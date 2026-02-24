@@ -1,0 +1,242 @@
+{
+  "uuid": "4ff5baf0-6b3a-4f4e-9b93-9c8e80554b73",
+  "lastMigration": 32,
+  "name": "Push Sports API Mock",
+  "endpointPrefix": "api",
+  "latency": 0,
+  "port": 3001,
+  "hostname": "",
+  "cors": true,
+  "headers": [
+    {
+      "key": "Access-Control-Allow-Origin",
+      "value": "*"
+    },
+    {
+      "key": "Access-Control-Allow-Methods",
+      "value": "GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS"
+    },
+    {
+      "key": "Access-Control-Allow-Headers",
+      "value": "Content-Type, Origin, Accept, Authorization, Content-Length, X-Requested-With"
+    }
+  ],
+  "folders": [],
+  "routes": [
+    {
+      "uuid": "login-route",
+      "type": "http",
+      "documentation": "Login endpoint",
+      "method": "post",
+      "endpoint": "auth/login",
+      "responses": [
+        {
+          "uuid": "login-success-superadmin",
+          "body": "{\n  \"user\": {\n    \"id\": 1,\n    \"nombre\": \"Admin\",\n    \"apellido\": \"Sistema\",\n    \"email\": \"admin@pushsports.com\",\n    \"rol\": \"SUPER_ADMIN\",\n    \"sucursal_id\": null\n  },\n  \"token\": \"mockoon-jwt-token\"\n}",
+          "latency": 500,
+          "statusCode": 200,
+          "label": "Super Admin",
+          "rules": [
+            {
+              "target": "body",
+              "modifier": "email",
+              "value": "admin@pushsports.com",
+              "invert": false,
+              "operator": "equals"
+            }
+          ]
+        },
+        {
+          "uuid": "login-success-adminsucursal",
+          "body": "{\n  \"user\": {\n    \"id\": 2,\n    \"nombre\": \"Encargado\",\n    \"apellido\": \"Local\",\n    \"email\": \"encargado@pushsports.com\",\n    \"rol\": \"ADMIN_SUCURSAL\",\n    \"sucursal_id\": 1\n  },\n  \"token\": \"mockoon-jwt-token\"\n}",
+          "latency": 500,
+          "statusCode": 200,
+          "label": "Admin Sucursal",
+          "rules": [
+            {
+              "target": "body",
+              "modifier": "email",
+              "value": "encargado@pushsports.com",
+              "invert": false,
+              "operator": "equals"
+            }
+          ]
+        },
+        {
+          "uuid": "login-success-vendedor",
+          "body": "{\n  \"user\": {\n    \"id\": 3,\n    \"nombre\": \"Pedro\",\n    \"apellido\": \"Sánchez\",\n    \"email\": \"pedro@pushsports.com\",\n    \"rol\": \"VENDEDOR\",\n    \"sucursal_id\": 1\n  },\n  \"token\": \"mockoon-jwt-token\"\n}",
+          "latency": 500,
+          "statusCode": 200,
+          "label": "Vendedor",
+          "rules": [
+            {
+              "target": "body",
+              "modifier": "email",
+              "value": "pedro@pushsports.com",
+              "invert": false,
+              "operator": "equals"
+            }
+          ]
+        },
+        {
+          "uuid": "login-failed",
+          "body": "{\"error\": \"Credenciales inválidas\"}",
+          "latency": 500,
+          "statusCode": 401,
+          "label": "Fallback Error",
+          "rules": []
+        }
+      ]
+    },
+    {
+      "uuid": "sucursales-route",
+      "type": "http",
+      "documentation": "Sucursales",
+      "method": "get",
+      "endpoint": "sucursales",
+      "responses": [
+        {
+          "uuid": "sucursales-list",
+          "body": "[\n  { \"id_comercio\": \"11a5f1e4-2768-4365-9e05-a06c42fbcf2c\", \"nombre\": \"Sede Centro\", \"id_tipo_comercio\": 1, \"direccion\": \"Dean Funes 123\", \"latitud\": -24.7821, \"longitud\": -65.4125, \"imagen_url\": \"\", \"saldo_acumulado_mili\": 0, \"activo\": true },\n  { \"id_comercio\": \"dc860e2b-be06-46c3-ab7a-0ec5f615f03f\", \"nombre\": \"Sede Norte\", \"id_tipo_comercio\": 1, \"direccion\": \"Av. Bolivia 200\", \"latitud\": -24.75, \"longitud\": -65.4, \"imagen_url\": \"\", \"saldo_acumulado_mili\": 0, \"activo\": true }\n]",
+          "latency": 300,
+          "statusCode": 200,
+          "label": "Sucursales List"
+        }
+      ]
+    },
+    {
+      "uuid": "productos-route",
+      "type": "http",
+      "method": "get",
+      "endpoint": "productos",
+      "responses": [
+        {
+          "uuid": "productos-list",
+          "body": "[\n  { \"id_producto\": \"97181f8f-c6d2-44ac-b974-b071f000d288\", \"nombre\": \"100% Whey Protein - Vainilla\", \"codigo_barras\": \"779123456001\", \"id_categoria\": 1, \"id_marca\": 1, \"id_proveedor\": \"539f29fc-386c-460f-af21-fabd82796f5a\", \"precio_venta_sugerido\": 18500, \"costo_compra\": 12000, \"imagen_url\": \"\", \"activo\": true },\n  { \"id_producto\": \"6205594d-37b7-4ed5-b31e-dc9ce4f0fc29\", \"nombre\": \"Creatina Monohidrato 300g\", \"codigo_barras\": \"779123456002\", \"id_categoria\": 2, \"id_marca\": 2, \"id_proveedor\": \"720f8189-2f33-4647-9cea-941eb98aac1d\", \"precio_venta_sugerido\": 25000, \"costo_compra\": 18000, \"imagen_url\": \"\", \"activo\": true },\n  { \"id_producto\": \"7a7ccb50-d8a9-4021-b333-f853563fc6ae\", \"nombre\": \"Isolate Protein - Chocolate\", \"codigo_barras\": \"779123456003\", \"id_categoria\": 1, \"id_marca\": 3, \"id_proveedor\": \"539f29fc-386c-460f-af21-fabd82796f5a\", \"precio_venta_sugerido\": 32000, \"costo_compra\": 22000, \"imagen_url\": \"\", \"activo\": false }\n]",
+          "latency": 400,
+          "statusCode": 200
+        }
+      ]
+    },
+    {
+      "uuid": "categorias-route",
+      "type": "http",
+      "method": "get",
+      "endpoint": "categorias",
+      "responses": [
+        {
+          "uuid": "categorias-list",
+          "body": "[\n  { \"id\": 1, \"nombre\": \"Proteínas\", \"descripcion\": \"Suplementos para recuperación y aumento\", \"activo\": true },\n  { \"id\": 2, \"nombre\": \"Aminoácidos\", \"descripcion\": \"BCAA, Creatinas, Glutaminas\", \"activo\": true },\n  { \"id\": 3, \"nombre\": \"Pre-Entrenos\", \"descripcion\": \"Óxido nítrico y estimulantes\", \"activo\": true },\n  { \"id\": 4, \"nombre\": \"Vitaminas\", \"descripcion\": \"Salud general y articulaciones\", \"activo\": true },\n  { \"id\": 5, \"nombre\": \"Quemadores\", \"descripcion\": \"Termogénicos y Lipotrópicos\", \"activo\": true },\n  { \"id\": 6, \"nombre\": \"Barras Energéticas\", \"descripcion\": \"Snacks y comidas rápidas\", \"activo\": true },\n  { \"id\": 7, \"nombre\": \"Accesorios\", \"descripcion\": \"Shakers, Guantes, Cintos\", \"activo\": true }\n]",
+          "latency": 200,
+          "statusCode": 200
+        }
+      ]
+    },
+    {
+      "uuid": "marcas-route",
+      "type": "http",
+      "method": "get",
+      "endpoint": "marcas",
+      "responses": [
+        {
+          "uuid": "marcas-list",
+          "body": "[\n  { \"id\": 1, \"nombre\": \"Ena Sport\", \"descripcion\": \"Marca Nacional N1\", \"activo\": true },\n  { \"id\": 2, \"nombre\": \"Star Nutrition\", \"descripcion\": \"Premium National\", \"activo\": true },\n  { \"id\": 3, \"nombre\": \"Gentech\", \"descripcion\": \"Excelencia en polvos\", \"activo\": true },\n  { \"id\": 4, \"nombre\": \"Dymatize\", \"descripcion\": \"Internacional\", \"activo\": true },\n  { \"id\": 5, \"nombre\": \"Optimum Nutrition\", \"descripcion\": \"Gold Standard\", \"activo\": true },\n  { \"id\": 6, \"nombre\": \"Universal Nutrition\", \"descripcion\": \"Animal Pak\", \"activo\": true },\n  { \"id\": 7, \"nombre\": \"BSN\", \"descripcion\": \"Syntha-6\", \"activo\": true }\n]",
+          "latency": 200,
+          "statusCode": 200
+        }
+      ]
+    },
+    {
+      "uuid": "usuarios-route",
+      "type": "http",
+      "method": "get",
+      "endpoint": "usuarios",
+      "responses": [
+        {
+          "uuid": "usuarios-list",
+          "body": "[\n  { \"id_usuario\": \"fc5c6b10-2ab1-49dd-bf4e-b75962653806\", \"nombre\": \"Admin\", \"apellido\": \"Sistema\", \"email\": \"admin@pushsports.com\", \"id_rol\": 1, \"id_comercio_asignado\": null, \"activo\": true },\n  { \"id_usuario\": \"7c3c1837-6471-426c-990d-3f35da93a3f5\", \"nombre\": \"Encargado\", \"apellido\": \"Local\", \"email\": \"encargado@pushsports.com\", \"id_rol\": 2, \"id_comercio_asignado\": \"11a5f1e4-2768-4365-9e05-a06c42fbcf2c\", \"activo\": true },\n  { \"id_usuario\": \"34638cc8-3010-416d-935f-43309ba949ee\", \"nombre\": \"Pedro\", \"apellido\": \"Sánchez\", \"email\": \"pedro@pushsports.com\", \"id_rol\": 3, \"id_comercio_asignado\": \"11a5f1e4-2768-4365-9e05-a06c42fbcf2c\", \"activo\": true }\n]",
+          "latency": 300,
+          "statusCode": 200
+        }
+      ]
+    },
+    {
+      "uuid": "descuentos-route",
+      "type": "http",
+      "method": "get",
+      "endpoint": "descuentos",
+      "responses": [
+        {
+          "uuid": "descuentos-list",
+          "body": "[\n  { \"id\": 1, \"codigo\": \"PUSH20\", \"tipo_descuento\": \"porcentaje\", \"valor_descuento\": 20, \"usos_maximos\": 100, \"usos_actuales\": 15, \"activo\": true },\n  { \"id\": 2, \"codigo\": \"BIENVENIDA\", \"tipo_descuento\": \"fijo\", \"valor_descuento\": 5000, \"usos_maximos\": 50, \"usos_actuales\": 50, \"activo\": false },\n  { \"id\": 3, \"codigo\": \"VERANOFIT\", \"tipo_descuento\": \"porcentaje\", \"valor_descuento\": 15, \"usos_maximos\": 200, \"usos_actuales\": 40, \"activo\": true },\n  { \"id\": 4, \"codigo\": \"AMIGO10\", \"tipo_descuento\": \"porcentaje\", \"valor_descuento\": 10, \"usos_maximos\": 999, \"usos_actuales\": 85, \"activo\": true }\n]",
+          "latency": 200,
+          "statusCode": 200
+        }
+      ]
+    },
+    {
+      "uuid": "pos-inventory-route",
+      "type": "http",
+      "method": "get",
+      "endpoint": "inventario/:sucursalId",
+      "responses": [
+        {
+          "uuid": "pos-inventory-list",
+          "body": "[\n  { \"id_inventario\": \"27d75cf5-a65c-45d4-8c8f-ec3f43e9a5bf\", \"id_comercio\": \"11a5f1e4-2768-4365-9e05-a06c42fbcf2c\", \"id_producto\": \"97181f8f-c6d2-44ac-b974-b071f000d288\", \"producto_nombre\": \"100% Whey Protein - Vainilla\", \"precio_venta\": 18500, \"cantidad_actual\": 15, \"stock_minimo_alerta\": 5, \"comision_pactada_porcentaje\": 10 },\n  { \"id_inventario\": \"57c1857c-fe8f-4e09-9c17-2f48807c0084\", \"id_comercio\": \"11a5f1e4-2768-4365-9e05-a06c42fbcf2c\", \"id_producto\": \"6205594d-37b7-4ed5-b31e-dc9ce4f0fc29\", \"producto_nombre\": \"Creatina Monohidrato 300g\", \"precio_venta\": 25000, \"cantidad_actual\": 0, \"stock_minimo_alerta\": 10, \"comision_pactada_porcentaje\": 12 }\n]",
+          "latency": 250,
+          "statusCode": 200
+        }
+      ]
+    },
+    {
+      "uuid": "proveedores-route",
+      "type": "http",
+      "method": "get",
+      "endpoint": "proveedores",
+      "responses": [
+        {
+          "uuid": "proveedores-list",
+          "body": "[\n  { \"id_proveedor\": \"539f29fc-386c-460f-af21-fabd82796f5a\", \"nombre_proveedor\": \"Suples Mayorista SRL\", \"telefono\": \"3875111222\", \"razon_social\": \"Suples SRL\", \"cuit\": \"30-11111111-2\", \"activo\": true },\n  { \"id_proveedor\": \"720f8189-2f33-4647-9cea-941eb98aac1d\", \"nombre_proveedor\": \"Gentech Oficial\", \"telefono\": \"1141112222\", \"razon_social\": \"Gentech SA\", \"cuit\": \"30-22222222-3\", \"activo\": true }\n]",
+          "latency": 200,
+          "statusCode": 200
+        }
+      ]
+    },
+    {
+      "uuid": "dummy-routes-post-put-delete",
+      "type": "http",
+      "documentation": "Catch all for writes so frontend UI responds properly when trying to add/edit/delete entity",
+      "method": "all",
+      "endpoint": "*(productos|sucursales|categorias|marcas|usuarios|descuentos|proveedores)*",
+      "responses": [
+        {
+          "uuid": "dummy-success",
+          "body": "{\"message\": \"Operación simulada con éxito\"}",
+          "latency": 300,
+          "statusCode": 200,
+          "rules": [
+             {
+              "target": "request",
+              "modifier": "method",
+              "value": "POST,PUT,DELETE",
+              "invert": false,
+              "operator": "regex"
+             }
+           ]
+        }
+      ]
+    }
+  ],
+  "rootChildren": [
+    { "type": "route", "uuid": "login-route" },
+    { "type": "route", "uuid": "sucursales-route" },
+    { "type": "route", "uuid": "productos-route" },
+    { "type": "route", "uuid": "categorias-route" },
+    { "type": "route", "uuid": "marcas-route" },
+    { "type": "route", "uuid": "usuarios-route" },
+    { "type": "route", "uuid": "descuentos-route" },
+    { "type": "route", "uuid": "pos-inventory-route" },
+    { "type": "route", "uuid": "proveedores-route" },
+    { "type": "route", "uuid": "dummy-routes-post-put-delete" }
+  ]
+}

@@ -1,0 +1,163 @@
+{
+  "sucursales": [
+    {
+      "id_comercio": "11a5f1e4-2768-4365-9e05-a06c42fbcf2c",
+      "nombre": "Sede Centro",
+      "id_tipo_comercio": 1,
+      "direccion": "Dean Funes 123",
+      "latitud": -24.7821,
+      "longitud": -65.4125,
+      "imagen_url": "",
+      "saldo_acumulado_mili": 0,
+      "activo": true
+    },
+    {
+      "id_comercio": "dc860e2b-be06-46c3-ab7a-0ec5f615f03f",
+      "nombre": "Sede Norte",
+      "id_tipo_comercio": 1,
+      "direccion": "Av. Bolivia 200",
+      "latitud": -24.75,
+      "longitud": -65.4,
+      "imagen_url": "",
+      "saldo_acumulado_mili": 0,
+      "activo": true
+    }
+  ],
+  "usuarios": [
+    {
+      "id_usuario": "fc5c6b10-2ab1-49dd-bf4e-b75962653806",
+      "nombre": "Admin",
+      "apellido": "Sistema",
+      "email": "admin@pushsports.com",
+      "id_rol": 1,
+      "id_comercio_asignado": null,
+      "activo": true
+    },
+    {
+      "id_usuario": "7c3c1837-6471-426c-990d-3f35da93a3f5",
+      "nombre": "Encargado",
+      "apellido": "Local",
+      "email": "encargado@pushsports.com",
+      "id_rol": 2,
+      "id_comercio_asignado": "11a5f1e4-2768-4365-9e05-a06c42fbcf2c",
+      "activo": true
+    },
+    {
+      "id_usuario": "34638cc8-3010-416d-935f-43309ba949ee",
+      "nombre": "Pedro",
+      "apellido": "Sánchez",
+      "email": "pedro@pushsports.com",
+      "id_rol": 3,
+      "id_comercio_asignado": "11a5f1e4-2768-4365-9e05-a06c42fbcf2c",
+      "activo": true
+    }
+  ],
+  "proveedores": [
+    {
+      "id_proveedor": "539f29fc-386c-460f-af21-fabd82796f5a",
+      "nombre_proveedor": "Suples Mayorista SRL",
+      "telefono": "3875111222",
+      "razon_social": "Suples SRL",
+      "cuit": "30-11111111-2",
+      "activo": true
+    },
+    {
+      "id_proveedor": "720f8189-2f33-4647-9cea-941eb98aac1d",
+      "nombre_proveedor": "Gentech Oficial",
+      "telefono": "1141112222",
+      "razon_social": "Gentech SA",
+      "cuit": "30-22222222-3",
+      "activo": true
+    }
+  ],
+  "productos": [
+    {
+      "id_producto": "97181f8f-c6d2-44ac-b974-b071f000d288",
+      "nombre": "100% Whey Protein - Vainilla",
+      "codigo_barras": "779123456001",
+      "id_categoria": 1,
+      "id_marca": 1,
+      "id_proveedor": "539f29fc-386c-460f-af21-fabd82796f5a",
+      "precio_venta_sugerido": 18500,
+      "costo_compra": 12000,
+      "imagen_url": "",
+      "activo": true
+    },
+    {
+      "id_producto": "6205594d-37b7-4ed5-b31e-dc9ce4f0fc29",
+      "nombre": "Creatina Monohidrato 300g",
+      "codigo_barras": "779123456002",
+      "id_categoria": 2,
+      "id_marca": 2,
+      "id_proveedor": "720f8189-2f33-4647-9cea-941eb98aac1d",
+      "precio_venta_sugerido": 25000,
+      "costo_compra": 18000,
+      "imagen_url": "",
+      "activo": true
+    },
+    {
+      "id_producto": "7a7ccb50-d8a9-4021-b333-f853563fc6ae",
+      "nombre": "Isolate Protein - Chocolate",
+      "codigo_barras": "779123456003",
+      "id_categoria": 1,
+      "id_marca": 3,
+      "id_proveedor": "539f29fc-386c-460f-af21-fabd82796f5a",
+      "precio_venta_sugerido": 32000,
+      "costo_compra": 22000,
+      "imagen_url": "",
+      "activo": false
+    }
+  ],
+  "categorias": [
+    {
+      "id_categoria": 1,
+      "nombre": "Proteínas",
+      "descripcion": "Suplementos para recuperación y aumento"
+    },
+    {
+      "id_categoria": 2,
+      "nombre": "Aminoácidos",
+      "descripcion": "BCAA, Creatinas, Glutaminas"
+    }
+  ],
+  "marcas": [
+    {
+      "id_marca": 1,
+      "nombre_marca": "Ena Sport"
+    },
+    {
+      "id_marca": 2,
+      "nombre_marca": "Star Nutrition"
+    },
+    {
+      "id_marca": 3,
+      "nombre_marca": "Gentech"
+    }
+  ],
+  "inventario": [
+    {
+      "id_inventario": "27d75cf5-a65c-45d4-8c8f-ec3f43e9a5bf",
+      "id_comercio": "11a5f1e4-2768-4365-9e05-a06c42fbcf2c",
+      "id_producto": "97181f8f-c6d2-44ac-b974-b071f000d288",
+      "cantidad_actual": 15,
+      "stock_minimo_alerta": 5,
+      "comision_pactada_porcentaje": 10
+    },
+    {
+      "id_inventario": "57c1857c-fe8f-4e09-9c17-2f48807c0084",
+      "id_comercio": "11a5f1e4-2768-4365-9e05-a06c42fbcf2c",
+      "id_producto": "6205594d-37b7-4ed5-b31e-dc9ce4f0fc29",
+      "cantidad_actual": 0,
+      "stock_minimo_alerta": 10,
+      "comision_pactada_porcentaje": 12
+    },
+    {
+      "id_inventario": "24cdce65-0354-4e36-91a7-c0206201a325",
+      "id_comercio": "dc860e2b-be06-46c3-ab7a-0ec5f615f03f",
+      "id_producto": "97181f8f-c6d2-44ac-b974-b071f000d288",
+      "cantidad_actual": 8,
+      "stock_minimo_alerta": 5,
+      "comision_pactada_porcentaje": 10
+    }
+  ]
+}
