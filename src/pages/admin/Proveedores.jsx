@@ -1,46 +1,44 @@
 import React from 'react';
-import { Truck } from 'lucide-react';
+import { Truck } from 'iconsax-react';
 import GenericABM from '../../components/ui/GenericABM';
-import { proveedoresService } from '../../services/genericServices';
+import { proveedoresService as service } from '../../services/genericServices';
 
 const Proveedores = () => {
     const columns = [
-        { header: 'ID Proveedor', accessor: 'id_proveedor' },
+        { header: 'ID', accessor: 'id', render: (row) => <span className="text-[10px] font-mono opacity-50">{row.id}</span> },
         { 
-            header: 'Razón Social', 
-            accessor: 'razon_social',
-            render: (row) => <span className="font-bold">{row.razon_social}</span>
+            header: 'Suministrador / Razón Social', 
+            accessor: 'nombre',
+            render: (row) => (
+                <div className="flex flex-col">
+                    <span className="font-bold text-sm text-neutral-900 uppercase tracking-tight">{row.nombre}</span>
+                    <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">{row.email || 'Sin Contacto'}</span>
+                </div>
+            )
         },
-        { header: 'CUIT', accessor: 'cuit' },
-        { header: 'Teléfono', accessor: 'telefono' },
-        { header: 'Email', accessor: 'email' },
         { 
-            header: 'Estado', 
+            header: 'Estado Logístico', 
             accessor: 'activo',
             render: (row) => (
-                <span className={`px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white ${row.activo ? 'bg-black' : 'bg-neutral-400'}`}>
-                    {row.activo ? 'Activo' : 'Inactivo'}
-                </span>
+                <div className={`inline-flex px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest ${row.activo ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-400'}`}>
+                    {row.activo ? 'Proveedor Activo' : 'Suspendido'}
+                </div>
             )
         },
     ];
 
     const formFields = [
-        { name: 'razon_social', label: 'Razón Social / Nombre', required: true },
-        { name: 'cuit', label: 'CUIT', required: true },
-        { name: 'telefono', label: 'Teléfono', required: true },
-        { name: 'email', label: 'Correo Electrónico', required: false, type: 'email' },
-        { name: 'direccion', label: 'Dirección Comercial', required: false }
+        { name: 'nombre', label: 'Razón Social / Nombre', required: true },
+        { name: 'email', label: 'Email de contacto', required: false },
     ];
 
     return (
         <GenericABM 
-            title="Gestión de Proveedores"
+            title="Proveedores y Logística"
             icon={Truck}
-            service={proveedoresService}
+            service={service}
             columns={columns}
             formFields={formFields}
-            idField="id_proveedor"
         />
     );
 };

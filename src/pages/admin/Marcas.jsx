@@ -1,41 +1,38 @@
 import React from 'react';
-import { Award } from 'lucide-react';
+import { Tag } from 'iconsax-react';
 import GenericABM from '../../components/ui/GenericABM';
-import { marcasService } from '../../services/genericServices';
+import { marcasService as service } from '../../services/genericServices';
 
 const Marcas = () => {
     const columns = [
-        { header: 'ID Marca', accessor: 'id_marca' },
+        { header: 'ID', accessor: 'id', render: (row) => <span className="text-[10px] font-mono opacity-50">{row.id}</span> },
         { 
-            header: 'Nombre', 
+            header: 'Nombre de Marca / Partner', 
             accessor: 'nombre',
-            render: (row) => <span className="font-bold">{row.nombre}</span>
+            render: (row) => <span className="font-bold text-sm text-neutral-900 uppercase tracking-tight">{row.nombre}</span>
         },
-        { header: 'Descripción', accessor: 'descripcion' },
         { 
-            header: 'Estado', 
+            header: 'Estado Alianza', 
             accessor: 'activo',
             render: (row) => (
-                <span className={`px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white ${row.activo ? 'bg-black' : 'bg-neutral-400'}`}>
-                    {row.activo ? 'Activo' : 'Inactivo'}
-                </span>
+                <div className={`inline-flex px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest ${row.activo ? 'bg-emerald-50 text-emerald-600' : 'bg-neutral-100 text-neutral-400'}`}>
+                    {row.activo ? 'Colaborador Activo' : 'Finalizado'}
+                </div>
             )
         },
     ];
 
     const formFields = [
         { name: 'nombre', label: 'Nombre de la Marca', required: true },
-        { name: 'descripcion', label: 'Descripción', required: false }
     ];
 
     return (
         <GenericABM 
-            title="Marcas de Productos"
-            icon={Award}
-            service={marcasService}
+            title="Marcas y Partners"
+            icon={Tag}
+            service={service}
             columns={columns}
             formFields={formFields}
-            idField="id_marca"
         />
     );
 };

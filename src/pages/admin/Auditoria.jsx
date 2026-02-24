@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { History, Search, FileText } from 'lucide-react';
+import { Activity, DocumentText, SearchNormal1, FilterSearch, Clock } from 'iconsax-react';
 import DataTable from '../../components/ui/DataTable';
 import { auditoriaService } from '../../services/auditoriaService';
 
@@ -20,65 +20,80 @@ const Auditoria = () => {
 
     const getTypeColor = (tipo) => {
         switch(tipo) {
-            case 'VENTA': return 'bg-black text-white';
-            case 'ENVIO': return 'bg-neutral-600 text-white';
-            case 'LIQUIDACION': return 'bg-white border text-black border-black';
-            default: return 'bg-neutral-200 text-black';
+            case 'VENTA': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
+            case 'ENVIO': return 'bg-brand-cyan/10 text-brand-cyan border-brand-cyan/20';
+            case 'LIQUIDACION': return 'bg-neutral-900 text-white border-neutral-800';
+            default: return 'bg-neutral-50 text-neutral-400 border-neutral-100';
         }
     };
 
     const columns = [
-        { header: 'ID', accessor: 'id' },
+        { header: 'ID Log', accessor: 'id', render: (row) => <span className="text-[10px] font-mono opacity-40">{row.id.split('-')[0]}...</span> },
         { 
-            header: 'Tipo', 
+            header: 'Operación', 
             accessor: 'tipo',
             render: (row) => (
-                <span className={`px-2 py-1 text-[10px] font-bold uppercase tracking-widest ${getTypeColor(row.tipo)}`}>
+                <div className={`inline-flex px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest border ${getTypeColor(row.tipo)}`}>
                     {row.tipo}
-                </span>
+                </div>
             )
         },
         { 
-            header: 'Fecha y Hora', 
+            header: 'Cronología', 
             accessor: 'fecha',
-            render: (row) => <span className="font-mono text-sm">{new Date(row.fecha).toLocaleString()}</span>
+            render: (row) => (
+                <div className="flex items-center gap-2 text-neutral-600">
+                    <Clock size={14} className="opacity-40" />
+                    <span className="text-[11px] font-bold tracking-tight">{new Date(row.fecha).toLocaleString()}</span>
+                </div>
+            )
         },
         { 
-            header: 'Usuario', 
+            header: 'Operador Responsable', 
             accessor: 'usuario',
-            render: (row) => <span className="font-bold">{row.usuario}</span>
+            render: (row) => (
+                <div className="flex flex-col">
+                    <span className="font-bold text-sm text-neutral-900 tracking-tight">{row.usuario}</span>
+                    <span className="text-[9px] font-bold text-neutral-300 uppercase tracking-widest italic">Acción Verificada</span>
+                </div>
+            )
         },
         { 
-            header: 'Detalle', 
+            header: 'Descripción del Evento', 
             accessor: 'descripcion',
-            render: (row) => <span className="text-neutral-600">{row.descripcion}</span>
+            render: (row) => <span className="text-[11px] font-medium text-neutral-500 leading-relaxed uppercase tracking-tight">{row.descripcion}</span>
         },
     ];
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b-4 border-black pb-4 text-black">
-                <div className="flex items-center gap-3">
-                    <History size={32} />
-                    <h2 className="text-3xl font-black italic uppercase tracking-tighter">
-                        Auditoría de Sistema
+        <div className="space-y-12 max-w-7xl mx-auto animate-in fade-in duration-700">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-neutral-100 pb-10 gap-6">
+                 <div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-neutral-300">REGISTRO DE SEGURIDAD</span>
+                    <h2 className="text-4xl font-bold tracking-tight mt-2 text-neutral-900">
+                        Auditoría Transaccional
                     </h2>
-                </div>
-                <button className="flex items-center gap-2 border-2 border-black px-4 py-2 text-xs font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-colors">
-                    <FileText size={16} /> Exportar CSV
-                </button>
+                 </div>
+                 
+                 <button className="bg-neutral-50 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-900 transition-all px-8 py-4 rounded-2xl text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-3">
+                    <DocumentText size={18} /> Exportar Auditoría (.csv)
+                 </button>
             </div>
             
             {isLoading ? (
-                <div className="text-center py-12 font-bold uppercase tracking-widest text-neutral-500 animate-pulse">
-                    CARGANDO REGISTROS DE SISTEMA...
+                <div className="flex flex-col items-center justify-center py-24 space-y-6">
+                    <div className="w-12 h-12 border-4 border-neutral-100 border-t-brand-cyan rounded-full animate-spin"></div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-neutral-300">Recuperando Registros...</p>
                 </div>
             ) : (
-                <DataTable 
-                    data={transacciones}
-                    columns={columns}
-                    searchPlaceholder="Buscar por usuario, detalle o tipo..."
-                />
+                <div className="card-premium overflow-hidden">
+                    <DataTable 
+                        data={transacciones}
+                        columns={columns}
+                        searchPlaceholder="Filtrar por usuario, acción o descripción..."
+                        variant="minimal"
+                    />
+                </div>
             )}
         </div>
     );

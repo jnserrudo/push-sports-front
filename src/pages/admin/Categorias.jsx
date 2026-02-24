@@ -1,41 +1,38 @@
 import React from 'react';
-import { Tags } from 'lucide-react';
+import { Category } from 'iconsax-react';
 import GenericABM from '../../components/ui/GenericABM';
-import { categoriasService } from '../../services/genericServices';
+import { categoriasService as service } from '../../services/genericServices';
 
 const Categorias = () => {
     const columns = [
-        { header: 'ID Categoría', accessor: 'id_categoria' },
+        { header: 'ID', accessor: 'id', render: (row) => <span className="text-[10px] font-mono opacity-50">{row.id}</span> },
         { 
-            header: 'Nombre', 
+            header: 'Nombre de Categoría', 
             accessor: 'nombre',
-            render: (row) => <span className="font-bold">{row.nombre}</span>
+            render: (row) => <span className="font-bold text-sm text-neutral-900 uppercase tracking-tight">{row.nombre}</span>
         },
-        { header: 'Descripción', accessor: 'descripcion' },
         { 
             header: 'Estado', 
             accessor: 'activo',
             render: (row) => (
-                <span className={`px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white ${row.activo ? 'bg-black' : 'bg-neutral-400'}`}>
-                    {row.activo ? 'Activo' : 'Inactivo'}
-                </span>
+                <div className={`inline-flex px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest ${row.activo ? 'bg-brand-cyan/10 text-brand-cyan' : 'bg-neutral-100 text-neutral-400'}`}>
+                    {row.activo ? 'Vigente' : 'Inactiva'}
+                </div>
             )
         },
     ];
 
     const formFields = [
         { name: 'nombre', label: 'Nombre de la Categoría', required: true },
-        { name: 'descripcion', label: 'Descripción', required: false }
     ];
 
     return (
         <GenericABM 
             title="Categorías de Productos"
-            icon={Tags}
-            service={categoriasService}
+            icon={Category}
+            service={service}
             columns={columns}
             formFields={formFields}
-            idField="id_categoria"
         />
     );
 };

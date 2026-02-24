@@ -1,276 +1,202 @@
 import React, { useState, useEffect } from 'react';
-import { Box } from 'lucide-react';
-import DataTable from '../../components/ui/DataTable';
-import Modal from '../../components/ui/Modal';
+import { Box, Category, ArchiveBook, Tag, DollarCircle, Setting2, InfoCircle } from 'iconsax-react';
+import GenericABM from '../../components/ui/GenericABM';
 import { productosService } from '../../services/productosService';
 
 const Productos = () => {
-    const [productos, setProductos] = useState([]);
     const [categorias, setCategorias] = useState([]);
     const [marcas, setMarcas] = useState([]);
-    
-    const [isLoading, setIsLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingItem, setEditingItem] = useState(null);
-    
-    const [formData, setFormData] = useState({
-        nombre: '',
-        descripcion: '',
-        codigo_barras: '',
-        id_categoria: '',
-        id_marca: '',
-        id_proveedor: '',
-        costo_compra: 0,
-        precio_venta_sugerido: 0,
-        stock_minimo: 0 // Will map differently if inventory abstraction stays
-    });
-
-    const loadData = async () => {
-        setIsLoading(true);
-        const [prodData, catData, marData] = await Promise.all([
-            productosService.getAll(),
-            productosService.getCategorias(),
-            productosService.getMarcas()
-        ]);
-        setProductos(prodData);
-        setCategorias(catData);
-        setMarcas(marData);
-        setIsLoading(false);
-    };
 
     useEffect(() => {
-        loadData();
+        Promise.all([
+            productosService.getCategorias(),
+            productosService.getMarcas()
+        ]).then(([cats, mars]) => {
+            setCategorias(cats);
+            setMarcas(mars);
+        }).catch(console.error);
     }, []);
 
-    const handleAdd = () => {
-        setEditingItem(null);
-        setFormData({ 
-            nombre: '', 
-            descripcion: '',
-            codigo_barras: '',
-            id_categoria: categorias[0]?.id || '', 
-            id_marca: marcas[0]?.id || '',
-            id_proveedor: '', 
-            costo_compra: 0,
-            precio_venta_sugerido: 0,
-            stock_minimo: 5
-        });
-        setIsModalOpen(true);
-    };
-
-    const handleEdit = (item) => {
-        setEditingItem(item);
-        setFormData({
-            nombre: item.nombre,
-            descripcion: item.descripcion || '',
-            codigo_barras: item.codigo_barras || '',
-            id_categoria: item.id_categoria,
-            id_marca: item.id_marca,
-            id_proveedor: item.id_proveedor || '',
-            costo_compra: item.costo_compra || 0,
-            precio_venta_sugerido: item.precio_venta_sugerido || 0,
-            stock_minimo: item.stock_minimo || 0
-        });
-        setIsModalOpen(true);
-    };
-
-    const handleDelete = async (item) => {
-        if(window.confirm(`¿Seguro que deseas desactivar el producto ${item.nombre}?`)) {
-            await productosService.delete(item.id_producto);
-            loadData();
-        }
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        const dataToSave = {
-            ...formData,
-            id_categoria: Number(formData.id_categoria),
-            id_marca: Number(formData.id_marca),
-            costo_compra: Number(formData.costo_compra),
-            precio_venta_sugerido: Number(formData.precio_venta_sugerido),
-            stock_minimo: Number(formData.stock_minimo)
-        };
-
-        if (editingItem) {
-            await productosService.update(editingItem.id_producto, dataToSave);
-        } else {
-            await productosService.create(dataToSave);
-        }
-        setIsModalOpen(false);
-        loadData();
-    };
-
     const columns = [
-        { header: 'Código', accessor: 'codigo_barras' },
+        { header: 'Cod. Barras', accessor: 'codigo_barras', render: (row) => <span className="text-[10px] font-mono opacity-60">{row.codigo_barras}</span> },
         { 
-            header: 'Producto', 
+            header: 'Producto / Descripción', 
             accessor: 'nombre',
-            render: (row) => <span className="font-bold">{row.nombre}</span>
-        },
-        { header: 'Marca', accessor: 'marca_nombre' },
-        { header: 'Categoría', accessor: 'categoria_nombre' },
-        { 
-            header: 'Precio Venta', 
-            accessor: 'precio_venta_sugerido',
-            render: (row) => `$${row.precio_venta_sugerido?.toLocaleString() || 0}`
+            render: (row) => (
+                <div className="flex flex-col">
+                    <span className="font-bold text-sm tracking-tight text-neutral-900">{row.nombre}</span>
+                    <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest truncate max-w-[200px]">{row.descripcion || 'Sin descripción'}</span>
+                </div>
+            )
         },
         { 
-            header: 'Stock Total', 
+            header: 'Clasificación', 
+            render: (row) => (
+                <div className="flex flex-col">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">{row.marca_nombre || 'Genérico'}</span>
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-brand-cyan">{row.categoria_nombre || 'Sin Cat.'}</span>
+                </div>
+            )
+        },
+        { 
+            header: 'Precios', 
+            render: (row) => (
+                <div className="flex flex-col">
+                    <span className="font-bold text-neutral-900 text-sm">${row.precio_venta_sugerido?.toLocaleString() || 0}</span>
+                    <span className="text-[9px] font-bold text-neutral-300 uppercase tracking-widest">Costo: ${row.costo_compra?.toLocaleString() || 0}</span>
+                </div>
+            )
+        },
+        { 
+            header: 'Stock Global', 
             accessor: 'stock_total',
-            render: (row) => (
-                <span className={`font-bold ${row.stock_total === 0 ? 'text-red-500' : row.stock_total <= row.stock_minimo ? 'text-yellow-600' : 'text-black'}`}>
-                    {row.stock_total || 0} {row.stock_total === 0 && '(Agotado)'} {row.stock_total > 0 && row.stock_total <= row.stock_minimo && '(¡Bajo!)'}
-                </span>
-            )
-        },
-        { 
-            header: 'Estado', 
-            accessor: 'activo',
-            render: (row) => (
-                <span className={`px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white ${row.activo ? 'bg-black' : 'bg-neutral-400'}`}>
-                    {row.activo ? 'Activo' : 'Inactivo'}
-                </span>
-            )
+            render: (row) => {
+                const isCritical = (row.stock_total || 0) <= (row.stock_minimo || 5);
+                const isEmpty = (row.stock_total || 0) === 0;
+                return (
+                    <div className="flex items-center gap-3">
+                        <div className={`w-2 h-2 rounded-full ${isEmpty ? 'bg-red-500 animate-pulse' : isCritical ? 'bg-amber-500' : 'bg-emerald-500'}`}></div>
+                        <span className={`font-bold text-sm ${isEmpty ? 'text-red-500' : isCritical ? 'text-amber-500' : 'text-neutral-900'}`}>
+                            {row.stock_total || 0}
+                        </span>
+                    </div>
+                );
+            }
         },
     ];
 
-    return (
-        <div className="space-y-6 max-w-7xl mx-auto">
-            <div className="flex items-center gap-3 border-b-4 border-black pb-4">
-                <Box size={32} />
-                <h2 className="text-3xl font-black italic uppercase tracking-tighter">
-                    Catálogo de Productos
-                </h2>
-            </div>
-            
-            {isLoading ? (
-                <div className="text-center py-12 font-bold uppercase tracking-widest text-neutral-500 animate-pulse">
-                    CARGANDO DATOS...
-                </div>
-            ) : (
-                <DataTable 
-                    data={productos}
-                    columns={columns}
-                    onAdd={handleAdd}
-                    addLabel="Nuevo Producto"
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    searchPlaceholder="Buscar por código, nombre, marca..."
-                />
-            )}
-
-            <Modal 
-                isOpen={isModalOpen} 
-                onClose={() => setIsModalOpen(false)}
-                title={editingItem ? "Editar Producto" : "Nuevo Producto"}
-                maxWidth="max-w-3xl"
-            >
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-wider">Nombre del Producto</label>
-                            <input 
-                                required
-                                type="text" 
-                                className="w-full border-2 border-black p-2 focus:outline-none focus:ring-2 focus:ring-black font-mono text-sm"
-                                value={formData.nombre}
-                                onChange={e => setFormData({...formData, nombre: e.target.value})}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-wider">Código de Barras</label>
-                            <input 
-                                required
-                                type="text" 
-                                className="w-full border-2 border-black p-2 focus:outline-none focus:ring-2 focus:ring-black font-mono text-sm"
-                                value={formData.codigo_barras}
-                                onChange={e => setFormData({...formData, codigo_barras: e.target.value})}
-                            />
-                        </div>
-                    </div>
-
+    const renderForm = (formData, setFormData) => {
+        return (
+            <div className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                         <label className="text-xs font-bold uppercase tracking-wider">Descripción Detallada</label>
-                         <textarea 
-                             className="w-full border-2 border-black p-2 focus:outline-none focus:ring-2 focus:ring-black font-mono text-sm h-20 resize-none"
-                             value={formData.descripcion}
-                             onChange={e => setFormData({...formData, descripcion: e.target.value})}
-                         />
+                        <label className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 ml-1">Nombre del Producto</label>
+                        <input 
+                            required type="text" 
+                            className="input-premium"
+                            placeholder="Ej: Proteína Whey Isolated"
+                            value={formData.nombre || ''} 
+                            onChange={e => setFormData({...formData, nombre: e.target.value})} 
+                        />
                     </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-wider">Categoría</label>
+                    <div className="space-y-2">
+                        <label className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 ml-1">Código de Barras</label>
+                        <input 
+                            required type="text" 
+                            className="input-premium"
+                            placeholder="7791234..."
+                            value={formData.codigo_barras || ''} 
+                            onChange={e => setFormData({...formData, codigo_barras: e.target.value})} 
+                        />
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 ml-1">Descripción Breve</label>
+                    <textarea 
+                        className="input-premium min-h-[100px] resize-none"
+                        placeholder="Detalles sobre presentación, sabor o características..."
+                        value={formData.descripcion || ''} 
+                        onChange={e => setFormData({...formData, descripcion: e.target.value})} 
+                    />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <label className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 ml-1">Categoría</label>
+                        <div className="relative">
                             <select 
-                                required
-                                className="w-full border-2 border-black p-2 focus:outline-none focus:ring-2 focus:ring-black font-mono text-sm"
-                                value={formData.id_categoria}
-                                onChange={e => setFormData({...formData, id_categoria: e.target.value})}
+                                required 
+                                className="input-premium appearance-none"
+                                value={formData.id_categoria || ''} 
+                                onChange={e => setFormData({...formData, id_categoria: parseInt(e.target.value)})}
                             >
-                                <option value="">Seleccionar...</option>
+                                <option value="">Seleccionar Categoría...</option>
                                 {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                             </select>
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-300">
+                                <Category size={16} />
+                            </div>
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-wider">Marca</label>
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 ml-1">Marca</label>
+                        <div className="relative">
                             <select 
-                                required
-                                className="w-full border-2 border-black p-2 focus:outline-none focus:ring-2 focus:ring-black font-mono text-sm"
-                                value={formData.id_marca}
-                                onChange={e => setFormData({...formData, id_marca: e.target.value})}
+                                required 
+                                className="input-premium appearance-none"
+                                value={formData.id_marca || ''} 
+                                onChange={e => setFormData({...formData, id_marca: parseInt(e.target.value)})}
                             >
-                                <option value="">Seleccionar...</option>
+                                <option value="">Seleccionar Marca...</option>
                                 {marcas.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
                             </select>
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-300">
+                                <Tag size={16} />
+                            </div>
                         </div>
                     </div>
+                </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-wider">Precio Costo ($)</label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                        <label className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 ml-1">Costo ($)</label>
+                        <div className="relative">
                             <input 
-                                required
-                                type="number" 
-                                min="0" step="0.01"
-                                className="w-full border-2 border-black p-2 focus:outline-none focus:ring-2 focus:ring-black font-mono text-sm"
-                                value={formData.costo_compra}
-                                onChange={e => setFormData({...formData, costo_compra: e.target.value})}
+                                required type="number" step="0.01"
+                                className="input-premium pl-10"
+                                value={formData.costo_compra || ''} 
+                                onChange={e => setFormData({...formData, costo_compra: Number(e.target.value)})} 
                             />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-wider">Precio Venta ($)</label>
-                            <input 
-                                required
-                                type="number" 
-                                min="0" step="0.01"
-                                className="w-full border-2 border-black p-2 focus:outline-none focus:ring-2 focus:ring-black font-mono text-sm"
-                                value={formData.precio_venta_sugerido}
-                                onChange={e => setFormData({...formData, precio_venta_sugerido: e.target.value})}
-                            />
-                        </div>
-                         <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-wider">Stock Mínimo</label>
-                            <input 
-                                required
-                                type="number" 
-                                min="0"
-                                className="w-full border-2 border-black p-2 focus:outline-none focus:ring-2 focus:ring-black font-mono text-sm"
-                                value={formData.stock_minimo}
-                                onChange={e => setFormData({...formData, stock_minimo: e.target.value})}
-                            />
+                            <DollarCircle size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-300" />
                         </div>
                     </div>
+                    <div className="space-y-2">
+                        <label className="text-[11px] font-bold uppercase tracking-widest text-neutral-100 ml-1 bg-neutral-900 px-2 rounded-md w-fit">Venta Sugerida ($)</label>
+                        <div className="relative">
+                            <input 
+                                required type="number" step="0.01"
+                                className="input-premium pl-10 border-neutral-300"
+                                value={formData.precio_venta_sugerido || ''} 
+                                onChange={e => setFormData({...formData, precio_venta_sugerido: Number(e.target.value)})} 
+                            />
+                            <DollarCircle size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-900" />
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 ml-1">Stock Alarma</label>
+                        <div className="relative">
+                            <input 
+                                required type="number"
+                                className="input-premium pl-10"
+                                value={formData.stock_minimo || ''} 
+                                onChange={e => setFormData({...formData, stock_minimo: Number(e.target.value)})} 
+                            />
+                            <Setting2 size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-300" />
+                        </div>
+                    </div>
+                </div>
 
-                    <button 
-                        type="submit"
-                        className="w-full bg-black text-white font-bold uppercase tracking-widest py-4 mt-6 hover:bg-neutral-800 transition-colors border-2 border-black"
-                    >
-                        {editingItem ? "Guardar Cambios" : "Crear Producto"}
-                    </button>
-                </form>
-            </Modal>
-        </div>
+                <div className="p-6 bg-brand-cyan/5 rounded-[2rem] border border-brand-cyan/10 flex items-start gap-4">
+                    <InfoCircle size={20} className="text-brand-cyan mt-1" />
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 leading-relaxed">
+                        Definir un <span className="text-neutral-900">PVP Sugerido</span> ayuda a mantener márgenes coherentes en todas las sucursales. El stock real se gestiona por inventario individual.
+                    </p>
+                </div>
+            </div>
+        );
+    };
+
+    return (
+        <GenericABM 
+            title="Suministros y Productos"
+            icon={ArchiveBook}
+            service={productosService}
+            columns={columns}
+            formFields={[]} 
+            renderForm={renderForm}
+            idField="id_producto"
+        />
     );
 };
 

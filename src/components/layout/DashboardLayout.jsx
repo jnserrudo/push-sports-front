@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   LogoutCurve, 
-  Menu, 
+  HambergerMenu, 
   SearchNormal1, 
   CloseCircle,
   Category,
@@ -139,7 +139,7 @@ const DashboardLayout = ({ children }) => {
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                 className="p-2.5 bg-neutral-50 text-neutral-500 hover:bg-neutral-100 rounded-xl transition-all"
             >
-              <Menu size={20} />
+              <HambergerMenu size={20} />
             </button>
             
             <div className="hidden lg:flex items-center gap-6 ml-6">

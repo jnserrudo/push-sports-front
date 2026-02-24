@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Shield, Store, User as UserIcon } from 'lucide-react';
+import { People, ShieldSecurity, Shop, ProfileCircle } from 'iconsax-react';
 import GenericABM from '../../components/ui/GenericABM';
 import { usuariosService as service } from '../../services/genericServices';
 import { sucursalesService } from '../../services/sucursalesService';
@@ -28,10 +28,10 @@ const Usuarios = () => {
             accessor: 'id_rol',
             render: (row) => {
                 const roles = {
-                    1: { label: 'SUPER ADMIN', color: 'bg-neutral-900 text-white', icon: Shield },
-                    2: { label: 'SUPERVISOR', color: 'bg-neutral-100 text-neutral-700', icon: Store },
-                    3: { label: 'VENDEDOR', color: 'bg-brand-cyan/10 text-brand-cyan', icon: UserIcon },
-                    default: { label: 'USUARIO', color: 'bg-neutral-50 text-neutral-400', icon: UserIcon }
+                    1: { label: 'SUPER ADMIN', color: 'bg-neutral-900 text-white', icon: ShieldSecurity },
+                    2: { label: 'SUPERVISOR', color: 'bg-neutral-100 text-neutral-700', icon: Shop },
+                    3: { label: 'VENDEDOR', color: 'bg-brand-cyan/10 text-brand-cyan', icon: ProfileCircle },
+                    default: { label: 'USUARIO', color: 'bg-neutral-50 text-neutral-400', icon: ProfileCircle }
                 };
                 const config = roles[row.id_rol] || roles.default;
                 return (
@@ -150,7 +150,7 @@ const Usuarios = () => {
                 <div className="bg-neutral-50 p-6 rounded-3xl border border-dashed border-neutral-200">
                     <div className="flex items-center gap-4">
                          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-brand-cyan shadow-sm border border-neutral-100">
-                            <Shield size={20} />
+                            <ShieldSecurity size={20} variant="Bold" />
                          </div>
                          <p className="text-[11px] font-medium text-neutral-400 leading-relaxed uppercase tracking-widest">
                             Los cambios de permisos impactan en tiempo real <br/> sobre la terminal del operador.
@@ -164,7 +164,7 @@ const Usuarios = () => {
     return (
         <GenericABM 
             title="Gestión de Operadores"
-            icon={Users}
+            icon={People}
             service={service}
             columns={columns}
             formFields={[]} 
