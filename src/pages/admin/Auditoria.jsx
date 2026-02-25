@@ -1,15 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, DocumentText, SearchNormal1, FilterSearch, Clock } from 'iconsax-react';
+import { Activity, FileText, Search, Filter, Clock, ShieldAlert } from 'lucide-react';
 import DataTable from '../../components/ui/DataTable';
 import { auditoriaService } from '../../services/auditoriaService';
+import { useAuthStore } from '../../store/authStore';
 
 const Auditoria = () => {
+    const { user, role, sucursalId } = useAuthStore();
+    const isSuperAdmin = user?.id_rol === 1;
     const [transacciones, setTransacciones] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const loadData = async () => {
         setIsLoading(true);
-        const data = await auditoriaService.getAll();
+        let data = await auditoriaService.getAll();
+        
+        // Simular filtrado por comercio si no es Super Admin
+        if (!isSuperAdmin && sucursalId) {
+            data = data.filter(t => t.id_comercio === sucursalId || t.descripcion.includes('Sede') || !t.id_comercio);
+        }
+        
         setTransacciones(data);
         setIsLoading(false);
     };
@@ -28,7 +37,7 @@ const Auditoria = () => {
     };
 
     const columns = [
-        { header: 'ID Log', accessor: 'id', render: (row) => <span className="text-[10px] font-mono opacity-40">{row.id.split('-')[0]}...</span> },
+        { header: 'ID Log', accessor: 'id', render: (row) => <span className="text-[10px] font-mono opacity-40">{String(row.id).split('-')[0]}...</span> },
         { 
             header: 'Operación', 
             accessor: 'tipo',
@@ -69,14 +78,19 @@ const Auditoria = () => {
         <div className="space-y-12 max-w-7xl mx-auto animate-in fade-in duration-700">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-neutral-100 pb-10 gap-6">
                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-neutral-300">REGISTRO DE SEGURIDAD</span>
-                    <h2 className="text-4xl font-bold tracking-tight mt-2 text-neutral-900">
-                        Auditoría Transaccional
+                    <div className="flex items-center gap-3">
+                         <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-neutral-300">REGISTRO DE SEGURIDAD</span>
+                         <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${isSuperAdmin ? 'bg-neutral-900 text-white' : 'bg-amber-500 text-white shadow-lg shadow-amber-500/20'}`}>
+                             {isSuperAdmin ? 'Consola Central' : 'Vista de Sede'}
+                         </div>
+                    </div>
+                    <h2 className="text-4xl font-bold tracking-tight mt-4 text-neutral-900">
+                        Auditoría {isSuperAdmin ? 'Global' : 'Local'}
                     </h2>
                  </div>
                  
-                 <button className="bg-neutral-50 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-900 transition-all px-8 py-4 rounded-2xl text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-3">
-                    <DocumentText size={18} /> Exportar Auditoría (.csv)
+                 <button className="bg-neutral-900 text-white hover:bg-black hover:scale-105 transition-all px-10 py-5 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-4 shadow-xl shadow-neutral-900/10">
+                    <FileText size={20} className="text-brand-cyan" /> Exportar Auditoría (.csv)
                  </button>
             </div>
             

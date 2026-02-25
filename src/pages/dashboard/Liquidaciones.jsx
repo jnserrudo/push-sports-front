@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { WalletCheck, CardPos, Setting2, InfoCircle, TickCircle, Clock, MoneySend } from 'iconsax-react';
+import { Wallet, CreditCard, Settings2, Info, CheckCircle2, Clock, Send } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { sucursalesService } from '../../services/sucursalesService';
 import { liquidacionesService } from '../../services/liquidacionesService';
@@ -7,8 +7,8 @@ import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
 
 const Liquidaciones = () => {
-    const { role, sucursalId } = useAuthStore();
-    const isSuperAdmin = role === 'SUPER_ADMIN';
+    const { role, sucursalId, user } = useAuthStore();
+    const isSuperAdmin = user?.id_rol === 1;
 
     const [sucursales, setSucursales] = useState([]);
     const [historial, setHistorial] = useState([]);
@@ -71,7 +71,7 @@ const Liquidaciones = () => {
     };
 
     const columnsHistorial = [
-        { header: 'ID Liq', accessor: 'id', render: (row) => <span className="text-[10px] font-mono opacity-50">{row.id.split('-')[0]}...</span> },
+        { header: 'ID Liq', accessor: 'id', render: (row) => <span className="text-[10px] font-mono opacity-50">{String(row.id).split('-')[0]}...</span> },
         { 
             header: 'Sede Liquidada', 
             accessor: 'sucursal_nombre',
@@ -115,13 +115,13 @@ const Liquidaciones = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-neutral-100 pb-10 gap-6">
                  <div>
                     <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-neutral-300">ADMINISTRACIÓN FINANCIERA</span>
-                    <h2 className="text-4xl font-bold tracking-tight mt-2 text-neutral-900">
-                        Cierre de Liquidaciones
+                     <h2 className="text-4xl font-bold tracking-tight mt-2 text-neutral-900">
+                        {isSuperAdmin ? 'Cierre de Liquidaciones' : 'Conciliación de Sede'}
                     </h2>
                  </div>
                  
                  <div className="p-4 bg-white border border-neutral-100 rounded-2xl flex items-center gap-4">
-                    <WalletCheck size={24} className="text-brand-cyan" variant="Bold" />
+                    <Wallet size={24} className="text-brand-cyan" />
                     <div className="flex flex-col">
                         <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">Estado de Tesorería</span>
                         <span className="text-[11px] font-bold text-neutral-900 uppercase tracking-widest">Auditado y Verificado</span>
@@ -138,7 +138,7 @@ const Liquidaciones = () => {
                 <>
                     <div className="space-y-6">
                         <div className="flex items-center gap-3">
-                            <MoneySend size={20} className="text-neutral-900" variant="Bold" />
+                            <Send size={20} className="text-neutral-900" />
                             <h3 className="text-xs font-bold uppercase tracking-[0.4em] text-neutral-900">Arqueos Pendientes de Cobro</h3>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -164,7 +164,7 @@ const Liquidaciones = () => {
                                             onClick={() => handleLiquidarClick(suc)}
                                             className="w-full mt-6 bg-neutral-900 text-white py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-2 group"
                                         >
-                                            LIQUIDAR SALDO <TickCircle size={16} className="group-hover:scale-110 transition-transform" />
+                                            LIQUIDAR SALDO <CheckCircle2 size={16} className="group-hover:scale-110 transition-transform" />
                                         </button>
                                     ) : (
                                         <div className="mt-6 pt-4 border-t border-neutral-50 flex items-center justify-center">
@@ -180,7 +180,7 @@ const Liquidaciones = () => {
 
                     <div className="pt-12 space-y-6">
                         <div className="flex items-center gap-3">
-                            <Setting2 size={20} className="text-neutral-900" variant="Bold" />
+                            <Settings2 size={20} className="text-neutral-900" />
                             <h3 className="text-xs font-bold uppercase tracking-[0.4em] text-neutral-900">Historial Consolidado</h3>
                         </div>
                         <div className="card-premium overflow-hidden">
@@ -198,7 +198,7 @@ const Liquidaciones = () => {
             <Modal isOpen={isConfirmOpen} onClose={() => setIsConfirmOpen(false)} title="Autorizar Liquidación">
                 <div className="space-y-8 p-1">
                     <div className="p-6 bg-brand-cyan/5 rounded-[2rem] border border-brand-cyan/10 flex items-start gap-4">
-                        <InfoCircle size={20} className="text-brand-cyan mt-1" />
+                        <Info size={20} className="text-brand-cyan mt-1" />
                         <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 leading-relaxed">
                             Confirme la <span className="text-neutral-900">recepción física o digital</span> del monto detallado. Al autorizar, el saldo de la sucursal volverá a cero y se emitirá un log de auditoría.
                         </p>
@@ -222,7 +222,7 @@ const Liquidaciones = () => {
                             disabled={isProcessing}
                             className="w-full btn-cyan py-5 text-[10px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-3"
                         >
-                            {isProcessing ? 'AUTORIZANDO...' : <><CardPos size={20} variant="Bold" /> CONFIRMAR INGRESO DE CAJA</>}
+                            {isProcessing ? 'AUTORIZANDO...' : <><CreditCard size={20} /> CONFIRMAR INGRESO DE CAJA</>}
                         </button>
                         <button 
                             onClick={() => setIsConfirmOpen(false)}

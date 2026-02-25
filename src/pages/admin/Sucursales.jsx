@@ -1,11 +1,11 @@
 import React from 'react';
-import { Shop } from 'iconsax-react';
+import { Store } from 'lucide-react';
 import GenericABM from '../../components/ui/GenericABM';
 import { sucursalesService as service } from '../../services/sucursalesService';
 
 const Sucursales = () => {
     const columns = [
-        { header: 'ID', accessor: 'id_comercio', render: (row) => <span className="text-[10px] font-mono opacity-50">{row.id_comercio.split('-')[0]}...</span> },
+        { header: 'ID', accessor: 'id_comercio', render: (row) => <span className="text-[10px] font-mono opacity-50">{String(row.id_comercio).split('-')[0]}...</span> },
         { 
             header: 'Nombre del Local', 
             accessor: 'nombre',
@@ -57,7 +57,7 @@ const Sucursales = () => {
     return (
         <GenericABM 
             title="Sedes y Sucursales"
-            icon={Shop}
+            icon={Store}
             service={service}
             columns={columns}
             formFields={formFields}

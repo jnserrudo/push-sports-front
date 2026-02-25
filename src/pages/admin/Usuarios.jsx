@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { People, ShieldSecurity, Shop, ProfileCircle } from 'iconsax-react';
+import { Users, ShieldCheck, Store, UserCircle } from 'lucide-react';
 import GenericABM from '../../components/ui/GenericABM';
 import { usuariosService as service } from '../../services/genericServices';
 import { sucursalesService } from '../../services/sucursalesService';
@@ -12,14 +12,14 @@ const Usuarios = () => {
     }, []);
 
     const columns = [
-        { header: 'ID', accessor: 'id_usuario', render: (row) => <span className="text-[10px] font-mono opacity-50">{row.id_usuario.split('-')[0]}...</span> },
+        { header: 'ID', accessor: 'id_usuario', render: (row) => <span className="text-xs font-black font-mono text-neutral-400">{String(row.id_usuario).split('-')[0]}...</span> },
         { 
             header: 'Operador', 
             accessor: 'nombre',
             render: (row) => (
                 <div className="flex flex-col">
-                    <span className="font-bold text-sm tracking-tight text-neutral-900">{row.nombre} {row.apellido}</span>
-                    <span className="text-[10px] font-mono text-neutral-400 lowercase">{row.email}</span>
+                    <span className="font-black text-xl tracking-tighter text-neutral-900 uppercase">{row.nombre} {row.apellido}</span>
+                    <span className="text-xs font-black text-brand-cyan uppercase tracking-widest">{row.email}</span>
                 </div>
             )
         },
@@ -28,22 +28,22 @@ const Usuarios = () => {
             accessor: 'id_rol',
             render: (row) => {
                 const roles = {
-                    1: { label: 'SUPER ADMIN', color: 'bg-neutral-900 text-white', icon: ShieldSecurity },
-                    2: { label: 'SUPERVISOR', color: 'bg-neutral-100 text-neutral-700', icon: Shop },
-                    3: { label: 'VENDEDOR', color: 'bg-brand-cyan/10 text-brand-cyan', icon: ProfileCircle },
-                    default: { label: 'USUARIO', color: 'bg-neutral-50 text-neutral-400', icon: ProfileCircle }
+                    1: { label: 'ADMIN CENTRAL', color: 'bg-neutral-900 text-white', icon: ShieldCheck },
+                    2: { label: 'GESTOR DE COMERCIO', color: 'bg-brand-cyan/10 text-brand-cyan', icon: Store },
+                    3: { label: 'VENDEDOR POS', color: 'bg-neutral-100 text-neutral-700', icon: UserCircle },
+                    default: { label: 'PERSONAL RECIÉN REGISTRADO', color: 'bg-neutral-50 text-neutral-400', icon: UserCircle }
                 };
                 const config = roles[row.id_rol] || roles.default;
                 return (
-                    <div className={`inline-flex items-center gap-2 px-3 py-1 text-[9px] font-bold uppercase tracking-widest rounded-full border border-neutral-100 ${config.color}`}>
-                        <config.icon size={11} strokeWidth={2.5} />
+                    <div className={`inline-flex items-center gap-3 px-5 py-2 text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl border-4 border-neutral-100 ${config.color}`}>
+                        <config.icon size={16} strokeWidth={3} />
                         {config.label}
                     </div>
                 );
             }
         },
         { 
-            header: 'Sucursal Asignada', 
+            header: 'Gestión Asignada', 
             accessor: 'id_comercio_asignado',
             render: (row) => {
                 if (!row.id_comercio_asignado) return (
@@ -55,8 +55,8 @@ const Usuarios = () => {
                 const suc = sucursales.find(s => s.id_comercio === row.id_comercio_asignado);
                 return (
                     <div className="flex flex-col">
-                        <span className="font-bold text-xs text-neutral-700 uppercase">{suc?.nombre || 'Sede #' + row.id_comercio_asignado.split('-')[0]}</span>
-                        <span className="text-[9px] text-neutral-300 font-bold uppercase tracking-widest">Activo</span>
+                        <span className="font-black text-base text-neutral-900 uppercase tracking-tight">{suc?.nombre || 'Sede #' + String(row.id_comercio_asignado).split('-')[0]}</span>
+                        <span className="text-[11px] font-black text-brand-cyan uppercase tracking-[0.3em]">Conexión Activa</span>
                     </div>
                 );
             }
@@ -66,43 +66,43 @@ const Usuarios = () => {
     const renderForm = (formData, setFormData) => {
         return (
             <div className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                        <label className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 ml-1">Nombre</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div className="space-y-4">
+                        <label className="text-sm font-black uppercase tracking-[0.3em] text-neutral-400 ml-1">Nombre</label>
                         <input 
                             required type="text" 
                             className="input-premium"
-                            placeholder="Ingrese nombre"
+                            placeholder="NOMBRE"
                             value={formData.nombre || ''} 
                             onChange={e => setFormData({...formData, nombre: e.target.value})} 
                         />
                     </div>
-                    <div className="space-y-2">
-                        <label className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 ml-1">Apellido</label>
+                    <div className="space-y-4">
+                        <label className="text-sm font-black uppercase tracking-[0.3em] text-neutral-400 ml-1">Apellido</label>
                         <input 
                             required type="text" 
                             className="input-premium"
-                            placeholder="Ingrese apellido"
+                            placeholder="APELLIDO"
                             value={formData.apellido || ''} 
                             onChange={e => setFormData({...formData, apellido: e.target.value})} 
                         />
                     </div>
                 </div>
 
-                <div className="space-y-2">
-                    <label className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 ml-1">Email Administrativo</label>
+                <div className="space-y-4">
+                    <label className="text-sm font-black uppercase tracking-[0.3em] text-neutral-400 ml-1">Email de Acceso</label>
                     <input 
                         required type="email" 
                         className="input-premium"
-                        placeholder="operador@push.com"
+                        placeholder="OPERADOR@PUSH.COM"
                         value={formData.email || ''} 
                         onChange={e => setFormData({...formData, email: e.target.value})} 
                     />
                 </div>
 
                 {!formData.id_usuario && (
-                    <div className="space-y-2">
-                        <label className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 ml-1">Contraseña Inicial</label>
+                    <div className="space-y-4">
+                        <label className="text-sm font-black uppercase tracking-[0.3em] text-neutral-400 ml-1">Contraseña de Inicio</label>
                         <input 
                             required type="password" 
                             className="input-premium"
@@ -113,31 +113,31 @@ const Usuarios = () => {
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                        <label className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 ml-1">Rol del Sistema</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div className="space-y-4">
+                        <label className="text-sm font-black uppercase tracking-[0.3em] text-neutral-400 ml-1">Nivel de Acceso</label>
                         <select 
                             required 
-                            className="input-premium appearance-none"
+                            className="input-premium appearance-none py-8"
                             value={formData.id_rol || ''} 
                             onChange={e => setFormData({...formData, id_rol: parseInt(e.target.value)})}
                         >
-                            <option value="">Seleccionar Rol...</option>
-                            <option value={1}>SUPER_ADMIN (CONTROL TOTAL)</option>
-                            <option value={2}>SUPERVISOR (GESTIÓN SUCURSAL)</option>
-                            <option value={3}>VENDEDOR (PUNTO DE VENTA)</option>
-                            <option value={4}>USUARIO (SOLO LECTURA)</option>
+                            <option value="">SELECCIONAR ROL...</option>
+                            <option value={1}>ADMINISTRADOR CENTRAL (TOTAL)</option>
+                            <option value={2}>GESTOR DE COMERCIO (SUPERVISIÓN)</option>
+                            <option value={3}>VENDEDOR STAFF (OPERATIVO)</option>
+                            <option value={4}>LOGÍSTICA / OTROS (LECTURA)</option>
                         </select>
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 ml-1">Sucursal Asignada</label>
+                    <div className="space-y-4">
+                        <label className="text-sm font-black uppercase tracking-[0.3em] text-neutral-400 ml-1">Sede de Operación</label>
                         <select 
-                            className="input-premium appearance-none"
+                            className="input-premium appearance-none py-8"
                             value={formData.id_comercio_asignado || ''} 
                             onChange={e => setFormData({...formData, id_comercio_asignado: e.target.value === '' ? null : e.target.value})}
                         >
-                            <option value="">SIN ASIGNAR (ACCESO RESTRINGIDO)</option>
+                            <option value="">GLOBAL (TODAS)</option>
                             {sucursales.map(s => (
                                 <option key={s.id_comercio} value={s.id_comercio}>
                                     {s.nombre}
@@ -150,7 +150,7 @@ const Usuarios = () => {
                 <div className="bg-neutral-50 p-6 rounded-3xl border border-dashed border-neutral-200">
                     <div className="flex items-center gap-4">
                          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-brand-cyan shadow-sm border border-neutral-100">
-                            <ShieldSecurity size={20} variant="Bold" />
+                            <ShieldCheck size={20} />
                          </div>
                          <p className="text-[11px] font-medium text-neutral-400 leading-relaxed uppercase tracking-widest">
                             Los cambios de permisos impactan en tiempo real <br/> sobre la terminal del operador.
@@ -164,7 +164,7 @@ const Usuarios = () => {
     return (
         <GenericABM 
             title="Gestión de Operadores"
-            icon={People}
+            icon={Users}
             service={service}
             columns={columns}
             formFields={[]} 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { PercentageSquare, CalendarTick, ArchiveBook, EmptyWalletTick } from 'iconsax-react';
+import { Percent, CalendarCheck2, Library, Ticket } from 'lucide-react';
 import GenericABM from '../../components/ui/GenericABM';
 import { ofertasService as service } from '../../services/genericServices';
 
@@ -16,7 +16,7 @@ const Ofertas = () => {
             accessor: 'descuento_porcentaje',
             render: (row) => (
                 <div className="flex items-center gap-2">
-                    <PercentageSquare size={16} className="text-brand-cyan" variant="Bold" />
+                    <Percent size={16} className="text-brand-cyan" />
                     <span className="font-bold text-neutral-900">{row.descuento_porcentaje}% OFF</span>
                 </div>
             )
@@ -25,7 +25,7 @@ const Ofertas = () => {
             header: 'Vigencia', 
             render: (row) => (
                 <div className="flex items-center gap-2 text-neutral-400">
-                    <CalendarTick size={16} />
+                    <CalendarCheck2 size={16} />
                     <span className="text-[10px] font-bold uppercase tracking-widest">{row.fecha_fin ? `Hasta ${new Date(row.fecha_fin).toLocaleDateString()}` : 'Indefinida'}</span>
                 </div>
             )
@@ -51,7 +51,7 @@ const Ofertas = () => {
     return (
         <GenericABM 
             title="Ofertas Relámpago"
-            icon={EmptyWalletTick}
+            icon={Ticket}
             service={service}
             columns={columns}
             formFields={formFields}

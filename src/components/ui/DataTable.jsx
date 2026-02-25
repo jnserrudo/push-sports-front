@@ -1,22 +1,23 @@
 import React, { useState } from 'react';
+import { Activity } from 'lucide-react';
 import { 
-  SearchNormal1, 
-  ArrowDown, 
-  ArrowUp, 
-  ArrowSwapHorizontal, 
-  ArrowLeft2, 
-  ArrowRight2,
-  FilterSearch,
-  CloseCircle,
-  Add
-} from 'iconsax-react';
+  Search, 
+  ChevronDown, 
+  ChevronUp, 
+  ChevronsUpDown, 
+  ChevronLeft, 
+  ChevronRight,
+  Filter,
+  XCircle,
+  Plus
+} from 'lucide-react';
 
 const DataTable = ({ 
     columns, 
     data, 
-    searchPlaceholder = "Buscar registros...",
+    searchPlaceholder = "BUSCAR REGISTROS...",
     onAdd,
-    addLabel = "Nuevo Registro",
+    addLabel = "NUEVO REGISTRO",
     onEdit,
     onDelete,
     onView
@@ -63,22 +64,22 @@ const DataTable = ({
 
     const renderSortIcon = (col) => {
         if (!col.accessor) return null;
-        if (sortConfig.key !== col.accessor) return <ArrowSwapHorizontal size={14} className="ml-2 opacity-20" />;
+        if (sortConfig.key !== col.accessor) return <ChevronsUpDown size={14} className="ml-3 opacity-20" />;
         return sortConfig.direction === 'asc' 
-            ? <ArrowUp size={14} className="ml-2 text-brand-cyan" variant="Bold" /> 
-            : <ArrowDown size={14} className="ml-2 text-brand-cyan" variant="Bold" />;
+            ? <ChevronUp size={14} className="ml-3 text-brand-cyan" /> 
+            : <ChevronDown size={14} className="ml-3 text-brand-cyan" />;
     };
 
     return (
-        <div className="bg-white rounded-[2rem] p-8 shadow-premium border border-neutral-100 relative overflow-hidden">
+        <div className="bg-white rounded-[3rem] p-10 shadow-premium border border-neutral-100 relative overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-700">
             
-            {/* Toolbar Principal */}
-            <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-end gap-8 mb-10">
-                <div className="relative flex-1 max-w-xl group">
-                    <label className="text-[10px] font-bold uppercase tracking-[0.3em] text-neutral-300 ml-4 mb-2.5 block">Explorar Base de Datos</label>
+            {/* Toolbar Principal: Pillar 3 Spatial Composition */}
+            <div className="flex flex-col xl:flex-row justify-between items-stretch xl:items-end gap-12 mb-16">
+                <div className="relative flex-1 max-w-2xl group">
+                    <label className="text-sm font-black uppercase tracking-[0.5em] text-neutral-400 ml-8 mb-6 block text-label-caps">Búsqueda Avanzada</label>
                     <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-neutral-300 group-focus-within:text-brand-cyan transition-colors">
-                            <SearchNormal1 size={18} />
+                        <div className="absolute inset-y-0 left-0 pl-10 flex items-center pointer-events-none text-neutral-300 group-focus-within:text-brand-cyan transition-colors">
+                            <Search size={32} />
                         </div>
                         <input 
                             type="text" 
@@ -88,14 +89,14 @@ const DataTable = ({
                                 setSearchTerm(e.target.value);
                                 setCurrentPage(1);
                             }}
-                            className="input-premium pl-12 pr-10 py-3.5 text-xs shadow-sm"
+                            className="input-premium pl-24 pr-14 py-10 text-base uppercase tracking-widest h-24"
                         />
                         {searchTerm && (
                             <button 
                                 onClick={() => { setSearchTerm(''); setCurrentPage(1); }}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-neutral-300 hover:text-neutral-900 transition-colors"
+                                className="absolute right-8 top-1/2 -translate-y-1/2 p-3 text-neutral-300 hover:text-red-500 transition-all"
                             >
-                                <CloseCircle size={18} variant="Bold" />
+                                <XCircle size={32} />
                             </button>
                         )}
                     </div>
@@ -104,106 +105,121 @@ const DataTable = ({
                 {onAdd && (
                     <button 
                         onClick={onAdd}
-                        className="btn-cyan py-3.5 px-8 flex items-center gap-2 group h-12"
+                        className="btn-cyan h-24 px-16 flex items-center gap-6 group shadow-glow"
                     >
-                        <Add size={18} variant="Bold" className="group-hover:rotate-90 transition-transform" />
-                        <span className="font-bold tracking-widest text-[11px] uppercase">{addLabel}</span>
+                        <Plus size={32} className="group-hover:rotate-90 transition-transform" />
+                        <span className="font-black tracking-[0.3em] text-sm uppercase">{addLabel}</span>
                     </button>
                 )}
             </div>
 
-            {/* Table Area */}
-            <div className="rounded-2xl border border-neutral-100 overflow-hidden bg-white shadow-sm">
-                <table className="w-full text-left border-collapse">
-                    <thead>
-                        <tr className="bg-neutral-50/50 text-neutral-400 uppercase text-[9px] tracking-[0.2em] font-bold border-b border-neutral-100">
-                            {columns.map((col, idx) => (
-                                <th 
-                                    key={idx} 
-                                    className={`p-6 ${col.accessor ? 'cursor-pointer hover:bg-neutral-100 transition-colors' : ''}`}
-                                    onClick={() => col.accessor && handleSort(col.accessor)}
-                                >
-                                    <div className="flex items-center">
-                                        {col.header}
-                                        {renderSortIcon(col)}
-                                    </div>
-                                </th>
-                            ))}
-                            {(onEdit || onDelete || onView) && (
-                                <th className="p-6 text-right opacity-30">Acciones</th>
-                            )}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {paginatedData.length === 0 ? (
-                            <tr>
-                                <td colSpan={columns.length + 1} className="p-24 text-center">
-                                    <div className="flex flex-col items-center gap-4 text-neutral-200">
-                                        <FilterSearch size={64} variant="Bulk" />
-                                        <p className="font-bold uppercase tracking-widest text-[10px]">Sin resultados encontrados</p>
-                                    </div>
-                                </td>
+            {/* Table Area: Pillar 4 Layering */}
+            <div className="rounded-[2.5rem] border border-neutral-100 overflow-hidden bg-white shadow-xl relative z-10">
+                <div className="overflow-x-auto scrollbar-hide">
+                    <table className="w-full text-left border-collapse min-w-[800px]">
+                        <thead>
+                            <tr className="bg-neutral-50 text-neutral-900 uppercase text-xs tracking-[0.4em] font-black border-b border-neutral-100">
+                                {columns.map((col, idx) => (
+                                    <th 
+                                        key={idx} 
+                                        className={`p-10 ${col.accessor ? 'cursor-pointer hover:bg-brand-cyan/5 transition-colors' : ''}`}
+                                        onClick={() => col.accessor && handleSort(col.accessor)}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            {col.header}
+                                            {renderSortIcon(col)}
+                                        </div>
+                                    </th>
+                                ))}
+                                {(onEdit || onDelete || onView) && (
+                                    <th className="p-10 text-right text-neutral-500 font-black tracking-[0.5em] uppercase">Control</th>
+                                )}
                             </tr>
-                        ) : (
-                            paginatedData.map((row, rowIdx) => (
-                                <tr key={rowIdx} className="border-b border-neutral-50 last:border-0 hover:bg-neutral-50/50 transition-all font-medium">
-                                    {columns.map((col, colIdx) => (
-                                        <td key={colIdx} className="p-6 text-xs text-neutral-600">
-                                            {col.render ? col.render(row) : <span className="uppercase tracking-tight">{row[col.accessor]}</span>}
-                                        </td>
-                                    ))}
-                                    {(onEdit || onDelete || onView) && (
-                                        <td className="p-6 text-right space-x-1 whitespace-nowrap">
-                                            {onView && (
-                                                <button onClick={() => onView(row)} className="p-2 text-neutral-400 hover:text-neutral-900 hover:bg-white rounded-lg transition-all border border-transparent hover:border-neutral-100 hover:shadow-sm">
-                                                    Ver
-                                                </button>
-                                            )}
-                                            {onEdit && (
-                                                <button onClick={() => onEdit(row)} className="px-4 py-2 text-[10px] uppercase font-bold tracking-widest text-neutral-600 bg-white border border-neutral-200 rounded-lg hover:border-brand-cyan hover:text-brand-cyan transition-all shadow-sm">
-                                                    Editar
-                                                </button>
-                                            )}
-                                            {onDelete && (
-                                                <button onClick={() => onDelete(row)} className="px-4 py-2 text-[10px] uppercase font-bold tracking-widest text-white bg-neutral-900 border border-neutral-900 rounded-lg hover:bg-red-500 hover:border-red-500 transition-all shadow-sm">
-                                                    Eliminar
-                                                </button>
-                                            )}
-                                        </td>
-                                    )}
+                        </thead>
+                        <tbody className="divide-y divide-neutral-50 text-neutral-900">
+                            {paginatedData.length === 0 ? (
+                                <tr>
+                                    <td colSpan={columns.length + 1} className="p-24 text-center">
+                                        <div className="flex flex-col items-center gap-6 text-neutral-200 italic">
+                                            <Filter size={60} className="opacity-20" />
+                                            <p className="font-extrabold uppercase tracking-[0.3em] text-xs text-neutral-400">No se detectaron registros activos</p>
+                                        </div>
+                                    </td>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                            ) : (
+                                paginatedData.map((row, rowIdx) => (
+                                    <tr key={rowIdx} className="group hover:bg-brand-cyan/[0.05] transition-all font-black border-b-4 border-neutral-50 last:border-0">
+                                        {columns.map((col, colIdx) => (
+                                            <td key={colIdx} className="p-10 text-sm uppercase tracking-tighter text-neutral-900 font-black">
+                                                {col.render ? col.render(row) : <span className="tracking-widest">{row[col.accessor]}</span>}
+                                            </td>
+                                        ))}
+                                        {(onEdit || onDelete || onView) && (
+                                            <td className="p-10 text-right space-x-4 whitespace-nowrap">
+                                                {onView && (
+                                                    <button onClick={() => onView(row)} className="px-10 py-4 text-[10px] uppercase font-black tracking-widest text-neutral-900 bg-white border-4 border-neutral-900 rounded-2xl hover:bg-neutral-900 hover:text-white transition-all shadow-lg">
+                                                        Detalle
+                                                    </button>
+                                                )}
+                                                 {onEdit && (
+                                                     <button onClick={() => onEdit(row)} className="px-10 py-4 text-[10px] uppercase font-black tracking-widest text-brand-cyan bg-white border-4 border-brand-cyan rounded-2xl hover:bg-brand-cyan hover:text-black transition-all shadow-lg">
+                                                         Editar
+                                                     </button>
+                                                 )}
+                                                 {onDelete && (
+                                                     <button onClick={() => onDelete(row)} className="px-10 py-4 text-[10px] uppercase font-black tracking-widest text-red-600 bg-white border-4 border-red-600 rounded-2xl hover:bg-red-600 hover:text-white transition-all shadow-lg">
+                                                         Eliminar
+                                                     </button>
+                                                 )}
+                                            </td>
+                                        )}
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
-            {/* Pagination */}
-            <div className="mt-10 flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="bg-neutral-50 px-5 py-2 rounded-full border border-neutral-100 font-bold uppercase text-[9px] tracking-widest text-neutral-400">
-                    Total: <span className="text-neutral-900">{processedData.length} Registros</span>
+            {/* Pagination: Pillar 3 Spatial */}
+            <div className="mt-16 flex flex-col md:flex-row items-center justify-between gap-12">
+                <div className="flex items-center gap-6">
+                     <div className="p-6 bg-neutral-900 border-2 border-neutral-900 rounded-[1.5rem] shadow-xl">
+                          <Activity size={32} className="text-brand-cyan" />
+                     </div>
+                    <div className="flex flex-col">
+                        <span className="text-xs font-black text-neutral-400 uppercase tracking-[0.4em]">SINCRONIZACIÓN CENTRAL</span>
+                        <span className="font-black text-base uppercase tracking-widest text-neutral-900 mt-2">
+                            {processedData.length} REGISTROS ACTIVOS
+                        </span>
+                    </div>
                 </div>
                 
                 {totalPages > 1 && (
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-10">
                         <button 
                             onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                             disabled={currentPage === 1}
-                            className="p-3 bg-white border border-neutral-200 rounded-2xl text-neutral-400 hover:text-neutral-900 hover:border-brand-cyan disabled:opacity-30 disabled:pointer-events-none transition-all shadow-sm"
+                            className="w-20 h-20 bg-white border-4 border-neutral-100 rounded-[2rem] text-neutral-300 hover:text-black hover:border-black disabled:opacity-20 disabled:pointer-events-none transition-all flex items-center justify-center shadow-xl"
                         >
-                            <ArrowLeft2 size={20} variant="Bold" />
+                            <ChevronLeft size={32} />
                         </button>
                         
-                        <div className="px-6 py-3 font-bold text-xs tabular-nums text-neutral-400">
-                            Página <span className="text-neutral-900">{currentPage}</span> / {totalPages}
+                        <div className="flex flex-col items-center">
+                            <span className="text-[11px] font-black uppercase tracking-[0.5em] text-neutral-400 mb-2">SECTOR</span>
+                            <div className="font-black tracking-tighter text-4xl">
+                                <span className="text-brand-cyan">{currentPage.toString().padStart(2, '0')}</span> 
+                                <span className="mx-4 text-neutral-100">/</span> 
+                                {totalPages.toString().padStart(2, '0')}
+                            </div>
                         </div>
 
                         <button 
                             onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                             disabled={currentPage === totalPages}
-                            className="p-3 bg-white border border-neutral-200 rounded-2xl text-neutral-400 hover:text-neutral-900 hover:border-brand-cyan disabled:opacity-30 disabled:pointer-events-none transition-all shadow-sm"
+                            className="w-20 h-20 bg-white border-4 border-neutral-100 rounded-[2rem] text-neutral-300 hover:text-black hover:border-black disabled:opacity-20 disabled:pointer-events-none transition-all flex items-center justify-center shadow-xl"
                         >
-                            <ArrowRight2 size={20} variant="Bold" />
+                            <ChevronRight size={32} />
                         </button>
                     </div>
                 )}

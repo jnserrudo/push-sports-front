@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TruckFast, Box, House, AddCircle, InfoCircle, DirectRight } from 'iconsax-react';
+import { Truck, Box, Home, PlusCircle, Info, ChevronRight } from 'lucide-react';
 import DataTable from '../../components/ui/DataTable';
 import Modal from '../../components/ui/Modal';
 import { enviosService } from '../../services/enviosService';
@@ -60,7 +60,7 @@ const Envios = () => {
     };
 
     const columns = [
-        { header: 'ID Envío', accessor: 'id', render: (row) => <span className="text-[10px] font-mono opacity-50">{row.id.split('-')[0]}...</span> },
+        { header: 'ID Envío', accessor: 'id', render: (row) => <span className="text-[10px] font-mono opacity-50">{String(row.id).split('-')[0]}...</span> },
         { 
             header: 'Fecha de Operación', 
             accessor: 'fecha',
@@ -111,7 +111,7 @@ const Envios = () => {
                     onClick={handleAdd}
                     className="btn-cyan px-8 py-4 text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-3 shadow-xl shadow-brand-cyan/20"
                  >
-                    <AddCircle size={18} variant="Bold" /> Registrar Envío
+                    <PlusCircle size={18} /> Registrar Envío
                  </button>
             </div>
             
@@ -138,7 +138,7 @@ const Envios = () => {
             >
                 <form onSubmit={handleSubmit} className="space-y-8 p-1">
                     <div className="p-6 bg-brand-cyan/5 rounded-[2rem] border border-brand-cyan/10 flex items-start gap-4">
-                        <InfoCircle size={20} className="text-brand-cyan mt-1" />
+                        <Info size={20} className="text-brand-cyan mt-1" />
                         <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 leading-relaxed">
                             Al confirmar, el stock se incrementará automáticamente en la <span className="text-neutral-900">Sede Destino</span>. Esta operación es irreversible y queda auditada.
                         </p>
@@ -158,7 +158,7 @@ const Envios = () => {
                                     {sucursales.map(s => <option key={s.id} value={s.id}>{s.nombre}</option>)}
                                 </select>
                                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-300">
-                                    <House size={16} />
+                                    <Home size={16} />
                                 </div>
                             </div>
                         </div>
@@ -197,7 +197,7 @@ const Envios = () => {
                         type="submit"
                         className="w-full btn-cyan py-5 text-[10px] font-bold uppercase tracking-[0.2em] flex justify-center items-center gap-3"
                     >
-                        <TruckFast size={20} variant="Bold" /> PROCESAR ORDEN DE ENVÍO
+                        <Truck size={20} /> PROCESAR ORDEN DE ENVÍO
                     </button>
                     
                     <button 

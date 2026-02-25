@@ -1,128 +1,114 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { ShieldSecurity, ArrowRight, Sms, Lock } from 'iconsax-react';
+import { authService } from '../services/authService';
+import { ArrowRight, Lock, Mail, ShieldCheck, User } from 'lucide-react';
 
 const Login = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [loading, setLoading] = useState(false);
+    const [credentials, setCredentials] = useState({ email: '', password: '' });
     const { login } = useAuthStore();
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+
+    const handleChange = (e) => {
+        setCredentials({ ...credentials, [e.target.name]: e.target.value });
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         try {
-            await login(email, password);
+            // Pasamos 'email' como el identificador (puede ser email o usuario)
+            const data = await authService.login(credentials.email, credentials.password);
+            login(data.user, data.token);
             navigate('/dashboard');
         } catch (error) {
-            alert('Error al iniciar sesión: ' + (error.response?.data?.message || error.message));
+            alert('Error al iniciar sesión: ' + (error.response?.data?.message || 'Credenciales inválidas'));
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-6 relative font-sans overflow-hidden">
-            {/* Background decorative elements */}
-            <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-brand-cyan/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
-            <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-neutral-200/20 blur-3xl rounded-full translate-y-1/2 -translate-x-1/2"></div>
+        <div className="min-h-screen bg-[#FDFDFD] flex items-center justify-center p-0 md:p-8 relative font-sans overflow-hidden">
+            {/* Soft Ambient Background */}
+            <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-brand-cyan/5 to-transparent pointer-events-none"></div>
             
-            <div className="max-w-4xl w-full flex flex-col md:flex-row bg-white rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden border border-neutral-100">
+            <div className="max-w-6xl w-full flex flex-col md:flex-row bg-white min-h-[600px] md:h-auto md:min-h-[70vh] md:rounded-[2.5rem] shadow-[0_40px_100px_rgba(0,0,0,0.08)] relative z-10 border border-neutral-100/50">
                 
-                {/* Branding Panel */}
-                <div className="hidden md:flex md:w-5/12 bg-neutral-900 relative flex-col justify-between p-12 overflow-hidden">
-                    <div className="relative z-10">
-                        <div className="w-14 h-14 bg-brand-cyan text-neutral-900 flex items-center justify-center font-bold text-2xl rounded-2xl shadow-xl mb-10">
-                            P
+                {/* CLEAN BRAND CENTERED LOGIN */}
+                <div className="w-full max-w-lg mx-auto p-8 md:p-14 bg-white flex flex-col justify-center animate-in fade-in zoom-in-95 duration-1000">
+                    <div className="mb-14 text-center">
+                        <div className="inline-block w-24 h-24 bg-white border-2 border-neutral-100 p-4 rounded-[2.5rem] shadow-sm mb-10 mx-auto transition-transform hover:scale-110 duration-500">
+                            <img src="/icono.jpeg" alt="PushSport Salta" className="w-full h-full object-contain invert" />
                         </div>
-                        <h2 className="text-4xl font-bold text-white leading-tight tracking-tight mb-6">
-                            Gestión <br />
-                            <span className="text-brand-cyan">Empresarial.</span>
-                        </h2>
-                        <p className="text-neutral-400 font-medium text-sm leading-relaxed max-w-[200px]">
-                            Acceda al ecosistema centralizado de inventario y facturación de Push Sport.
+                        <h1 className="text-neutral-900 text-4xl md:text-5xl font-black tracking-tighter uppercase mb-4 leading-none">
+                            PushSport.<br/>
+                            <span className="text-brand-cyan">Salta</span>
+                        </h1>
+                        <p className="text-neutral-400 font-black text-[10px] uppercase tracking-[0.5em] mt-6">
+                            SISTEMA DE GESTIÓN CENTRAL
                         </p>
                     </div>
-                    
-                    <div className="relative z-10 pt-10 border-t border-white/10">
-                        <div className="flex items-center gap-3 text-white/50 mb-4">
-                            <ShieldSecurity size={20} variant="Bold" className="text-brand-cyan" />
-                            <span className="text-[10px] uppercase font-bold tracking-[0.3em]">Conexión Encriptada</span>
-                        </div>
-                    </div>
 
-                    {/* Subtle Background Image Mask */}
-                    <div className="absolute inset-0 opacity-10 pointer-events-none">
-                        <img src="/segunda.jpeg" alt="Push" className="w-full h-full object-cover grayscale" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-neutral-900/60 to-transparent"></div>
-                    </div>
-                </div>
-
-                {/* Form Side */}
-                <div className="w-full md:w-7/12 p-10 md:p-20 bg-white flex flex-col justify-center animate-in slide-in-from-right-10 duration-700">
-                    <div className="mb-12">
-                         <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-neutral-300 block mb-2">BIENVENIDO</span>
-                         <h1 className="text-neutral-900 font-bold text-4xl tracking-tight mb-4">
-                             Acceso Staff.
-                         </h1>
-                         <p className="text-neutral-400 font-medium">Ingrese sus credenciales corporativas.</p>
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="space-y-2">
-                            <label className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 ml-1">Email Registrado</label>
+                    <form onSubmit={handleSubmit} className="space-y-8">
+                        <div className="space-y-3">
+                            <label className="text-xs font-black uppercase tracking-[0.3em] text-neutral-400 ml-1">Email o Usuario</label>
                             <div className="relative group">
-                                <Sms className="absolute left-5 top-1/2 -translate-y-1/2 text-neutral-300 group-focus-within:text-brand-cyan transition-colors" size={20} />
+                                <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-neutral-300 group-focus-within:text-brand-cyan transition-colors" size={20} />
                                 <input 
-                                    type="email" 
-                                    required 
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="input-premium pl-14 h-14"
-                                    placeholder="usuario@pushsport.com"
+                                    required name="email" type="text"
+                                    className="w-full pl-14 pr-6 py-4 bg-neutral-50 border-2 border-transparent rounded-2xl text-lg font-bold text-neutral-900 placeholder:text-neutral-300 focus:outline-none focus:border-brand-cyan/20 focus:bg-white transition-all shadow-sm"
+                                    placeholder="USUARIO"
+                                    value={credentials.email} onChange={handleChange}
                                 />
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-center px-1">
-                                <label className="text-[11px] font-bold uppercase tracking-widest text-neutral-400">Clave de Acceso</label>
-                                <button type="button" className="text-[10px] font-bold text-neutral-300 hover:text-brand-cyan transition-colors">¿Olvidó su clave?</button>
-                            </div>
+                        <div className="space-y-3">
+                             <label className="text-xs font-black uppercase tracking-[0.3em] text-neutral-400 ml-1">Contraseña</label>
                             <div className="relative group">
-                                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-neutral-300 group-focus-within:text-brand-cyan transition-colors" size={20} />
+                                <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-neutral-300 group-focus-within:text-brand-cyan transition-colors" size={20} />
                                 <input 
-                                    type="password" 
-                                    required 
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="input-premium pl-14 h-14"
+                                    required name="password" type="password"
+                                    className="w-full pl-14 pr-6 py-4 bg-neutral-50 border-2 border-transparent rounded-2xl text-lg font-bold text-neutral-900 placeholder:text-neutral-300 focus:outline-none focus:border-brand-cyan/20 focus:bg-white transition-all shadow-sm"
                                     placeholder="••••••••"
+                                    value={credentials.password} onChange={handleChange}
                                 />
+                            </div>
+                            <div className="flex justify-end pr-2 pt-1">
+                                <a href="#" className="text-xs font-black text-brand-cyan uppercase tracking-widest hover:underline decoration-2 underline-offset-8">¿Olvidaste tu contraseña?</a>
                             </div>
                         </div>
 
-                        <button 
-                            type="submit" 
-                            disabled={loading}
-                            className="w-full btn-premium flex items-center justify-center gap-3 group mt-6 h-14"
-                        >
-                            {loading ? 'AUTORIZANDO...' : 'ENTRAR AL PANEL'}
-                            {!loading && <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />}
-                        </button>
+                        <div className="flex flex-col gap-6 pt-10">
+                            <button 
+                                type="submit" 
+                                disabled={loading}
+                                className={`w-full h-20 flex items-center justify-center gap-6 group transition-all rounded-[1.5rem] text-sm font-black uppercase tracking-[0.2em] shadow-lg ${
+                                    loading 
+                                    ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed' 
+                                    : 'bg-brand-cyan text-white hover:brightness-110 hover:shadow-cyan-500/20 active:scale-[0.98]'
+                                }`}
+                            >
+                                {loading ? 'VERIFICANDO...' : 'ENTRAR AL SISTEMA'}
+                                {!loading && <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />}
+                            </button>
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                                <Link to="/" className="text-xs font-black uppercase tracking-widest text-neutral-300 hover:text-black transition-colors underline decoration-2 underline-offset-8">Volver al Sitio</Link>
+                                <div className="hidden sm:block w-1 h-1 rounded-full bg-neutral-200"></div>
+                                <Link to="/register" className="h-14 px-10 flex items-center justify-center border-2 border-brand-cyan text-brand-cyan hover:bg-brand-cyan hover:text-white transition-all rounded-2xl text-[10px] font-black uppercase tracking-widest">
+                                    Solicitar Acceso
+                                </Link>
+                            </div>
+                        </div>
                     </form>
-
-                    <div className="mt-12 text-center pt-8 border-t border-neutral-50">
-                        <p className="text-sm text-neutral-400 font-medium mb-4">¿No posee una cuenta?</p>
-                        <Link to="/register" className="text-sm font-bold text-neutral-900 hover:text-brand-cyan transition-colors underline decoration-brand-cyan/20 decoration-4 underline-offset-8">Solicitar registro de vendedor</Link>
-                    </div>
                 </div>
             </div>
-            
-            <div className="absolute bottom-10 text-[10px] font-bold uppercase tracking-[0.5em] text-neutral-300">
-                Push Sport Salta &middot; Terminal de Control &copy; 2026
+
+            {/* Subtle Watermark */}
+            <div className="absolute bottom-10 right-10 opacity-[0.02] pointer-events-none select-none">
+                <span className="text-[120px] font-bold tracking-tighter text-neutral-100 uppercase">Push</span>
             </div>
         </div>
     );

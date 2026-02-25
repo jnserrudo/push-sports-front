@@ -1,16 +1,14 @@
 import api from '../api/api';
 
 export const authService = {
-  login: async (email, password) => {
+  login: async (identifier, password) => {
     try {
-      // Intentamos con /login si /auth/login da 404, pero por ahora mantenemos el estándar
-      // que el usuario reporte si su ruta es /login o /users/login
-      const response = await api.post('/login', { email, password });
+      // Usamos 'identifier' para soportar tanto email como nombre de usuario
+      const response = await api.post('/login', { identifier, password });
       return response.data;
     } catch (error) {
       if (error.response && error.response.status === 404) {
-        // Fallback or retry with /auth/login if both are common
-        const retry = await api.post('/auth/login', { email, password });
+        const retry = await api.post('/auth/login', { identifier, password });
         return retry.data;
       }
       throw error;

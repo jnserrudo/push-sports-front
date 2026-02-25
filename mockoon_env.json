@@ -203,11 +203,25 @@
       ]
     },
     {
+      "uuid": "ofertas-route",
+      "type": "http",
+      "method": "get",
+      "endpoint": "ofertas",
+      "responses": [
+        {
+          "uuid": "ofertas-list",
+          "body": "[\n  { \"id\": 1, \"nombre\": \"2x1 Proteína\", \"descuento_porcentaje\": 50, \"fecha_inicio\": \"2024-01-01\", \"fecha_fin\": \"2024-12-31\", \"activo\": true },\n  { \"id\": 2, \"nombre\": \"Outlet Creatina\", \"descuento_porcentaje\": 20, \"fecha_inicio\": \"2024-01-01\", \"fecha_fin\": null, \"activo\": true }\n]",
+          "latency": 200,
+          "statusCode": 200
+        }
+      ]
+    },
+    {
       "uuid": "dummy-routes-post-put-delete",
       "type": "http",
       "documentation": "Catch all for writes so frontend UI responds properly when trying to add/edit/delete entity",
       "method": "all",
-      "endpoint": "*(productos|sucursales|categorias|marcas|usuarios|descuentos|proveedores)*",
+      "endpoint": "*(productos|sucursales|categorias|marcas|usuarios|descuentos|proveedores|ofertas)*",
       "responses": [
         {
           "uuid": "dummy-success",
@@ -215,14 +229,14 @@
           "latency": 300,
           "statusCode": 200,
           "rules": [
-             {
+            {
               "target": "request",
               "modifier": "method",
               "value": "POST,PUT,DELETE",
               "invert": false,
               "operator": "regex"
-             }
-           ]
+            }
+          ]
         }
       ]
     }
@@ -237,6 +251,7 @@
     { "type": "route", "uuid": "descuentos-route" },
     { "type": "route", "uuid": "pos-inventory-route" },
     { "type": "route", "uuid": "proveedores-route" },
+    { "type": "route", "uuid": "ofertas-route" },
     { "type": "route", "uuid": "dummy-routes-post-put-delete" }
   ]
 }
