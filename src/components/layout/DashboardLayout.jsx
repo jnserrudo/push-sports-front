@@ -13,7 +13,8 @@ import {
   Menu as MenuIcon,
   Bell,
   User as UserIcon,
-  ChevronLeft
+  ChevronLeft,
+  X
 } from 'lucide-react';
 import { useNavigate, useLocation, Link, Outlet } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';

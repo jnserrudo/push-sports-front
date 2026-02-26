@@ -4,7 +4,7 @@ import {
   Users, Box, TrendingUp, Activity, Zap, BarChart3,
   ExternalLink, ArrowRight, Monitor, Store, ShieldCheck,
   Package, Truck, Tag, Ticket, AlertTriangle, CheckCircle2,
-  ChevronRight, RefreshCw, CircleDollarSign, MapPin, Clock
+  ChevronRight, RefreshCw, CircleDollarSign, MapPin, Clock, Wallet
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { sucursalesService } from '../../services/sucursalesService';
