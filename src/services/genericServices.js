@@ -24,11 +24,18 @@ const createApiService = (endpointName) => ({
     }
 });
 
-export const categoriasService = createApiService('categorias');
-export const marcasService = createApiService('marcas');
+// Catálogos: anidados bajo /catalogos en el backend
+export const categoriasService = createApiService('catalogos/categorias');
+export const marcasService = createApiService('catalogos/marcas');
+
+// Entidades directas
 export const usuariosService = createApiService('usuarios');
-export const descuentosService = createApiService('descuentos');
 export const proveedoresService = createApiService('proveedores');
+
+// Entidades con endpoints propios en el backend
+export const descuentosService = createApiService('descuentos');
 export const combosService = createApiService('combos');
 export const ofertasService = createApiService('ofertas');
-export const sucursalesService = createApiService('sucursales');
+
+// Re-export sucursales apuntando a comercios
+export const sucursalesGenericService = createApiService('comercios');

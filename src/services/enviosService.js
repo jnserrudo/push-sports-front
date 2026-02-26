@@ -1,39 +1,33 @@
-// src/services/enviosService.js
-// Mock data de envíos y su lógica
-let mockEnvios = [
-    { id: 1, sucursal_id: 1, sucursal_nombre: "Sede Centro", producto_id: 1, producto_nombre: "Whey Protein 1kg Vainilla", cantidad: 10, fecha: "2026-02-22T08:00:00Z" }
-];
+import api from '../api/api';
 
 export const enviosService = {
+    // Obtener todos los movimientos de stock (que son los "envíos" reales)
     getAll: async () => {
-        return new Promise(resolve => {
-            setTimeout(() => {
-                resolve([...mockEnvios]);
-            }, 500);
-        });
+        const response = await api.get('/movimientos');
+        // Mapear los datos del backend al formato que espera el frontend
+        return (response.data || []).map(mov => ({
+            id: mov.id_movimiento,
+            sucursal_id: mov.id_comercio,
+            sucursal_nombre: mov.comercio?.nombre || 'N/A',
+            producto_id: mov.id_producto,
+            producto_nombre: mov.producto?.nombre || 'N/A',
+            cantidad: Math.abs(mov.cantidad_cambio),
+            fecha: mov.fecha_hora,
+            tipo: mov.tipo_movimiento?.nombre_movimiento || 'MOVIMIENTO',
+            usuario: mov.usuario?.nombre || 'Sistema'
+        }));
     },
 
-    crearEnvio: async (sucursalId, productoId, cantidad, sucursalesList, productosList) => {
-        return new Promise(resolve => {
-            setTimeout(() => {
-                const sucursalNombre = sucursalesList.find(s => String(s.id) === String(sucursalId))?.nombre || "Desconocida";
-                const productoNombre = productosList.find(p => String(p.id) === String(productoId))?.nombre || "Desconocido";
-
-                const nuevoEnvio = {
-                    id: Date.now(),
-                    sucursal_id: sucursalId,
-                    sucursal_nombre: sucursalNombre,
-                    producto_id: productoId,
-                    producto_nombre: productoNombre,
-                    cantidad: Number(cantidad),
-                    fecha: new Date().toISOString()
-                };
-                mockEnvios.push(nuevoEnvio);
-                
-                // NOTA: En un caso real, esto impacta en la tabla intermedia stock_sucursal sumando "cantidad" al producto en la sucursal.
-                
-                resolve(nuevoEnvio);
-            }, 800);
+    // Crear un envío (movimiento de stock tipo ingreso)
+    crearEnvio: async (sucursalId, productoId, cantidad) => {
+        // Usamos el endpoint de inventario para actualizar stock
+        // Buscamos el inventario del comercio+producto y actualizamos
+        const response = await api.post('/movimientos', {
+            id_comercio: sucursalId,
+            id_producto: productoId,
+            cantidad_cambio: Number(cantidad),
+            id_tipo_movimiento: 1 // Tipo 1 = Ingreso/Envío
         });
+        return response.data;
     }
 };

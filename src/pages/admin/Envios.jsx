@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Truck, Box, Home, PlusCircle, Info, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Truck, Box, Home, PlusCircle, Info, Check, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
 import DataTable from '../../components/ui/DataTable';
 import Modal from '../../components/ui/Modal';
 import { enviosService } from '../../services/enviosService';
@@ -7,206 +7,273 @@ import { sucursalesService } from '../../services/sucursalesService';
 import { productosService } from '../../services/productosService';
 
 const Envios = () => {
-    const [envios, setEnvios] = useState([]);
+    const [envios, setEnvios]         = useState([]);
     const [sucursales, setSucursales] = useState([]);
-    const [productos, setProductos] = useState([]);
-    
-    const [isLoading, setIsLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    
+    const [productos, setProductos]   = useState([]);
+    const [isLoading, setIsLoading]   = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isModalOpen, setIsModalOpen]   = useState(false);
+    const [feedback, setFeedback] = useState(null); // { type: 'ok'|'error', msg: string }
+
     const [formData, setFormData] = useState({
         sucursal_id: '',
         producto_id: '',
-        cantidad: 1
+        cantidad: 1,
     });
 
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         setIsLoading(true);
-        const [envData, sucData, prodData] = await Promise.all([
-            enviosService.getAll(),
-            sucursalesService.getAll(),
-            productosService.getAll()
-        ]);
-        setEnvios(envData);
-        setSucursales(sucData.filter(s => s.activo));
-        setProductos(prodData.filter(p => p.activo));
-        setIsLoading(false);
-    };
-
-    useEffect(() => {
-        loadData();
+        try {
+            const [envData, sucData, prodData] = await Promise.all([
+                enviosService.getAll(),
+                sucursalesService.getAll(),
+                productosService.getAll(),
+            ]);
+            setEnvios(envData);
+            setSucursales(sucData.filter(s => s.activo));
+            setProductos(prodData.filter(p => p.activo));
+        } catch (err) {
+            console.error('Error cargando envíos:', err);
+        } finally {
+            setIsLoading(false);
+        }
     }, []);
 
+    useEffect(() => { loadData(); }, [loadData]);
+
     const handleAdd = () => {
-        setFormData({ 
+        setFormData({
             sucursal_id: sucursales[0]?.id || '',
-            producto_id: productos[0]?.id || '',
-            cantidad: 1
+            producto_id: productos[0]?.id  || '',
+            cantidad: 1,
         });
+        setFeedback(null);
         setIsModalOpen(true);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        await enviosService.crearEnvio(
-            formData.sucursal_id, 
-            formData.producto_id, 
-            formData.cantidad,
-            sucursales,
-            productos
-        );
-        setIsModalOpen(false);
-        loadData();
+        setIsSubmitting(true);
+        setFeedback(null);
+        try {
+            await enviosService.crearEnvio(
+                formData.sucursal_id,
+                formData.producto_id,
+                formData.cantidad,
+                sucursales,
+                productos,
+            );
+            setFeedback({ type: 'ok', msg: 'Orden procesada correctamente.' });
+            setTimeout(() => {
+                setIsModalOpen(false);
+                setFeedback(null);
+                loadData();
+            }, 1200);
+        } catch (err) {
+            setFeedback({ type: 'error', msg: err?.message || 'Error al procesar la orden.' });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const columns = [
-        { header: 'ID Envío', accessor: 'id', render: (row) => <span className="text-[10px] font-mono opacity-50">{String(row.id).split('-')[0]}...</span> },
-        { 
-            header: 'Fecha de Operación', 
+        {
+            header: 'ID Envío',
+            accessor: 'id',
+            render: (row) => (
+                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">
+                    #{String(row.id).split('-')[0]}
+                </span>
+            )
+        },
+        {
+            header: 'Fecha',
             accessor: 'fecha',
             render: (row) => (
                 <div className="flex flex-col">
-                    <span className="font-bold text-xs text-neutral-900">{new Date(row.fecha).toLocaleDateString()}</span>
-                    <span className="text-[9px] font-bold text-neutral-300 uppercase tracking-widest">Registrado</span>
+                    <span className="font-bold text-sm text-black uppercase tracking-widest">
+                        {row.fecha ? new Date(row.fecha).toLocaleDateString() : '—'}
+                    </span>
+                    <span className="text-[9px] font-bold text-brand-cyan uppercase tracking-widest">Registrado</span>
                 </div>
             )
         },
-        { 
-            header: 'Sede Destino', 
+        {
+            header: 'Destino',
             accessor: 'sucursal_nombre',
             render: (row) => (
                 <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-brand-cyan shadow-[0_0_8px_rgba(0,194,255,0.4)]"></div>
-                    <span className="font-bold text-sm text-neutral-800 uppercase tracking-tight">{row.sucursal_nombre}</span>
+                    <div className="w-1.5 h-1.5 bg-black rounded-full flex-shrink-0" />
+                    <span className="font-bold text-sm text-black uppercase tracking-widest">{row.sucursal_nombre || '—'}</span>
                 </div>
             )
         },
-        { 
-            header: 'Producto Trasladado', 
+        {
+            header: 'Producto',
             accessor: 'producto_nombre',
-            render: (row) => <span className="text-xs font-medium text-neutral-600 uppercase tracking-wide">{row.producto_nombre}</span>
+            render: (row) => (
+                <span className="text-xs font-bold text-neutral-600 uppercase tracking-widest leading-snug">
+                    {row.producto_nombre || '—'}
+                </span>
+            )
         },
-        { 
-            header: 'Volumen', 
+        {
+            header: 'Volumen',
             accessor: 'cantidad',
             render: (row) => (
-                <div className="inline-flex px-3 py-1 bg-neutral-900 text-white rounded-xl font-bold text-[10px] tracking-widest">
-                    {row.cantidad} UNID.
+                <div className="inline-flex items-baseline gap-1 px-3 py-1.5 bg-black text-white rounded-lg font-sport text-lg leading-none tracking-widest">
+                    {row.cantidad}
+                    <span className="text-[10px] font-sans font-bold ml-1 mb-0.5">UN.</span>
                 </div>
             )
         },
     ];
 
     return (
-        <div className="space-y-12 max-w-7xl mx-auto animate-in fade-in duration-700">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-neutral-100 pb-10 gap-6">
-                 <div>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-neutral-300">LOGÍSTICA INTERNA</span>
-                    <h2 className="text-4xl font-bold tracking-tight mt-2 text-neutral-900">
-                        Transferencia de Stock
+        <div className="space-y-8 max-w-[1400px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b-2 border-black pb-6 gap-6">
+                <div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-neutral-500 mb-2 block">LOGÍSTICA INTERNA</span>
+                    <h2 className="text-4xl md:text-5xl uppercase leading-none m-0 font-sport text-black">
+                        Transferencia de <span className="text-brand-cyan">Stock.</span>
                     </h2>
-                 </div>
-                 
-                 <button 
-                    onClick={handleAdd}
-                    className="btn-cyan px-8 py-4 text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-3 shadow-xl shadow-brand-cyan/20"
-                 >
-                    <PlusCircle size={18} /> Registrar Envío
-                 </button>
+                    <p className="text-neutral-500 text-sm font-medium mt-2 m-0">{envios.length} movimientos registrados</p>
+                </div>
+
+                <div className="flex gap-3 w-full md:w-auto">
+                    <button
+                        onClick={loadData}
+                        disabled={isLoading}
+                        className="flex items-center gap-2 bg-neutral-100 text-black hover:bg-neutral-200 transition-colors px-4 py-3.5 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] disabled:opacity-50"
+                    >
+                        <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
+                    </button>
+                    <button
+                        onClick={handleAdd}
+                        className="flex-1 md:flex-none bg-brand-cyan text-black hover:bg-black hover:text-white transition-colors px-6 py-3.5 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-md"
+                    >
+                        <PlusCircle size={16} /> REGISTRAR ENVÍO
+                    </button>
+                </div>
             </div>
-            
+
             {isLoading ? (
-                <div className="flex flex-col items-center justify-center py-24 space-y-6">
-                    <div className="w-12 h-12 border-4 border-neutral-100 border-t-brand-cyan rounded-full animate-spin"></div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-neutral-300">Sincronizando Historial...</p>
+                <div className="flex flex-col items-center justify-center py-32 space-y-6">
+                    <div className="w-10 h-10 border-4 border-neutral-200 border-t-brand-cyan rounded-full animate-spin" />
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-neutral-400">Sincronizando Historial...</p>
                 </div>
             ) : (
-                <div className="card-premium overflow-hidden">
-                    <DataTable 
+                <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm">
+                    <DataTable
                         data={envios}
                         columns={columns}
-                        searchPlaceholder="Filtrar por sede, producto o ID..."
+                        searchPlaceholder="Filtrar por sede o producto..."
                         variant="minimal"
                     />
                 </div>
             )}
 
-            <Modal 
-                isOpen={isModalOpen} 
-                onClose={() => setIsModalOpen(false)}
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => !isSubmitting && setIsModalOpen(false)}
                 title="Nueva Orden de Traslado"
             >
-                <form onSubmit={handleSubmit} className="space-y-8 p-1">
-                    <div className="p-6 bg-brand-cyan/5 rounded-[2rem] border border-brand-cyan/10 flex items-start gap-4">
-                        <Info size={20} className="text-brand-cyan mt-1" />
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 leading-relaxed">
-                            Al confirmar, el stock se incrementará automáticamente en la <span className="text-neutral-900">Sede Destino</span>. Esta operación es irreversible y queda auditada.
+                <form onSubmit={handleSubmit} className="space-y-6 p-2">
+
+                    {/* Feedback banner */}
+                    {feedback && (
+                        <div className={`flex items-center gap-3 p-4 rounded-xl border text-[10px] font-bold uppercase tracking-widest ${
+                            feedback.type === 'ok'
+                                ? 'bg-green-50 border-green-200 text-green-700'
+                                : 'bg-red-50 border-red-200 text-red-700'
+                        }`}>
+                            {feedback.type === 'ok'
+                                ? <CheckCircle2 size={16} />
+                                : <AlertCircle size={16} />
+                            }
+                            {feedback.msg}
+                        </div>
+                    )}
+
+                    <div className="p-5 bg-neutral-50 border border-neutral-200 rounded-xl flex items-start gap-4">
+                        <Info size={18} className="text-brand-cyan shrink-0 mt-0.5" />
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 leading-relaxed m-0">
+                            Al confirmar, el stock se incrementará en la <span className="text-black font-black">Sede Destino</span>. Operación irreversible.
                         </p>
                     </div>
 
-                    <div className="space-y-6">
+                    <div className="space-y-5">
                         <div className="space-y-2">
-                            <label className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 ml-1">Sede de Destino</label>
-                            <div className="relative">
-                                <select 
+                            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Sede de Destino</label>
+                            <div className="relative group">
+                                <Home size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
+                                <select
                                     required
-                                    className="input-premium appearance-none"
+                                    disabled={isSubmitting}
+                                    className="w-full pl-10 pr-4 py-3 bg-white border border-neutral-200 rounded-lg text-sm font-bold text-black uppercase focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan transition-all appearance-none disabled:opacity-60"
                                     value={formData.sucursal_id}
-                                    onChange={e => setFormData({...formData, sucursal_id: e.target.value})}
+                                    onChange={e => setFormData({ ...formData, sucursal_id: e.target.value })}
                                 >
-                                    <option value="">Seleccione destino empresarial...</option>
+                                    <option value="">Seleccione destino...</option>
                                     {sucursales.map(s => <option key={s.id} value={s.id}>{s.nombre}</option>)}
                                 </select>
-                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-300">
-                                    <Home size={16} />
-                                </div>
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 ml-1">Producto a Cargar</label>
-                            <div className="relative">
-                                <select 
+                            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Producto a Transferir</label>
+                            <div className="relative group">
+                                <Box size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
+                                <select
                                     required
-                                    className="input-premium appearance-none"
+                                    disabled={isSubmitting}
+                                    className="w-full pl-10 pr-4 py-3 bg-white border border-neutral-200 rounded-lg text-sm font-bold text-black uppercase focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan transition-all appearance-none disabled:opacity-60"
                                     value={formData.producto_id}
-                                    onChange={e => setFormData({...formData, producto_id: e.target.value})}
+                                    onChange={e => setFormData({ ...formData, producto_id: e.target.value })}
                                 >
-                                    <option value="">Seleccione ítem del catálogo...</option>
+                                    <option value="">Seleccione ítem...</option>
                                     {productos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
                                 </select>
-                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-300">
-                                    <Box size={16} />
-                                </div>
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 ml-1">Cantidad de Unidades</label>
-                            <input 
-                                required type="number" min="1"
-                                className="input-premium"
-                                placeholder="0"
-                                value={formData.cantidad}
-                                onChange={e => setFormData({...formData, cantidad: Number(e.target.value)})}
-                            />
+                            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Cantidad de Unidades</label>
+                            <div className="relative group">
+                                <Check size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
+                                <input
+                                    required type="number" min="1"
+                                    disabled={isSubmitting}
+                                    className="w-full pl-10 pr-4 py-3 bg-white border border-neutral-200 rounded-lg text-sm font-bold text-black focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan transition-all disabled:opacity-60"
+                                    placeholder="0"
+                                    value={formData.cantidad}
+                                    onChange={e => setFormData({ ...formData, cantidad: Number(e.target.value) })}
+                                />
+                            </div>
                         </div>
                     </div>
 
-                    <button 
-                        type="submit"
-                        className="w-full btn-cyan py-5 text-[10px] font-bold uppercase tracking-[0.2em] flex justify-center items-center gap-3"
-                    >
-                        <Truck size={20} /> PROCESAR ORDEN DE ENVÍO
-                    </button>
-                    
-                    <button 
-                        type="button"
-                        onClick={() => setIsModalOpen(false)}
-                        className="w-full text-[10px] font-bold uppercase tracking-widest text-neutral-300 hover:text-neutral-500 transition-colors py-2"
-                    >
-                        CANCELAR OPERACIÓN
-                    </button>
+                    <div className="pt-6 flex flex-col gap-3">
+                        <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="w-full bg-black text-white py-4 rounded-lg text-[11px] font-bold uppercase tracking-[0.2em] flex justify-center items-center gap-3 hover:bg-brand-cyan hover:text-black transition-colors disabled:opacity-60"
+                        >
+                            {isSubmitting
+                                ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> PROCESANDO...</>
+                                : <><Truck size={16} /> PROCESAR ORDEN</>
+                            }
+                        </button>
+                        <button
+                            type="button"
+                            disabled={isSubmitting}
+                            onClick={() => setIsModalOpen(false)}
+                            className="w-full text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-black transition-colors py-3 disabled:opacity-40"
+                        >
+                            CANCELAR
+                        </button>
+                    </div>
                 </form>
             </Modal>
         </div>

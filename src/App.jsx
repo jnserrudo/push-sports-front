@@ -18,11 +18,14 @@ import Ofertas from './pages/admin/Ofertas';
 import Liquidaciones from './pages/dashboard/Liquidaciones';
 import POS from './pages/pos/POS';
 import Inventario from './pages/admin/Inventario';
+import Movimientos from './pages/admin/Movimientos';
 import Register from './pages/Register';
+import Toaster from './components/ui/Toaster';
 
 const App = () => {
   return (
     <Router>
+      <Toaster />
       <Routes>
         {/* PUBLIC ROUTES */}
         <Route path="/" element={<Landing />} />
@@ -41,6 +44,7 @@ const App = () => {
           <Route path="marcas" element={<Marcas />} />
           <Route path="usuarios" element={<Usuarios />} />
           <Route path="envios" element={<Envios />} />
+          <Route path="movimientos" element={<Movimientos />} />
           <Route path="liquidaciones" element={<Liquidaciones />} />
           <Route path="descuentos" element={<Descuentos />} />
           <Route path="auditoria" element={<Auditoria />} />

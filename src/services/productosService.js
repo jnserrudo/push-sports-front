@@ -11,6 +11,11 @@ export const productosService = {
         return res.data;
     },
 
+    getProveedores: async () => {
+        const res = await api.get('/proveedores');
+        return res.data;
+    },
+
     getAll: async () => {
         const res = await api.get('/productos');
         return res.data;

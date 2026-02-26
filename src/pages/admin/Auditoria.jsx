@@ -1,110 +1,170 @@
-import React, { useState, useEffect } from 'react';
-import { Activity, FileText, Search, Filter, Clock, ShieldAlert } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { FileText, Clock, ShieldAlert, RefreshCw, Download } from 'lucide-react';
 import DataTable from '../../components/ui/DataTable';
 import { auditoriaService } from '../../services/auditoriaService';
 import { useAuthStore } from '../../store/authStore';
 
 const Auditoria = () => {
-    const { user, role, sucursalId } = useAuthStore();
+    const { user, sucursalId } = useAuthStore();
     const isSuperAdmin = user?.id_rol === 1;
     const [transacciones, setTransacciones] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         setIsLoading(true);
-        let data = await auditoriaService.getAll();
-        
-        // Simular filtrado por comercio si no es Super Admin
-        if (!isSuperAdmin && sucursalId) {
-            data = data.filter(t => t.id_comercio === sucursalId || t.descripcion.includes('Sede') || !t.id_comercio);
+        try {
+            let data = await auditoriaService.getAll();
+            if (!isSuperAdmin && sucursalId) {
+                data = data.filter(t =>
+                    t.id_comercio === sucursalId ||
+                    t.descripcion?.includes('Sede') ||
+                    !t.id_comercio
+                );
+            }
+            setTransacciones(data);
+        } catch (err) {
+            console.error('Error cargando auditoría:', err);
+        } finally {
+            setIsLoading(false);
         }
-        
-        setTransacciones(data);
-        setIsLoading(false);
+    }, [isSuperAdmin, sucursalId]);
+
+    useEffect(() => { loadData(); }, [loadData]);
+
+    // Export a CSV real
+    const handleExport = () => {
+        if (!transacciones.length) return;
+        const headers = ['ID', 'Accion', 'Entidad', 'Fecha', 'Usuario'];
+        const rows = transacciones.map(t => [
+            t.id_auditoria,
+            t.accion || '',
+            t.entidad_afectada || '',
+            t.fecha_hora ? new Date(t.fecha_hora).toLocaleString() : '',
+            t.usuario?.nombre || 'Sistema',
+        ]);
+        const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `auditoria_pushsport_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
     };
 
-    useEffect(() => {
-        loadData();
-    }, []);
-
-    const getTypeColor = (tipo) => {
-        switch(tipo) {
-            case 'VENTA': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-            case 'ENVIO': return 'bg-brand-cyan/10 text-brand-cyan border-brand-cyan/20';
-            case 'LIQUIDACION': return 'bg-neutral-900 text-white border-neutral-800';
-            default: return 'bg-neutral-50 text-neutral-400 border-neutral-100';
+    const getTypeColor = (accion) => {
+        switch (accion) {
+            case 'CREATE':  return 'bg-white text-black border-black';
+            case 'UPDATE':  return 'bg-brand-cyan text-black border-brand-cyan';
+            case 'DELETE':  return 'bg-black text-white border-black';
+            default:        return 'bg-neutral-100 text-neutral-500 border-neutral-200';
         }
     };
 
     const columns = [
-        { header: 'ID Log', accessor: 'id', render: (row) => <span className="text-[10px] font-mono opacity-40">{String(row.id).split('-')[0]}...</span> },
-        { 
-            header: 'Operación', 
-            accessor: 'tipo',
+        {
+            header: 'ID Log',
+            accessor: 'id_auditoria',
             render: (row) => (
-                <div className={`inline-flex px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest border ${getTypeColor(row.tipo)}`}>
-                    {row.tipo}
+                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">
+                    #{String(row.id_auditoria).split('-')[0]}
+                </span>
+            )
+        },
+        {
+            header: 'Operación',
+            accessor: 'accion',
+            render: (row) => (
+                <div className={`inline-flex px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border ${getTypeColor(row.accion)}`}>
+                    {row.accion || 'SISTEMA'}
                 </div>
             )
         },
-        { 
-            header: 'Cronología', 
-            accessor: 'fecha',
+        {
+            header: 'Entidad',
+            accessor: 'entidad_afectada',
             render: (row) => (
-                <div className="flex items-center gap-2 text-neutral-600">
-                    <Clock size={14} className="opacity-40" />
-                    <span className="text-[11px] font-bold tracking-tight">{new Date(row.fecha).toLocaleString()}</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-black">
+                    {row.entidad_afectada || '—'}
+                </span>
+            )
+        },
+        {
+            header: 'Cronología',
+            accessor: 'fecha_hora',
+            render: (row) => (
+                <div className="flex items-center gap-2">
+                    <Clock size={12} className="text-brand-cyan" strokeWidth={3} />
+                    <span className="text-[11px] font-bold tracking-widest uppercase">
+                        {row.fecha_hora ? new Date(row.fecha_hora).toLocaleString() : '—'}
+                    </span>
                 </div>
             )
         },
-        { 
-            header: 'Operador Responsable', 
+        {
+            header: 'Operador / Autoría',
             accessor: 'usuario',
             render: (row) => (
                 <div className="flex flex-col">
-                    <span className="font-bold text-sm text-neutral-900 tracking-tight">{row.usuario}</span>
-                    <span className="text-[9px] font-bold text-neutral-300 uppercase tracking-widest italic">Acción Verificada</span>
+                    <span className="font-bold text-xs text-black uppercase tracking-widest">
+                        {row.usuario?.nombre || 'SISTEMA'} {row.usuario?.apellido || ''}
+                    </span>
+                    <span className="text-[9px] font-bold text-brand-cyan uppercase tracking-widest">Firma Verificada</span>
                 </div>
             )
-        },
-        { 
-            header: 'Descripción del Evento', 
-            accessor: 'descripcion',
-            render: (row) => <span className="text-[11px] font-medium text-neutral-500 leading-relaxed uppercase tracking-tight">{row.descripcion}</span>
         },
     ];
 
     return (
-        <div className="space-y-12 max-w-7xl mx-auto animate-in fade-in duration-700">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-neutral-100 pb-10 gap-6">
-                 <div>
-                    <div className="flex items-center gap-3">
-                         <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-neutral-300">REGISTRO DE SEGURIDAD</span>
-                         <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${isSuperAdmin ? 'bg-neutral-900 text-white' : 'bg-amber-500 text-white shadow-lg shadow-amber-500/20'}`}>
-                             {isSuperAdmin ? 'Consola Central' : 'Vista de Sede'}
-                         </div>
+        <div className="space-y-8 max-w-[1400px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b-2 border-black pb-6 gap-6">
+                <div>
+                    <div className="flex items-center gap-3 mb-2">
+                        <ShieldAlert size={16} className="text-brand-cyan" />
+                        <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-neutral-500">REGISTRO DE SEGURIDAD</span>
+                        <div className={`px-2 py-0.5 rounded border text-[9px] font-black uppercase tracking-widest ${isSuperAdmin ? 'bg-black text-white border-black' : 'bg-transparent text-black border-black'}`}>
+                            {isSuperAdmin ? 'CORE' : 'SEDE'}
+                        </div>
                     </div>
-                    <h2 className="text-4xl font-bold tracking-tight mt-4 text-neutral-900">
-                        Auditoría {isSuperAdmin ? 'Global' : 'Local'}
+                    <h2 className="text-4xl md:text-5xl uppercase leading-none m-0 font-sport">
+                        Auditoría <span className="text-brand-cyan">{isSuperAdmin ? 'Global.' : 'Local.'}</span>
                     </h2>
-                 </div>
-                 
-                 <button className="bg-neutral-900 text-white hover:bg-black hover:scale-105 transition-all px-10 py-5 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-4 shadow-xl shadow-neutral-900/10">
-                    <FileText size={20} className="text-brand-cyan" /> Exportar Auditoría (.csv)
-                 </button>
+                    <p className="text-neutral-500 text-sm font-medium mt-2 m-0">
+                        {transacciones.length} registros cargados
+                    </p>
+                </div>
+
+                <div className="flex gap-3 w-full md:w-auto">
+                    <button
+                        onClick={loadData}
+                        disabled={isLoading}
+                        className="flex items-center gap-2 bg-neutral-100 text-black hover:bg-neutral-200 transition-colors px-4 py-3.5 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] disabled:opacity-50"
+                    >
+                        <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
+                        ACTUALIZAR
+                    </button>
+                    <button
+                        onClick={handleExport}
+                        disabled={!transacciones.length}
+                        className="flex items-center gap-2 bg-black text-white hover:bg-brand-cyan hover:text-black transition-colors px-6 py-3.5 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] shadow-md disabled:opacity-40"
+                    >
+                        <Download size={14} /> EXPORTAR CSV
+                    </button>
+                </div>
             </div>
-            
+
             {isLoading ? (
-                <div className="flex flex-col items-center justify-center py-24 space-y-6">
-                    <div className="w-12 h-12 border-4 border-neutral-100 border-t-brand-cyan rounded-full animate-spin"></div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-neutral-300">Recuperando Registros...</p>
+                <div className="flex flex-col items-center justify-center py-32 space-y-6">
+                    <div className="w-10 h-10 border-4 border-neutral-200 border-t-brand-cyan rounded-full animate-spin" />
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-neutral-400">Sincronizando Registros...</p>
                 </div>
             ) : (
-                <div className="card-premium overflow-hidden">
-                    <DataTable 
+                <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm">
+                    <DataTable
                         data={transacciones}
                         columns={columns}
-                        searchPlaceholder="Filtrar por usuario, acción o descripción..."
+                        searchPlaceholder="Buscar ID, Operador o Evento..."
                         variant="minimal"
                     />
                 </div>

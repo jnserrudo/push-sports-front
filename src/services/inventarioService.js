@@ -1,17 +1,38 @@
 import api from '../api/api';
 
 export const inventarioService = {
-    // ABM principal de inventarios
+    // El backend NO tiene GET /inventarios genérico.
+    // Solo tiene GET /inventarios/:id_comercio
+    // Para "getAll" de SUPER_ADMIN, obtenemos comercios y luego su inventario.
     getAll: async () => {
-        const response = await api.get('/inventarios');
-        return response.data;
+        // Intentar obtener todos los comercios y luego el inventario de cada uno
+        try {
+            const comerciosRes = await api.get('/comercios');
+            const comercios = comerciosRes.data || [];
+            const allInventarios = [];
+            for (const comercio of comercios) {
+                try {
+                    const invRes = await api.get(`/inventarios/${comercio.id_comercio}`);
+                    const items = (invRes.data || []).map(item => ({
+                        ...item,
+                        sucursal_nombre: comercio.nombre
+                    }));
+                    allInventarios.push(...items);
+                } catch {
+                    // Si un comercio falla, continuar con los demás
+                }
+            }
+            return allInventarios;
+        } catch {
+            return [];
+        }
     },
     getById: async (id) => {
         const response = await api.get(`/inventarios/${id}`);
         return response.data;
     },
     getBySucursal: async (sucursalId) => {
-        const response = await api.get(`/inventarios/sucursal/${sucursalId}`);
+        const response = await api.get(`/inventarios/${sucursalId}`);
         return response.data;
     },
     create: async (data) => {
