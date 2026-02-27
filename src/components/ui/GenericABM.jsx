@@ -42,7 +42,13 @@ const GenericABM = ({
     const handleAdd = () => {
         setEditingItem(null);
         const initialForm = {};
-        formFields.forEach(f => initialForm[f.name] = f.defaultValue || '');
+        formFields.forEach(f => {
+            if (f.type === 'checkbox') {
+                initialForm[f.name] = f.defaultValue !== undefined ? f.defaultValue : true; // checkboxes default to true
+            } else {
+                initialForm[f.name] = f.defaultValue ?? '';
+            }
+        });
         setFormData(initialForm);
         setIsModalOpen(true);
     };

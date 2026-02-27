@@ -9,29 +9,42 @@ import {
   Store,
   Box,
   Receipt,
-  Loader2
+  Loader2,
+  MapPin
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { posService } from '../../services/posService';
+import { sucursalesService } from '../../services/sucursalesService';
+import { toast } from '../../store/toastStore';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const POS = () => {
   const { user, sucursalId } = useAuthStore();
+  const isSuperAdmin = user?.id_rol === 1;
   const [cart, setCart] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [currentSucursal, setCurrentSucursal] = useState(null);
+  const [sucursalOptions, setSucursalOptions] = useState([]);
+  const [selectedSucursalId, setSelectedSucursalId] = useState(null); // for SuperAdmin picker
   const [products, setProducts] = useState([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [metodoPago, setMetodoPago] = useState('Efectivo');
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Load sucursal options for SuperAdmin picker
+  useEffect(() => {
+    if (isSuperAdmin) {
+      sucursalesService.getAll().then(setSucursalOptions).catch(console.error);
+    }
+  }, [isSuperAdmin]);
 
   // Cargar inventario real del comercio
   useEffect(() => {
     const loadProducts = async () => {
       setIsLoadingProducts(true);
       try {
-        const id = sucursalId || user?.id_comercio_asignado;
+        const id = selectedSucursalId || sucursalId || user?.id_comercio_asignado;
         if (id) {
           const [inventario, sucursalData] = await Promise.all([
             posService.getInventarioSucursal(id),
@@ -40,10 +53,9 @@ const POS = () => {
           setProducts(inventario || []);
           setCurrentSucursal(sucursalData);
         } else {
-          // If the user doesn't have an assigned store (e.g. SUPER_ADMIN), they shouldn't see products directly here without picking one.
-          // We can silently ignore this or show a specific UI state.
           setProducts([]);
           setCurrentSucursal(null);
+          setIsLoadingProducts(false);
         }
       } catch (error) {
         console.error('Error cargando inventario POS:', error);
@@ -53,7 +65,7 @@ const POS = () => {
       }
     };
     loadProducts();
-  }, [sucursalId, user]);
+  }, [selectedSucursalId, sucursalId, user]);
 
   // Obtener nombre del producto y precio normalizado
   const getProductNombre = (item) => item.producto?.nombre || 'Producto';
@@ -70,7 +82,12 @@ const POS = () => {
     if (getProductStock(item) <= 0) return;
     const id = getProductId(item);
     const existing = cart.find(c => c.id === id);
+    const stockMax = getProductStock(item);
     if (existing) {
+      if (existing.cantidad >= stockMax) {
+        toast.error(`Máximo de stock disponible: ${stockMax} unidades`);
+        return;
+      }
       setCart(cart.map(c => c.id === id ? { ...c, cantidad: c.cantidad + 1 } : c));
     } else {
       setCart([...cart, { 
@@ -78,7 +95,7 @@ const POS = () => {
         id_producto: item.id_producto,
         nombre: getProductNombre(item),
         precio: getProductPrecio(item),
-        stock: getProductStock(item),
+        stock: stockMax,
         img: getProductImg(item),
         cantidad: 1
       }]);
@@ -90,7 +107,7 @@ const POS = () => {
   const updateQuantity = (id, delta) => {
     setCart(cart.map(item => {
       if (item.id === id) {
-        const newQty = Math.max(1, item.cantidad + delta);
+        const newQty = Math.min(item.stock, Math.max(1, item.cantidad + delta));
         return { ...item, cantidad: newQty };
       }
       return item;
@@ -143,6 +160,23 @@ const POS = () => {
                   <p className="text-[9px] md:text-xs font-bold text-neutral-400 uppercase tracking-widest mt-1">Inventario {currentSucursal?.nombre || 'local'}</p>
                 </div>
             </div>
+
+            {/* SuperAdmin sucursal picker */}
+            {isSuperAdmin && (
+                <div className="flex items-center gap-2 bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2">
+                    <MapPin size={14} className="text-brand-cyan flex-shrink-0" />
+                    <select
+                        value={selectedSucursalId || ''}
+                        onChange={e => { setCart([]); setSelectedSucursalId(e.target.value || null); }}
+                        className="bg-transparent text-black text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer appearance-none pr-4"
+                    >
+                        <option value="">SELECCIONAR SEDE...</option>
+                        {sucursalOptions.map(s => (
+                            <option key={s.id_comercio} value={s.id_comercio}>{s.nombre}</option>
+                        ))}
+                    </select>
+                </div>
+            )}
             
             <div className="relative flex-1 w-full md:max-w-md group">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-300 group-focus-within:text-brand-cyan transition-colors" size={20} />
@@ -157,7 +191,16 @@ const POS = () => {
         </div>
 
         <div className="flex-1 p-4 md:p-8 overflow-y-auto scrollbar-hide">
-          {isLoadingProducts ? (
+          {/* SuperAdmin needs to pick a store first */}
+          {isSuperAdmin && !selectedSucursalId ? (
+            <div className="flex flex-col items-center justify-center py-24 md:py-40 gap-6 opacity-50">
+              <MapPin size={80} strokeWidth={0.5} className="text-brand-cyan" />
+              <div className="text-center space-y-1">
+                <p className="text-[11px] font-black uppercase tracking-[1em] text-neutral-600">Seleccioná una sede</p>
+                <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400">Usá el selector de arriba para cargar el inventario</p>
+              </div>
+            </div>
+          ) : isLoadingProducts ? (
             <div className="flex flex-col items-center justify-center py-20 md:py-32 gap-6 opacity-60">
                 <div className="w-12 h-12 border-4 border-neutral-100 border-t-brand-cyan rounded-full animate-spin"></div>
                 <p className="text-[10px] font-black uppercase tracking-[0.5em] text-neutral-400">Accediendo a la RED...</p>
