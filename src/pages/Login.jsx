@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { authService } from '../services/authService';
-import { ArrowRight, Lock, Mail, Home } from 'lucide-react';
+import { ArrowRight, Lock, Mail, Home, Loader2 } from 'lucide-react';
 import { toast } from '../store/toastStore';
 
 const Login = () => {
@@ -21,9 +21,10 @@ const Login = () => {
         try {
             const data = await authService.login(credentials.email, credentials.password);
             login(data.user, data.token);
+            toast.success('¡Bienvenido de nuevo!');
             navigate('/dashboard');
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Credenciales inválidas');
+            toast.error(error.response?.data?.message || 'Error al iniciar sesión. Verifique sus datos.');
         } finally {
             setLoading(false);
         }
@@ -126,7 +127,11 @@ const Login = () => {
                                     : 'bg-black text-white hover:bg-brand-cyan hover:text-black shadow-lg group'
                                 }`}
                             >
-                                {loading ? 'VERIFICANDO...' : 'INGRESAR AL SISTEMA'}
+                                {loading ? (
+                                    <Loader2 className="animate-spin" size={18} />
+                                ) : (
+                                    'INGRESAR AL SISTEMA'
+                                )}
                                 {!loading && <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" color="currentColor" />}
                             </button>
                             

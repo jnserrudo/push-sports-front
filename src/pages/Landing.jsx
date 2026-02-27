@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ArrowRight, 
-  Location,
-  Timer1,
+  MapPin as Location,
+  Clock as Timer1,
   Instagram,
   Facebook,
-  DirectRight,
-  CloseCircle,
-  TickCircle,
-  Flash,
-  Map1
-} from 'iconsax-react';
+  Send as DirectRight,
+  XCircle as CloseCircle,
+  CheckCircle2 as TickCircle,
+  Zap as Flash,
+  Map as Map1
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import StoreMap from '../components/StoreMap'; 
 
@@ -110,6 +110,7 @@ const PreviewModal = ({ category, isOpen, onClose }) => {
 
 const Landing = () => {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [preview, setPreview] = useState({ isOpen: false, category: '' });
   const [activeLocation, setActiveLocation] = useState(0);
 
@@ -157,6 +158,7 @@ const Landing = () => {
             </span>
           </div>
 
+          {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8">
             {['Inicio', 'Productos', 'Sedes', 'Nosotros'].map(item => (
               <a key={item} href={`#${item.toLowerCase()}`} className={`text-xs font-bold uppercase tracking-widest transition-all hover:-translate-y-0.5 ${isScrolled ? 'text-neutral-500 hover:text-brand-cyan' : 'text-white/80 hover:text-brand-cyan'}`}>
@@ -167,6 +169,43 @@ const Landing = () => {
               Acceso Staff
             </Link>
           </div>
+
+          {/* Mobile Toggle */}
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className={`md:hidden p-2 rounded-lg transition-all ${isScrolled ? 'text-black' : 'text-white hover:text-brand-cyan'}`}
+          >
+            {isMobileMenuOpen ? <CloseCircle size={32} variant="Bold" /> : <Map1 size={32} variant="Bold" />}
+          </button>
+        </div>
+
+        {/* Mobile Menu Overlay */}
+        <div className={`md:hidden fixed inset-0 z-[150] bg-white transition-all duration-500 ${isMobileMenuOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0 pointer-events-none'}`}>
+            <div className="p-8 h-full flex flex-col justify-between">
+                <div className="space-y-12 mt-10">
+                    {['Inicio', 'Productos', 'Sedes', 'Nosotros'].map((item, idx) => (
+                        <a 
+                            key={item} 
+                            href={`#${item.toLowerCase()}`} 
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="block text-5xl font-sport uppercase text-black tracking-tight"
+                            style={{ transitionDelay: `${idx * 100}ms` }}
+                        >
+                            {item}.
+                        </a>
+                    ))}
+                </div>
+                
+                <div className="space-y-6">
+                    <Link 
+                        to="/login" 
+                        className="w-full py-6 bg-brand-cyan text-white rounded-2xl flex items-center justify-center gap-4 text-sm font-black uppercase tracking-[0.2em] shadow-xl shadow-brand-cyan/20"
+                    >
+                        ACCESO STAFF <ArrowRight size={20} />
+                    </Link>
+                    <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest text-center">Gestión Central PushSport Salta</p>
+                </div>
+            </div>
         </div>
       </nav>
 
@@ -381,11 +420,11 @@ const Landing = () => {
                         Líderes en suplementación y rendimiento en Salta. Calidad garantizada para atletas exigentes.
                     </p>
                     <div className="flex gap-3">
-                        <a href="#" className="w-10 h-10 rounded-lg bg-neutral-100 flex items-center justify-center text-black hover:bg-brand-cyan hover:text-white hover:-translate-y-1 transition-all duration-300">
-                            <Instagram size={18} variant="Bold" />
+                        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-lg bg-neutral-100 flex items-center justify-center text-black hover:bg-brand-cyan hover:text-white hover:-translate-y-1 transition-all duration-300">
+                            <Instagram size={20} />
                         </a>
-                        <a href="#" className="w-10 h-10 rounded-lg bg-neutral-100 flex items-center justify-center text-black hover:bg-brand-cyan hover:text-white hover:-translate-y-1 transition-all duration-300">
-                            <Facebook size={18} variant="Bold" />
+                        <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-lg bg-neutral-100 flex items-center justify-center text-black hover:bg-brand-cyan hover:text-white hover:-translate-y-1 transition-all duration-300">
+                            <Facebook size={20} />
                         </a>
                     </div>
                 </div>

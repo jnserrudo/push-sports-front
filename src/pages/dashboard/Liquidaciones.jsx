@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Wallet, CreditCard, Settings2, Info, CheckCircle2, Clock, Send, ShieldCheck, AlertCircle } from 'lucide-react';
+import { CreditCard, CheckCircle2, Clock, Send, ShieldCheck, History, Download, DollarSign, X, FileText, Settings2, AlertCircle, RotateCcw } from 'lucide-react';
+import { toast } from '../../store/toastStore';
 import { useAuthStore } from '../../store/authStore';
 import { sucursalesService } from '../../services/sucursalesService';
 import { liquidacionesService } from '../../services/liquidacionesService';
+import { devolucionesService } from '../../services/devolucionesService';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
+
+// --- NUEVAS LIBRERÍAS ---
+import { jsPDF } from 'jspdf';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Liquidaciones = () => {
     const { role, sucursalId, user } = useAuthStore();
@@ -12,6 +18,7 @@ const Liquidaciones = () => {
 
     const [sucursales, setSucursales] = useState([]);
     const [historial, setHistorial] = useState([]);
+    const [devolucionesPorSucursal, setDevolucionesPorSucursal] = useState({}); // { id_comercio: totalMonto }
     const [isLoading, setIsLoading] = useState(true);
     
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -23,12 +30,36 @@ const Liquidaciones = () => {
         try {
             let sucs = await sucursalesService.getAll();
             if (!isSuperAdmin) {
-                sucs = sucs.filter(s => s.id_comercio === sucursalId || s.id === sucursalId); // Adaptado si tu DB usa id o id_comercio
+                sucs = sucs.filter(s => s.id_comercio === sucursalId || s.id === sucursalId);
             }
             setSucursales(sucs);
 
             const hist = await liquidacionesService.getHistorial(!isSuperAdmin ? sucursalId : null);
             setHistorial(hist);
+
+            // Cargar devoluciones pendientes (sin liquidar) por cada sucursal
+            // para restar del saldo antes de mostrar el monto a cobrar
+            const devsMap = {};
+            for (const suc of sucs) {
+                const sucId = suc.id_comercio || suc.id;
+                try {
+                    const devs = await devolucionesService.getHistorialComercio(sucId);
+                    // Solo contamos devoluciones que NO están en una liquidación ya cerrada
+                    // (las ventas sin id_liquidacion son las pendientes)
+                    const totalDevolucionesPendientes = devs.reduce((acc, d) => {
+                        // Si la venta asociada no tiene liquidacion, la devolución afecta saldo actual
+                        if (!d.venta?.id_liquidacion) {
+                            return acc + parseFloat(d.monto_reembolso || 0);
+                        }
+                        return acc;
+                    }, 0);
+                    devsMap[sucId] = totalDevolucionesPendientes;
+                } catch {
+                    devsMap[sucId] = 0;
+                }
+            }
+            setDevolucionesPorSucursal(devsMap);
+
         } catch (error) {
             console.error(error);
         } finally {
@@ -48,11 +79,10 @@ const Liquidaciones = () => {
     const confirmLiquidacion = async () => {
         setIsProcessing(true);
         try {
-            const netoPagado = selectedSucursal.saldo_acumulado_mili || selectedSucursal.saldo_pendiente; // Adaptado según tu modelo
-            const comision = selectedSucursal.comision_porcentaje || 0; // Ajusta si la comisión viene de otro lado
+            const netoPagado = selectedSucursal.saldo_acumulado_mili || selectedSucursal.saldo_pendiente;
+            const comision = selectedSucursal.comision_porcentaje || 0;
             const totalVendido = netoPagado / (1 - (comision / 100));
 
-            // Si el backend espera el ID de sucursal
             const sucId = selectedSucursal.id_comercio || selectedSucursal.id;
 
             await liquidacionesService.liquidarSucursal(
@@ -64,17 +94,75 @@ const Liquidaciones = () => {
             
             await sucursalesService.update(sucId, { saldo_pendiente: 0, saldo_acumulado_mili: 0 });
 
+            toast.success("Liquidación procesada correctamente");
             setIsConfirmOpen(false);
             loadData();
         } catch (error) {
             console.error(error);
+            toast.error("Error al procesar liquidación");
         } finally {
             setIsProcessing(false);
         }
     };
 
-    // Funciones Helper para normalizar propiedades de tu DB
+    // --- FUNCIÓN DE EXPORTACIÓN A PDF (COMPROBANTE) ---
+    const generatePDF = (row) => {
+        const doc = new jsPDF({ format: 'a5' });
+
+        // Diseño estilo Brutalista / Receipt
+        doc.setFillColor(0, 0, 0); // Fondo negro cabecera
+        doc.rect(0, 0, 148, 40, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(22);
+        doc.setFont('helvetica', 'bold');
+        doc.text("PUSH SPORTS", 10, 20);
+
+        doc.setTextColor(0, 229, 255); // Brand Cyan
+        doc.setFontSize(10);
+        doc.text("RECIBO OFICIAL DE TESORERÍA", 10, 30);
+
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        
+        doc.text(`ID Transacción: #${String(row.id).split('-')[0]}`, 10, 50);
+        doc.text(`Fecha: ${new Date(row.fecha).toLocaleString()}`, 10, 60);
+        doc.text(`Sede Auditada: ${row.sucursal_nombre}`, 10, 70);
+
+        doc.setLineWidth(0.5);
+        doc.line(10, 80, 138, 80);
+
+        doc.setFont('helvetica', 'bold');
+        doc.text("DETALLE FINANCIERO", 10, 95);
+        
+        doc.setFont('helvetica', 'normal');
+        doc.text("Volumen Bruto:", 10, 110);
+        doc.text(`$${Math.round(row.total_vendido).toLocaleString()}`, 100, 110, { align: 'right' });
+
+        doc.text(`Comisión Sede (${row.comision_porcentaje}%):`, 10, 120);
+        doc.text(`-$${Math.round(row.monto_comision).toLocaleString()}`, 100, 120, { align: 'right' });
+
+        doc.line(10, 130, 138, 130);
+
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.text("NETO CONSOLIDADO:", 10, 145);
+        doc.text(`$${Math.round(row.neto_pagado).toLocaleString()}`, 138, 145, { align: 'right' });
+
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(150, 150, 150);
+        doc.text("Este documento es un comprobante oficial generado por el Core.", 74, 180, { align: 'center' });
+        doc.text("Firma Verificada: SISTEMA", 74, 185, { align: 'center' });
+
+        doc.save(`Comprobante_Liq_${String(row.id).split('-')[0]}.pdf`);
+        toast.success("Comprobante PDF generado");
+    };
+
     const getSaldo = (suc) => suc.saldo_acumulado_mili ?? suc.saldo_pendiente ?? 0;
+    const getDevolucionTotal = (suc) => devolucionesPorSucursal[suc.id_comercio ?? suc.id] ?? 0;
+    const getSaldoNeto = (suc) => Math.max(0, getSaldo(suc) - getDevolucionTotal(suc));
     const getId = (suc) => suc.id_comercio ?? suc.id;
 
     const columnsHistorial = [
@@ -123,16 +211,33 @@ const Liquidaciones = () => {
                 </div>
             )
         },
+        {
+            header: 'Comprobante',
+            render: (row) => (
+                <button
+                    onClick={() => generatePDF(row)}
+                    className="p-2 text-neutral-400 hover:text-black hover:bg-neutral-100 rounded-md transition-colors"
+                    title="Exportar Recibo PDF"
+                >
+                    <FileText size={16} strokeWidth={2.5} />
+                </button>
+            )
+        }
     ];
 
     return (
-        <div className="space-y-8 max-w-[1400px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <motion.div 
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+            className="space-y-8 max-w-[1400px] mx-auto"
+        >
             
             {/* Header Técnico */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b-2 border-black pb-6 gap-6">
                  <div>
                     <div className="flex items-center gap-3 mb-2">
-                         <ShieldCheck size={16} className="text-brand-cyan" variant="Bold" />
+                         <ShieldCheck size={16} className="text-brand-cyan" />
                          <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-neutral-500">TESORERÍA CENTRAL</span>
                          <div className={`px-2 py-0.5 rounded border text-[9px] font-black uppercase tracking-widest bg-black text-white border-black`}>
                              {isSuperAdmin ? 'GLOBAL' : 'SEDE'}
@@ -144,7 +249,7 @@ const Liquidaciones = () => {
                  </div>
                  
                  <div className="px-5 py-3.5 bg-neutral-100 border border-neutral-200 rounded-lg flex items-center gap-4 shadow-sm">
-                    <Wallet size={20} className="text-brand-cyan" />
+                    <CreditCard size={20} className="text-brand-cyan" />
                     <div className="flex flex-col">
                         <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-[0.2em]">Estado Financiero</span>
                         <span className="text-[10px] font-black text-black uppercase tracking-widest">Auditado & Verificado</span>
@@ -167,13 +272,18 @@ const Liquidaciones = () => {
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                            {sucursales.map(suc => {
+                            {sucursales.map((suc, i) => {
                                 const saldo = getSaldo(suc);
                                 const hasDebt = saldo > 0;
 
                                 return (
-                                <div key={getId(suc)} className={`bg-white border ${hasDebt ? 'border-neutral-200 hover:border-black' : 'border-neutral-100'} p-6 rounded-xl flex flex-col justify-between min-h-[220px] transition-all duration-300 shadow-sm relative overflow-hidden group`}>
-                                    
+                                <motion.div 
+                                    key={getId(suc)}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: i * 0.1 }}
+                                    className={`bg-white border ${hasDebt ? 'border-neutral-200 hover:border-black' : 'border-neutral-100'} p-6 rounded-xl flex flex-col justify-between min-h-[220px] transition-all duration-300 shadow-sm relative overflow-hidden group`}
+                                >
                                     {/* Marcador de deuda */}
                                     {hasDebt && (
                                         <div className="absolute top-0 right-0 w-16 h-16 overflow-hidden">
@@ -185,28 +295,35 @@ const Liquidaciones = () => {
 
                                     <div className="space-y-1 relative z-10">
                                         <span className="text-[9px] font-black uppercase tracking-[0.2em] text-neutral-400 block mb-2">{suc.nombre}</span>
-                                        
                                         <div className="flex items-baseline gap-1">
                                             <span className={`text-sm font-bold ${hasDebt ? 'text-black' : 'text-neutral-300'}`}>$</span>
                                             <p className={`text-5xl font-sport m-0 leading-none ${hasDebt ? 'text-black' : 'text-neutral-300'}`}>
-                                                {saldo.toLocaleString()}
+                                                {getSaldoNeto(suc).toLocaleString()}
                                             </p>
                                         </div>
-                                        
+                                        {getSaldo(suc) > 0 && getDevolucionTotal(suc) > 0 && (
+                                            <div className="flex items-center gap-2 mt-2">
+                                                <RotateCcw size={10} className="text-amber-500" />
+                                                <span className="text-[9px] font-bold text-amber-500 uppercase tracking-widest">
+                                                    Dev. descontadas: -${getDevolucionTotal(suc).toLocaleString()}
+                                                </span>
+                                            </div>
+                                        )}
                                         {hasDebt && (
-                                            <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest mt-2">
+                                            <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest mt-1">
                                                 Responsabilidad: Central
                                             </p>
                                         )}
                                     </div>
                                     
                                     {isSuperAdmin && hasDebt ? (
-                                        <button 
+                                        <motion.button 
+                                            whileTap={{ scale: 0.95 }}
                                             onClick={() => handleLiquidarClick(suc)}
                                             className="w-full mt-6 bg-black text-white py-3.5 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] hover:bg-brand-cyan hover:text-black transition-colors flex items-center justify-center gap-2"
                                         >
-                                            LIQUIDAR SALDO <CheckCircle2 size={14} />
-                                        </button>
+                                            LIQUIDAR ${getSaldoNeto(suc).toLocaleString()} <CheckCircle2 size={14} />
+                                        </motion.button>
                                     ) : (
                                         <div className="mt-6 pt-3 border-t border-neutral-100 flex items-center gap-2">
                                             <div className={`w-1.5 h-1.5 rounded-full ${hasDebt ? 'bg-amber-400 animate-pulse' : 'bg-green-500'}`}></div>
@@ -215,7 +332,7 @@ const Liquidaciones = () => {
                                             </span>
                                         </div>
                                     )}
-                                </div>
+                                </motion.div>
                             )})}
                         </div>
                     </div>
@@ -239,49 +356,70 @@ const Liquidaciones = () => {
             )}
 
             {/* Modal Técnico de Confirmación */}
-            <Modal isOpen={isConfirmOpen} onClose={() => setIsConfirmOpen(false)} title="Autorizar Arqueo">
-                <div className="space-y-6 p-2">
-                    
-                    <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-lg flex items-start gap-3">
-                        <AlertCircle size={18} className="text-black shrink-0" />
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 leading-relaxed m-0">
-                            Confirme la <span className="text-black font-black">recepción del monto</span>. Al autorizar, el saldo de la sede volverá a CERO y se emitirá el log de auditoría.
-                        </p>
-                    </div>
-                    
-                    <div className="bg-black p-6 rounded-xl border border-neutral-800">
-                        <div className="flex justify-between items-center text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-3">
-                            <span>Monto Total a Conciliar:</span>
+            <AnimatePresence>
+            {isConfirmOpen && (
+                <Modal isOpen={isConfirmOpen} onClose={() => setIsConfirmOpen(false)} title="Autorizar Arqueo">
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        className="space-y-6 p-2"
+                    >
+                        
+                        <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-lg flex items-start gap-3">
+                            <AlertCircle size={18} className="text-black shrink-0" />
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 leading-relaxed m-0">
+                                Confirme la <span className="text-black font-black">recepción del monto</span>. Al autorizar, el saldo de la sede volverá a CERO y se emitirá el log de auditoría.
+                            </p>
                         </div>
-                        <div className="flex justify-between items-baseline">
-                            <span className="text-[10px] font-bold text-brand-cyan uppercase tracking-[0.3em]">NETO A INGRESAR:</span>
-                            <div className="flex items-baseline gap-1 text-white">
-                                <span className="text-sm font-bold">$</span>
-                                <span className="text-5xl font-sport leading-none">
-                                    {selectedSucursal ? getSaldo(selectedSucursal).toLocaleString() : '0'}
-                                </span>
+                        
+                        <div className="bg-black p-6 rounded-xl border border-neutral-800 shadow-xl overflow-hidden relative">
+                            {/* Glow estético interno */}
+                            <div className="absolute -right-10 -top-10 w-32 h-32 bg-brand-cyan/20 blur-3xl rounded-full" />
+                            
+                            <div className="relative z-10 flex justify-between items-center text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-3">
+                                <span>Monto Total a Conciliar:</span>
                             </div>
+                            <div className="relative z-10 flex justify-between items-baseline">
+                                <span className="text-[10px] font-bold text-brand-cyan uppercase tracking-[0.3em]">NETO A INGRESAR:</span>
+                                <div className="flex items-baseline gap-1 text-white">
+                                    <span className="text-sm font-bold">$</span>
+                                    <span className="text-5xl font-sport leading-none">
+                                        {selectedSucursal ? getSaldoNeto(selectedSucursal).toLocaleString() : '0'}
+                                    </span>
+                                </div>
+                            </div>
+                            {selectedSucursal && getDevolucionTotal(selectedSucursal) > 0 && (
+                                <div className="relative z-10 flex items-center gap-2 mt-2 pt-2 border-t border-neutral-700">
+                                    <RotateCcw size={10} className="text-amber-400" />
+                                    <span className="text-[9px] font-bold text-amber-400 uppercase tracking-widest">
+                                        Incluye descuento por devoluciones: -${getDevolucionTotal(selectedSucursal).toLocaleString()}
+                                    </span>
+                                </div>
+                            )}
                         </div>
-                    </div>
 
-                    <div className="pt-4 flex flex-col gap-3">
-                        <button 
-                            onClick={confirmLiquidacion}
-                            disabled={isProcessing}
-                            className="w-full bg-brand-cyan text-black py-4 rounded-lg text-[11px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-white transition-colors"
-                        >
-                            {isProcessing ? 'AUTORIZANDO...' : <><CreditCard size={18} /> CONFIRMAR INGRESO</>}
-                        </button>
-                        <button 
-                            onClick={() => setIsConfirmOpen(false)}
-                            className="w-full py-3 text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-black transition-colors"
-                        >
-                            CANCELAR OPERACIÓN
-                        </button>
-                    </div>
-                </div>
-            </Modal>
-        </div>
+                        <div className="pt-4 flex flex-col gap-3">
+                            <motion.button 
+                                whileTap={{ scale: 0.98 }}
+                                onClick={confirmLiquidacion}
+                                disabled={isProcessing}
+                                className="w-full bg-brand-cyan text-black py-4 rounded-lg text-[11px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-white transition-colors border border-transparent hover:border-black"
+                            >
+                                {isProcessing ? 'AUTORIZANDO...' : <><CreditCard size={18} /> CONFIRMAR INGRESO</>}
+                            </motion.button>
+                            <button 
+                                onClick={() => setIsConfirmOpen(false)}
+                                className="w-full py-3 text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-black transition-colors"
+                            >
+                                CANCELAR OPERACIÓN
+                            </button>
+                        </div>
+                    </motion.div>
+                </Modal>
+            )}
+            </AnimatePresence>
+        </motion.div>
     );
 };
 

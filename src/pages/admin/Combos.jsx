@@ -52,6 +52,7 @@ const Combos = () => {
         { name: 'nombre',       label: 'Nombre del Combo',   required: true },
         { name: 'descripcion',  label: 'Descripción',        required: false },
         { name: 'precio_combo', label: 'Precio Final (AR$)', required: true, type: 'number' },
+        { name: 'activo',       label: 'Habilitado',         required: false, type: 'checkbox' },
     ];
 
     return (

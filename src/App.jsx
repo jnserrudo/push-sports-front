@@ -21,6 +21,7 @@ import Inventario from './pages/admin/Inventario';
 import Movimientos from './pages/admin/Movimientos';
 import Register from './pages/Register';
 import Toaster from './components/ui/Toaster';
+import Devoluciones from './pages/dashboard/Devoluciones';
 
 const App = () => {
   return (
@@ -52,6 +53,7 @@ const App = () => {
           <Route path="combos" element={<Combos />} />
           <Route path="ofertas" element={<Ofertas />} />
           <Route path="inventario" element={<Inventario />} />
+          <Route path="devoluciones" element={<Devoluciones />} />
           {/* POS also accessible under /dashboard for Vendedores */}
           <Route path="pos" element={<POS />} />
         </Route>

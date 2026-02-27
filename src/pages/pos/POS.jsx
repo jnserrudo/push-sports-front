@@ -13,13 +13,14 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { posService } from '../../services/posService';
-
+import { motion, AnimatePresence } from 'framer-motion';
 
 const POS = () => {
   const { user, sucursalId } = useAuthStore();
   const [cart, setCart] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [currentSucursal, setCurrentSucursal] = useState(null);
   const [products, setProducts] = useState([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [metodoPago, setMetodoPago] = useState('Efectivo');
@@ -30,15 +31,20 @@ const POS = () => {
     const loadProducts = async () => {
       setIsLoadingProducts(true);
       try {
-        const comercioId = sucursalId || user?.id_comercio_asignado;
-        if (!comercioId) {
-          console.warn('POS: Usuario sin comercio asignado');
+        const id = sucursalId || user?.id_comercio_asignado;
+        if (id) {
+          const [inventario, sucursalData] = await Promise.all([
+            posService.getInventarioSucursal(id),
+            sucursalesService.getById(id)
+          ]);
+          setProducts(inventario || []);
+          setCurrentSucursal(sucursalData);
+        } else {
+          // If the user doesn't have an assigned store (e.g. SUPER_ADMIN), they shouldn't see products directly here without picking one.
+          // We can silently ignore this or show a specific UI state.
           setProducts([]);
-          return;
+          setCurrentSucursal(null);
         }
-        const inventario = await posService.getInventarioSucursal(comercioId);
-        // El backend devuelve InventarioComercio con include de producto
-        setProducts(inventario || []);
       } catch (error) {
         console.error('Error cargando inventario POS:', error);
         setProducts([]);
@@ -110,11 +116,13 @@ const POS = () => {
       setCart([]);
       setActiveTab('catalog');
       setShowCheckoutModal(false);
+      toast.success("Venta procesada exitosamente");
       // Recargar inventario tras la venta para reflejar stock actualizado
       const inventario = await posService.getInventarioSucursal(comercioId);
       setProducts(inventario || []);
     } catch (error) {
       console.error('Error al procesar venta:', error);
+      toast.error("Error al procesar la venta");
     } finally {
       setIsProcessing(false);
     }
@@ -150,29 +158,36 @@ const POS = () => {
 
         <div className="flex-1 p-4 md:p-8 overflow-y-auto scrollbar-hide">
           {isLoadingProducts ? (
-            <div className="flex flex-col items-center justify-center h-48 gap-4">
-              <Loader2 size={32} className="animate-spin text-brand-cyan" />
-              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-neutral-400">Cargando...</p>
+            <div className="flex flex-col items-center justify-center py-20 md:py-32 gap-6 opacity-60">
+                <div className="w-12 h-12 border-4 border-neutral-100 border-t-brand-cyan rounded-full animate-spin"></div>
+                <p className="text-[10px] font-black uppercase tracking-[0.5em] text-neutral-400">Accediendo a la RED...</p>
             </div>
           ) : filteredProducts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-48 gap-4 opacity-40">
-              <Store size={48} className="text-neutral-300" />
-              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-neutral-400">Sin productos</p>
+            <div className="flex flex-col items-center justify-center py-20 md:py-40 opacity-20 filter grayscale">
+              <Store size={100} strokeWidth={0.5} />
+              <p className="text-xs font-black uppercase tracking-[1em] mt-10">Sin Productos</p>
             </div>
           ) : (
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 pb-20 md:pb-0">
+          <motion.div layout className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 pb-20 md:pb-0">
+            <AnimatePresence>
             {filteredProducts.map(item => {
               const stock = getProductStock(item);
               const precio = getProductPrecio(item);
               const nombre = getProductNombre(item);
               const img = getProductImg(item);
               return (
-              <div 
+              <motion.div 
+                layout
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                whileHover={stock > 0 ? { scale: 1.02 } : {}}
+                whileTap={stock > 0 ? { scale: 0.95 } : {}}
                 key={getProductId(item)}
                 onClick={() => addToCart(item)}
                 className={`group p-3 md:p-4 bg-white rounded-2xl md:rounded-3xl transition-all duration-300 relative cursor-pointer border ${
                   stock > 0 
-                  ? 'border-neutral-100 shadow-sm hover:border-brand-cyan/20 active:scale-95' 
+                  ? 'border-neutral-100 shadow-sm hover:border-brand-cyan/20' 
                   : 'bg-neutral-50/50 opacity-40 grayscale border-transparent cursor-not-allowed'
                 }`}
               >
@@ -198,10 +213,11 @@ const POS = () => {
                         {stock} DISP.
                     </span>
                 </div>
-              </div>
+              </motion.div>
               );
             })}
-          </div>
+            </AnimatePresence>
+          </motion.div>
           )}
         </div>
       </div>
@@ -237,8 +253,17 @@ const POS = () => {
                 <p className="text-[9px] text-neutral-400 font-bold uppercase tracking-widest leading-relaxed">Seleccioná productos<br/>para iniciar la venta.</p>
             </div>
           ) : (
-            cart.map(item => (
-              <div key={item.id} className="p-3 md:p-5 bg-neutral-50/50 rounded-xl md:rounded-2xl border border-neutral-100 flex flex-col gap-3 group">
+            <AnimatePresence>
+            {cart.map((item, i) => (
+              <motion.div 
+                layout
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.2, delay: i * 0.05 }}
+                key={item.id} 
+                className="p-3 md:p-5 bg-neutral-50/50 rounded-xl md:rounded-2xl border border-neutral-100 flex flex-col gap-3 group"
+              >
                 <div className="flex justify-between items-start">
                     <div className="flex items-center gap-3 md:gap-4">
                          <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl overflow-hidden border border-neutral-200 bg-neutral-100 flex items-center justify-center">
@@ -264,8 +289,9 @@ const POS = () => {
                     </div>
                     <span className="font-black text-neutral-900 text-base md:text-lg tracking-tighter">${(item.precio * item.cantidad).toLocaleString()}</span>
                 </div>
-              </div>
-            ))
+              </motion.div>
+            ))}
+            </AnimatePresence>
           )}
         </div>
 

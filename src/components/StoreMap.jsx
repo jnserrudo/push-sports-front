@@ -47,7 +47,7 @@ const StoreMap = ({ activeLocation = 0 }) => {
     <div className="w-full h-full flex flex-col lg:flex-row overflow-hidden">
 
       {/* ── Panel izquierdo: info de la sede activa ── */}
-      <div className="lg:w-[280px] xl:w-[320px] flex-shrink-0 bg-white flex flex-col justify-between p-8 border-r border-neutral-100">
+      <div className="w-full lg:w-[280px] xl:w-[320px] flex-shrink-0 bg-white flex flex-col justify-between p-6 lg:p-8 border-b lg:border-r border-neutral-100 order-2 lg:order-1">
 
         {/* Encabezado */}
         <div className="space-y-8">

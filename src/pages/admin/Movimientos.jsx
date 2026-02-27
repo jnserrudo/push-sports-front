@@ -3,25 +3,37 @@ import { Activity, ArrowUpRight, ArrowDownLeft, RefreshCw, Filter, List, Search,
 import DataTable from '../../components/ui/DataTable';
 import { enviosService } from '../../services/enviosService';
 import { useAuthStore } from '../../store/authStore';
+import { sucursalesService } from '../../services/sucursalesService';
 
 const Movimientos = () => {
     const { user, sucursalId } = useAuthStore();
     const isSuperAdmin = user?.id_rol === 1;
+    
     const [movimientos, setMovimientos] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [sucursalesOptions, setSucursalesOptions] = useState([]);
+    const [globalFilterId, setGlobalFilterId] = useState('ALL');
 
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            // enviosService.getAll calling /movimientos
-            const data = await enviosService.getAll();
+            if (isSuperAdmin && sucursalesOptions.length === 0) {
+                 const sucs = await sucursalesService.getAll().catch(()=>[]);
+                 setSucursalesOptions(sucs);
+            }
+
+            // Determine which ID to send to the service
+            const targetId = isSuperAdmin ? (globalFilterId === 'ALL' ? null : globalFilterId) : sucursalId;
+            
+            // enviosService ahora acepta targetId para filtrar desde el Backend
+            const data = await enviosService.getAll(targetId);
             setMovimientos(data);
         } catch (err) {
             console.error('Error cargando movimientos:', err);
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [isSuperAdmin, sucursalId, globalFilterId, sucursalesOptions.length]);
 
     useEffect(() => { loadData(); }, [loadData]);
 
@@ -134,11 +146,28 @@ const Movimientos = () => {
                     </p>
                 </div>
 
-                <div className="flex gap-3 w-full md:w-auto">
+                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto items-center">
+                    {isSuperAdmin && (
+                        <div className="w-full sm:w-auto flex items-center bg-white border border-neutral-200 rounded-lg px-4 py-3 md:py-2">
+                            <Store size={14} className="text-brand-cyan mr-3" />
+                            <select
+                                value={globalFilterId}
+                                onChange={(e) => setGlobalFilterId(e.target.value)}
+                                className="bg-transparent text-black text-[10px] md:text-[11px] font-black uppercase tracking-widest outline-none cursor-pointer appearance-none flex-1 pr-6"
+                            >
+                                <option value="ALL">KARDEX GLOBAL (TODAS LAS SEDES)</option>
+                                {sucursalesOptions.map(suc => (
+                                    <option key={suc.id_sucursal || suc.id_comercio} value={suc.id_sucursal || suc.id_comercio}>
+                                        {suc.nombre}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
                     <button
                         onClick={loadData}
                         disabled={isLoading}
-                        className="flex items-center gap-2 bg-neutral-100 text-black hover:bg-neutral-200 transition-colors px-4 py-3.5 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] disabled:opacity-50"
+                        className="w-full sm:w-auto flex items-center justify-center gap-2 bg-neutral-900 text-white hover:bg-brand-cyan hover:text-black transition-colors px-6 py-3.5 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] disabled:opacity-50"
                     >
                         <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
                         ACTUALIZAR

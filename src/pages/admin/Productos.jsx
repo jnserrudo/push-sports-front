@@ -306,6 +306,18 @@ const Productos = () => {
                 );
             }
         },
+        {
+            header: 'Estado',
+            render: (row) => (
+                <div className={`inline-flex px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border ${
+                    row.activo !== false
+                        ? 'bg-black text-white border-black'
+                        : 'bg-neutral-100 text-neutral-400 border-neutral-200 line-through'
+                }`}>
+                    {row.activo !== false ? 'Activo' : 'Inactivo'}
+                </div>
+            )
+        },
     ];
 
     const renderForm = (formData, setFormData) => {
@@ -447,6 +459,24 @@ const Productos = () => {
                         </div>
                     </div>
 
+                    {/* Activo toggle */}
+                    <div className="flex items-center justify-between p-4 bg-neutral-50 border border-neutral-200 rounded-lg">
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black">Estado del Producto</p>
+                            <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5">Desactivar oculta el producto del catálogo y del POS</p>
+                        </div>
+                        <div
+                            onClick={() => setFormData({ ...formData, activo: formData.activo === false ? true : false })}
+                            className={`w-12 h-7 rounded-full transition-all relative flex-shrink-0 cursor-pointer ${
+                                formData.activo === false ? 'bg-neutral-200' : 'bg-brand-cyan'
+                            }`}
+                        >
+                            <div className={`w-5 h-5 bg-white rounded-full shadow absolute top-1 transition-all ${
+                                formData.activo === false ? 'left-1' : 'left-6'
+                            }`} />
+                        </div>
+                    </div>
+
                     <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-lg flex items-start gap-3">
                         <Info size={16} className="text-black mt-0.5 shrink-0" />
                         <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 leading-relaxed m-0">
@@ -467,13 +497,14 @@ const Productos = () => {
 
     return (
         <GenericABM
-            title="Catálogo Master"
+            title="Inventario"
             icon={Package}
             service={productosService}
             columns={columns}
             formFields={[]}
             renderForm={renderForm}
             idField="id_producto"
+            modalMaxWidth="max-w-5xl"
         />
     );
 };

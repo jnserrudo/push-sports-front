@@ -32,11 +32,11 @@ const Usuarios = () => {
             header: 'Credencial Operador',
             accessor: 'nombre',
             render: (row) => (
-                <div className="flex flex-col">
-                    <span className="font-sport text-xl text-black uppercase leading-none mb-1">
+                 <div className="flex flex-col">
+                    <span className="font-black text-xs md:text-xl text-black uppercase leading-none mb-[2px] md:mb-1">
                         {row.nombre} {row.apellido}
                     </span>
-                    <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest">{row.email}</span>
+                    <span className="text-[8px] md:text-[10px] font-black text-neutral-500 uppercase tracking-widest leading-none">{row.email}</span>
                 </div>
             )
         },
@@ -46,8 +46,8 @@ const Usuarios = () => {
             render: (row) => {
                 const cfg = ROLES[row.id_rol] || ROLES[4];
                 return (
-                    <div className={`inline-flex items-center gap-2 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest rounded-md border ${cfg.color}`}>
-                        <cfg.icon size={12} strokeWidth={3} />
+                    <div className={`inline-flex items-center gap-1 md:gap-2 px-1 md:px-2.5 py-0.5 md:py-1 text-[7px] md:text-[10px] font-black uppercase tracking-widest rounded-sm border-2 ${cfg.color} leading-none`}>
+                        <cfg.icon className="w-2 h-2 md:w-3 md:h-3" strokeWidth={3} />
                         {cfg.label}
                     </div>
                 );
@@ -83,6 +83,7 @@ const Usuarios = () => {
                 {[
                     { field: 'nombre',   label: 'Nombre',   placeholder: 'NOMBRE'   },
                     { field: 'apellido', label: 'Apellido', placeholder: 'APELLIDO' },
+                    { field: 'username', label: 'Usuario',  placeholder: 'NICKNAME' },
                 ].map(({ field, label, placeholder }) => (
                     <div key={field} className="space-y-2">
                         <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">{label}</label>

@@ -2,8 +2,10 @@ import api from '../api/api';
 
 export const enviosService = {
     // Obtener todos los movimientos de stock (que son los "envíos" reales)
-    getAll: async () => {
-        const response = await api.get('/movimientos');
+    // Acepta un sucursalId opcional. Si se envía, restringe la búsqueda a esa sucursal.
+    getAll: async (sucursalId = null) => {
+        const endpoint = sucursalId ? `/movimientos/comercio/${sucursalId}` : '/movimientos';
+        const response = await api.get(endpoint);
         // Mapear los datos del backend al formato que espera el frontend
         return (response.data || []).map(mov => ({
             id: mov.id_movimiento,

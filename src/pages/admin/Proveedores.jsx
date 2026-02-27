@@ -61,6 +61,7 @@ const Proveedores = () => {
                 { name: 'razon_social',     label: 'Razón Social',         required: false },
                 { name: 'cuit',             label: 'CUIT',                 required: false },
                 { name: 'telefono',         label: 'Teléfono de Contacto', required: false },
+                { name: 'activo',           label: 'Proveedor Activo',     required: false, type: 'checkbox' },
             ]}
             idField="id_proveedor"
         />

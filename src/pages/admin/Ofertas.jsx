@@ -71,6 +71,7 @@ const Ofertas = () => {
                 { name: 'descuento_porcentaje', label: 'Porcentaje (%)',       required: true, type:'number'},
                 { name: 'fecha_inicio',         label: 'Fecha Inicio',        required: true, type:'date'  },
                 { name: 'fecha_fin',            label: 'Fecha Fin',           required: false,type:'date'  },
+                { name: 'activo',               label: 'Oferta Vigente',      required: false,type:'checkbox' },
             ]}
             idField="id_oferta"
         />
