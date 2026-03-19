@@ -3,7 +3,7 @@ import api from '../api/api';
 // Create a generic service generator for CRUD operations
 const createApiService = (endpointName) => ({
     getAll: async () => {
-        const response = await api.get(`/${endpointName}`);
+        const response = await api.get(`/${endpointName}?includeInactive=true`);
         return response.data;
     },
     getById: async (id) => {

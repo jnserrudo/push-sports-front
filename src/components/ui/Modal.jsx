@@ -39,7 +39,7 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-md" }) => {
             {/* Header - High End Design */}
             <div className="flex justify-between items-center p-6 md:p-10 bg-neutral-50/50 backdrop-blur-sm flex-shrink-0 border-b border-neutral-100">
               <div className="flex flex-col">
-                <span className="text-[9px] md:text-[11px] font-bold uppercase tracking-[0.4em] text-neutral-400 mb-1">Push System</span>
+                <span className="text-[9px] md:text-[11px] font-bold uppercase tracking-[0.4em] text-neutral-400 mb-1">Push Sport Salta</span>
                 <h3 className="font-bold text-lg md:text-3xl text-black tracking-tight uppercase font-sport leading-none">{title}</h3>
               </div>
               <button 

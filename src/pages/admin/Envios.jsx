@@ -1,12 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Navigate } from 'react-router-dom';
 import { Truck, Box, Home, PlusCircle, Info, Check, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
 import DataTable from '../../components/ui/DataTable';
 import Modal from '../../components/ui/Modal';
 import { enviosService } from '../../services/enviosService';
 import { sucursalesService } from '../../services/sucursalesService';
 import { productosService } from '../../services/productosService';
+import { useAuthStore } from '../../store/authStore';
 
 const Envios = () => {
+    const { user } = useAuthStore();
+    const isSuperAdmin = user?.id_rol === 1;
+
     const [envios, setEnvios]         = useState([]);
     const [sucursales, setSucursales] = useState([]);
     const [productos, setProductos]   = useState([]);
@@ -43,8 +48,8 @@ const Envios = () => {
 
     const handleAdd = () => {
         setFormData({
-            sucursal_id: sucursales[0]?.id || '',
-            producto_id: productos[0]?.id  || '',
+            sucursal_id: sucursales[0]?.id_comercio || '',
+            producto_id: productos[0]?.id_producto  || '',
             cantidad: 1,
         });
         setFeedback(null);
@@ -78,7 +83,7 @@ const Envios = () => {
 
     const columns = [
         {
-            header: 'ID Envío',
+            header: 'ID Asignación',
             accessor: 'id',
             render: (row) => (
                 <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">
@@ -129,6 +134,11 @@ const Envios = () => {
         },
     ];
 
+    // Fallback de seguridad extrema
+    if (!isSuperAdmin) {
+        return <Navigate to="/dashboard" replace />;
+    }
+
     return (
         <div className="space-y-8 max-w-[1400px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
 
@@ -136,7 +146,7 @@ const Envios = () => {
                 <div>
                     <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-neutral-500 mb-2 block">LOGÍSTICA INTERNA</span>
                     <h2 className="text-4xl md:text-5xl uppercase leading-none m-0 font-sport text-black">
-                        Transferencia de <span className="text-brand-cyan">Stock.</span>
+                        Gestión de <span className="text-brand-cyan">Stock.</span>
                     </h2>
                     <p className="text-neutral-500 text-sm font-medium mt-2 m-0">{envios.length} movimientos registrados</p>
                 </div>
@@ -153,7 +163,7 @@ const Envios = () => {
                         onClick={handleAdd}
                         className="flex-1 md:flex-none bg-brand-cyan text-black hover:bg-black hover:text-white transition-colors px-6 py-3.5 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-md"
                     >
-                        <PlusCircle size={16} /> REGISTRAR ENVÍO
+                        <PlusCircle size={16} /> REGISTRAR ASIGNACIÓN
                     </button>
                 </div>
             </div>
@@ -177,7 +187,7 @@ const Envios = () => {
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => !isSubmitting && setIsModalOpen(false)}
-                title="Nueva Orden de Traslado"
+                title="Nueva Orden de Asignación"
             >
                 <form onSubmit={handleSubmit} className="space-y-6 p-2">
 
@@ -216,7 +226,7 @@ const Envios = () => {
                                     onChange={e => setFormData({ ...formData, sucursal_id: e.target.value })}
                                 >
                                     <option value="">Seleccione destino...</option>
-                                    {sucursales.map(s => <option key={s.id} value={s.id}>{s.nombre}</option>)}
+                                    {sucursales.map(s => <option key={s.id_comercio} value={s.id_comercio}>{s.nombre}</option>)}
                                 </select>
                             </div>
                         </div>
@@ -233,7 +243,7 @@ const Envios = () => {
                                     onChange={e => setFormData({ ...formData, producto_id: e.target.value })}
                                 >
                                     <option value="">Seleccione ítem...</option>
-                                    {productos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                                    {productos.map(p => <option key={p.id_producto} value={p.id_producto}>{p.nombre}</option>)}
                                 </select>
                             </div>
                         </div>

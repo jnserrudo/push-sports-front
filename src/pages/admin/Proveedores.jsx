@@ -53,6 +53,7 @@ const Proveedores = () => {
     return (
         <GenericABM
             title="Logística y Proveedores"
+            description="Directorio de empresas y distribuidores. Centraliza la información de contacto y fiscal para el abastecimiento de los productos Push Sport."
             icon={Truck}
             service={service}
             columns={columns}

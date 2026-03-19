@@ -24,6 +24,7 @@ const Marcas = () => {
     return (
         <GenericABM
             title="Directorio de Marcas"
+            description="Gestión de marcas comerciales y partners estratégicos asociados a los productos del inventario."
             icon={Tag}
             service={service}
             columns={columns}

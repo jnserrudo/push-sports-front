@@ -1,10 +1,11 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import DashboardLayout from './components/layout/DashboardLayout';
 import Dashboard from './pages/admin/Dashboard';
 import Sucursales from './pages/admin/Sucursales';
+import TiposComercio from './pages/admin/TiposComercio';
 import Productos from './pages/admin/Productos';
 import Categorias from './pages/admin/Categorias';
 import Marcas from './pages/admin/Marcas';
@@ -22,6 +23,8 @@ import Movimientos from './pages/admin/Movimientos';
 import Register from './pages/Register';
 import Toaster from './components/ui/Toaster';
 import Devoluciones from './pages/dashboard/Devoluciones';
+import Reporteria from './pages/admin/Reporteria';
+import Perfil from './pages/dashboard/Perfil';
 
 const App = () => {
   return (
@@ -40,12 +43,14 @@ const App = () => {
         >
           <Route index element={<Dashboard />} />
           <Route path="sucursales" element={<Sucursales />} />
+          <Route path="tipos-comercio" element={<TiposComercio />} />
           <Route path="productos" element={<Productos />} />
           <Route path="categorias" element={<Categorias />} />
           <Route path="marcas" element={<Marcas />} />
           <Route path="usuarios" element={<Usuarios />} />
           <Route path="envios" element={<Envios />} />
           <Route path="movimientos" element={<Movimientos />} />
+          <Route path="reporteria" element={<Reporteria />} />
           <Route path="liquidaciones" element={<Liquidaciones />} />
           <Route path="descuentos" element={<Descuentos />} />
           <Route path="auditoria" element={<Auditoria />} />
@@ -54,6 +59,7 @@ const App = () => {
           <Route path="ofertas" element={<Ofertas />} />
           <Route path="inventario" element={<Inventario />} />
           <Route path="devoluciones" element={<Devoluciones />} />
+          <Route path="perfil" element={<Perfil />} />
           {/* POS also accessible under /dashboard for Vendedores */}
           <Route path="pos" element={<POS />} />
         </Route>

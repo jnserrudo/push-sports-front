@@ -55,6 +55,41 @@ html, body {
     @apply bg-black/60 backdrop-blur-2xl border border-white/10 shadow-2xl;
   }
 
+  /* Custom Scrollbar Utilities */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #f5f5f5; 
+    border-left: 1px solid #e5e5e5;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #000; 
+    border-radius: 0px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #00e5ff; 
+  }
+
+  /* For datatables and specific containers */
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f9fafb !important;
+    border-left: 1px solid #f3f4f6 !important;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #e5e7eb !important;
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #d1d5db !important;
+  }
+
   .text-balance {
     text-wrap: balance;
   }

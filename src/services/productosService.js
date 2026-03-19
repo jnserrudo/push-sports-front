@@ -12,12 +12,12 @@ export const productosService = {
     },
 
     getProveedores: async () => {
-        const res = await api.get('/proveedores');
+        const res = await api.get('/proveedores?includeInactive=true');
         return res.data;
     },
 
     getAll: async () => {
-        const res = await api.get('/productos');
+        const res = await api.get('/productos?includeInactive=true');
         return res.data;
     },
 

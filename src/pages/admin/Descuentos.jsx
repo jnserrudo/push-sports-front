@@ -132,6 +132,7 @@ const Descuentos = () => {
     return (
         <GenericABM
             title="Motor de Descuentos"
+            description="Creación de cupones y códigos promocionales (monto fijo o porcentaje) con capacidad de establecer límites de uso."
             icon={Ticket}
             service={descuentosService}
             columns={columns}

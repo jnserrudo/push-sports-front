@@ -22,7 +22,6 @@ export const uploadProductImage = async (file) => {
             headers: {
                 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
                 'Content-Type': file.type || 'image/jpeg',
-                'x-upsert': 'true',
             },
             body: file,
         }
@@ -66,10 +65,11 @@ export const deleteProductImage = async (url) => {
 export const parseImagenes = (imagen_url) => {
     if (!imagen_url) return [];
     try {
+        if (Array.isArray(imagen_url)) return imagen_url;
         const parsed = JSON.parse(imagen_url);
         return Array.isArray(parsed) ? parsed : [parsed];
     } catch {
-        return [imagen_url]; // Legacy: plain string URL
+        return imagen_url ? [imagen_url] : [];
     }
 };
 
@@ -80,4 +80,41 @@ export const serializeImagenes = (urls) => {
     const valid = (urls || []).filter(Boolean);
     if (valid.length === 0) return null;
     return JSON.stringify(valid);
+};
+
+/**
+ * Fetch a remote image URL and convert it to a base64 data URI.
+ * Required for react-pdf image embedding (avoids CORS issues in Web Worker context).
+ * Returns null if the fetch fails.
+ */
+export const fetchImageAsBase64 = async (url) => {
+    if (!url) return null;
+    try {
+        const res = await fetch(url);
+        if (!res.ok) return null;
+        const blob = await res.blob();
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = () => resolve(null);
+            reader.readAsDataURL(blob);
+        });
+    } catch {
+        return null;
+    }
+};
+
+/**
+ * Pre-fetch all product images as base64, returning a map of { id_producto: base64string | null }
+ * Call this once before rendering PDFs.
+ */
+export const prefetchProductImages = async (products) => {
+    const entries = await Promise.all(
+        products.map(async (p) => {
+            const urls = parseImagenes(p.imagen_url);
+            const base64 = urls[0] ? await fetchImageAsBase64(urls[0]) : null;
+            return [p.id_producto, base64];
+        })
+    );
+    return Object.fromEntries(entries);
 };

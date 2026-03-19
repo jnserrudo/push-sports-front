@@ -102,7 +102,7 @@ const Dashboard = () => {
   const [stats, setStats] = useState({
     ventas: null, usuarios: null, productos: null,
     stockCritico: [], movimientos: [], sucursalesCount: 0,
-    chartData: []
+    chartData: [], sucursalesDeuda: []
   });
 
   const loadStats = async () => {
@@ -120,17 +120,22 @@ const Dashboard = () => {
       ]);
 
       if (!isSuperAdmin && sucursalId) {
-         setCurrentSucursal(sucursales.find(s => s.id_sucursal === sucursalId));
+         setCurrentSucursal(sucursales.find(s => s.id_comercio === sucursalId));
       }
 
       const movimientosFiltrados = filterId 
-        ? todosMovimientos.filter(m => m.sucursal_id === filterId)
+        ? todosMovimientos.filter(m => m.sucursal_id === filterId || m.id_comercio === filterId)
         : todosMovimientos;
 
       const criticos = productos.filter(p => (p.stock_total || 0) <= (p.stock_minimo || 5) && p.activo);
 
-      const sucursalesCalculo = filterId ? sucursales.filter(s => s.id_sucursal === filterId) : sucursales;
+      const sucursalesCalculo = filterId ? sucursales.filter(s => s.id_comercio === filterId) : sucursales;
       const totalCaja = sucursalesCalculo.reduce((acc, s) => acc + Number(s.saldo_acumulado_mili || 0), 0);
+
+      // Top 3 deudas de sucursales (para el widget de Liquidaciones en vivo)
+      const sucursalesDeuda = [...sucursalesCalculo]
+        .sort((a, b) => Number(b.saldo_acumulado_mili || 0) - Number(a.saldo_acumulado_mili || 0))
+        .slice(0, 3);
 
       // ── Ventas reales de los últimos 7 días ──
       let chartData = [];
@@ -177,7 +182,8 @@ const Dashboard = () => {
         stockCritico: criticos.slice(0, 3),
         movimientos: movimientosFiltrados,
         sucursalesCount: sucursales.length,
-        chartData
+        chartData,
+        sucursalesDeuda
       });
     } catch (e) {
       console.error(e);
@@ -231,7 +237,7 @@ const Dashboard = () => {
                  >
                    <option value="ALL">VISIÓN GLOBAL</option>
                    {sucursalesOptions.map(suc => (
-                     <option key={suc.id_sucursal} value={suc.id_sucursal}>{suc.nombre}</option>
+                     <option key={suc.id_comercio} value={suc.id_comercio}>{suc.nombre}</option>
                    ))}
                  </select>
               </div>
@@ -243,63 +249,205 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* ── GRÁFICA PRINCIPAL RECHARTS ── */}
-      <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-5 md:p-8 flex flex-col mb-6">
-        <div className="flex items-center justify-between mb-6">
-             <div className="flex items-center gap-3">
-               <div className="w-10 h-10 bg-brand-cyan/10 rounded-lg flex items-center justify-center border border-brand-cyan/20">
-                 <BarChart3 size={18} className="text-brand-cyan" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        {/* Gráfico Principal */}
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-neutral-200 shadow-sm p-5 md:p-8 flex flex-col">
+          <div className="flex items-center justify-between mb-6">
+               <div className="flex items-center gap-3">
+                 <div className="w-10 h-10 bg-brand-cyan/10 rounded-lg flex items-center justify-center border border-brand-cyan/20">
+                   <BarChart3 size={18} className="text-brand-cyan" />
+                 </div>
+                 <div>
+                   <span className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.3em] block mb-1">RENDIMIENTO SEMANAL</span>
+                   <h3 className="font-sport text-xl uppercase m-0 leading-none text-black">
+                       Volumen de <span className="text-brand-cyan">Ventas.</span>
+                   </h3>
+                 </div>
                </div>
-               <div>
-                 <span className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.3em] block mb-1">RENDIMIENTO SEMANAL</span>
-                 <h3 className="font-sport text-xl uppercase m-0 leading-none text-black">
-                     Volumen de <span className="text-brand-cyan">Ventas.</span>
-                 </h3>
+          </div>
+          
+          <div className="h-64 md:h-80 w-full">
+              {loading ? (
+                  <div className="w-full h-full bg-neutral-50 rounded-xl animate-pulse flex items-center justify-center">
+                      <span className="text-xs font-black uppercase tracking-widest text-neutral-300">Generando Gráfica...</span>
+                  </div>
+              ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={stats.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorVentas" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#00c2ff" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#00c2ff" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e5e5" />
+                      <XAxis dataKey="name" tick={{fontSize: 10, fill: '#a3a3a3', fontWeight: 900}} tickLine={false} axisLine={false} />
+                      <YAxis tick={{fontSize: 10, fill: '#a3a3a3', fontWeight: 900}} tickLine={false} axisLine={false} tickFormatter={(val) => `$${val/1000}k`} />
+                      <RechartsTooltip content={<CustomTooltip />} />
+                      <Area type="monotone" dataKey="ventas" stroke="#00c2ff" strokeWidth={4} fillOpacity={1} fill="url(#colorVentas)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+              )}
+          </div>
+        </div>
+
+        {/* Panel Liquidaciones en Vivo (Widget) */}
+        {isSuperAdmin && (
+            <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-xl p-5 md:p-8 flex flex-col relative overflow-hidden group">
+               <div className="absolute -right-10 -top-10 w-40 h-40 bg-brand-cyan/10 blur-3xl rounded-full" />
+               <div className="relative z-10 flex flex-col h-full">
+                 <div className="flex items-center gap-3 mb-6">
+                   <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center border border-neutral-800">
+                     <CircleDollarSign size={18} className="text-brand-cyan" />
+                   </div>
+                   <div>
+                     <span className="text-[10px] font-black text-brand-cyan uppercase tracking-[0.3em] block mb-1 flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-brand-cyan rounded-full animate-pulse"></span> LIVE TRACKER
+                     </span>
+                     <h3 className="font-sport text-xl md:text-2xl uppercase m-0 leading-none text-white">Liquidaciones</h3>
+                   </div>
+                 </div>
+
+                 <div className="flex-1 space-y-3">
+                    {loading ? (
+                        Array(3).fill(0).map((_, i) => (
+                            <div key={i} className="h-14 bg-neutral-800 animate-pulse rounded-xl w-full" />
+                        ))
+                    ) : stats.sucursalesDeuda.length === 0 ? (
+                        <div className="py-8 text-center text-neutral-500 font-bold text-xs uppercase tracking-widest">
+                            No hay saldos pendientes
+                        </div>
+                    ) : (
+                        stats.sucursalesDeuda.map((sucursal) => (
+                           <div key={sucursal.id_comercio} className="bg-black/50 border border-neutral-800 p-3 md:p-4 rounded-xl flex justify-between items-center group-hover:border-neutral-700 transition-colors">
+                               <div className="flex items-center gap-3">
+                                   <Store size={14} className="text-neutral-500" />
+                                   <span className="text-sm font-bold text-neutral-300 uppercase tracking-wide truncate max-w-[120px] md:max-w-[180px]">{sucursal.nombre}</span>
+                               </div>
+                               <span className="font-sport text-brand-cyan text-lg md:text-xl">
+                                   ${Number(sucursal.saldo_acumulado_mili || 0).toLocaleString()}
+                               </span>
+                           </div>
+                        ))
+                    )}
+                 </div>
+
+                 <Link to="/dashboard/liquidaciones" className="mt-4 pt-4 border-t border-neutral-800 flex items-center justify-between text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500 hover:text-brand-cyan transition-colors">
+                     <span>Ir a Tablero Completo</span>
+                     <ArrowRight size={14} />
+                 </Link>
                </div>
-             </div>
-        </div>
-        
-        <div className="h-64 md:h-80 w-full">
-            {loading ? (
-                <div className="w-full h-full bg-neutral-50 rounded-xl animate-pulse flex items-center justify-center">
-                    <span className="text-xs font-black uppercase tracking-widest text-neutral-300">Generando Gráfica...</span>
-                </div>
-            ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={stats.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorVentas" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#00c2ff" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#00c2ff" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e5e5" />
-                    <XAxis dataKey="name" tick={{fontSize: 10, fill: '#a3a3a3', fontWeight: 900}} tickLine={false} axisLine={false} />
-                    <YAxis tick={{fontSize: 10, fill: '#a3a3a3', fontWeight: 900}} tickLine={false} axisLine={false} tickFormatter={(val) => `$${val/1000}k`} />
-                    <RechartsTooltip content={<CustomTooltip />} />
-                    <Area type="monotone" dataKey="ventas" stroke="#00c2ff" strokeWidth={4} fillOpacity={1} fill="url(#colorVentas)" />
-                  </AreaChart>
-                </ResponsiveContainer>
-            )}
-        </div>
+            </div>
+        )}
       </div>
 
       {/* ── MÉTRICAS ── */}
       <section className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
         <MetricCard title="Caja Fuerte" value={stats.ventas} icon={CreditCard} sub="Saldo acumulado" link="/dashboard/liquidaciones" loading={loading} />
-        <MetricCard title="Staff" value={stats.usuarios} icon={Users} sub="Operadores" link="/dashboard/usuarios" loading={loading} />
+        {isSuperAdmin && (
+            <MetricCard title="Staff" value={stats.usuarios} icon={Users} sub="Operadores" link="/dashboard/usuarios" loading={loading} />
+        )}
         <MetricCard title="Productos" value={loading ? '-' : stats.productos} icon={Package} sub="Catálogo Activo" link="/dashboard/productos" loading={loading} />
       </section>
 
-      {/* ── ACCESOS RÁPIDOS ── */}
-      <div className="mt-8">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-          <QuickCard icon={Zap} title="Ofertas" desc="Promociones activas" link="/dashboard/ofertas" />
-          <QuickCard icon={RotateCcw} title="Devoluciones" desc="Revertir ventas" link="/dashboard/devoluciones" />
-          <QuickCard icon={Monitor} title="Sucursales" desc="Sedes conectadas" link="/dashboard/sucursales" accent />
-          <QuickCard icon={ShieldCheck} title="Auditoria" desc="Logs de seguridad" link="/dashboard/auditoria" accent />
-        </div>
-      </div>
+      {/* ── LIVE TRACKER: FLUJO DE INVENTARIO (CRÍTICO PARA UX) ── */}
+      <section className="mt-8 md:mt-12 bg-white rounded-2xl md:rounded-[2rem] border-2 border-neutral-100 shadow-sm p-5 md:p-8 overflow-hidden">
+         <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-2 border-neutral-100 pb-4 mb-6 gap-4">
+             <div>
+                 <span className="text-[10px] font-black uppercase tracking-[0.4em] text-neutral-400 block mb-1">MONITOREO EN TIEMPO REAL</span>
+                 <h2 className="text-xl md:text-2xl font-sport uppercase m-0 leading-none text-black">
+                     Flujo de <span className="text-brand-cyan">Inventario.</span>
+                 </h2>
+                 <p className="text-xs text-neutral-500 font-medium mt-1">El ciclo de vida de tus productos: Asignaciones, Ventas y Alertas.</p>
+             </div>
+             <Link to="/dashboard/movimientos" className="text-[10px] font-black text-brand-cyan uppercase tracking-widest hover:text-black transition-colors flex items-center gap-1">
+                 Ver Historial Completo <ArrowRight size={12} />
+             </Link>
+         </div>
+
+         <div className="space-y-3 md:space-y-4">
+             {loading ? (
+                 Array(3).fill(0).map((_, i) => (
+                     <div key={i} className="h-16 bg-neutral-50 animate-pulse rounded-xl w-full" />
+                 ))
+             ) : stats.movimientos.length === 0 ? (
+                 <div className="py-10 text-center">
+                     <Package size={32} className="mx-auto text-neutral-200 mb-3" />
+                     <p className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Sin movimientos recientes</p>
+                 </div>
+             ) : (
+                 stats.movimientos.slice(0, 5).map((mov, i) => {
+                     // Determinar el flujo basado en si es ingreso o salida
+                     const isIngreso = mov.tipo === 'INGRESO' || mov.cantidad > 0; // Asumiendo que 'Envío' es ingreso
+                     const isVenta = mov.tipo === 'VENTA' || mov.tipo === 'EGRESO';
+                     
+                     let IconComponent = Box;
+                     let colorClass = "bg-neutral-100 text-neutral-600 border-neutral-200";
+                     let verb = "Movimiento Registrado";
+
+                     if (isIngreso) {
+                         IconComponent = Truck;
+                         colorClass = "bg-emerald-50 text-emerald-600 border-emerald-200";
+                         verb = "Stock Recibido (Admin)";
+                     } else if (isVenta) {
+                         IconComponent = CreditCard;
+                         colorClass = "bg-blue-50 text-blue-600 border-blue-200";
+                         verb = "Venta Procesada (Local)";
+                     }
+
+                     return (
+                         <motion.div 
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: i * 0.1 }}
+                            key={i} 
+                            className="group flex items-center justify-between p-4 rounded-xl border border-neutral-100 hover:border-brand-cyan hover:shadow-md transition-all duration-300 bg-white"
+                         >
+                             <div className="flex items-center gap-4">
+                                 <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl border flex items-center justify-center flex-shrink-0 transition-colors ${colorClass} group-hover:scale-110 duration-300`}>
+                                     <IconComponent size={20} strokeWidth={2.5} />
+                                 </div>
+                                 <div className="flex flex-col">
+                                     <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-0.5">{verb}</span>
+                                     <span className="font-bold text-sm text-neutral-900 group-hover:text-brand-cyan transition-colors">{mov.producto_nombre}</span>
+                                     <span className="text-xs text-neutral-500 font-medium">{mov.sucursal_nombre} • {new Date(mov.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                 </div>
+                             </div>
+                             <div className="flex flex-col items-end">
+                                 <span className={`font-sport text-lg md:text-xl leading-none ${isIngreso ? 'text-emerald-500' : isVenta ? 'text-blue-500' : 'text-neutral-900'}`}>
+                                     {isIngreso ? '+' : '-'}{Math.abs(mov.cantidad)}
+                                 </span>
+                                 <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">UNIDADES</span>
+                             </div>
+                         </motion.div>
+                     );
+                 })
+             )}
+         </div>
+      </section>
+
+      {/* ── ALERTAS DE STOCK CRÍTICO ── */}
+      {stats.stockCritico.length > 0 && (
+        <section className="bg-neutral-900 rounded-2xl md:rounded-[2rem] p-5 md:p-8 mt-6">
+          <div className="flex items-center gap-3 mb-6">
+            <AlertTriangle className="text-brand-cyan" size={24} />
+            <h3 className="text-white font-sport text-xl uppercase leading-none m-0">Stock <span className="text-brand-cyan">Crítico</span></h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {stats.stockCritico.map(p => (
+              <div key={p.id_producto} className="bg-black border border-neutral-800 p-4 rounded-xl flex justify-between items-center">
+                <div>
+                  <span className="text-white font-bold text-sm block">{p.nombre}</span>
+                  <span className="text-neutral-500 text-[10px] font-black uppercase tracking-widest block mt-1">Mínimo: {p.stock_minimo || 5}</span>
+                </div>
+                <div className="bg-brand-cyan/20 text-brand-cyan px-3 py-1.5 rounded-lg font-sport text-lg leading-none">
+                  {p.stock_total || 0}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </motion.div>
   );
 };

@@ -1,88 +1,55 @@
 import React, { useState, useEffect, useRef } from 'react';
-import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
-import { Store, Info, MapPin, Layout, Landmark } from 'lucide-react';
+import { Store, Info, MapPin, Layout, Landmark, X, Navigation } from 'lucide-react';
+import { Map, MapMarker, MarkerContent, MapControls, useMap } from '../../components/ui/map';
+import { toast } from '../../store/toastStore';
 import GenericABM from '../../components/ui/GenericABM';
 import { sucursalesService as service } from '../../services/sucursalesService';
 import { uploadProductImage, deleteProductImage } from '../../lib/supabaseStorage';
 
+const MapClickCapture = ({ onLocationSelect }) => {
+    const { map, isLoaded } = useMap();
+    useEffect(() => {
+        if (!isLoaded || !map) return;
+        const handleClick = (e) => {
+            onLocationSelect(e.lngLat.lat, e.lngLat.lng);
+        };
+        map.on('click', handleClick);
+        return () => map.off('click', handleClick);
+    }, [map, isLoaded, onLocationSelect]);
+    return null;
+};
+
 const MapPicker = ({ lat, lng, onLocationSelect }) => {
-    const mapContainer = useRef(null);
-    const map = useRef(null);
-    const marker = useRef(null);
-    
     // Posición inicial: Salta, Argentina si no hay datos
     const defaultCoords = [-65.4117, -24.7859]; 
+    const currentLng = parseFloat(lng) || defaultCoords[0];
+    const currentLat = parseFloat(lat) || defaultCoords[1];
     const initialCoords = (lat && lng) ? [parseFloat(lng), parseFloat(lat)] : defaultCoords;
 
-    useEffect(() => {
-        if (map.current) return;
-
-        map.current = new maplibregl.Map({
-            container: mapContainer.current,
-            style: 'https://demotiles.maplibre.org/style.json', // Estilo simple por defecto
-            center: initialCoords,
-            zoom: 12
-        });
-
-        map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
-
-        marker.current = new maplibregl.Marker({
-            draggable: true,
-            color: "#00E5FF"
-        })
-        .setLngLat(initialCoords)
-        .addTo(map.current);
-
-        marker.current.on('dragend', () => {
-            const lngLat = marker.current.getLngLat();
-            onLocationSelect(lngLat.lat, lngLat.lng);
-        });
-
-        map.current.on('click', (e) => {
-            marker.current.setLngLat(e.lngLat);
-            onLocationSelect(e.lngLat.lat, e.lngLat.lng);
-        });
-
-        return () => {
-            if (map.current) {
-                map.current.remove();
-                map.current = null;
-            }
-        };
-    }, []);
-
-    // Actualizar marcador si cambian las coordenadas externamente (por ejemplo al editar)
-    useEffect(() => {
-        if (marker.current && lat && lng) {
-            const currentPos = marker.current.getLngLat();
-            if (currentPos.lat !== parseFloat(lat) || currentPos.lng !== parseFloat(lng)) {
-                marker.current.setLngLat([parseFloat(lng), parseFloat(lat)]);
-                map.current?.flyTo({ center: [parseFloat(lng), parseFloat(lat)], zoom: 15 });
-            }
-        }
-    }, [lat, lng]);
-
     return (
-        <div className="space-y-2">
-            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Ubicación Geográfica (Pin)</label>
-            <div 
-                ref={mapContainer} 
-                className="w-full h-64 rounded-xl border-2 border-neutral-100 overflow-hidden shadow-inner bg-neutral-50"
-            />
-            <div className="flex gap-4">
-                <div className="flex-1 space-y-1">
-                    <span className="text-[8px] font-black uppercase text-neutral-400">Latitud</span>
-                    <div className="px-3 py-2 bg-neutral-100 rounded-lg text-[10px] font-mono font-bold text-black border border-neutral-200 text-center">
-                        {lat || '-24.7859...'}
-                    </div>
-                </div>
-                <div className="flex-1 space-y-1">
-                    <span className="text-[8px] font-black uppercase text-neutral-400">Longitud</span>
-                    <div className="px-3 py-2 bg-neutral-100 rounded-lg text-[10px] font-mono font-bold text-black border border-neutral-200 text-center">
-                        {lng || '-65.4117...'}
-                    </div>
-                </div>
+        <div className="space-y-4">
+            <label className="text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] text-black">Ubicación Geográfica (Pin)</label>
+            <div className="w-full h-80 md:h-[400px] rounded-2xl border-4 border-neutral-100 overflow-hidden shadow-inner bg-neutral-50 relative pointer-events-auto">
+                <Map
+                    center={initialCoords}
+                    zoom={13}
+                    className="w-full h-full"
+                >
+                    <MapControls showZoom showCompass />
+                    <MapClickCapture onLocationSelect={onLocationSelect} />
+                    <MapMarker 
+                        longitude={currentLng} 
+                        latitude={currentLat}
+                        draggable
+                        onDragEnd={(e) => onLocationSelect(e.lat, e.lng)}
+                    >
+                        <MarkerContent>
+                            <div className="w-12 h-12 bg-brand-cyan rounded-full border-4 border-white shadow-xl flex items-center justify-center cursor-pointer hover:scale-110 transition-transform hover:shadow-[0_0_20px_rgba(0,229,255,0.6)]">
+                                <MapPin size={24} className="text-white" />
+                            </div>
+                        </MarkerContent>
+                    </MapMarker>
+                </Map>
             </div>
         </div>
     );
@@ -96,8 +63,8 @@ const ImagePicker = ({ value, onChange, label = "Imagen de la Sede" }) => {
     const handleFile = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        if (file.size > 2 * 1024 * 1024) {
-            alert('La imagen debe pesar menos de 2MB');
+        if (file.size > 10 * 1024 * 1024) {
+            toast.error('La imagen debe pesar menos de 10MB');
             return;
         }
         
@@ -109,7 +76,7 @@ const ImagePicker = ({ value, onChange, label = "Imagen de la Sede" }) => {
             onChange(url);
         } catch (error) {
             console.error(error);
-            alert('Error al subir la imagen');
+            toast.error('Error de conexión al subir imagen');
         } finally {
             setUploading(false);
         }
@@ -122,7 +89,7 @@ const ImagePicker = ({ value, onChange, label = "Imagen de la Sede" }) => {
             </label>
             <div
                 onClick={() => !uploading && inputRef.current?.click()}
-                className={`relative w-full h-40 rounded-xl border-2 border-dashed cursor-pointer transition-all group overflow-hidden
+                className={`relative w-full h-64 md:h-80 rounded-2xl border-4 border-dashed cursor-pointer transition-all group overflow-hidden
                     ${value ? 'border-brand-cyan bg-brand-cyan/5' : 'border-neutral-200 bg-neutral-50 hover:border-brand-cyan hover:bg-brand-cyan/5'}`}
             >
                 {uploading ? (
@@ -151,7 +118,7 @@ const ImagePicker = ({ value, onChange, label = "Imagen de la Sede" }) => {
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-neutral-400 group-hover:text-brand-cyan transition-colors">
                         <Landmark size={32} />
                         <span className="text-[10px] font-black uppercase tracking-widest">Subir foto de la sede</span>
-                        <span className="text-[9px] font-bold text-neutral-300">Formato JPG, PNG (máx. 2MB)</span>
+                        <span className="text-[9px] font-bold text-neutral-300">Formato JPG, PNG (máx. 10MB)</span>
                     </div>
                 )}
             </div>
@@ -227,19 +194,19 @@ const Sucursales = () => {
             header: 'Ubicación',
             render: (row) => (
                 <div className="flex items-center gap-2">
-                    <div className="flex flex-col">
-                        <span className="text-[8px] font-black text-neutral-400 uppercase">Lat: {parseFloat(row.latitud || 0).toFixed(4)}</span>
-                        <span className="text-[8px] font-black text-neutral-400 uppercase">Lng: {parseFloat(row.longitud || 0).toFixed(4)}</span>
-                    </div>
-                    {row.latitud && row.longitud && (
+                    {row.latitud && row.longitud ? (
                         <a 
                             href={`https://www.google.com/maps?q=${row.latitud},${row.longitud}`} 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="p-1.5 bg-neutral-100 rounded-lg hover:bg-brand-cyan hover:text-white transition-all text-neutral-400"
+                            className="flex items-center gap-2 px-3 py-1.5 bg-brand-cyan/10 rounded-lg hover:bg-brand-cyan hover:text-white transition-all text-brand-cyan group"
+                            title={`Lat: ${row.latitud}, Lng: ${row.longitud}`}
                         >
-                            <Navigation size={12} />
+                            <Navigation size={12} className="group-hover:animate-pulse" />
+                            <span className="text-[10px] font-black uppercase tracking-widest hidden md:block">Abrir Mapa</span>
                         </a>
+                    ) : (
+                        <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest bg-neutral-100 px-2 py-1 rounded-md">Sin Mapear</span>
                     )}
                 </div>
             )
@@ -260,53 +227,40 @@ const Sucursales = () => {
     ];
 
     const renderForm = (formData, setFormData) => (
-        <div className="space-y-6">
+        <div className="space-y-8 md:space-y-10 px-2 md:px-6"> 
             
             <ImagePicker 
                 value={formData.imagen_url || ''} 
-                onChange={(url) => setFormData({ ...formData, imagen_url: url })}
+                onChange={(url) => setFormData(prev => ({ ...prev, imagen_url: url }))}
             />
 
-            <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Nombre de la Sede *</label>
-                <div className="relative group">
-                    <Store size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
-                    <input
-                        required type="text"
-                        className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-bold text-black uppercase placeholder:text-neutral-400 focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan transition-all"
-                        placeholder="EJ: SUCURSAL CENTRO"
-                        value={formData.nombre || ''}
-                        onChange={e => setFormData({ ...formData, nombre: e.target.value.toUpperCase() })}
-                    />
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Dirección *</label>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+                <div className="space-y-4">
+                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] text-black">Nombre de la Sede *</label>
                     <div className="relative group">
-                        <MapPin size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
+                        <Store size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
                         <input
                             required type="text"
-                            className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-bold text-black uppercase placeholder:text-neutral-400 focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan transition-all"
-                            placeholder="EJ: AV. BELGRANO 1234"
-                            value={formData.direccion || ''}
-                            onChange={e => setFormData({ ...formData, direccion: e.target.value.toUpperCase() })}
+                            className="w-full pl-14 pr-6 py-4 bg-neutral-50 border-2 border-neutral-100 rounded-2xl text-base font-bold text-black uppercase placeholder:text-neutral-400 focus:outline-none focus:border-brand-cyan focus:ring-4 focus:ring-brand-cyan/20 transition-all hover:border-neutral-200"
+                            placeholder="EJ: SUCURSAL CENTRO"
+                            value={formData.nombre || ''}
+                            onChange={e => setFormData({ ...formData, nombre: e.target.value.toUpperCase() })}
                         />
                     </div>
                 </div>
-                <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Tipo de Negocio *</label>
+
+                <div className="space-y-4">
+                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] text-black">Tipo de Negocio *</label>
                     <div className="relative group">
-                        <Layout size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
+                        <Layout size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none group-focus-within:text-brand-cyan transition-colors" />
                         <select
                             required
-                            className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-bold text-black uppercase focus:outline-none focus:border-brand-cyan transition-all appearance-none"
+                            className="w-full pl-14 pr-6 py-4 bg-neutral-50 border-2 border-neutral-100 rounded-2xl text-base font-bold text-black uppercase focus:outline-none focus:border-brand-cyan focus:ring-4 focus:ring-brand-cyan/20 transition-all appearance-none cursor-pointer hover:border-neutral-200"
                             value={formData.id_tipo_comercio || ''}
                             onChange={e => setFormData({ ...formData, id_tipo_comercio: parseInt(e.target.value) })}
                         >
                             <option value="">SELECCIONAR TIPO...</option>
-                            {tiposComercio.map(t => (
+                            {(Array.isArray(tiposComercio) ? tiposComercio : []).map(t => (
                                 <option key={t.id_tipo_comercio} value={t.id_tipo_comercio}>
                                     {t.nombre}
                                 </option>
@@ -316,34 +270,57 @@ const Sucursales = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Caja Inicial ($) *</label>
-                    <div className="relative group">
-                        <Landmark size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
-                        <input
-                            required type="number" step="0.01" min="0"
-                            className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-bold text-black focus:outline-none focus:border-brand-cyan transition-all"
-                            placeholder="0.00"
-                            value={formData.saldo_acumulado_mili || ''}
-                            onChange={e => setFormData({ ...formData, saldo_acumulado_mili: parseFloat(e.target.value) })}
-                        />
-                    </div>
+            <div className="space-y-4">
+                <label className="text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] text-black">Dirección de la Sede *</label>
+                <div className="relative group">
+                    <MapPin size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
+                    <input
+                        required type="text"
+                        className="w-full pl-14 pr-6 py-4 bg-neutral-50 border-2 border-neutral-100 rounded-2xl text-base font-bold text-black uppercase placeholder:text-neutral-400 focus:outline-none focus:border-brand-cyan focus:ring-4 focus:ring-brand-cyan/20 transition-all hover:border-neutral-200"
+                        placeholder="EJ: AV. BELGRANO 1234, SALTA CAPITAL"
+                        value={formData.direccion || ''}
+                        onChange={e => setFormData({ ...formData, direccion: e.target.value.toUpperCase() })}
+                    />
                 </div>
-                {/* Latitud y longitud se manejan vía el MapPicker */}
             </div>
 
-            <MapPicker 
-                lat={formData.latitud} 
-                lng={formData.longitud} 
-                onLocationSelect={(lat, lng) => setFormData({ ...formData, latitud: lat, longitud: lng })}
-            />
+            <div className="mt-8 pt-8 border-t-2 border-neutral-100">
+                <div className="p-5 md:p-6 bg-brand-cyan/5 border-2 border-brand-cyan/20 rounded-2xl flex items-start gap-4 shadow-sm mb-6">
+                    <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center flex-shrink-0">
+                        <Info size={20} className="text-brand-cyan" />
+                    </div>
+                    <p className="text-xs md:text-sm font-bold text-neutral-700 leading-relaxed m-0 mt-0.5">
+                        Haga click directamente en el mapa o arrastre el marcador de posición para definir la <span className="text-brand-cyan">ubicación geolocalizada</span> en tiempo real.
+                    </p>
+                </div>
 
-            <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-lg flex items-start gap-3">
-                <Info size={16} className="text-black mt-0.5 shrink-0" />
-                <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 leading-relaxed m-0">
-                    Haga click en el mapa o arrastre el marcador para definir la <span className="text-brand-cyan">ubicación exacta</span> del comercio. La latitud y longitud se guardarán automáticamente.
-                </p>
+                <MapPicker 
+                    lat={formData.latitud} 
+                    lng={formData.longitud} 
+                    onLocationSelect={(lat, lng) => setFormData(prev => ({ ...prev, latitud: lat, longitud: lng }))}
+                />
+            </div>
+
+            <div className="space-y-4 pt-4">
+                <label className="flex items-center justify-between p-5 bg-white border-2 border-neutral-100 rounded-2xl cursor-pointer group hover:border-brand-cyan transition-all">
+                    <div className="flex flex-col">
+                        <span className="text-xs font-bold uppercase tracking-[0.2em] text-black">Estado Operativo de la Sede</span>
+                        <span className="text-[10px] text-neutral-400 font-bold tracking-widest mt-1">Determina si la sucursal está visible y recibe operaciones</span>
+                    </div>
+                    <div
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setFormData(prev => ({ ...prev, activo: prev.activo === false ? true : false }));
+                        }}
+                        className={`w-14 h-8 rounded-full transition-all relative shadow-inner flex-shrink-0 ${
+                            formData.activo !== false ? 'bg-brand-cyan' : 'bg-neutral-200'
+                        }`}
+                    >
+                        <div className={`w-6 h-6 bg-white rounded-full shadow-md absolute top-1 transition-all ${
+                            formData.activo !== false ? 'left-7' : 'left-1'
+                        }`} />
+                    </div>
+                </label>
             </div>
         </div>
     );
@@ -351,12 +328,14 @@ const Sucursales = () => {
     return (
         <GenericABM
             title="Sedes y Sucursales"
+            description="Registro y mapeo de los puntos de venta. Controla la ubicación física, el estado operativo y las categorizaciones de cada sucursal de la red Push Sport."
             icon={Store}
             service={service}
             columns={columns}
             formFields={[]}
             renderForm={renderForm}
             idField="id_comercio"
+            modalMaxWidth="max-w-xl md:max-w-4xl"
         />
     );
 };

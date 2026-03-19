@@ -6,7 +6,8 @@ import { toast } from '../../store/toastStore';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const GenericABM = ({ 
-    title, 
+    title,
+    description,
     icon: Icon, 
     service,
     columns,
@@ -14,7 +15,8 @@ const GenericABM = ({
     renderForm = null,
     idField = 'id',
     modalMaxWidth = "max-w-md",
-    fetchMethod = null, // Custom fetch method from parent (e.g. for scoped sucursal fetches)
+    fetchMethod = null,
+    validate = null, // Custom validation function returns string/array or null
 }) => {
     const [data, setData] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -22,6 +24,7 @@ const GenericABM = ({
     const [editingItem, setEditingItem] = useState(null);
     const [formData, setFormData] = useState({});
     const [deleteTarget, setDeleteTarget] = useState(null); // item to confirm delete
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const loadData = async () => {
         setIsLoading(true);
@@ -86,24 +89,81 @@ const GenericABM = ({
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        if (validate) {
+            const error = validate(formData);
+            if (error) {
+                toast.error(error, {
+                    style: {
+                        background: '#000',
+                        color: '#fff',
+                        borderRadius: '16px',
+                        border: '1px solid #DC2626',
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        letterSpacing: '0.1em'
+                    }
+                });
+                return;
+            }
+        }
+
+        setIsSubmitting(true);
         try {
-            // Strip internal state keys (prefixed with _) before sending to API
+            // Strip internal state keys (prefixed with _) AND nested relationship objects
+            // This prevents strict backend ORMs like Prisma from crashing with 500 Errors
+            // when we send back joined data like 'tipo_comercio: {...}' that we got from a GET request.
             const payload = Object.fromEntries(
-                Object.entries(formData).filter(([k]) => !k.startsWith('_'))
+                Object.entries(formData).filter(([k, v]) => 
+                    !k.startsWith('_') && 
+                    (v === null || typeof v !== 'object' || Array.isArray(v)) // Allow nulls, primitive values, and arrays (if needed for M:N relations later), block pure objects.
+                )
             );
+
             if (editingItem) {
                 const itemId = editingItem[idField];
                 await service.update(itemId, payload);
-                toast.success("Registro actualizado exitosamente");
+                toast.success('Registro actualizado exitosamente', {
+                    style: {
+                        background: '#000',
+                        color: '#fff',
+                        borderRadius: '16px',
+                        border: '1px solid #333',
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        letterSpacing: '0.1em'
+                    }
+                });
             } else {
                 await service.create(payload);
-                toast.success("Registro creado exitosamente");
+                toast.success('Registro creado exitosamente', {
+                    style: {
+                        background: '#000',
+                        color: '#fff',
+                        borderRadius: '16px',
+                        border: '1px solid #333',
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        letterSpacing: '0.1em'
+                    }
+                });
             }
             setIsModalOpen(false);
             loadData();
         } catch (error) {
             console.error(error);
-            toast.error("Error al procesar la solicitud");
+            toast.error(error.response?.data?.error || 'Error al guardar el registro', {
+                style: {
+                    background: '#DC2626',
+                    color: '#fff',
+                    borderRadius: '16px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    letterSpacing: '0.1em'
+                }
+            });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -120,6 +180,11 @@ const GenericABM = ({
                         <h1 className="text-xl md:text-5xl font-black tracking-[-0.03em] m-0 text-black uppercase leading-none">
                             {title}
                         </h1>
+                        {description && (
+                            <p className="hidden md:block text-[10px] md:text-xs font-bold text-neutral-400 mt-3 max-w-2xl leading-relaxed">
+                                {description}
+                            </p>
+                        )}
                     </div>
                 </div>
                 
@@ -138,24 +203,38 @@ const GenericABM = ({
             
             {/* Tabla de Datos */}
             {isLoading ? (
-                <div className="space-y-4 animate-in fade-in duration-300">
-                    <div className="flex items-center justify-between px-4">
-                        <div className="w-48 h-8 bg-neutral-200 rounded-lg animate-pulse" />
-                        <div className="w-32 h-8 bg-neutral-200 rounded-lg animate-pulse" />
+                <div className="bg-white rounded-2xl md:rounded-[2.5rem] p-4 md:p-8 shadow-premium border border-neutral-100 relative overflow-hidden animate-in fade-in duration-500">
+                    <div className="flex flex-col md:flex-row justify-between mb-8 gap-4">
+                        <div className="w-full md:max-w-md h-12 md:h-16 bg-neutral-100 rounded-xl md:rounded-2xl animate-pulse" />
+                        <div className="w-32 md:w-48 h-12 md:h-16 bg-neutral-100 rounded-xl md:rounded-2xl animate-pulse" />
                     </div>
-                    {[1, 2, 3, 4, 5].map(i => (
-                        <div key={i} className="flex items-center gap-4 px-4 py-3 border border-neutral-200 rounded-2xl bg-white">
-                            <div className="w-8 h-8 bg-neutral-200 rounded-lg animate-pulse flex-shrink-0" />
-                            <div className="flex-1 space-y-2">
-                                <div className="h-3 bg-neutral-200 rounded animate-pulse" style={{ width: `${52 + (i * 9) % 35}%` }} />
-                                <div className="h-2.5 bg-neutral-100 rounded animate-pulse w-1/3" />
-                            </div>
-                            <div className="w-16 h-6 bg-neutral-200 rounded-lg animate-pulse" />
-                        </div>
-                    ))}
-                    <p className="text-center text-[10px] font-black uppercase tracking-[0.4em] text-brand-cyan animate-pulse pt-2">
-                        Sincronizando datos...
-                    </p>
+                    <div className="rounded-xl md:rounded-3xl border border-neutral-200 overflow-hidden bg-white">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-neutral-50 border-b border-neutral-200">
+                                    {[...Array(columns.length + 1)].map((_, i) => (
+                                        <th key={i} className="px-4 md:px-8 py-4 md:py-6">
+                                            <div className="h-4 bg-neutral-200 rounded w-20 animate-pulse" />
+                                        </th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-neutral-100">
+                                {[1, 2, 3, 4, 5].map(i => (
+                                    <tr key={i}>
+                                        {[...Array(columns.length + 1)].map((_, colI) => (
+                                            <td key={colI} className="px-4 py-4 md:px-8 md:py-6 relative">
+                                                <div className="flex items-center gap-3">
+                                                    {colI === 0 && <div className="w-8 h-8 md:w-10 md:h-10 bg-neutral-100 rounded-xl flex-shrink-0 animate-pulse" />}
+                                                    <div className="h-3 bg-neutral-100 rounded animate-pulse" style={{ width: `${Math.max(30, 80 - (i * colI * 10) % 50)}%` }} />
+                                                </div>
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             ) : (
                 <motion.div
@@ -171,6 +250,9 @@ const GenericABM = ({
                         onEdit={handleEdit}
                         onDelete={handleDelete}
                         searchPlaceholder={`Buscar en ${title}...`}
+                        emptyIcon={Icon}
+                        emptyTitle={`Aún no hay ${title}`}
+                        emptySubtitle="Comienza agregando el primer registro con el botón crear superior."
                     />
                 </motion.div>
             )}
@@ -223,9 +305,15 @@ const GenericABM = ({
                         <div className="pt-10 border-t border-neutral-50 flex flex-col gap-4">
                             <button 
                                 type="submit"
-                                className="w-full btn-premium py-4 flex justify-center items-center gap-3 group h-14"
+                                disabled={isSubmitting}
+                                className="w-full btn-premium py-4 flex justify-center items-center gap-3 group h-14 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {editingItem ? (
+                                {isSubmitting ? (
+                                    <>
+                                        <div className="w-5 h-5 border-2 border-brand-cyan border-t-transparent rounded-full animate-spin" />
+                                        <span className="font-black tracking-[0.3em] text-sm uppercase text-brand-cyan">Procesando...</span>
+                                    </>
+                                ) : editingItem ? (
                                     <>
                                         <Save size={24} />
                                         <span className="font-black tracking-[0.3em] text-sm uppercase">Guardar Cambios</span>

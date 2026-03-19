@@ -9,10 +9,12 @@ import {
   XCircle as CloseCircle,
   CheckCircle2 as TickCircle,
   Zap as Flash,
+  Menu,
   Map as Map1
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import StoreMap from '../components/StoreMap'; 
+import { sucursalesService } from '../services/sucursalesService';
 
 const PreviewModal = ({ category, isOpen, onClose }) => {
   if (!isOpen) return null;
@@ -114,13 +116,29 @@ const Landing = () => {
   const [preview, setPreview] = useState({ isOpen: false, category: '' });
   const [activeLocation, setActiveLocation] = useState(0);
 
-  const locations = [
-    { nombre: 'Sede Central (Centro)', dir: 'Av. Belgrano 450, Salta Capital', h: '09:00 - 21:00' },
-    { nombre: 'Push Norte (Valle)', dir: 'Av. Reyes Católicos 1200', h: '08:00 - 22:00' },
-    { nombre: 'Sede Sur (Limache)', dir: 'Ruta 51 km 2', h: '09:00 - 20:00' },
-    { nombre: 'Push Oeste (G. Bourg)', dir: 'Av. Savio 400', h: '07:00 - 23:00' },
-    { nombre: 'Sede Este (Autódromo)', dir: 'Av. Italia 120', h: '09:00 - 13:00 / 17:00 - 21:00' },
-  ];
+  const [locations, setLocations] = useState([
+    { nombre: 'Cargando Sedes...', dir: 'Aguarde un momento', h: '-' }
+  ]);
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const data = await sucursalesService.getPublic();
+        if (data && data.length > 0) {
+            setLocations(data.map(c => ({
+                nombre: c.nombre,
+                dir: c.direccion || 'Ubicación a confirmar',
+                h: '09:00 - 21:00' // Horario genérico (modelo no tiene campo horario)
+            })));
+        } else {
+            setLocations([{ nombre: 'Plataforma en Mantenimiento', dir: 'No hay sedes activadas temporalmente.', h: '-' }]);
+        }
+      } catch (error) {
+        setLocations([{ nombre: 'Error de Conexión', dir: 'Reconfigure backend.', h: '-' }]);
+      }
+    };
+    fetchLocations();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -175,20 +193,20 @@ const Landing = () => {
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className={`md:hidden p-2 rounded-lg transition-all ${isScrolled ? 'text-black' : 'text-white hover:text-brand-cyan'}`}
           >
-            {isMobileMenuOpen ? <CloseCircle size={32} variant="Bold" /> : <Map1 size={32} variant="Bold" />}
+            {isMobileMenuOpen ? <CloseCircle size={32} /> : <Menu size={32} />}
           </button>
         </div>
 
         {/* Mobile Menu Overlay */}
-        <div className={`md:hidden fixed inset-0 z-[150] bg-white transition-all duration-500 ${isMobileMenuOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0 pointer-events-none'}`}>
-            <div className="p-8 h-full flex flex-col justify-between">
-                <div className="space-y-12 mt-10">
+        <div className={`md:hidden fixed inset-0 z-[150] bg-white transition-all duration-500 overflow-y-auto ${isMobileMenuOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0 pointer-events-none'}`}>
+            <div className="p-8 min-h-full flex flex-col justify-between pt-24 pb-12">
+                <div className="space-y-6 mb-12">
                     {['Inicio', 'Productos', 'Sedes', 'Nosotros'].map((item, idx) => (
                         <a 
                             key={item} 
                             href={`#${item.toLowerCase()}`} 
                             onClick={() => setIsMobileMenuOpen(false)}
-                            className="block text-5xl font-sport uppercase text-black tracking-tight"
+                            className="block text-3xl sm:text-4xl font-sport uppercase text-black tracking-tight border-b border-neutral-100 pb-2"
                             style={{ transitionDelay: `${idx * 100}ms` }}
                         >
                             {item}.
@@ -196,10 +214,11 @@ const Landing = () => {
                     ))}
                 </div>
                 
-                <div className="space-y-6">
+                <div className="space-y-6 mt-auto">
                     <Link 
                         to="/login" 
-                        className="w-full py-6 bg-brand-cyan text-white rounded-2xl flex items-center justify-center gap-4 text-sm font-black uppercase tracking-[0.2em] shadow-xl shadow-brand-cyan/20"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="w-full py-4 sm:py-6 bg-brand-cyan text-white rounded-2xl flex items-center justify-center gap-4 text-sm font-black uppercase tracking-[0.2em] shadow-xl shadow-brand-cyan/20 active:scale-95 transition-all"
                     >
                         ACCESO STAFF <ArrowRight size={20} />
                     </Link>
@@ -389,8 +408,8 @@ const Landing = () => {
                     {/* Overlay info sede activa — FIX: z-index explícito y fondo sólido */}
                     <div className="absolute top-5 left-5 z-20 bg-white px-4 py-3 rounded-xl shadow-lg border border-neutral-100 pointer-events-none">
                         <span className="text-[10px] text-neutral-400 font-bold tracking-widest uppercase block mb-1">Visualizando</span>
-                        <span className="text-black font-sport text-xl uppercase leading-none block">{locations[activeLocation].nombre}</span>
-                        <span className="text-neutral-500 text-xs font-medium block mt-1">{locations[activeLocation].dir}</span>
+                        <span className="text-black font-sport text-xl uppercase leading-none block">{locations[activeLocation]?.nombre || 'Sede'}</span>
+                        <span className="text-neutral-500 text-xs font-medium block mt-1">{locations[activeLocation]?.dir || 'Dirección'}</span>
                     </div>
                     
                     {/* FIX: Sin mix-blend-multiply, el mapa se renderiza limpio */}

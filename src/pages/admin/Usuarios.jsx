@@ -13,7 +13,7 @@ const Usuarios = () => {
 
     const ROLES = {
         1: { label: 'ADMIN. CORE',   color: 'bg-black text-white border-black',             icon: ShieldCheck },
-        2: { label: 'GESTOR SEDE',   color: 'bg-brand-cyan text-black border-brand-cyan',   icon: Store       },
+        2: { label: 'SUPERVISOR / GESTOR',   color: 'bg-brand-cyan text-black border-brand-cyan',   icon: Store       },
         3: { label: 'VENDEDOR POS',  color: 'bg-transparent text-black border-black',       icon: UserCircle  },
         4: { label: 'VISOR',         color: 'bg-neutral-100 text-neutral-400 border-neutral-200', icon: UserCircle },
     };
@@ -145,7 +145,7 @@ const Usuarios = () => {
                         >
                             <option value="">SELECCIONAR ROL...</option>
                             <option value={1}>ADMIN. CORE — Control total</option>
-                            <option value={2}>GESTOR SEDE — Inventario y Caja</option>
+                            <option value={2}>SUPERVISOR / GESTOR — Inventario, Envios y Caja</option>
                             <option value={3}>VENDEDOR POS — Caja únicamente</option>
                             <option value={4}>VISOR — Solo lectura</option>
                         </select>
@@ -153,7 +153,7 @@ const Usuarios = () => {
                 </div>
 
                 <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Asignación Física</label>
+                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Sucursal / Sede Asignada</label>
                     <div className="relative group">
                         <Store size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
                         <select
@@ -182,6 +182,7 @@ const Usuarios = () => {
     return (
         <GenericABM
             title="Gestión de Staff"
+            description="Administración de permisos y operadores del sistema. Asigna los roles de seguridad (Admin, Supervisor, POS) y asocia al personal con sus respectivas sedes de trabajo."
             icon={Users}
             service={service}
             columns={columns}

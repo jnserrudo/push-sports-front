@@ -142,7 +142,7 @@ const Movimientos = () => {
                         Movimientos de <span className="text-brand-cyan">Stock.</span>
                     </h2>
                     <p className="text-neutral-500 text-sm font-medium mt-2 m-0">
-                        Historial completo de entradas, salidas y transferencias
+                        Historial completo de entradas, salidas y asignaciones
                     </p>
                 </div>
 
@@ -157,7 +157,7 @@ const Movimientos = () => {
                             >
                                 <option value="ALL">KARDEX GLOBAL (TODAS LAS SEDES)</option>
                                 {sucursalesOptions.map(suc => (
-                                    <option key={suc.id_sucursal || suc.id_comercio} value={suc.id_sucursal || suc.id_comercio}>
+                                    <option key={suc.id_comercio} value={suc.id_comercio}>
                                         {suc.nombre}
                                     </option>
                                 ))}

@@ -17,6 +17,7 @@ const Register = () => {
     const [formData, setFormData] = useState({
         nombre: '',
         apellido: '',
+        username: '',
         email: '',
         password: '',
         confirmPassword: '' 
@@ -149,6 +150,19 @@ const Register = () => {
                                     placeholder="APELLIDO"
                                 />
                             </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Nombre de Usuario</label>
+                        <div className="relative group">
+                            <User className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-black transition-colors" size={16} />
+                            <input 
+                                required type="text" name="username"
+                                className="w-full pl-9 pr-4 py-3 bg-white border-2 border-neutral-200 rounded-lg text-sm font-bold text-black lowercase placeholder:text-neutral-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                                value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value.toLowerCase().replace(/\s/g, '') })}
+                                placeholder="USUARIO"
+                            />
                         </div>
                     </div>
 

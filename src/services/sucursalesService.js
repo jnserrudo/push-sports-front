@@ -2,7 +2,11 @@ import api from '../api/api';
 
 export const sucursalesService = {
     getAll: async () => {
-        const response = await api.get('/comercios');
+        const response = await api.get('/comercios?includeInactive=true');
+        return response.data;
+    },
+    getPublic: async () => {
+        const response = await api.get('/comercios/public');
         return response.data;
     },
     getById: async (id) => {

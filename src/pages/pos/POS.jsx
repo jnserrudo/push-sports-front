@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Search, 
   Trash2, 
@@ -10,7 +10,10 @@ import {
   Box,
   Receipt,
   Loader2,
-  MapPin
+  MapPin,
+  Clock,
+  Play,
+  X
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { posService } from '../../services/posService';
@@ -31,6 +34,72 @@ const POS = () => {
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [metodoPago, setMetodoPago] = useState('Efectivo');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [drafts, setDrafts] = useState([]);
+  const [showDrafts, setShowDrafts] = useState(false);
+  
+  const searchInputRef = useRef(null);
+
+  // Load Drafts from local storage on mount
+  useEffect(() => {
+    try {
+      const savedDrafts = JSON.parse(localStorage.getItem('pos_drafts')) || [];
+      setDrafts(savedDrafts);
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
+
+  const saveDraft = () => {
+    if (cart.length === 0) return;
+    const newDraft = {
+      id: Date.now().toString(),
+      timestamp: new Date().toISOString(),
+      items: cart,
+      total: total
+    };
+    const updatedDrafts = [newDraft, ...drafts];
+    setDrafts(updatedDrafts);
+    localStorage.setItem('pos_drafts', JSON.stringify(updatedDrafts));
+    setCart([]);
+    toast.success('Carrito guardado en espera');
+  };
+
+  const loadDraft = (draft) => {
+    setCart(draft.items);
+    const updatedDrafts = drafts.filter(d => d.id !== draft.id);
+    setDrafts(updatedDrafts);
+    localStorage.setItem('pos_drafts', JSON.stringify(updatedDrafts));
+    setShowDrafts(false);
+  };
+
+  const deleteDraft = (draftId) => {
+    const updatedDrafts = drafts.filter(d => d.id !== draftId);
+    setDrafts(updatedDrafts);
+    localStorage.setItem('pos_drafts', JSON.stringify(updatedDrafts));
+  };
+
+  // ─── KEYBOARD SHORTCUTS ───
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Focus Search: Ctrl/Cmd + F
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F')) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+      
+      // Finalizar Venta: Ctrl/Cmd + Enter
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        if (cart.length > 0 && !isProcessing && activeTab === 'cart' || cart.length > 0 && !isProcessing && window.innerWidth >= 1280) { // Only if cart is visible or desktop
+          e.preventDefault();
+          handleConfirmSale();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [cart, isProcessing, activeTab]);
+
 
   // Load sucursal options for SuperAdmin picker
   useEffect(() => {
@@ -181,8 +250,9 @@ const POS = () => {
             <div className="relative flex-1 w-full md:max-w-md group">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-300 group-focus-within:text-brand-cyan transition-colors" size={20} />
                 <input 
+                    ref={searchInputRef}
                     type="text" 
-                    placeholder="BUSCAR..."
+                    placeholder="BUSCAR PRODUCTO (CTRL+F)..."
                     className="input-premium-v2 pl-12 py-3 md:pl-16 md:py-5 text-[9px] md:text-xs tracking-[0.2em] uppercase font-black w-full"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -276,21 +346,73 @@ const POS = () => {
                 >
                   <ChevronRight size={20} className="rotate-180" />
                 </button>
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-white text-brand-cyan flex items-center justify-center rounded-xl border-2 border-neutral-100 shadow-sm">
-                    <Receipt size={20} md:size={24} />
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-white text-brand-cyan flex items-center justify-center rounded-xl border-2 border-neutral-100 shadow-sm relative group cursor-pointer" onClick={() => setShowDrafts(!showDrafts)}>
+                    <Receipt size={20} md:size={24} className="group-hover:opacity-0 transition-opacity absolute" />
+                    <Clock size={20} md:size={24} className="opacity-0 group-hover:opacity-100 transition-opacity absolute text-amber-500" />
+                    {drafts.length > 0 && (
+                        <div className="absolute -top-1 -right-1 bg-amber-500 text-white text-[8px] font-black w-4 h-4 flex items-center justify-center rounded-full shadow-sm">
+                            {drafts.length}
+                        </div>
+                    )}
                 </div>
                 <div>
                     <h2 className="text-xl md:text-3xl font-black tracking-tighter m-0 uppercase leading-none text-neutral-900">Ticket</h2>
-                    <span className="text-[9px] md:text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-1 block">Operación Actual</span>
+                    <span 
+                      onClick={() => setShowDrafts(!showDrafts)}
+                      className="text-[9px] md:text-[10px] font-bold text-neutral-400 hover:text-amber-500 uppercase tracking-widest mt-1 block cursor-pointer transition-colors"
+                    >
+                      {drafts.length > 0 ? `${drafts.length} En Espera` : 'Operación Actual'}
+                    </span>
                 </div>
             </div>
-            <div className="bg-white text-neutral-400 font-bold text-[9px] px-3 md:px-4 py-1.5 rounded-full uppercase tracking-widest border border-neutral-100">
-                {cart.length} ITEMS
-            </div>
+            <motion.div 
+                key={cartItemsCount}
+                initial={{ scale: 1.2, backgroundColor: '#00d2ff', color: '#000' }}
+                animate={{ scale: 1, backgroundColor: '#ffffff', color: '#a3a3a3' }}
+                transition={{ duration: 0.3 }}
+                className="font-bold text-[9px] px-3 md:px-4 py-1.5 rounded-full uppercase tracking-widest border border-neutral-100"
+            >
+                {cartItemsCount} ITEMS
+            </motion.div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 md:space-y-4 scrollbar-hide">
-          {cart.length === 0 ? (
+          {showDrafts ? (
+            <div className="space-y-3">
+               <div className="flex items-center justify-between mb-2">
+                 <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Ventas en Espera</h3>
+                 <button onClick={() => setShowDrafts(false)} className="text-neutral-400 hover:text-black"><X size={14} /></button>
+               </div>
+               {drafts.length === 0 ? (
+                 <div className="text-center p-8 opacity-50">
+                    <Clock size={32} className="mx-auto text-neutral-300 mb-3" />
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400">No hay ventas pausadas</p>
+                 </div>
+               ) : (
+                 drafts.map((draft) => (
+                   <div key={draft.id} className="p-4 bg-amber-50/50 border border-amber-200/50 rounded-xl flex flex-col gap-3 group">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="text-[10px] font-black uppercase text-amber-700 tracking-wider">Carrito Guardado</p>
+                          <p className="text-[8px] font-bold text-amber-600/60 uppercase tracking-widest mt-0.5">
+                            {new Date(draft.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} • {draft.items.length} items
+                          </p>
+                        </div>
+                        <span className="font-black text-amber-700">${draft.total.toLocaleString()}</span>
+                      </div>
+                      <div className="flex gap-2">
+                         <button onClick={() => loadDraft(draft)} className="flex-1 bg-amber-500 text-white font-black text-[9px] uppercase tracking-widest py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-amber-600 transition-colors">
+                           <Play size={12} fill="currentColor" /> Retomar
+                         </button>
+                         <button onClick={() => deleteDraft(draft.id)} className="px-3 bg-red-50 text-red-500 rounded-lg flex items-center justify-center hover:bg-red-100 transition-colors">
+                           <Trash2 size={14} />
+                         </button>
+                      </div>
+                   </div>
+                 ))
+               )}
+            </div>
+          ) : cart.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-4 opacity-30">
                 <Store size={40} className="text-neutral-300" />
                 <p className="text-[9px] text-neutral-400 font-bold uppercase tracking-widest leading-relaxed">Seleccioná productos<br/>para iniciar la venta.</p>
@@ -353,25 +475,45 @@ const POS = () => {
                     >
                       <option>Efectivo</option>
                       <option>Tarjeta</option>
-                      <option>Transferencia</option>
+                      <option>Transf. Bancaria</option>
                     </select>
                 </div>
                 
                 <div className="pt-4 md:pt-8 border-t border-neutral-200 flex justify-between items-end">
                     <div className="flex flex-col">
                         <span className="text-[10px] md:text-[13px] font-black text-neutral-400 uppercase tracking-[0.3em] mb-2 md:mb-4">Total Neto</span>
-                        <span className="text-3xl md:text-5xl font-black text-neutral-900 tracking-tighter leading-none">${total.toLocaleString()}</span>
+                        <motion.span 
+                            key={total}
+                            initial={{ scale: 1.05, color: '#00d2ff' }}
+                            animate={{ scale: 1, color: '#171717' }}
+                            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                            className="text-3xl md:text-5xl font-black tracking-tighter leading-none"
+                        >
+                            ${total.toLocaleString()}
+                        </motion.span>
                     </div>
                 </div>
             </div>
 
+            {cart.length > 0 && (
+                 <button 
+                  onClick={saveDraft}
+                  className="w-full bg-neutral-100 text-neutral-500 font-black text-[10px] uppercase tracking-[0.2em] py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-amber-100 hover:text-amber-600 transition-colors"
+                 >
+                   <Clock size={14} /> GUARDAR EN ESPERA
+                 </button>
+            )}
+
             <button 
                 onClick={handleConfirmSale}
-                disabled={cart.length === 0 || isProcessing}
-                className="w-full btn-cyan h-14 md:h-18 text-[10px] md:text-[11px] flex items-center justify-center gap-3 disabled:opacity-20 transition-all active:scale-95"
+                disabled={cart.length === 0 || isProcessing || showDrafts}
+                className="w-full btn-cyan h-14 md:h-18 text-[10px] md:text-[11px] flex flex-col md:flex-row items-center justify-center gap-1 md:gap-3 disabled:opacity-20 transition-all active:scale-95 group"
             >
-                {isProcessing ? <Loader2 size={16} className="animate-spin" /> : null}
-                FINALIZAR VENTA <ChevronRight size={16} />
+                <div className="flex items-center gap-2">
+                    {isProcessing ? <Loader2 size={16} className="animate-spin" /> : null}
+                    FINALIZAR VENTA <ChevronRight size={16} />
+                </div>
+                <span className="text-[8px] font-black tracking-widest text-black/50 hidden md:block group-hover:text-black/70 transition-colors">(CTRL + ENTER)</span>
             </button>
         </div>
       </div>

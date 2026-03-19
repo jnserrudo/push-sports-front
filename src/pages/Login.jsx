@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { authService } from '../services/authService';
-import { ArrowRight, Lock, Mail, Home, Loader2 } from 'lucide-react';
+import { ArrowRight, Lock, Mail, Home, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from '../store/toastStore';
 
 const Login = () => {
@@ -10,6 +10,8 @@ const Login = () => {
     const { login } = useAuthStore();
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const isExpired = searchParams.get('expired') === 'true';
 
     const handleChange = (e) => {
         setCredentials({ ...credentials, [e.target.name]: e.target.value });
@@ -82,6 +84,16 @@ const Login = () => {
                             Ingrese sus credenciales corporativas.
                         </p>
                     </div>
+
+                    {isExpired && (
+                        <div className="mb-6 p-4 bg-orange-50 border-l-4 border-orange-500 rounded-r-lg flex items-center gap-3 animate-in slide-in-from-top-4 duration-500">
+                            <AlertCircle className="text-orange-500 shrink-0" size={20} />
+                            <div>
+                                <p className="text-[13px] font-bold text-orange-900 leading-tight">Tu sesión ha expirado</p>
+                                <p className="text-[11px] text-orange-700 font-medium">Por seguridad, ingresa tus credenciales nuevamente.</p>
+                            </div>
+                        </div>
+                    )}
 
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div className="space-y-2">

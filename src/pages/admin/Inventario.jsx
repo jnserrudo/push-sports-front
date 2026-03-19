@@ -76,6 +76,17 @@ const Inventario = () => {
         setIsModalOpen(true);
     };
 
+    const handleDelete = async (item) => {
+        if (!window.confirm(`¿Desvincular "${item.producto?.nombre}" de "${item.comercio?.nombre || item.sucursal_nombre}"? Esta acción es irreversible.`)) return;
+        try {
+            await inventarioService.delete(item.id_inventario);
+            toast.success('Registro desvinculado correctamente');
+            await loadAll();
+        } catch (err) {
+            toast.error(err?.response?.data?.error || 'Error al desvincular');
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -194,8 +205,11 @@ const Inventario = () => {
                         <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-neutral-500">CONTROL DE STOCK</span>
                     </div>
                     <h2 className="text-4xl md:text-5xl uppercase leading-none m-0 font-sport text-black">
-                        {isSuperAdmin ? 'Inventario' : 'Mi'} <span className="text-brand-cyan">Inventario.</span>
+                        {isSuperAdmin ? 'Gestión de' : 'Mi'} <span className="text-brand-cyan">Inventario.</span>
                     </h2>
+                    <p className="hidden md:block text-[10px] md:text-xs font-bold text-neutral-400 mt-3 max-w-2xl leading-relaxed">
+                        Control en tiempo real del stock físico. Permite a la sede central abastecer puntos de venta y a las sucursales ver su disponibilidad local.
+                    </p>
                     <p className="text-xs text-neutral-400 font-bold uppercase tracking-widest mt-2">
                         {data.length} registros en el sistema
                     </p>
@@ -220,6 +234,7 @@ const Inventario = () => {
                         data={data}
                         columns={columns}
                         onEdit={handleEdit}
+                        onDelete={isSuperAdmin ? handleDelete : undefined}
                         searchPlaceholder="Buscar producto o sede..."
                     />
                 </motion.div>

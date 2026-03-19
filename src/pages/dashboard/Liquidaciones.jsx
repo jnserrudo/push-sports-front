@@ -30,7 +30,7 @@ const Liquidaciones = () => {
         try {
             let sucs = await sucursalesService.getAll();
             if (!isSuperAdmin) {
-                sucs = sucs.filter(s => s.id_comercio === sucursalId || s.id === sucursalId);
+                sucs = sucs.filter(s => s.id_comercio === sucursalId);
             }
             setSucursales(sucs);
 
@@ -79,7 +79,7 @@ const Liquidaciones = () => {
     const confirmLiquidacion = async () => {
         setIsProcessing(true);
         try {
-            const netoPagado = selectedSucursal.saldo_acumulado_mili || selectedSucursal.saldo_pendiente;
+            const netoPagado = Number(selectedSucursal.saldo_acumulado_mili) || 0;
             const comision = selectedSucursal.comision_porcentaje || 0;
             const totalVendido = netoPagado / (1 - (comision / 100));
 
@@ -92,7 +92,7 @@ const Liquidaciones = () => {
                 netoPagado
             );
             
-            await sucursalesService.update(sucId, { saldo_pendiente: 0, saldo_acumulado_mili: 0 });
+            await sucursalesService.update(sucId, { saldo_acumulado_mili: 0 });
 
             toast.success("Liquidación procesada correctamente");
             setIsConfirmOpen(false);
@@ -160,7 +160,7 @@ const Liquidaciones = () => {
         toast.success("Comprobante PDF generado");
     };
 
-    const getSaldo = (suc) => suc.saldo_acumulado_mili ?? suc.saldo_pendiente ?? 0;
+    const getSaldo = (suc) => Number(suc.saldo_acumulado_mili) || 0;
     const getDevolucionTotal = (suc) => devolucionesPorSucursal[suc.id_comercio ?? suc.id] ?? 0;
     const getSaldoNeto = (suc) => Math.max(0, getSaldo(suc) - getDevolucionTotal(suc));
     const getId = (suc) => suc.id_comercio ?? suc.id;
@@ -282,7 +282,7 @@ const Liquidaciones = () => {
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: i * 0.1 }}
-                                    className={`bg-white border ${hasDebt ? 'border-neutral-200 hover:border-black' : 'border-neutral-100'} p-6 rounded-xl flex flex-col justify-between min-h-[220px] transition-all duration-300 shadow-sm relative overflow-hidden group`}
+                                    className={`bg-white border p-6 rounded-2xl flex flex-col justify-between min-h-[220px] transition-all duration-300 shadow-sm relative overflow-hidden group hover:-translate-y-1 hover:shadow-md ${hasDebt ? 'border-neutral-200 hover:border-neutral-300' : 'border-neutral-100'}`}
                                 >
                                     {/* Marcador de deuda */}
                                     {hasDebt && (
@@ -296,8 +296,8 @@ const Liquidaciones = () => {
                                     <div className="space-y-1 relative z-10">
                                         <span className="text-[9px] font-black uppercase tracking-[0.2em] text-neutral-400 block mb-2">{suc.nombre}</span>
                                         <div className="flex items-baseline gap-1">
-                                            <span className={`text-sm font-bold ${hasDebt ? 'text-black' : 'text-neutral-300'}`}>$</span>
-                                            <p className={`text-5xl font-sport m-0 leading-none ${hasDebt ? 'text-black' : 'text-neutral-300'}`}>
+                                            <span className={`text-sm font-bold ${hasDebt ? 'text-black' : 'text-neutral-500'}`}>$</span>
+                                            <p className={`text-5xl font-sport m-0 leading-none ${hasDebt ? 'text-black' : 'text-neutral-800'}`}>
                                                 {getSaldoNeto(suc).toLocaleString()}
                                             </p>
                                         </div>
@@ -343,7 +343,7 @@ const Liquidaciones = () => {
                             <Settings2 size={16} className="text-black" />
                             <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-black m-0">Historial Consolidado</h3>
                         </div>
-                        <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm">
+                        <div className="bg-white rounded-2xl md:rounded-[2.5rem] shadow-premium border border-neutral-100 p-2 md:p-4 transition-all duration-500 hover:shadow-premium-hover">
                             <DataTable 
                                 data={historial}
                                 columns={columnsHistorial}

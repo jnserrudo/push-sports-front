@@ -24,7 +24,10 @@ const DataTable = ({
     onEdit,
     onDelete,
     onView,
-    variant // pass 'minimal' for compact layout (no outer shadow/rounded)
+    variant, // pass 'minimal' for compact layout (no outer shadow/rounded)
+    emptyIcon: EmptyIcon = Database,
+    emptyTitle = "No hay datos disponibles",
+    emptySubtitle = "Todavía no existen registros en esta sección. Puedes comenzar agregando nueva información."
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -75,15 +78,17 @@ const DataTable = ({
     };
 
     return (
-        <div className="bg-transparent md:bg-white rounded-none md:rounded-[3rem] p-0 md:p-10 md:shadow-premium md:border border-neutral-100 relative overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-700">
-            
+        <div className="bg-white rounded-2xl md:rounded-[2.5rem] p-4 md:p-8 shadow-premium border border-neutral-100 relative overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-700">
+            {/* Ambient Accent (Subtle) */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-brand-cyan/5 blur-3xl pointer-events-none rounded-full -translate-y-1/2 translate-x-1/2" />
+
             {/* Toolbar Principal */}
-            <div className="flex items-center justify-between gap-2 sm:gap-4 md:gap-12 mb-4 md:mb-16">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 md:gap-8 mb-6 md:mb-10 relative z-10">
                 <div className="relative flex-1 group w-full min-w-0">
-                    <label className="hidden md:block text-sm font-black uppercase tracking-[0.5em] text-neutral-600 ml-8 mb-6 block text-label-caps">Búsqueda Avanzada</label>
-                    <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 md:pl-10 flex items-center pointer-events-none text-neutral-400 group-focus-within:text-brand-cyan transition-colors">
-                            <Search size={18} className="md:w-8 md:h-8" />
+                    <label className="hidden md:block text-xs font-black uppercase tracking-[0.3em] text-neutral-400 mb-2 ml-2">Explorador de Datos</label>
+                    <div className="relative flex items-center">
+                        <div className="absolute left-4 md:left-6 flex items-center pointer-events-none text-neutral-400 group-focus-within:text-brand-cyan transition-colors">
+                            <Search size={20} className="md:w-6 md:h-6" />
                         </div>
                         <input 
                             type="text" 
@@ -93,73 +98,86 @@ const DataTable = ({
                                 setSearchTerm(e.target.value);
                                 setCurrentPage(1);
                             }}
-                            className="input-premium pl-10 md:pl-24 pr-8 md:pr-14 h-10 md:h-24 w-full text-[10px] sm:text-xs md:text-base font-black text-black uppercase tracking-widest rounded-xl md:rounded-[2rem] border-2 md:border-[3px] border-black focus:border-brand-cyan focus:bg-white bg-neutral-50 transition-all placeholder:text-neutral-400"
+                            className="w-full pl-12 md:pl-16 pr-10 md:pr-14 h-12 md:h-16 bg-neutral-50/50 border-2 border-neutral-100 focus:border-brand-cyan focus:bg-white text-neutral-900 text-sm md:text-base font-bold tracking-widest uppercase rounded-xl md:rounded-2xl transition-all outline-none placeholder:text-neutral-400 shadow-inner"
                         />
                         {searchTerm && (
                             <button 
                                 onClick={() => { setSearchTerm(''); setCurrentPage(1); }}
-                                className="absolute right-2 md:right-8 top-1/2 -translate-y-1/2 p-1.5 md:p-2 text-neutral-400 hover:text-red-500 transition-all"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-red-500 transition-all bg-white rounded-full p-1"
                             >
-                                <XCircle size={16} className="md:w-8 md:h-8" />
+                                <XCircle size={18} className="md:w-5 md:h-5" />
                             </button>
                         )}
                     </div>
                 </div>
 
                 {onAdd && (
-                    <button 
-                        onClick={onAdd}
-                        className="bg-black text-white border-2 border-black hover:bg-brand-cyan hover:text-black h-10 w-10 sm:w-auto md:h-24 px-0 sm:px-6 md:px-16 flex items-center justify-center gap-0 sm:gap-2 md:gap-6 group flex-shrink-0 rounded-xl md:rounded-[2rem] transition-colors"
-                        title={addLabel}
-                    >
-                        <Plus size={20} className="md:w-8 md:h-8 group-hover:rotate-90 transition-transform" strokeWidth={3} />
-                        <span className="hidden sm:inline font-black tracking-[0.2em] md:tracking-[0.3em] text-[10px] md:text-sm uppercase whitespace-nowrap">{addLabel}</span>
-                    </button>
+                    <div className="flex items-end h-full mt-auto">
+                        <button 
+                            onClick={onAdd}
+                            className="w-full md:w-auto bg-black text-white px-6 md:px-10 h-12 md:h-16 flex items-center justify-center gap-3 group rounded-xl md:rounded-2xl transition-all hover:bg-brand-cyan hover:text-black hover:shadow-lg hover:-translate-y-0.5"
+                            title={addLabel}
+                        >
+                            <Plus size={20} className="md:w-5 md:h-5 transition-transform group-hover:rotate-90" strokeWidth={3} />
+                            <span className="font-black tracking-[0.2em] md:tracking-[0.3em] text-xs md:text-sm uppercase whitespace-nowrap">{addLabel}</span>
+                        </button>
+                    </div>
                 )}
             </div>
 
             {/* Table Area */}
-            <div className="rounded-xl md:rounded-[2.5rem] border-2 md:border-[3px] border-black overflow-hidden bg-white shadow-md md:shadow-xl relative z-10 w-full mb-3 md:mb-0">
-                <div className="overflow-x-auto scrollbar-hide">
+            <div className="rounded-xl md:rounded-3xl border border-neutral-200 overflow-hidden bg-white shadow-sm relative z-10 w-full mb-4">
+                <div className="overflow-x-auto custom-scrollbar">
                     <table className="w-full text-left border-collapse min-w-full md:min-w-[800px]">
                         <thead>
-                            <tr className="bg-black text-brand-cyan uppercase text-[7px] md:text-xs tracking-[0.2em] md:tracking-[0.4em] font-black border-b-2 border-black">
+                            <tr className="bg-neutral-50/50 text-neutral-500 text-xs md:text-sm font-semibold border-b border-neutral-200">
                                 {columns.map((col, idx) => (
                                     <th 
                                         key={idx} 
-                                        className={`px-2 md:px-3 py-2.5 md:p-10 ${col.accessor ? 'cursor-pointer hover:bg-white/10 transition-colors' : ''} ${idx > 1 ? 'hidden sm:table-cell' : ''}`}
+                                        className={`px-4 md:px-8 py-3 md:py-5 whitespace-nowrap ${col.accessor ? 'cursor-pointer hover:bg-neutral-100 transition-colors' : ''} ${idx > 1 ? 'hidden sm:table-cell' : ''}`}
                                         onClick={() => col.accessor && handleSort(col.accessor)}
                                     >
-                                        <div className="flex items-center gap-1.5 md:gap-3 leading-none">
+                                        <div className="flex items-center gap-2 leading-none">
                                             {col.header}
                                             {renderSortIcon(col)}
                                         </div>
                                     </th>
                                 ))}
                                 {(onEdit || onDelete || onView) && (
-                                    <th className="px-2 py-2.5 md:p-10 text-right text-white font-black tracking-[0.2em] md:tracking-[0.5em] uppercase">Control</th>
+                                    <th className="px-4 md:px-8 py-3 md:py-5 text-right font-semibold">Acciones</th>
                                 )}
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-neutral-200 text-black">
+                        <tbody className="divide-y divide-neutral-100 text-neutral-700">
                             {paginatedData.length === 0 ? (
                                 <tr>
-                                    <td colSpan={columns.length + 1} className="p-8 md:p-20 text-center">
-                                        <div className="flex flex-col items-center justify-center gap-4">
-                                            <div className="w-16 h-16 md:w-24 md:h-24 bg-neutral-100 rounded-[1.5rem] flex items-center justify-center">
+                                    <td colSpan={columns.length + ((onEdit || onDelete || onView) ? 1 : 0)} className="p-0 border-0">
+                                        <div className="flex flex-col items-center justify-center p-10 md:p-24 w-full min-h-[300px] text-center bg-white border-transparent">
+                                            <div className="w-16 h-16 md:w-20 md:h-20 bg-neutral-50 rounded-2xl flex items-center justify-center shadow-inner border border-neutral-100 mb-6 transition-all duration-300 hover:scale-105">
                                                 {searchTerm
-                                                    ? <Search className="text-neutral-300 w-8 h-8 md:w-12 md:h-12" />
-                                                    : <Database className="text-neutral-300 w-8 h-8 md:w-12 md:h-12" />
+                                                    ? <Search className="text-neutral-300 w-8 h-8 md:w-10 md:h-10" />
+                                                    : <EmptyIcon className="text-neutral-300 w-8 h-8 md:w-10 md:h-10" />
                                                 }
                                             </div>
-                                            <div className="space-y-1">
-                                                <span className="block text-[10px] md:text-sm font-black text-neutral-400 uppercase tracking-widest">
-                                                    {searchTerm ? 'Sin resultados para tu búsqueda' : 'No hay registros aún'}
-                                                </span>
+                                            <div className="w-full max-w-md mx-auto space-y-3 flex flex-col items-center justify-center">
+                                                <h4 className="text-lg md:text-xl font-bold text-neutral-800 leading-normal text-center w-full">
+                                                    {searchTerm ? 'No se encontraron resultados' : emptyTitle}
+                                                </h4>
+                                                <p className="text-sm text-neutral-500 leading-relaxed text-center w-full">
+                                                    {searchTerm 
+                                                        ? 'No pudimos encontrar datos que coincidan con tu búsqueda. Intenta ajustar los filtros o el término.'
+                                                        : emptySubtitle}
+                                                </p>
                                                 {!searchTerm && onAdd && (
-                                                    <button onClick={onAdd} className="text-[9px] font-bold text-brand-cyan uppercase tracking-widest hover:underline">
-                                                        + Agregar primer registro
-                                                    </button>
+                                                    <div className="pt-6 flex justify-center w-full">
+                                                        <button 
+                                                            onClick={onAdd} 
+                                                            className="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold text-white bg-black rounded-xl hover:bg-brand-cyan hover:text-black hover:-translate-y-0.5 transition-all w-full md:w-auto shadow-md"
+                                                        >
+                                                            <Plus size={18} strokeWidth={2.5} />
+                                                            Crear Primer Registro
+                                                        </button>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
@@ -167,42 +185,42 @@ const DataTable = ({
                                 </tr>
                             ) : (
                                 paginatedData.map((row, rowIdx) => (
-                                    <tr key={rowIdx} className={`group hover:bg-neutral-50 transition-all border-b border-neutral-200 last:border-0 text-[10px] md:text-sm ${
-                                        row.activo === false ? 'opacity-50' : 'bg-white'
+                                    <tr key={rowIdx} className={`group hover:bg-neutral-50 border-b border-neutral-100 last:border-0 transition-colors text-sm text-neutral-700 ${
+                                        row.activo === false ? 'opacity-50 grayscale' : 'bg-white'
                                     }`}>
                                         {columns.map((col, colIdx) => (
-                                            <td key={colIdx} className={`px-2 py-2 md:p-10 uppercase tracking-tighter text-black font-black align-middle ${colIdx > 1 ? 'hidden sm:table-cell' : ''}`}>
-                                                {col.render ? col.render(row) : <span className="tracking-widest">{row[col.accessor]}</span>}
+                                            <td key={colIdx} className={`px-4 py-4 md:px-8 md:py-6 align-middle ${colIdx > 1 ? 'hidden sm:table-cell' : ''} ${colIdx === 0 ? 'text-black font-black' : ''}`}>
+                                                {col.render ? col.render(row) : <span className="text-neutral-600">{row[col.accessor] ?? '—'}</span>}
                                             </td>
                                         ))}
                                         {(onEdit || onDelete || onView) && (
-                                            <td className="px-2 py-2 md:p-10 text-right align-middle">
-                                                <div className="flex items-center justify-end gap-1 md:gap-2">
+                                            <td className="px-4 py-4 md:px-8 md:py-6 text-right align-middle">
+                                                <div className="flex items-center justify-end gap-2">
                                                     {onView && (
                                                         <button
                                                             onClick={() => onView(row)}
-                                                            title="Ver detalle"
-                                                            className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-lg text-neutral-500 bg-neutral-100 hover:bg-neutral-200 hover:text-black transition-all"
+                                                            title="Inspeccionar"
+                                                            className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-xl text-brand-cyan bg-brand-cyan/10 hover:bg-brand-cyan hover:text-black transition-all"
                                                         >
-                                                            <Eye size={14} />
+                                                            <Eye size={18} strokeWidth={2.5} />
                                                         </button>
                                                     )}
                                                     {onEdit && (
                                                         <button
                                                             onClick={() => onEdit(row)}
-                                                            title="Editar"
-                                                            className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-lg text-white bg-black hover:bg-brand-cyan hover:text-black transition-all"
+                                                            title="Modificar"
+                                                            className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-xl text-neutral-500 bg-neutral-100 border border-neutral-200 hover:bg-black hover:text-white hover:border-black transition-all"
                                                         >
-                                                            <Pencil size={14} />
+                                                            <Pencil size={18} strokeWidth={2.5} />
                                                         </button>
                                                     )}
                                                     {onDelete && (
                                                         <button
                                                             onClick={() => onDelete(row)}
-                                                            title="Desactivar"
-                                                            className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-lg text-white bg-red-500 hover:bg-red-700 transition-all"
+                                                            title="Eliminar"
+                                                            className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-xl text-red-500 bg-red-50 border border-red-100 hover:bg-red-500 hover:text-white transition-all"
                                                         >
-                                                            <Trash2 size={14} />
+                                                            <Trash2 size={18} strokeWidth={2.5} />
                                                         </button>
                                                     )}
                                                 </div>
@@ -217,46 +235,41 @@ const DataTable = ({
             </div>
 
             {/* Pagination */}
-            <div className="mt-0 md:mt-16 flex items-center justify-between gap-2 md:gap-12 bg-black md:bg-transparent p-2 md:p-0 rounded-xl md:rounded-none">
-                <div className="flex items-center gap-2 md:gap-6 bg-transparent w-full md:w-auto justify-between md:justify-start">
-                    <div className="flex items-center gap-2 md:gap-6">
-                         <div className="p-2 md:p-6 bg-transparent md:bg-neutral-900 border-0 md:border-2 border-neutral-900 rounded-md md:rounded-[1.5rem] md:shadow-xl hidden sm:block">
-                              <Activity className="text-brand-cyan md:w-8 md:h-8" strokeWidth={3} size={16} />
-                         </div>
-                        <div className="flex flex-col ml-2 sm:ml-0">
-                            <span className="text-[6px] md:text-xs font-black text-neutral-400 uppercase tracking-[0.3em] md:tracking-[0.4em] leading-none">TOTAL MÓDULO</span>
-                            <span className="font-black text-[9px] md:text-base uppercase tracking-widest text-white md:text-neutral-900 mt-1 md:mt-2 leading-none">
-                                {processedData.length} FILAS
-                            </span>
-                        </div>
+            <div className="mt-6 md:mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 z-10 relative">
+                <div className="flex items-center gap-3 md:gap-4 px-4 py-2 bg-neutral-50 rounded-xl border border-neutral-100">
+                     <div className="w-8 h-8 md:w-10 md:h-10 bg-white border border-neutral-200 rounded-lg flex items-center justify-center shadow-sm">
+                          <Activity className="text-brand-cyan" strokeWidth={2.5} size={18} />
+                     </div>
+                    <div className="flex flex-col">
+                        <span className="text-[9px] md:text-[10px] font-black text-neutral-400 uppercase tracking-[0.3em] leading-none mb-1">DATASTREAM</span>
+                        <span className="font-black text-xs md:text-sm uppercase tracking-widest text-black leading-none">
+                            {processedData.length} REGISTROS
+                        </span>
                     </div>
                 </div>
                 
                 {totalPages > 1 && (
-                    <div className="flex items-center gap-2 md:gap-10 pr-2 md:pr-0">
+                    <div className="flex items-center gap-4 md:gap-6 bg-white border border-neutral-200 p-2 rounded-2xl shadow-sm">
                         <button 
                             onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                             disabled={currentPage === 1}
-                            className="w-8 h-8 md:w-20 md:h-20 bg-neutral-800 md:bg-white border-0 md:border-4 border-neutral-100 rounded-lg md:rounded-[2rem] text-white md:text-neutral-400 hover:bg-neutral-700 md:hover:text-black hover:border-black disabled:opacity-20 transition-all flex items-center justify-center md:shadow-lg"
+                            className="w-10 h-10 md:w-12 md:h-12 bg-neutral-50 rounded-xl text-neutral-500 hover:text-black hover:bg-neutral-100 disabled:opacity-30 disabled:hover:bg-neutral-50 transition-all flex items-center justify-center border border-neutral-200 cursor-pointer"
                         >
-                            <ChevronLeft size={14} md:size={32} strokeWidth={3} />
+                            <ChevronLeft size={20} strokeWidth={3} />
                         </button>
                         
-                        <div className="flex flex-col items-center min-w-[2.5rem]">
-                            <span className="hidden md:block text-[11px] font-black uppercase tracking-[0.5em] text-neutral-400 mb-2">SECTOR</span>
-                            <div className="font-black tracking-tighter text-xs md:text-4xl text-white md:text-black leading-none">
-                                <span className="text-brand-cyan">{currentPage.toString().padStart(2, '0')}</span> 
-                                <span className="mx-1 md:mx-4 text-neutral-600 md:text-neutral-200">/</span> 
-                                {totalPages.toString().padStart(2, '0')}
-                            </div>
+                        <div className="font-black tracking-widest text-sm md:text-base text-neutral-400">
+                            <span className="text-black">{currentPage.toString().padStart(2, '0')}</span> 
+                            <span className="mx-2">/</span> 
+                            {totalPages.toString().padStart(2, '0')}
                         </div>
 
                         <button 
                             onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                             disabled={currentPage === totalPages}
-                            className="w-8 h-8 md:w-20 md:h-20 bg-neutral-800 md:bg-white border-0 md:border-4 border-neutral-100 rounded-lg md:rounded-[2rem] text-white md:text-neutral-400 hover:bg-brand-cyan hover:text-black md:hover:border-black disabled:opacity-20 transition-all flex items-center justify-center md:shadow-lg"
+                            className="w-10 h-10 md:w-12 md:h-12 bg-black rounded-xl text-white hover:bg-neutral-800 disabled:opacity-30 disabled:bg-black transition-all flex items-center justify-center font-bold cursor-pointer shadow-md hover:shadow-lg hover:-translate-y-0.5"
                         >
-                            <ChevronRight size={14} md:size={32} strokeWidth={3} />
+                            <ChevronRight size={20} strokeWidth={3} />
                         </button>
                     </div>
                 )}
