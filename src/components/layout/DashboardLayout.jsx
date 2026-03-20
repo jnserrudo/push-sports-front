@@ -32,7 +32,7 @@ const DashboardLayout = () => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 768);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 768);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -378,7 +378,7 @@ const DashboardLayout = () => {
         </header>
 
         {/* PAGE CONTENT */}
-        <main className="flex-1 overflow-y-auto p-0 md:p-10 lg:p-14 bg-neutral-50 custom-scrollbar relative">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 lg:p-14 bg-neutral-50 custom-scrollbar relative overflow-x-hidden">
             <div className="max-w-7xl mx-auto space-y-4">
                 {isAuthorized ? (
                   <AnimatePresence mode="wait">

@@ -229,7 +229,7 @@ const MultiImagePicker = ({ formData, setFormData }) => {
             <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">
                 Imágenes del Producto <span className="text-neutral-400">(hasta 3 · máx. 5MB c/u)</span>
             </label>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2 md:gap-3">
                 {[0, 1, 2].map(i => (
                     <ImageSlot
                         key={i}
@@ -671,7 +671,7 @@ const Productos = () => {
                     <AttributesManager formData={formData} setFormData={setFormData} />
 
                     {/* Precios + Stock Mínimo */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="space-y-2">
                             <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Costo Compra *</label>
                             <div className="relative group">

@@ -206,14 +206,14 @@ const Reporteria = () => {
             className="space-y-6"
           >
             {/* Context banner */}
-            <div className="bg-neutral-900 rounded-2xl px-6 py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 mb-0">
+            <div className="bg-neutral-900 rounded-2xl px-4 md:px-6 py-4 flex flex-col gap-3 mb-0">
               <div>
                 <p className="text-white font-black text-sm uppercase tracking-tight">Lista de Precios para Comercios</p>
                 <p className="text-neutral-400 text-[10px] font-bold uppercase tracking-widest mt-0.5">
                   El <span className="text-white">precio público</span> siempre se incluye en el PDF. Podés activar el precio Push si querés enviarlo también.
                 </p>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex flex-wrap items-center gap-2">
                 {prefetchingImages && (
                   <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">
                     <Loader2 size={12} className="animate-spin text-brand-cyan" /> Preparando...
@@ -244,7 +244,7 @@ const Reporteria = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-[2.5rem] p-8 shadow-premium border border-neutral-100">
+            <div className="bg-white rounded-2xl md:rounded-[2.5rem] p-4 md:p-8 shadow-premium border border-neutral-100">
               <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-8">
                 <div className="relative flex-1 w-full max-w-md">
                   <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-neutral-400" size={18} />
@@ -261,7 +261,7 @@ const Reporteria = () => {
                 </p>
               </div>
 
-              <div className="overflow-x-auto rounded-3xl border border-neutral-100">
+              <div className="overflow-x-auto -mx-4 md:mx-0 rounded-none md:rounded-3xl border-y md:border border-neutral-100">
                 <table className="w-full text-left">
                   <thead>
                     <tr className="bg-neutral-50/80 text-neutral-400 text-[10px] font-black uppercase tracking-widest">
@@ -469,11 +469,11 @@ const Reporteria = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+                  className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6"
                 >
                   {/* Left: Catalog */}
                   <div className="lg:col-span-1">
-                    <div className="bg-white rounded-[2.5rem] p-6 shadow-premium border border-neutral-100 flex flex-col" style={{ height: '75vh' }}>
+                    <div className="bg-white rounded-2xl md:rounded-[2.5rem] p-4 md:p-6 shadow-premium border border-neutral-100 flex flex-col" style={{ height: '60vh', minHeight: '320px' }}>
                       <div className="mb-4 space-y-2">
                         <h3 className="text-sm font-black uppercase tracking-widest text-neutral-900 flex items-center gap-2">
                           <Plus size={16} className="text-brand-cyan" /> Productos a dejar
@@ -534,9 +534,9 @@ const Reporteria = () => {
                   </div>
 
                   {/* Right: Report builder */}
-                  <div className="lg:col-span-2 space-y-5">
+                  <div className="lg:col-span-2 space-y-4 md:space-y-5">
                     {/* Actions bar */}
-                    <div className="bg-neutral-900 rounded-2xl px-5 py-3.5 flex flex-wrap items-center justify-between gap-3">
+                    <div className="bg-neutral-900 rounded-2xl px-4 md:px-5 py-3 md:py-3.5 flex flex-wrap items-center justify-between gap-2 md:gap-3">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-brand-cyan/20 rounded-lg flex items-center justify-center">
                           <Store className="text-brand-cyan" size={16} />
@@ -600,7 +600,7 @@ const Reporteria = () => {
                     </div>
 
                     {/* Items list */}
-                    <div className="bg-white rounded-[2.5rem] p-8 shadow-premium border border-neutral-100 min-h-[450px] flex flex-col">
+                    <div className="bg-white rounded-2xl md:rounded-[2.5rem] p-4 md:p-8 shadow-premium border border-neutral-100 min-h-[300px] md:min-h-[450px] flex flex-col">
                       <div className="flex items-center justify-between mb-6">
                         <div>
                           <h3 className="text-lg font-black text-neutral-900 tracking-tighter uppercase">Productos a entregar</h3>
@@ -646,7 +646,7 @@ const Reporteria = () => {
                               </div>
 
                               {/* Stock row */}
-                              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 md:gap-3">
                                 {/* Col 1: Stock en comercio */}
                                 <div className="space-y-1.5">
                                   <label className="text-[9px] font-black uppercase tracking-widest text-neutral-400">Stock comercio</label>
