@@ -92,8 +92,6 @@ const Liquidaciones = () => {
                 netoPagado
             );
             
-            await sucursalesService.update(sucId, { saldo_acumulado_mili: 0 });
-
             toast.success("Liquidación procesada correctamente");
             setIsConfirmOpen(false);
             loadData();

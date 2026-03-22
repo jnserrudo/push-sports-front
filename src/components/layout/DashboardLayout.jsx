@@ -26,6 +26,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import { useNavigate, useLocation, Link, Outlet, Navigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { ThemeToggle } from '../ui/ThemeToggle';
 import api from '../../api/api';
 
 const DashboardLayout = () => {
@@ -286,6 +287,8 @@ const DashboardLayout = () => {
             </div>
             
             <div className="flex items-center gap-2 md:gap-3">
+                <ThemeToggle />
+                
                 <div className="relative" ref={notificationsRef} onMouseEnter={handleNotificationsEnter} onMouseLeave={handleNotificationsLeave}>
                   <button 
                     onClick={() => { setIsNotificationsOpen(!isNotificationsOpen); if (!isNotificationsOpen) loadNotifications(); }}

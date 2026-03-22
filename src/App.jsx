@@ -21,7 +21,10 @@ import POS from './pages/pos/POS';
 import Inventario from './pages/admin/Inventario';
 import Movimientos from './pages/admin/Movimientos';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Toaster from './components/ui/Toaster';
+import { GlobalLoader } from './components/ui/GlobalLoader';
 import Devoluciones from './pages/dashboard/Devoluciones';
 import Reporteria from './pages/admin/Reporteria';
 import Perfil from './pages/dashboard/Perfil';
@@ -29,12 +32,15 @@ import Perfil from './pages/dashboard/Perfil';
 const App = () => {
   return (
     <Router>
+      <GlobalLoader />
       <Toaster />
       <Routes>
         {/* PUBLIC ROUTES */}
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* PROTECTED ROUTES - UNIFIED DASHBOARD */}
         <Route 

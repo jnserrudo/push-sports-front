@@ -122,9 +122,9 @@ const Login = () => {
                             </div>
                             {/* ENLACE "OLVIDÉ MI CONTRASEÑA" CORREGIDO (Debajo del input, a la derecha) */}
                             <div className="flex justify-end pt-1">
-                                <a href="#" className="text-[11px] font-bold text-neutral-500 hover:text-brand-cyan underline underline-offset-4 transition-colors">
+                                <Link to="/forgot-password" className="text-[11px] font-bold text-neutral-500 hover:text-brand-cyan underline underline-offset-4 transition-colors">
                                     ¿Olvidaste tu contraseña?
-                                </a>
+                                </Link>
                             </div>
                         </div>
 

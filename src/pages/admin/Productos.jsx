@@ -19,6 +19,7 @@ import {
     ImagePlus
 } from 'lucide-react';
 import GenericABM from '../../components/ui/GenericABM';
+import { ExportButton } from '../../components/ui/ExportButton';
 import { useAuthStore } from '../../store/authStore';
 import { productosService } from '../../services/productosService';
 import {

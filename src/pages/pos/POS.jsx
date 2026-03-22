@@ -13,11 +13,19 @@ import {
   MapPin,
   Clock,
   Play,
-  X
+  X,
+  Tag,
+  CheckCircle2,
+  AlertCircle,
+  Zap,
+  Printer,
+  Package
 } from 'lucide-react';
+import { jsPDF } from 'jspdf';
 import { useAuthStore } from '../../store/authStore';
 import { posService } from '../../services/posService';
 import { sucursalesService } from '../../services/sucursalesService';
+import { combosService } from '../../services/combosService';
 import { toast } from '../../store/toastStore';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -31,11 +39,24 @@ const POS = () => {
   const [sucursalOptions, setSucursalOptions] = useState([]);
   const [selectedSucursalId, setSelectedSucursalId] = useState(null); // for SuperAdmin picker
   const [products, setProducts] = useState([]);
+  const [combos, setCombos] = useState([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [metodoPago, setMetodoPago] = useState('Efectivo');
   const [isProcessing, setIsProcessing] = useState(false);
   const [drafts, setDrafts] = useState([]);
   const [showDrafts, setShowDrafts] = useState(false);
+
+  // Descuento por código promo
+  const [codigoPromo, setCodigoPromo] = useState('');
+  const [descuentoAplicado, setDescuentoAplicado] = useState(null); // { codigo, monto_descuento, tipo_descuento, valor_descuento }
+  const [isValidatingCodigo, setIsValidatingCodigo] = useState(false);
+  const [promoError, setPromoError] = useState('');
+
+  // Ofertas vigentes
+  const [ofertasVigentes, setOfertasVigentes] = useState([]);
+
+  // Último comprobante de venta
+  const [lastSale, setLastSale] = useState(null);
   
   const searchInputRef = useRef(null);
 
@@ -101,6 +122,11 @@ const POS = () => {
   }, [cart, isProcessing, activeTab]);
 
 
+  // Cargar ofertas vigentes al montar
+  useEffect(() => {
+    posService.getOfertasVigentes().then(setOfertasVigentes).catch(() => setOfertasVigentes([]));
+  }, []);
+
   // Load sucursal options for SuperAdmin picker
   useEffect(() => {
     if (isSuperAdmin) {
@@ -108,27 +134,31 @@ const POS = () => {
     }
   }, [isSuperAdmin]);
 
-  // Cargar inventario real del comercio
+  // Cargar inventario real del comercio y combos
   useEffect(() => {
     const loadProducts = async () => {
       setIsLoadingProducts(true);
       try {
         const id = selectedSucursalId || sucursalId || user?.id_comercio_asignado;
         if (id) {
-          const [inventario, sucursalData] = await Promise.all([
+          const [inventario, sucursalData, combosData] = await Promise.all([
             posService.getInventarioSucursal(id),
-            sucursalesService.getById(id)
+            sucursalesService.getById(id),
+            combosService.getAll()
           ]);
           setProducts(inventario || []);
+          setCombos(combosData?.filter(c => c.activo) || []);
           setCurrentSucursal(sucursalData);
         } else {
           setProducts([]);
+          setCombos([]);
           setCurrentSucursal(null);
           setIsLoadingProducts(false);
         }
       } catch (error) {
         console.error('Error cargando inventario POS:', error);
         setProducts([]);
+        setCombos([]);
       } finally {
         setIsLoadingProducts(false);
       }
@@ -138,7 +168,16 @@ const POS = () => {
 
   // Obtener nombre del producto y precio normalizado
   const getProductNombre = (item) => item.producto?.nombre || 'Producto';
-  const getProductPrecio = (item) => Number(item.producto?.precio_venta_sugerido || 0);
+  const getProductPrecioBase = (item) => Number(item.producto?.precio_venta_sugerido || 0);
+  const getProductPrecio = (item) => {
+    const base = getProductPrecioBase(item);
+    if (ofertasVigentes.length === 0) return base;
+    // Aplicar la oferta con mayor descuento vigente (globalizada — aplica a todos los productos)
+    const mejorOferta = ofertasVigentes.reduce((max, o) => 
+      Number(o.descuento_porcentaje) > Number(max.descuento_porcentaje) ? o : max
+    , ofertasVigentes[0]);
+    return Math.round(base * (1 - Number(mejorOferta.descuento_porcentaje) / 100));
+  };
   const getProductStock = (item) => item.cantidad_actual ?? 0;
   const getProductId = (item) => item.id_inventario;
   const getProductImg = (item) => item.producto?.imagen_url || null;
@@ -185,8 +224,101 @@ const POS = () => {
 
   const [activeTab, setActiveTab] = useState('catalog'); // 'catalog' or 'cart'
 
-  const total = cart.reduce((acc, item) => acc + (item.precio * item.cantidad), 0);
+  const subtotal = cart.reduce((acc, item) => acc + (item.precio * item.cantidad), 0);
+  const montoDescuento = descuentoAplicado?.monto_descuento || 0;
+  const total = Math.max(0, subtotal - montoDescuento);
   const cartItemsCount = cart.reduce((acc, item) => acc + item.cantidad, 0);
+
+  const handleValidarCodigo = async () => {
+    if (!codigoPromo.trim()) return;
+    setIsValidatingCodigo(true);
+    setPromoError('');
+    try {
+      const result = await posService.validarDescuento(codigoPromo.trim(), subtotal);
+      setDescuentoAplicado(result);
+      setCodigoPromo('');
+      toast.success(`Código "${result.codigo}" aplicado: -$${result.monto_descuento.toLocaleString()}`);
+    } catch (err) {
+      setPromoError(err?.response?.data?.error || 'Código inválido');
+      setDescuentoAplicado(null);
+    } finally {
+      setIsValidatingCodigo(false);
+    }
+  };
+
+  const handleRemoveCodigo = () => {
+    setDescuentoAplicado(null);
+    setCodigoPromo('');
+    setPromoError('');
+  };
+
+  const generateComprobante = (ventaData) => {
+    const doc = new jsPDF({ format: 'a6', orientation: 'portrait' });
+    const comercioNombre = currentSucursal?.nombre || 'Sede';
+    const fecha = new Date().toLocaleString();
+
+    doc.setFillColor(0, 0, 0);
+    doc.rect(0, 0, 105, 30, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PUSH SPORT', 8, 14);
+    doc.setTextColor(0, 210, 255);
+    doc.setFontSize(7);
+    doc.text('COMPROBANTE DE VENTA', 8, 22);
+    doc.setTextColor(180, 180, 180);
+    doc.text(comercioNombre.toUpperCase(), 97, 22, { align: 'right' });
+
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Fecha: ${fecha}`, 8, 38);
+    doc.text(`Método de pago: ${metodoPago}`, 8, 44);
+    if (ventaData?.id_venta) doc.text(`Ref: #${String(ventaData.ventaCabecera?.id_venta || '').split('-')[0]}`, 8, 50);
+
+    doc.setLineWidth(0.3);
+    doc.line(8, 54, 97, 54);
+
+    let y = 62;
+    doc.setFont('helvetica', 'bold');
+    doc.text('PRODUCTO', 8, y);
+    doc.text('CANT', 72, y, { align: 'right' });
+    doc.text('TOTAL', 97, y, { align: 'right' });
+    y += 4;
+    doc.line(8, y, 97, y);
+    y += 6;
+
+    doc.setFont('helvetica', 'normal');
+    cart.forEach(item => {
+      const lineTotal = (item.precio * item.cantidad).toLocaleString();
+      doc.text(item.nombre.substring(0, 28), 8, y);
+      doc.text(String(item.cantidad), 72, y, { align: 'right' });
+      doc.text(`$${lineTotal}`, 97, y, { align: 'right' });
+      y += 6;
+    });
+
+    doc.line(8, y, 97, y);
+    y += 6;
+
+    if (descuentoAplicado) {
+      doc.text(`Descuento (${descuentoAplicado.codigo}):`, 8, y);
+      doc.text(`-$${montoDescuento.toLocaleString()}`, 97, y, { align: 'right' });
+      y += 6;
+    }
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text('TOTAL:', 8, y);
+    doc.text(`$${total.toLocaleString()}`, 97, y, { align: 'right' });
+
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(150, 150, 150);
+    doc.text('Gracias por tu compra — Push Sport Salta', 52, 148, { align: 'center' });
+
+    doc.save(`comprobante_${Date.now()}.pdf`);
+    toast.success('Comprobante generado');
+  };
 
   const handleConfirmSale = async () => {
     if (!cart.length) return;
@@ -198,8 +330,11 @@ const POS = () => {
         cantidadAComprar: item.cantidad,
         precio_venta: item.precio
       }));
-      await posService.registrarVenta(comercioId, user?.id_usuario, itemsPayload, total, metodoPago);
+      const ventaResult = await posService.registrarVenta(comercioId, user?.id_usuario, itemsPayload, total, metodoPago);
+      setLastSale(ventaResult);
       setCart([]);
+      setDescuentoAplicado(null);
+      setCodigoPromo('');
       setActiveTab('catalog');
       setShowCheckoutModal(false);
       toast.success("Venta procesada exitosamente");
@@ -332,6 +467,68 @@ const POS = () => {
             </AnimatePresence>
           </motion.div>
           )}
+
+          {/* Sección de Combos */}
+          {!isLoadingProducts && combos.length > 0 && (
+            <div className="mt-8">
+              <div className="flex items-center gap-2 mb-4">
+                <Package size={14} className="text-brand-cyan" />
+                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-400">
+                  Combos Especiales
+                </h3>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
+                {combos.map(combo => (
+                  <motion.div
+                    key={combo.id_combo}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      const existingItem = cart.find(c => c.id === combo.id_combo);
+                      if (existingItem) {
+                        setCart(cart.map(c => 
+                          c.id === combo.id_combo 
+                            ? { ...c, cantidad: c.cantidad + 1 }
+                            : c
+                        ));
+                      } else {
+                        setCart([...cart, { 
+                          id: combo.id_combo,
+                          nombre: combo.nombre,
+                          precio: Number(combo.precio_combo),
+                          cantidad: 1,
+                          isCombo: true
+                        }]);
+                      }
+                      toast.success(`${combo.nombre} agregado al carrito`);
+                    }}
+                    className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl md:rounded-3xl p-3 md:p-4 cursor-pointer hover:shadow-lg transition-all"
+                  >
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Package size={12} className="text-amber-600" />
+                      <span className="text-[8px] font-black uppercase tracking-widest text-amber-600">
+                        COMBO
+                      </span>
+                    </div>
+                    <h4 className="font-black text-xs md:text-sm uppercase text-neutral-900 mb-2 line-clamp-2">
+                      {combo.nombre}
+                    </h4>
+                    {combo.descripcion && (
+                      <p className="text-[9px] text-neutral-500 mb-2 line-clamp-1">
+                        {combo.descripcion}
+                      </p>
+                    )}
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-[10px] font-bold text-neutral-600">$</span>
+                      <span className="text-lg md:text-xl font-sport text-neutral-900">
+                        {Number(combo.precio_combo).toLocaleString()}
+                      </span>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -460,61 +657,126 @@ const POS = () => {
           )}
         </div>
 
-        <div className="p-6 md:p-8 bg-neutral-50 border-t border-neutral-100 space-y-4 md:space-y-6">
-            <div className="space-y-3">
-                <div className="flex justify-between text-neutral-400 font-extrabold uppercase text-[10px] md:text-[12px] tracking-[0.2em]">
-                    <span>Subtotal Operativo</span>
-                    <span>${total.toLocaleString()}</span>
+        <div className="p-4 md:p-6 bg-neutral-50 border-t border-neutral-100 space-y-3">
+
+            {/* Banner oferta vigente */}
+            {ofertasVigentes.length > 0 && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-brand-cyan/10 border border-brand-cyan/30 rounded-xl">
+                    <Zap size={12} className="text-brand-cyan shrink-0" />
+                    <span className="text-[9px] font-black uppercase tracking-widest text-black">
+                        OFERTA ACTIVA: {ofertasVigentes[0].nombre} &mdash; {ofertasVigentes[0].descuento_porcentaje}% OFF
+                    </span>
                 </div>
-                <div className="flex justify-between items-center font-bold text-[10px] md:text-[12px] tracking-[0.2em] text-neutral-500">
-                    <span>Pago</span>
+            )}
+
+            {/* Campo código promo */}
+            {!descuentoAplicado ? (
+                <div className="flex gap-2">
+                    <div className="relative flex-1">
+                        <Tag size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+                        <input
+                            type="text"
+                            placeholder="CÓDIGO PROMO..."
+                            value={codigoPromo}
+                            onChange={e => { setCodigoPromo(e.target.value.toUpperCase()); setPromoError(''); }}
+                            onKeyDown={e => e.key === 'Enter' && handleValidarCodigo()}
+                            className="w-full pl-8 pr-3 py-2.5 bg-white border border-neutral-200 rounded-xl text-[9px] font-black uppercase tracking-widest focus:outline-none focus:border-black transition-colors"
+                        />
+                    </div>
+                    <button
+                        onClick={handleValidarCodigo}
+                        disabled={!codigoPromo.trim() || isValidatingCodigo || cart.length === 0}
+                        className="px-3 py-2.5 bg-black text-white text-[9px] font-black uppercase rounded-xl hover:bg-brand-cyan hover:text-black transition-colors disabled:opacity-30 flex items-center gap-1"
+                    >
+                        {isValidatingCodigo ? <Loader2 size={12} className="animate-spin" /> : 'OK'}
+                    </button>
+                </div>
+            ) : (
+                <div className="flex items-center justify-between px-3 py-2.5 bg-green-50 border border-green-200 rounded-xl">
+                    <div className="flex items-center gap-2">
+                        <CheckCircle2 size={13} className="text-green-600" />
+                        <span className="text-[9px] font-black uppercase tracking-widest text-green-700">
+                            {descuentoAplicado.codigo} &mdash; -{descuentoAplicado.tipo_descuento === 'porcentaje' ? `${descuentoAplicado.valor_descuento}%` : `$${descuentoAplicado.valor_descuento.toLocaleString()}`}
+                        </span>
+                    </div>
+                    <button onClick={handleRemoveCodigo} className="text-neutral-400 hover:text-red-500 transition-colors">
+                        <X size={13} />
+                    </button>
+                </div>
+            )}
+            {promoError && (
+                <div className="flex items-center gap-2 px-3 py-1.5">
+                    <AlertCircle size={11} className="text-red-500" />
+                    <span className="text-[9px] font-bold text-red-500">{promoError}</span>
+                </div>
+            )}
+
+            {/* Desglose de totales */}
+            <div className="space-y-1.5 pt-1">
+                <div className="flex justify-between text-neutral-400 font-extrabold uppercase text-[10px] tracking-[0.2em]">
+                    <span>Subtotal</span>
+                    <span>${subtotal.toLocaleString()}</span>
+                </div>
+                {descuentoAplicado && (
+                    <div className="flex justify-between font-bold text-[10px] tracking-[0.1em] text-green-600">
+                        <span>Descuento ({descuentoAplicado.codigo})</span>
+                        <span>-${montoDescuento.toLocaleString()}</span>
+                    </div>
+                )}
+                <div className="flex justify-between items-center font-bold text-[10px] tracking-[0.2em] text-neutral-500">
+                    <span>Método de pago</span>
                     <select
                       value={metodoPago}
                       onChange={e => setMetodoPago(e.target.value)}
-                      className="bg-white border border-neutral-200 rounded-lg px-2 py-1 text-[9px] md:text-[11px] font-black text-black"
+                      className="bg-white border border-neutral-200 rounded-lg px-2 py-1 text-[9px] md:text-[10px] font-black text-black"
                     >
                       <option>Efectivo</option>
                       <option>Tarjeta</option>
                       <option>Transf. Bancaria</option>
                     </select>
                 </div>
-                
-                <div className="pt-4 md:pt-8 border-t border-neutral-200 flex justify-between items-end">
-                    <div className="flex flex-col">
-                        <span className="text-[10px] md:text-[13px] font-black text-neutral-400 uppercase tracking-[0.3em] mb-2 md:mb-4">Total Neto</span>
-                        <motion.span 
-                            key={total}
-                            initial={{ scale: 1.05, color: '#00d2ff' }}
-                            animate={{ scale: 1, color: '#171717' }}
-                            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                            className="text-3xl md:text-5xl font-black tracking-tighter leading-none"
-                        >
-                            ${total.toLocaleString()}
-                        </motion.span>
-                    </div>
+                <div className="pt-3 border-t border-neutral-200 flex justify-between items-end">
+                    <span className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.3em]">Total</span>
+                    <motion.span
+                        key={total}
+                        initial={{ scale: 1.05, color: '#00d2ff' }}
+                        animate={{ scale: 1, color: '#171717' }}
+                        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                        className="text-3xl md:text-4xl font-black tracking-tighter leading-none"
+                    >
+                        ${total.toLocaleString()}
+                    </motion.span>
                 </div>
             </div>
 
-            {cart.length > 0 && (
-                 <button 
-                  onClick={saveDraft}
-                  className="w-full bg-neutral-100 text-neutral-500 font-black text-[10px] uppercase tracking-[0.2em] py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-amber-100 hover:text-amber-600 transition-colors"
-                 >
-                   <Clock size={14} /> GUARDAR EN ESPERA
-                 </button>
-            )}
-
-            <button 
-                onClick={handleConfirmSale}
-                disabled={cart.length === 0 || isProcessing || showDrafts}
-                className="w-full btn-cyan h-14 md:h-18 text-[10px] md:text-[11px] flex flex-col md:flex-row items-center justify-center gap-1 md:gap-3 disabled:opacity-20 transition-all active:scale-95 group"
-            >
-                <div className="flex items-center gap-2">
+            {/* Botones de acción */}
+            <div className="flex gap-2">
+                {cart.length > 0 && (
+                    <button
+                        onClick={saveDraft}
+                        className="flex-shrink-0 bg-neutral-100 text-neutral-500 font-black text-[9px] uppercase tracking-widest px-3 py-3.5 rounded-xl hover:bg-amber-100 hover:text-amber-600 transition-colors flex items-center gap-1.5"
+                    >
+                        <Clock size={13} />
+                    </button>
+                )}
+                {lastSale && cart.length === 0 && (
+                    <button
+                        onClick={() => generateComprobante(lastSale)}
+                        className="flex-shrink-0 bg-neutral-100 text-neutral-500 font-black text-[9px] uppercase tracking-widest px-3 py-3.5 rounded-xl hover:bg-neutral-200 hover:text-black transition-colors flex items-center gap-1.5"
+                        title="Reimprimir último comprobante"
+                    >
+                        <Printer size={13} />
+                    </button>
+                )}
+                <button
+                    onClick={handleConfirmSale}
+                    disabled={cart.length === 0 || isProcessing || showDrafts}
+                    className="flex-1 btn-cyan h-14 text-[10px] flex items-center justify-center gap-2 disabled:opacity-20 transition-all active:scale-95"
+                >
                     {isProcessing ? <Loader2 size={16} className="animate-spin" /> : null}
                     FINALIZAR VENTA <ChevronRight size={16} />
-                </div>
-                <span className="text-[8px] font-black tracking-widest text-black/50 hidden md:block group-hover:text-black/70 transition-colors">(CTRL + ENTER)</span>
-            </button>
+                </button>
+            </div>
         </div>
       </div>
 

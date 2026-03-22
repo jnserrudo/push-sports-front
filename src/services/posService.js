@@ -23,5 +23,22 @@ export const posService = {
 
         const response = await api.post('/ventas', payload);
         return response.data;
+    },
+
+    // Valida un código de descuento contra el subtotal actual
+    validarDescuento: async (codigo, subtotal) => {
+        const response = await api.post('/descuentos/validar', { codigo, subtotal });
+        return response.data;
+    },
+
+    // Trae las ofertas activas vigentes para aplicar al catálogo
+    getOfertasVigentes: async () => {
+        const response = await api.get('/ofertas');
+        const now = new Date();
+        return (response.data || []).filter(o => {
+            if (!o.activo) return false;
+            if (o.fecha_fin && new Date(o.fecha_fin) < now) return false;
+            return true;
+        });
     }
 };

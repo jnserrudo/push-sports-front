@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { sucursalesService } from '../../services/sucursalesService';
-import { UserIcon, Mail, Shield, MapPin, Key } from 'lucide-react';
+import { UserIcon, Mail, Shield, MapPin, Key, Lock, Eye, EyeOff, CheckCircle2, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import api from '../../api/api';
 
 const Perfil = () => {
     const { user, sucursalId } = useAuthStore();
     const [sucursalNombre, setSucursalNombre] = useState(null);
+
+    const [pwForm, setPwForm] = useState({ actual: '', nueva: '', confirmar: '' });
+    const [showPw, setShowPw] = useState({ actual: false, nueva: false, confirmar: false });
+    const [pwLoading, setPwLoading] = useState(false);
+    const [pwFeedback, setPwFeedback] = useState(null); // { type: 'ok'|'error', msg }
 
     useEffect(() => {
         if (sucursalId) {
@@ -15,6 +21,32 @@ const Perfil = () => {
                 .catch(() => setSucursalNombre(null));
         }
     }, [sucursalId]);
+
+    const handleCambiarPassword = async (e) => {
+        e.preventDefault();
+        setPwFeedback(null);
+        if (pwForm.nueva !== pwForm.confirmar) {
+            setPwFeedback({ type: 'error', msg: 'Las contraseñas nuevas no coinciden.' });
+            return;
+        }
+        if (pwForm.nueva.length < 6) {
+            setPwFeedback({ type: 'error', msg: 'La nueva contraseña debe tener al menos 6 caracteres.' });
+            return;
+        }
+        setPwLoading(true);
+        try {
+            await api.put('/usuarios/cambiar-password', {
+                password_actual: pwForm.actual,
+                password_nueva: pwForm.nueva
+            });
+            setPwFeedback({ type: 'ok', msg: 'Contraseña actualizada correctamente.' });
+            setPwForm({ actual: '', nueva: '', confirmar: '' });
+        } catch (err) {
+            setPwFeedback({ type: 'error', msg: err?.response?.data?.error || 'Error al cambiar contraseña.' });
+        } finally {
+            setPwLoading(false);
+        }
+    };
 
     if (!user) return null;
 
@@ -100,9 +132,64 @@ const Perfil = () => {
                     </div>
                 </div>
 
-                <div className="mt-12 text-center px-6">
+                {/* Sección cambio de contraseña */}
+                <div className="px-6 md:px-12 mt-10">
+                    <div className="border-t-2 border-neutral-100 pt-8">
+                        <div className="flex items-center gap-3 mb-6">
+                            <Lock size={16} className="text-brand-cyan" />
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500">Cambiar Contraseña</span>
+                        </div>
+                        <form onSubmit={handleCambiarPassword} className="space-y-4 max-w-sm">
+                            {[['actual', 'Contraseña Actual'], ['nueva', 'Nueva Contraseña'], ['confirmar', 'Confirmar Nueva']].map(([field, label]) => (
+                                <div key={field}>
+                                    <label className="block text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-1.5">{label}</label>
+                                    <div className="relative">
+                                        <input
+                                            type={showPw[field] ? 'text' : 'password'}
+                                            value={pwForm[field]}
+                                            onChange={e => setPwForm(f => ({ ...f, [field]: e.target.value }))}
+                                            required
+                                            className="w-full px-4 py-3 pr-10 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-bold focus:outline-none focus:border-black transition-colors"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPw(s => ({ ...s, [field]: !s[field] }))}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black transition-colors"
+                                        >
+                                            {showPw[field] ? <EyeOff size={14} /> : <Eye size={14} />}
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+
+                            {pwFeedback && (
+                                <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-[10px] font-bold ${
+                                    pwFeedback.type === 'ok'
+                                        ? 'bg-green-50 border border-green-200 text-green-700'
+                                        : 'bg-red-50 border border-red-200 text-red-700'
+                                }`}>
+                                    {pwFeedback.type === 'ok'
+                                        ? <CheckCircle2 size={13} />
+                                        : <AlertCircle size={13} />}
+                                    {pwFeedback.msg}
+                                </div>
+                            )}
+
+                            <button
+                                type="submit"
+                                disabled={pwLoading}
+                                className="w-full bg-black text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-brand-cyan hover:text-black transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+                            >
+                                <Lock size={13} />
+                                {pwLoading ? 'ACTUALIZANDO...' : 'ACTUALIZAR CONTRASEÑA'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div className="mt-10 text-center px-6">
                     <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">
-                        Para modificar credenciales o asignar nuevas sucursales contactá al Administrador Principal.
+                        Para asignar nuevas sucursales o modificar roles contactá al Administrador Principal.
                     </p>
                 </div>
             </div>
