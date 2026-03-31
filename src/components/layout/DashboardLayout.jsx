@@ -212,7 +212,7 @@ const DashboardLayout = () => {
                     }`}>
                         <item.icon size={14} md:size={16} />
                     </div>
-                    <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${isSidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0 hidden md:block'}`}>
+                    <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${isSidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>
                         {item.label}
                     </span>
                     <span className="md:hidden">{item.label}</span>
@@ -231,7 +231,7 @@ const DashboardLayout = () => {
                 <div className={`flex items-center justify-center font-black tracking-widest flex-shrink-0 transition-all duration-500 ${roleBranding.bg} ${roleBranding.text} ${isSidebarOpen ? 'w-10 h-10 md:w-14 md:h-14 text-[10px] md:text-sm rounded-xl md:rounded-2xl' : 'w-10 h-10 text-[10px] rounded-xl'}`}>
                     {roleBranding.short}
                 </div>
-                <div className={`flex flex-col min-w-0 transition-all duration-300 overflow-hidden ${isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 h-0 hidden md:block'}`}>
+                <div className={`flex flex-col min-w-0 transition-all duration-300 overflow-hidden ${isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 h-0'}`}>
                     <span className="font-black text-[10px] md:text-xs tracking-widest text-neutral-900 truncate uppercase">
                         {user?.nombre || 'PERSONAL'}
                     </span>

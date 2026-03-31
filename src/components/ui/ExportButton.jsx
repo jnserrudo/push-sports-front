@@ -1,6 +1,5 @@
 import React from 'react';
 import { Download } from 'lucide-react';
-import * as XLSX from 'xlsx';
 
 export const ExportButton = ({ 
     data, 
@@ -8,15 +7,23 @@ export const ExportButton = ({
     format = 'xlsx',
     className = ''
 }) => {
-    const handleExport = () => {
+    const handleExport = async () => {
         if (!data || data.length === 0) {
             return;
         }
 
-        const ws = XLSX.utils.json_to_sheet(data);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Datos');
-        XLSX.writeFile(wb, `${filename}_${new Date().toISOString().split('T')[0]}.${format}`);
+        try {
+            // Importación dinámica para evitar conflictos ESM
+            const XLSX = await import('xlsx');
+            
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Datos');
+            XLSX.writeFile(wb, `${filename}_${new Date().toISOString().split('T')[0]}.${format}`);
+        } catch (error) {
+            console.error('Error al exportar:', error);
+            alert('Error al exportar los datos');
+        }
     };
     
     return (

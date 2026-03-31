@@ -26,7 +26,7 @@ import ResetPassword from './pages/ResetPassword';
 import Toaster from './components/ui/Toaster';
 import { GlobalLoader } from './components/ui/GlobalLoader';
 import Devoluciones from './pages/dashboard/Devoluciones';
-import Reporteria from './pages/admin/Reporteria';
+const Reporteria = React.lazy(() => import('./pages/admin/Reporteria'));
 import Perfil from './pages/dashboard/Perfil';
 
 const App = () => {
@@ -56,7 +56,11 @@ const App = () => {
           <Route path="usuarios" element={<Usuarios />} />
           <Route path="envios" element={<Envios />} />
           <Route path="movimientos" element={<Movimientos />} />
-          <Route path="reporteria" element={<Reporteria />} />
+          <Route path="reporteria" element={
+            <React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="text-lg">Cargando...</div></div>}>
+              <Reporteria />
+            </React.Suspense>
+          } />
           <Route path="liquidaciones" element={<Liquidaciones />} />
           <Route path="descuentos" element={<Descuentos />} />
           <Route path="auditoria" element={<Auditoria />} />
