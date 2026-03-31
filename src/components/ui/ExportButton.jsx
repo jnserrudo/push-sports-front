@@ -1,5 +1,6 @@
 import React from 'react';
 import { Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 export const ExportButton = ({ 
     data, 
@@ -7,15 +8,12 @@ export const ExportButton = ({
     format = 'xlsx',
     className = ''
 }) => {
-    const handleExport = async () => {
+    const handleExport = () => {
         if (!data || data.length === 0) {
             return;
         }
 
         try {
-            // Importación dinámica para evitar conflictos ESM
-            const XLSX = await import('xlsx');
-            
             const ws = XLSX.utils.json_to_sheet(data);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'Datos');

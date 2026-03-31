@@ -14,6 +14,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 3000,
   },
   optimizeDeps: {
-    exclude: ['@react-pdf/renderer'],
+    include: ['xlsx', 'base64-js'],
+    exclude: [],
   },
 })

@@ -162,7 +162,7 @@ const DashboardLayout = () => {
       `}>
         
         {/* Branding */}
-        <div className={`p-6 border-b border-neutral-100 flex flex-col items-center relative transition-all duration-500 ${isSidebarOpen ? 'md:p-14' : 'md:p-4'}`}>
+        <div className={`border-b border-neutral-100 flex flex-col items-center relative transition-all duration-500 ${isSidebarOpen ? 'p-6 md:p-14' : 'p-4 md:p-4'}`}>
             {/* Mobile Close Button - Elite Refinement */}
             <button 
               onClick={() => setIsSidebarOpen(false)}
@@ -189,7 +189,7 @@ const DashboardLayout = () => {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-6 md:py-10">
-          <ul className="px-4 md:px-6 space-y-2 md:space-y-4">
+          <ul className={`space-y-2 md:space-y-4 ${isSidebarOpen ? 'px-4 md:px-6' : 'px-2 md:px-2'}`}>
             {filteredMenu.map((item) => {
               const isActive = item.path === '/dashboard'
                 ? location.pathname === item.path
@@ -199,23 +199,26 @@ const DashboardLayout = () => {
                   <Link
                     to={item.path}
                     onClick={() => { if (window.innerWidth < 768) setIsSidebarOpen(false); }}
-                    className={`flex items-center gap-4 md:gap-5 px-4 md:px-6 py-3 md:py-4 rounded-xl font-black text-[10px] md:text-[11px] uppercase tracking-[0.2em] transition-all group ${
+                    className={`flex items-center rounded-xl font-black text-[10px] md:text-[11px] uppercase tracking-[0.2em] transition-all group ${
                       isActive 
                         ? 'bg-neutral-900 text-brand-cyan shadow-md border-b-2 border-brand-cyan' 
                         : item.path === '/dashboard/usuarios' 
                           ? 'text-neutral-900 bg-brand-cyan/10 border border-brand-cyan/20 hover:bg-brand-cyan hover:text-black'
                           : 'text-neutral-700 hover:text-black hover:bg-neutral-100 hover:shadow-sm'
-                    } ${!isSidebarOpen && 'md:justify-center md:px-0'}`}
+                    } ${
+                      isSidebarOpen 
+                        ? 'gap-4 md:gap-5 px-4 md:px-6 py-3 md:py-4' 
+                        : 'justify-center px-2 py-3 md:px-3 md:py-4'
+                    }`}
                   >
                     <div className={`w-7 h-7 md:w-8 md:h-8 rounded-lg flex-shrink-0 flex items-center justify-center transition-all ${
                         isActive ? 'text-brand-cyan' : item.path === '/dashboard/usuarios' ? 'bg-neutral-900 text-white shadow-lg group-hover:bg-black group-hover:text-brand-cyan' : 'bg-neutral-200 text-neutral-600 group-hover:bg-black group-hover:text-white'
                     }`}>
                         <item.icon size={14} md:size={16} />
                     </div>
-                    <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${isSidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>
+                    <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${isSidebarOpen ? 'w-auto opacity-100' : 'md:w-0 md:opacity-0'}`}>
                         {item.label}
                     </span>
-                    <span className="md:hidden">{item.label}</span>
                   </Link>
                 </li>
               );
