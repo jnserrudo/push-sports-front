@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Package, AlertTriangle, MapPin, Box } from 'lucide-react';
+import { Search, Package, AlertTriangle, MapPin, Box, Trash2 } from 'lucide-react';
 import { inventarioService } from '../../services/inventarioService';
 import { productosService } from '../../services/productosService';
 import { sucursalesService } from '../../services/sucursalesService';
@@ -20,6 +20,7 @@ const Inventario = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [deleteConfirm, setDeleteConfirm] = useState(null);
 
     const [formData, setFormData] = useState({
         id_producto: '',
@@ -77,13 +78,19 @@ const Inventario = () => {
     };
 
     const handleDelete = async (item) => {
-        if (!window.confirm(`¿Desvincular "${item.producto?.nombre}" de "${item.comercio?.nombre || item.sucursal_nombre}"? Esta acción es irreversible.`)) return;
+        setDeleteConfirm(item);
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteConfirm) return;
         try {
-            await inventarioService.delete(item.id_inventario);
+            await inventarioService.delete(deleteConfirm.id_inventario);
             toast.success('Registro desvinculado correctamente');
             await loadAll();
         } catch (err) {
             toast.error(err?.response?.data?.error || 'Error al desvincular');
+        } finally {
+            setDeleteConfirm(null);
         }
     };
 
@@ -195,31 +202,31 @@ const Inventario = () => {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="space-y-6 max-w-[1400px] mx-auto pb-10"
+            className="space-y-3 max-w-[1400px] mx-auto pb-4"
         >
-            {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b-2 border-black pb-6 gap-4">
+            {/* Header - Compacto */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-black dark:border-gray-600 pb-3 gap-3">
                 <div>
-                    <div className="flex items-center gap-3 mb-2">
-                        <Search size={14} className="text-brand-cyan" />
-                        <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-neutral-500">CONTROL DE STOCK</span>
+                    <div className="flex items-center gap-2 mb-1">
+                        <Search size={12} className="text-brand-cyan" />
+                        <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-neutral-500">CONTROL STOCK</span>
                     </div>
-                    <h2 className="text-4xl md:text-5xl uppercase leading-none m-0 font-sport text-black">
-                        {isSuperAdmin ? 'Gestión de' : 'Mi'} <span className="text-brand-cyan">Inventario.</span>
+                    <h2 className="text-xl md:text-2xl uppercase leading-none m-0 font-sport text-black dark:text-white">
+                        {isSuperAdmin ? 'Gestión' : 'Mi'} <span className="text-brand-cyan">Inventario</span>
                     </h2>
-                    <p className="hidden md:block text-[10px] md:text-xs font-bold text-neutral-400 mt-3 max-w-2xl leading-relaxed">
-                        Control en tiempo real del stock físico. Permite a la sede central abastecer puntos de venta y a las sucursales ver su disponibilidad local.
+                    <p className="hidden md:block text-[9px] font-bold text-neutral-400 mt-1 max-w-2xl leading-relaxed">
+                        Control en tiempo real del stock físico.
                     </p>
-                    <p className="text-xs text-neutral-400 font-bold uppercase tracking-widest mt-2">
-                        {data.length} registros en el sistema
+                    <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest mt-1">
+                        {data.length} registros
                     </p>
                 </div>
                 <button
                     onClick={handleAdd}
-                    className="bg-black text-white text-[10px] font-black uppercase tracking-[0.2em] px-6 py-3 rounded-xl hover:bg-brand-cyan hover:text-black transition-colors flex items-center gap-2"
+                    className="bg-black text-white text-[9px] font-black uppercase tracking-[0.15em] px-4 py-2 rounded-lg hover:bg-brand-cyan hover:text-black transition-colors flex items-center gap-1.5"
                 >
-                    <Package size={14} />
-                    Nuevo Registro de Stock
+                    <Package size={12} />
+                    Nuevo Stock
                 </button>
             </div>
 
@@ -377,6 +384,41 @@ const Inventario = () => {
                     </div>
                 </form>
             </Modal>
+
+            {/* Modal de Confirmación de Eliminación */}
+            {deleteConfirm && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full animate-in zoom-in-95 duration-200">
+                        <div className="p-5">
+                            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-3">
+                                <Trash2 size={20} className="text-red-600" />
+                            </div>
+                            <h3 className="text-base font-black text-center text-neutral-900 mb-2">
+                                ¿Desvincular?
+                            </h3>
+                            <p className="text-xs text-neutral-600 text-center mb-4">
+                                ¿Desvincular <strong className="text-neutral-900">"{deleteConfirm.producto?.nombre}"</strong> de <strong>"{deleteConfirm.comercio?.nombre || deleteConfirm.sucursal_nombre}"</strong>?
+                                <br />
+                                <span className="text-red-600 font-medium text-[10px]">Esta acción es irreversible.</span>
+                            </p>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setDeleteConfirm(null)}
+                                    className="flex-1 px-3 py-2 bg-neutral-100 text-neutral-700 rounded-lg font-bold text-xs hover:bg-neutral-200 transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={confirmDelete}
+                                    className="flex-1 px-3 py-2 bg-red-600 text-white rounded-lg font-bold text-xs hover:bg-red-700 transition-colors shadow-lg shadow-red-600/20"
+                                >
+                                    Desvincular
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </motion.div>
     );
 };

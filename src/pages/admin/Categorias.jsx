@@ -9,14 +9,14 @@ const Categorias = () => {
             header: 'ID',
             accessor: 'id_categoria',
             render: (row) => (
-                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">#{row.id_categoria}</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400 dark:text-neutral-200">#{row.id_categoria}</span>
             )
         },
         {
             header: 'Nombre de Categoría',
             accessor: 'nombre',
             render: (row) => (
-                <span className="font-bold text-sm text-black uppercase tracking-widest">{row.nombre}</span>
+                <span className="font-bold text-sm text-black dark:text-white uppercase tracking-widest">{row.nombre}</span>
             )
         },
     ];

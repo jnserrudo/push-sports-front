@@ -19,7 +19,7 @@ const Proveedores = () => {
             accessor: 'nombre_proveedor',
             render: (row) => (
                 <div className="flex flex-col">
-                    <span className="font-bold text-sm text-black uppercase tracking-widest">{row.nombre_proveedor}</span>
+                    <span className="font-bold text-sm text-black dark:text-white uppercase tracking-widest">{row.nombre_proveedor}</span>
                     <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">
                         {row.razon_social || row.cuit || 'SIN DATOS FISCALES'}
                     </span>

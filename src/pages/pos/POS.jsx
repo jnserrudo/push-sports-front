@@ -58,6 +58,9 @@ const POS = () => {
   // Último comprobante de venta
   const [lastSale, setLastSale] = useState(null);
   
+  // Tab activo en mobile
+  const [activeTab, setActiveTab] = useState('catalog'); // 'catalog' or 'cart'
+  
   const searchInputRef = useRef(null);
 
   // Load Drafts from local storage on mount
@@ -222,8 +225,6 @@ const POS = () => {
     }));
   };
 
-  const [activeTab, setActiveTab] = useState('catalog'); // 'catalog' or 'cart'
-
   const subtotal = cart.reduce((acc, item) => acc + (item.precio * item.cantidad), 0);
   const montoDescuento = descuentoAplicado?.monto_descuento || 0;
   const total = Math.max(0, subtotal - montoDescuento);
@@ -353,8 +354,8 @@ const POS = () => {
     <div className="h-[calc(100vh-120px)] flex flex-col xl:flex-row gap-4 md:gap-8 font-sans animate-in fade-in duration-700 relative overflow-hidden">
       
       {/* CATALOG AREA */}
-      <div className={`flex-1 flex flex-col min-w-0 bg-white rounded-3xl md:rounded-[2rem] shadow-premium border border-neutral-100 overflow-hidden ${activeTab === 'cart' ? 'hidden xl:flex' : 'flex'}`}>
-        <div className="p-4 md:p-8 border-b border-neutral-50 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
+      <div className={`flex-1 flex flex-col min-w-0 bg-white dark:bg-gray-800 rounded-3xl md:rounded-[2rem] shadow-premium border border-neutral-100 dark:border-gray-700 overflow-hidden ${activeTab === 'cart' ? 'hidden xl:flex' : 'flex'}`}>
+        <div className="p-4 md:p-8 border-b border-neutral-50 dark:border-gray-700 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
             <div className="flex items-center gap-3 md:gap-4 w-full md:w-auto">
                 <div className="w-10 h-10 md:w-12 md:h-12 bg-neutral-950 text-brand-cyan flex items-center justify-center rounded-xl shadow-lg flex-shrink-0">
                     <Box size={20} md:size={24} />
@@ -407,7 +408,7 @@ const POS = () => {
             </div>
           ) : isLoadingProducts ? (
             <div className="flex flex-col items-center justify-center py-20 md:py-32 gap-6 opacity-60">
-                <div className="w-12 h-12 border-4 border-neutral-100 border-t-brand-cyan rounded-full animate-spin"></div>
+                <div className="w-12 h-12 border-4 border-neutral-100 dark:border-gray-700 border-t-brand-cyan rounded-full animate-spin"></div>
                 <p className="text-[10px] font-black uppercase tracking-[0.5em] text-neutral-400">Accediendo a la RED...</p>
             </div>
           ) : filteredProducts.length === 0 ? (
@@ -433,10 +434,10 @@ const POS = () => {
                 whileTap={stock > 0 ? { scale: 0.95 } : {}}
                 key={getProductId(item)}
                 onClick={() => addToCart(item)}
-                className={`group p-3 md:p-4 bg-white rounded-2xl md:rounded-3xl transition-all duration-300 relative cursor-pointer border ${
+                className={`group p-3 md:p-4 bg-white dark:bg-gray-800 rounded-2xl md:rounded-3xl transition-all duration-300 relative cursor-pointer border ${
                   stock > 0 
-                  ? 'border-neutral-100 shadow-sm hover:border-brand-cyan/20' 
-                  : 'bg-neutral-50/50 opacity-40 grayscale border-transparent cursor-not-allowed'
+                  ? 'border-neutral-100 dark:border-gray-700 shadow-sm hover:border-brand-cyan/20' 
+                  : 'bg-neutral-50/50 dark:bg-gray-700/50 opacity-40 grayscale border-transparent cursor-not-allowed'
                 }`}
               >
                 <div className="aspect-square bg-neutral-50 mb-3 md:mb-6 rounded-xl md:rounded-2xl overflow-hidden relative border border-neutral-50">
@@ -533,17 +534,17 @@ const POS = () => {
       </div>
 
       {/* CART AREA */}
-      <div className={`w-full xl:w-[420px] flex flex-col bg-white rounded-3xl md:rounded-[2rem] shadow-xl relative border-2 md:border-4 border-neutral-100 overflow-hidden ${activeTab === 'catalog' ? 'hidden xl:flex' : 'flex'}`}>
-        <div className="p-4 md:p-8 border-b border-neutral-100 flex justify-between items-center bg-neutral-50/30">
+      <div className={`w-full xl:w-[420px] flex flex-col bg-white dark:bg-gray-800 rounded-3xl md:rounded-[2rem] shadow-xl relative border-2 md:border-4 border-neutral-100 dark:border-gray-700 overflow-hidden ${activeTab === 'catalog' ? 'hidden xl:flex' : 'flex'}`}>
+        <div className="p-4 md:p-8 border-b border-neutral-100 dark:border-gray-700 flex justify-between items-center bg-neutral-50/30 dark:bg-gray-700/30">
             <div className="flex items-center gap-3 md:gap-4">
                 {/* Back button for mobile */}
                 <button 
                   onClick={() => setActiveTab('catalog')}
-                  className="xl:hidden w-10 h-10 rounded-xl bg-white border border-neutral-100 flex items-center justify-center text-neutral-400 active:text-black"
+                  className="xl:hidden w-10 h-10 rounded-xl bg-white dark:bg-gray-700 border border-neutral-100 dark:border-gray-600 flex items-center justify-center text-neutral-400 dark:text-gray-400 active:text-black dark:active:text-white"
                 >
                   <ChevronRight size={20} className="rotate-180" />
                 </button>
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-white text-brand-cyan flex items-center justify-center rounded-xl border-2 border-neutral-100 shadow-sm relative group cursor-pointer" onClick={() => setShowDrafts(!showDrafts)}>
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-white dark:bg-gray-700 text-brand-cyan dark:text-cyan-400 flex items-center justify-center rounded-xl border-2 border-neutral-100 dark:border-gray-600 shadow-sm relative group cursor-pointer" onClick={() => setShowDrafts(!showDrafts)}>
                     <Receipt size={20} md:size={24} className="group-hover:opacity-0 transition-opacity absolute" />
                     <Clock size={20} md:size={24} className="opacity-0 group-hover:opacity-100 transition-opacity absolute text-amber-500" />
                     {drafts.length > 0 && (
@@ -567,7 +568,7 @@ const POS = () => {
                 initial={{ scale: 1.2, backgroundColor: '#00d2ff', color: '#000' }}
                 animate={{ scale: 1, backgroundColor: '#ffffff', color: '#a3a3a3' }}
                 transition={{ duration: 0.3 }}
-                className="font-bold text-[9px] px-3 md:px-4 py-1.5 rounded-full uppercase tracking-widest border border-neutral-100"
+                className="font-bold text-[9px] px-3 md:px-4 py-1.5 rounded-full uppercase tracking-widest border border-neutral-100 dark:border-gray-600 dark:text-gray-300"
             >
                 {cartItemsCount} ITEMS
             </motion.div>
@@ -624,7 +625,7 @@ const POS = () => {
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.2, delay: i * 0.05 }}
                 key={item.id} 
-                className="p-3 md:p-5 bg-neutral-50/50 rounded-xl md:rounded-2xl border border-neutral-100 flex flex-col gap-3 group"
+                className="p-3 md:p-5 bg-neutral-50/50 dark:bg-gray-700/50 rounded-xl md:rounded-2xl border border-neutral-100 dark:border-gray-600 flex flex-col gap-3 group"
               >
                 <div className="flex justify-between items-start">
                     <div className="flex items-center gap-3 md:gap-4">
@@ -644,9 +645,9 @@ const POS = () => {
                     </button>
                 </div>
                 <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-1 bg-white border border-neutral-100 rounded-lg p-0.5 shadow-sm">
+                    <div className="flex items-center gap-1 bg-white dark:bg-gray-700 border border-neutral-100 dark:border-gray-600 rounded-lg p-0.5 shadow-sm">
                         <button onClick={() => updateQuantity(item.id, -1)} className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center text-neutral-400 active:text-brand-cyan"><Minus size={14} /></button>
-                        <span className="w-6 md:w-8 text-center font-bold text-xs md:text-sm tabular-nums text-neutral-900">{item.cantidad}</span>
+                        <span className="w-6 md:w-8 text-center font-bold text-xs md:text-sm tabular-nums text-neutral-900 dark:text-white">{item.cantidad}</span>
                         <button onClick={() => updateQuantity(item.id, 1)} className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center text-neutral-400 active:text-brand-cyan"><Plus size={14} /></button>
                     </div>
                     <span className="font-black text-neutral-900 text-base md:text-lg tracking-tighter">${(item.precio * item.cantidad).toLocaleString()}</span>
@@ -657,7 +658,7 @@ const POS = () => {
           )}
         </div>
 
-        <div className="p-4 md:p-6 bg-neutral-50 border-t border-neutral-100 space-y-3">
+        <div className="p-4 md:p-6 bg-neutral-50 dark:bg-gray-700 border-t border-neutral-100 dark:border-gray-700 space-y-3">
 
             {/* Banner oferta vigente */}
             {ofertasVigentes.length > 0 && (
@@ -680,7 +681,7 @@ const POS = () => {
                             value={codigoPromo}
                             onChange={e => { setCodigoPromo(e.target.value.toUpperCase()); setPromoError(''); }}
                             onKeyDown={e => e.key === 'Enter' && handleValidarCodigo()}
-                            className="w-full pl-8 pr-3 py-2.5 bg-white border border-neutral-200 rounded-xl text-[9px] font-black uppercase tracking-widest focus:outline-none focus:border-black transition-colors"
+                            className="w-full pl-8 pr-3 py-2.5 bg-white dark:bg-gray-600 border border-neutral-200 dark:border-gray-500 rounded-xl text-[9px] font-black uppercase tracking-widest text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-cyan-400 transition-colors"
                         />
                     </div>
                     <button
@@ -728,7 +729,7 @@ const POS = () => {
                     <select
                       value={metodoPago}
                       onChange={e => setMetodoPago(e.target.value)}
-                      className="bg-white border border-neutral-200 rounded-lg px-2 py-1 text-[9px] md:text-[10px] font-black text-black"
+                      className="bg-white dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg px-2 py-1 text-[9px] md:text-[10px] font-black text-black dark:text-white"
                     >
                       <option>Efectivo</option>
                       <option>Tarjeta</option>

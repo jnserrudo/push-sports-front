@@ -18,7 +18,7 @@ const Ofertas = () => {
             header: 'Oferta',
             accessor: 'nombre',
             render: (row) => (
-                <span className="font-bold text-sm text-black uppercase tracking-widest">{row.nombre}</span>
+                <span className="font-bold text-sm text-black dark:text-white uppercase tracking-widest">{row.nombre}</span>
             )
         },
         {
@@ -28,7 +28,7 @@ const Ofertas = () => {
                 <div className="flex items-baseline gap-1">
                     <span className="font-sport text-2xl text-brand-cyan leading-none">{row.descuento_porcentaje}</span>
                     <span className="font-sport text-xl text-brand-cyan leading-none">%</span>
-                    <span className="text-[9px] font-black text-black uppercase tracking-widest ml-1">OFF</span>
+                    <span className="text-[9px] font-black text-black dark:text-white uppercase tracking-widest ml-1">OFF</span>
                 </div>
             )
         },

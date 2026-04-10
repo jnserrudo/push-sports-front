@@ -145,7 +145,7 @@ const Reporteria = () => {
   };
 
   return (
-    <div className="space-y-6 md:space-y-10 animate-in fade-in duration-500">
+    <div className="space-y-3 md:space-y-4 animate-in fade-in duration-500">
       {toaster && <Toaster type={toaster.type} message={toaster.message} onClose={() => setToaster(null)} />}
       
       <AnimatePresence>
@@ -154,41 +154,41 @@ const Reporteria = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[100] bg-white/60 backdrop-blur-sm flex flex-col items-center justify-center"
+                className="fixed inset-0 z-[100] bg-white/60 dark:bg-gray-900/80 backdrop-blur-sm flex flex-col items-center justify-center"
             >
                 <Loader2 className="w-12 h-12 text-brand-cyan animate-spin mb-4" />
-                <p className="text-xs font-black uppercase tracking-[0.3em] text-neutral-900">Sincronizando datos...</p>
+                <p className="text-xs font-black uppercase tracking-[0.3em] text-neutral-900 dark:text-white">Sincronizando datos...</p>
             </motion.div>
         )}
       </AnimatePresence>
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-10">
-        <div className="flex items-center gap-4 md:gap-8">
-            <div className="w-16 h-16 md:w-20 md:h-20 bg-black rounded-2xl md:rounded-3xl flex items-center justify-center shadow-xl border-4 border-white shrink-0">
-                <ClipboardList className="text-brand-cyan w-8 h-8 md:w-10 md:h-10" strokeWidth={2.5} />
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-black rounded-xl flex items-center justify-center shadow-lg border-2 border-white shrink-0">
+                <ClipboardList className="text-brand-cyan w-5 h-5 md:w-6 md:h-6" strokeWidth={2.5} />
             </div>
             <div className="flex flex-col">
-                <span className="text-[10px] md:text-xs font-black text-brand-cyan uppercase tracking-[0.4em] leading-none">Push Sport</span>
-                <h1 className="text-3xl md:text-5xl font-black text-neutral-900 tracking-tighter mt-1 leading-none uppercase">Reportería</h1>
-                <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest mt-1 hidden md:block">
-                  Generá reportes de precios y visitas a comercios
+                <span className="text-[9px] font-black text-brand-cyan uppercase tracking-[0.2em] leading-none">Push Sport</span>
+                <h1 className="text-xl md:text-2xl font-black text-neutral-900 dark:text-white tracking-tight mt-0.5 leading-none uppercase">Reportería</h1>
+                <p className="text-[9px] text-neutral-400 dark:text-gray-400 font-bold uppercase tracking-wider mt-0.5 hidden md:block">
+                  Reportes de precios y visitas
                 </p>
             </div>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex bg-neutral-100 p-1.5 rounded-2xl w-full md:w-auto gap-1">
+        <div className="flex bg-neutral-100 dark:bg-gray-800 p-1 rounded-xl w-full md:w-auto gap-1">
             <button 
                 onClick={() => setActiveTab('global')}
-                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 md:px-8 py-3 md:py-3.5 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'global' ? 'bg-white text-black shadow-md' : 'text-neutral-500 hover:text-neutral-800'}`}
+                className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 md:px-4 py-2 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-wider transition-all ${activeTab === 'global' ? 'bg-white dark:bg-gray-700 text-black dark:text-white shadow-sm' : 'text-neutral-500 dark:text-gray-400 hover:text-neutral-800 dark:hover:text-gray-200'}`}
             >
                 <Download size={13} />
                 Lista de Precios
             </button>
             <button 
                 onClick={() => setActiveTab('shop')}
-                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 md:px-8 py-3 md:py-3.5 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'shop' ? 'bg-white text-black shadow-md' : 'text-neutral-500 hover:text-neutral-800'}`}
+                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 md:px-8 py-3 md:py-3.5 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'shop' ? 'bg-white dark:bg-gray-700 text-black dark:text-white shadow-md' : 'text-neutral-500 dark:text-gray-400 hover:text-neutral-800 dark:hover:text-gray-200'}`}
             >
                 <Store size={13} />
                 Visita a Comercio
@@ -203,13 +203,13 @@ const Reporteria = () => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
-            className="space-y-6"
+            className="space-y-2"
           >
             {/* Context banner */}
-            <div className="bg-neutral-900 rounded-2xl px-4 md:px-6 py-4 flex flex-col gap-3 mb-0">
+            <div className="bg-neutral-900 dark:bg-gray-800 rounded-xl px-3 md:px-4 py-3 flex flex-col gap-2 mb-0">
               <div>
-                <p className="text-white font-black text-sm uppercase tracking-tight">Lista de Precios para Comercios</p>
-                <p className="text-neutral-400 text-[10px] font-bold uppercase tracking-widest mt-0.5">
+                <p className="text-white dark:text-gray-100 font-black text-xs uppercase tracking-tight">Lista de Precios para Comercios</p>
+                <p className="text-neutral-400 dark:text-gray-400 text-[9px] font-bold uppercase tracking-wider mt-0.5">
                   El <span className="text-white">precio público</span> siempre se incluye en el PDF. Podés activar el precio Push si querés enviarlo también.
                 </p>
               </div>
@@ -244,27 +244,27 @@ const Reporteria = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl md:rounded-[2.5rem] p-4 md:p-8 shadow-premium border border-neutral-100">
-              <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-8">
+            <div className="bg-white dark:bg-gray-800 rounded-xl md:rounded-2xl p-3 md:p-4 shadow-sm border border-neutral-100 dark:border-gray-700">
+              <div className="flex flex-col md:flex-row gap-2 items-center justify-between mb-4">
                 <div className="relative flex-1 w-full max-w-md">
-                  <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-neutral-400" size={18} />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={16} />
                   <input
                     type="text"
                     placeholder="Buscar por nombre o marca..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-14 pr-5 h-12 bg-neutral-50 border-2 border-neutral-100 rounded-2xl focus:border-brand-cyan outline-none transition-all font-bold text-sm"
+                    className="w-full pl-10 pr-4 h-10 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg focus:border-brand-cyan dark:focus:border-cyan-400 outline-none transition-all font-bold text-xs text-neutral-900 dark:text-gray-100 placeholder:text-neutral-400 dark:placeholder:text-gray-500"
                   />
                 </div>
-                <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest shrink-0">
+                <p className="text-[10px] font-black text-neutral-400 dark:text-gray-400 uppercase tracking-widest shrink-0">
                   {filteredProducts.length} producto{filteredProducts.length !== 1 ? 's' : ''}
                 </p>
               </div>
 
-              <div className="overflow-x-auto -mx-4 md:mx-0 rounded-none md:rounded-3xl border-y md:border border-neutral-100">
+              <div className="overflow-x-auto -mx-4 md:mx-0 rounded-none md:rounded-3xl border-y md:border border-neutral-100 dark:border-gray-700">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="bg-neutral-50/80 text-neutral-400 text-[10px] font-black uppercase tracking-widest">
+                    <tr className="bg-neutral-50/80 dark:bg-gray-700/50 text-neutral-400 dark:text-gray-400 text-[10px] font-black uppercase tracking-widest">
                       <th className="px-6 py-5">Producto</th>
                       {showPushPriceGlobal && (
                         <th className="px-6 py-5 text-center">
@@ -279,7 +279,7 @@ const Reporteria = () => {
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-neutral-50">
+                  <tbody className="divide-y divide-neutral-50 dark:divide-gray-700">
                     {loading && filteredProducts.length === 0 ? (
                       <tr>
                         <td colSpan={showPushPriceGlobal ? 3 : 2} className="py-20 text-center opacity-30">
@@ -290,10 +290,10 @@ const Reporteria = () => {
                         </td>
                       </tr>
                     ) : filteredProducts.map(p => (
-                      <tr key={p.id_producto} className="hover:bg-neutral-50/50 transition-colors group">
+                      <tr key={p.id_producto} className="hover:bg-neutral-50/50 dark:hover:bg-gray-700/50 transition-colors group">
                         <td className="px-6 py-5">
                           <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center border-2 border-neutral-100 overflow-hidden shrink-0 group-hover:border-brand-cyan/30 transition-all">
+                            <div className="w-14 h-14 rounded-xl bg-white dark:bg-gray-700 flex items-center justify-center border-2 border-neutral-100 dark:border-gray-600 overflow-hidden shrink-0 group-hover:border-brand-cyan/30 dark:group-hover:border-cyan-400/30 transition-all">
                               {imageMap[p.id_producto] ? (
                                 <img src={imageMap[p.id_producto]} className="w-full h-full object-cover" />
                               ) : parseImagenes(p.imagen_url)[0] ? (
@@ -301,12 +301,20 @@ const Reporteria = () => {
                               ) : <Package className="text-neutral-200" size={22} />}
                             </div>
                             <div>
-                              <p className="text-sm font-black text-neutral-900 uppercase leading-none">{p.nombre}</p>
+                              <p className="text-sm font-black text-neutral-900 dark:text-gray-100 uppercase leading-none">{p.nombre}</p>
                               <div className="flex flex-wrap gap-1.5 mt-1.5">
                                 <span className="text-[10px] font-black text-brand-cyan uppercase tracking-widest">{p.marca?.nombre_marca || 'General'}</span>
-                                {p.atributos?.sabores && p.atributos.sabores.length > 0 && (
-                                  <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">· {p.atributos.sabores.join(', ')}</span>
-                                )}
+                                {/* Mostrar todos los atributos del producto */}
+                                {p.atributos && Object.entries(p.atributos).map(([key, values]) => {
+                                  if (!values || values.length === 0) return null;
+                                  const displayKey = key.toUpperCase();
+                                  const displayValues = Array.isArray(values) ? values.join(', ') : values;
+                                  return (
+                                    <span key={key} className="text-[9px] font-bold text-neutral-400 dark:text-gray-500 uppercase tracking-widest">
+                                      · {displayKey}: {displayValues}
+                                    </span>
+                                  );
+                                })}
                               </div>
                             </div>
                           </div>
@@ -314,26 +322,26 @@ const Reporteria = () => {
                         {showPushPriceGlobal && (
                           <td className="px-6 py-5">
                             <div className="flex items-center justify-center gap-1.5">
-                              <span className="text-neutral-300 text-xs font-black">$</span>
+                              <span className="text-neutral-300 dark:text-gray-500 text-xs font-black">$</span>
                               <input
                                 type="number"
                                 min="0"
                                 value={p.precio_pushsport}
                                 onChange={(e) => handlePriceChange(p.id_producto, 'precio_pushsport', e.target.value)}
-                                className="w-28 h-10 bg-brand-cyan/5 border-2 border-brand-cyan/20 rounded-lg text-center font-black text-sm outline-none focus:border-brand-cyan transition-all"
+                                className="w-28 h-10 bg-brand-cyan/5 dark:bg-cyan-900/20 border-2 border-brand-cyan/20 dark:border-cyan-700/30 rounded-lg text-center font-black text-sm text-neutral-900 dark:text-gray-100 outline-none focus:border-brand-cyan dark:focus:border-cyan-400 transition-all"
                               />
                             </div>
                           </td>
                         )}
                         <td className="px-6 py-5">
                           <div className="flex items-center justify-center gap-1.5">
-                            <span className="text-neutral-300 text-xs font-black">$</span>
+                            <span className="text-neutral-300 dark:text-gray-500 text-xs font-black">$</span>
                             <input
                               type="number"
                               min="0"
                               value={p.precio_venta_sugerido}
                               onChange={(e) => handlePriceChange(p.id_producto, 'precio_venta_sugerido', e.target.value)}
-                              className="w-28 h-10 bg-neutral-50 border-2 border-neutral-100 rounded-lg text-center font-black text-sm outline-none focus:border-brand-cyan transition-all"
+                              className="w-28 h-10 bg-neutral-50 dark:bg-gray-700 border-2 border-neutral-100 dark:border-gray-600 rounded-lg text-center font-black text-sm text-neutral-900 dark:text-gray-100 outline-none focus:border-brand-cyan dark:focus:border-cyan-400 transition-all"
                             />
                           </div>
                         </td>
@@ -350,12 +358,12 @@ const Reporteria = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="space-y-6"
+            className="space-y-2"
           >
             {/* Context banner for shop mode */}
-            <div className="bg-neutral-900 rounded-2xl px-6 py-4">
-              <p className="text-white font-black text-sm uppercase tracking-tight">Reporte de Visita a Comercio</p>
-              <p className="text-neutral-400 text-[10px] font-bold uppercase tracking-widest mt-0.5">
+            <div className="bg-neutral-900 dark:bg-gray-800 rounded-2xl px-6 py-4">
+              <p className="text-white dark:text-gray-100 font-black text-sm uppercase tracking-tight">Reporte de Visita a Comercio</p>
+              <p className="text-neutral-400 dark:text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-0.5">
                 Elegí la sucursal a visitar, seleccioná los productos que vas a dejar, ingresá las cantidades y generá el PDF para el comercio.
                 El <span className="text-white">precio público siempre aparece</span> en el reporte — podés incluir el precio Push opcionalmente.
               </p>
@@ -367,8 +375,8 @@ const Reporteria = () => {
                 onClick={() => { setShopStep(1); setSucursal(null); setSelectedItems([]); }}
                 className={`flex items-center gap-2.5 px-5 py-2.5 rounded-l-xl border-2 transition-all text-[11px] font-black uppercase tracking-widest ${
                   shopStep === 1
-                    ? 'bg-neutral-900 border-neutral-900 text-white'
-                    : 'bg-white border-neutral-200 text-neutral-500 hover:text-neutral-800'
+                    ? 'bg-neutral-900 dark:bg-gray-700 border-neutral-900 dark:border-gray-700 text-white dark:text-gray-100'
+                    : 'bg-white dark:bg-gray-800 border-neutral-200 dark:border-gray-600 text-neutral-500 dark:text-gray-400 hover:text-neutral-800 dark:hover:text-gray-200'
                 }`}
               >
                 <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black shrink-0 ${
@@ -408,14 +416,14 @@ const Reporteria = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="bg-white rounded-[2.5rem] p-10 shadow-premium border border-neutral-100"
+                  className="bg-white dark:bg-gray-800 rounded-[2.5rem] p-10 shadow-premium border border-neutral-100 dark:border-gray-700"
                 >
                   <div className="max-w-2xl mx-auto">
-                    <div className="text-center mb-10">
-                      <div className="w-16 h-16 bg-brand-cyan/10 rounded-2xl flex items-center justify-center mx-auto mb-5">
-                        <Store className="text-brand-cyan w-8 h-8" />
+                    <div className="text-center mb-6">
+                      <div className="w-12 h-12 bg-brand-cyan/10 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <Store className="text-brand-cyan w-6 h-6" />
                       </div>
-                      <h3 className="text-2xl font-black text-neutral-900 uppercase tracking-tighter mb-2">¿A qué comercio vas a ir?</h3>
+                      <h3 className="text-lg font-black text-neutral-900 dark:text-white uppercase tracking-tight mb-1">¿A qué comercio vas a ir?</h3>
                       <p className="text-xs font-bold text-neutral-400 uppercase tracking-widest max-w-sm mx-auto">
                         Seleccioná el comercio destino. El sistema va a consultar el stock actual de cada producto para ese local.
                       </p>
@@ -440,13 +448,13 @@ const Reporteria = () => {
                         <button
                           key={s.id_comercio}
                           onClick={() => handleSelectSucursal(s)}
-                          className="group w-full flex items-center gap-5 p-5 bg-neutral-50 border-2 border-neutral-100 rounded-2xl hover:border-brand-cyan hover:bg-white hover:shadow-lg transition-all text-left"
+                          className="group w-full flex items-center gap-5 p-5 bg-neutral-50 dark:bg-gray-700 border-2 border-neutral-100 dark:border-gray-600 rounded-2xl hover:border-brand-cyan hover:bg-white dark:hover:bg-gray-600 hover:shadow-lg transition-all text-left"
                         >
                           <div className="w-14 h-14 bg-neutral-100 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-brand-cyan/10 transition-all">
                             <Store className="text-neutral-400 group-hover:text-brand-cyan transition-colors" size={24} />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="font-black text-neutral-900 uppercase tracking-tight text-sm">{s.nombre}</p>
+                            <p className="font-black text-neutral-900 dark:text-white uppercase tracking-tight text-sm">{s.nombre}</p>
                             {s.direccion && <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest truncate mt-0.5">{s.direccion}</p>}
                           </div>
                           <ChevronRight className="text-neutral-300 group-hover:text-brand-cyan transition-colors shrink-0" size={20} />
@@ -473,9 +481,9 @@ const Reporteria = () => {
                 >
                   {/* Left: Catalog */}
                   <div className="lg:col-span-1">
-                    <div className="bg-white rounded-2xl md:rounded-[2.5rem] p-4 md:p-6 shadow-premium border border-neutral-100 flex flex-col" style={{ height: '60vh', minHeight: '320px' }}>
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-[2.5rem] p-4 md:p-6 shadow-premium border border-neutral-100 dark:border-gray-700 flex flex-col" style={{ height: '60vh', minHeight: '320px' }}>
                       <div className="mb-4 space-y-2">
-                        <h3 className="text-sm font-black uppercase tracking-widest text-neutral-900 flex items-center gap-2">
+                        <h3 className="text-sm font-black uppercase tracking-widest text-neutral-900 dark:text-white flex items-center gap-2">
                           <Plus size={16} className="text-brand-cyan" /> Productos a dejar
                         </h3>
                         <p className="text-[9px] text-neutral-400 font-bold uppercase tracking-widest">Tocá el <span className="text-brand-cyan">+</span> para agregar al reporte</p>
@@ -501,10 +509,10 @@ const Reporteria = () => {
                               className={`group flex items-center gap-3 p-2.5 rounded-xl border-2 transition-all ${
                                 alreadyAdded
                                   ? 'bg-brand-cyan/5 border-brand-cyan/30 opacity-60'
-                                  : 'bg-neutral-50 border-neutral-100 hover:border-brand-cyan/40 hover:bg-white'
+                                  : 'bg-neutral-50 dark:bg-gray-700 border-neutral-100 dark:border-gray-600 hover:border-brand-cyan/40 hover:bg-white dark:hover:bg-gray-600'
                               }`}
                             >
-                              <div className="w-11 h-11 rounded-lg bg-white border border-neutral-100 overflow-hidden shrink-0 flex items-center justify-center">
+                              <div className="w-11 h-11 rounded-lg bg-white dark:bg-gray-700 border border-neutral-100 dark:border-gray-600 overflow-hidden shrink-0 flex items-center justify-center">
                                 {imageMap[p.id_producto] ? (
                                   <img src={imageMap[p.id_producto]} className="w-full h-full object-cover" />
                                 ) : parseImagenes(p.imagen_url)[0] ? (
@@ -512,7 +520,7 @@ const Reporteria = () => {
                                 ) : <Package className="text-neutral-200" size={18} />}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="text-[11px] font-black text-neutral-900 uppercase truncate leading-tight">{p.nombre}</p>
+                                <p className="text-[11px] font-black text-neutral-900 dark:text-white uppercase truncate leading-tight">{p.nombre}</p>
                                 <p className="text-[9px] font-bold text-brand-cyan uppercase tracking-widest truncate">{p.marca?.nombre_marca || 'General'}</p>
                               </div>
                               <button
@@ -600,10 +608,10 @@ const Reporteria = () => {
                     </div>
 
                     {/* Items list */}
-                    <div className="bg-white rounded-2xl md:rounded-[2.5rem] p-4 md:p-8 shadow-premium border border-neutral-100 min-h-[300px] md:min-h-[450px] flex flex-col">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-[2.5rem] p-4 md:p-8 shadow-premium border border-neutral-100 dark:border-gray-700 min-h-[300px] md:min-h-[450px] flex flex-col">
                       <div className="flex items-center justify-between mb-6">
                         <div>
-                          <h3 className="text-lg font-black text-neutral-900 tracking-tighter uppercase">Productos a entregar</h3>
+                          <h3 className="text-lg font-black text-neutral-900 dark:text-white tracking-tighter uppercase">Productos a entregar</h3>
                           <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5">Ingresá cuántas unidades vas a dejar en el comercio</p>
                         </div>
                         {selectedItems.length > 0 && (
@@ -634,7 +642,7 @@ const Reporteria = () => {
                                   ) : <Package className="text-neutral-200" size={24} />}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <p className="font-black text-neutral-900 uppercase tracking-tight text-sm">{item.producto.nombre}</p>
+                                  <p className="font-black text-neutral-900 dark:text-white uppercase tracking-tight text-sm">{item.producto.nombre}</p>
                                   <p className="text-[10px] font-black text-brand-cyan uppercase tracking-widest mt-0.5">{item.producto.marca?.nombre_marca || 'General'}</p>
                                 </div>
                                 <button

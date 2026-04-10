@@ -130,32 +130,32 @@ const Movimientos = () => {
     ];
 
     return (
-        <div className="space-y-8 max-w-[1400px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="space-y-3 max-w-[1400px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
 
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b-2 border-black pb-6 gap-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-black dark:border-gray-600 pb-3 gap-3">
                 <div>
-                    <div className="flex items-center gap-3 mb-2">
-                        <Activity size={16} className="text-brand-cyan" />
-                        <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-neutral-500">TRAZABILIDAD DE STOCK</span>
+                    <div className="flex items-center gap-2 mb-1">
+                        <Activity size={12} className="text-brand-cyan" />
+                        <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-neutral-500">TRAZABILIDAD</span>
                     </div>
-                    <h2 className="text-4xl md:text-5xl uppercase leading-none m-0 font-sport text-black">
-                        Movimientos de <span className="text-brand-cyan">Stock.</span>
+                    <h2 className="text-xl md:text-2xl uppercase leading-none m-0 font-sport text-black dark:text-white">
+                        Movimientos <span className="text-brand-cyan">Stock</span>
                     </h2>
-                    <p className="text-neutral-500 text-sm font-medium mt-2 m-0">
-                        Historial completo de entradas, salidas y asignaciones
+                    <p className="text-neutral-500 text-xs font-medium mt-1 m-0">
+                        Entradas, salidas y asignaciones
                     </p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto items-center">
+                <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto items-center">
                     {isSuperAdmin && (
-                        <div className="w-full sm:w-auto flex items-center bg-white border border-neutral-200 rounded-lg px-4 py-3 md:py-2">
-                            <Store size={14} className="text-brand-cyan mr-3" />
+                        <div className="w-full sm:w-auto flex items-center bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-600 rounded-lg px-3 py-2">
+                            <Store size={12} className="text-brand-cyan mr-2" />
                             <select
                                 value={globalFilterId}
                                 onChange={(e) => setGlobalFilterId(e.target.value)}
-                                className="bg-transparent text-black text-[10px] md:text-[11px] font-black uppercase tracking-widest outline-none cursor-pointer appearance-none flex-1 pr-6"
+                                className="bg-transparent text-black dark:text-white text-[9px] font-black uppercase tracking-wider outline-none cursor-pointer appearance-none flex-1 pr-4"
                             >
-                                <option value="ALL">KARDEX GLOBAL (TODAS LAS SEDES)</option>
+                                <option value="ALL">GLOBAL (TODAS)</option>
                                 {sucursalesOptions.map(suc => (
                                     <option key={suc.id_comercio} value={suc.id_comercio}>
                                         {suc.nombre}
@@ -167,21 +167,21 @@ const Movimientos = () => {
                     <button
                         onClick={loadData}
                         disabled={isLoading}
-                        className="w-full sm:w-auto flex items-center justify-center gap-2 bg-neutral-900 text-white hover:bg-brand-cyan hover:text-black transition-colors px-6 py-3.5 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] disabled:opacity-50"
+                        className="w-full sm:w-auto flex items-center justify-center gap-1.5 bg-neutral-900 text-white hover:bg-brand-cyan hover:text-black transition-colors px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-[0.15em] disabled:opacity-50"
                     >
-                        <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
+                        <RefreshCw size={12} className={isLoading ? 'animate-spin' : ''} />
                         ACTUALIZAR
                     </button>
                 </div>
             </div>
 
             {isLoading ? (
-                <div className="flex flex-col items-center justify-center py-32 space-y-6">
-                    <div className="w-10 h-10 border-4 border-neutral-200 border-t-brand-cyan rounded-full animate-spin" />
-                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-neutral-400">Sincronizando Historial...</p>
+                <div className="flex flex-col items-center justify-center py-16 space-y-3">
+                    <div className="w-8 h-8 border-3 border-neutral-200 border-t-brand-cyan rounded-full animate-spin" />
+                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-neutral-400">Sincronizando...</p>
                 </div>
             ) : (
-                <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm">
+                <div className="bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
                     <DataTable
                         data={movimientos}
                         columns={columns}

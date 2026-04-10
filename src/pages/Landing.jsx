@@ -231,7 +231,7 @@ const Landing = () => {
       {/* HERO SECTION */}
       <section id="inicio" className="relative flex items-center bg-black min-h-screen pt-20 overflow-hidden">
         <div className="absolute inset-0 z-0">
-            <img src="/primera.jpeg" className="w-full h-full object-cover opacity-50 scale-105" alt="Hero PushSport" />
+            <img src="/fondo.jpeg" className="w-full h-full object-cover opacity-50 scale-100 rotate-6 origin-center scale-x-[-1] translate-x-[30%]" alt="Hero PushSport" />
             <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent"></div>
             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
         </div>

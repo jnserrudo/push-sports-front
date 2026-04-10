@@ -12,8 +12,8 @@ const Toaster = () => {
           key={t.id}
           className={`
             pointer-events-auto flex items-center gap-4 px-6 py-5 rounded-2xl shadow-2xl border-2 transition-all duration-500 animate-in slide-in-from-right-10
-            ${t.type === 'success' ? 'bg-white border-brand-cyan/20 text-neutral-900' : ''}
-            ${t.type === 'error' ? 'bg-white border-red-100 text-neutral-900' : ''}
+            ${t.type === 'success' ? 'bg-white dark:bg-gray-800 border-brand-cyan/20 dark:border-cyan-400/30 text-neutral-900 dark:text-white' : ''}
+            ${t.type === 'error' ? 'bg-white dark:bg-gray-800 border-red-100 dark:border-red-500/30 text-neutral-900 dark:text-white' : ''}
             ${t.type === 'info' ? 'bg-neutral-900 border-neutral-800 text-white' : ''}
           `}
         >

@@ -168,13 +168,13 @@ const Liquidaciones = () => {
         { 
             header: 'Sede Auditada', 
             accessor: 'sucursal_nombre',
-            render: (row) => <span className="font-bold text-sm text-black uppercase tracking-widest">{row.sucursal_nombre}</span>
+            render: (row) => <span className="font-bold text-sm text-black dark:text-white uppercase tracking-widest">{row.sucursal_nombre}</span>
         },
         { 
             header: 'Cronología', 
             accessor: 'fecha',
             render: (row) => (
-                <div className="flex flex-col text-black">
+                <div className="flex flex-col text-black dark:text-white">
                     <span className="text-xs font-bold uppercase tracking-widest">{new Date(row.fecha).toLocaleDateString()}</span>
                     <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">{new Date(row.fecha).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                 </div>
@@ -193,7 +193,7 @@ const Liquidaciones = () => {
             header: 'Deducción (Comisión)', 
             render: (row) => (
                 <div className="flex flex-col">
-                    <span className="text-xs font-bold text-black uppercase tracking-widest">
+                    <span className="text-xs font-bold text-black dark:text-white uppercase tracking-widest">
                         -${Math.round(row.monto_comision).toLocaleString()}
                     </span>
                     <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">({row.comision_porcentaje}% Sede)</span>
@@ -214,7 +214,7 @@ const Liquidaciones = () => {
             render: (row) => (
                 <button
                     onClick={() => generatePDF(row)}
-                    className="p-2 text-neutral-400 hover:text-black hover:bg-neutral-100 rounded-md transition-colors"
+                    className="p-2 text-neutral-400 hover:text-black dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-md transition-colors"
                     title="Exportar Recibo PDF"
                 >
                     <FileText size={16} strokeWidth={2.5} />
@@ -232,7 +232,7 @@ const Liquidaciones = () => {
         >
             
             {/* Header Técnico */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b-2 border-black pb-6 gap-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b-2 border-black dark:border-gray-600 pb-6 gap-6">
                  <div>
                     <div className="flex items-center gap-3 mb-2">
                          <ShieldCheck size={16} className="text-brand-cyan" />
@@ -241,7 +241,7 @@ const Liquidaciones = () => {
                              {isSuperAdmin ? 'GLOBAL' : 'SEDE'}
                          </div>
                     </div>
-                     <h2 className="text-4xl md:text-5xl uppercase leading-none m-0 font-sport text-black">
+                     <h2 className="text-4xl md:text-5xl uppercase leading-none m-0 font-sport text-black dark:text-white">
                         {isSuperAdmin ? 'Cierre de' : 'Conciliación de'} <span className="text-brand-cyan">{isSuperAdmin ? 'Caja.' : 'Fondos.'}</span>
                     </h2>
                  </div>
@@ -250,7 +250,7 @@ const Liquidaciones = () => {
                     <CreditCard size={20} className="text-brand-cyan" />
                     <div className="flex flex-col">
                         <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-[0.2em]">Estado Financiero</span>
-                        <span className="text-[10px] font-black text-black uppercase tracking-widest">Auditado & Verificado</span>
+                        <span className="text-[10px] font-black text-black dark:text-white uppercase tracking-widest">Auditado & Verificado</span>
                     </div>
                  </div>
             </div>
@@ -265,8 +265,8 @@ const Liquidaciones = () => {
                     {/* Tarjetas de Saldos Pendientes */}
                     <div className="space-y-4">
                         <div className="flex items-center gap-2 mb-2">
-                            <Send size={16} className="text-black" />
-                            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-black m-0">Arqueos Pendientes de Cobro</h3>
+                            <Send size={16} className="text-black dark:text-white" />
+                            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-black dark:text-white m-0">Arqueos Pendientes de Cobro</h3>
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -280,7 +280,7 @@ const Liquidaciones = () => {
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: i * 0.1 }}
-                                    className={`bg-white border p-6 rounded-2xl flex flex-col justify-between min-h-[220px] transition-all duration-300 shadow-sm relative overflow-hidden group hover:-translate-y-1 hover:shadow-md ${hasDebt ? 'border-neutral-200 hover:border-neutral-300' : 'border-neutral-100'}`}
+                                    className={`bg-white dark:bg-gray-800 border p-6 rounded-2xl flex flex-col justify-between min-h-[220px] transition-all duration-300 shadow-sm relative overflow-hidden group hover:-translate-y-1 hover:shadow-md ${hasDebt ? 'border-neutral-200 dark:border-gray-700 hover:border-neutral-300 dark:hover:border-gray-600' : 'border-neutral-100 dark:border-gray-700'}`}
                                 >
                                     {/* Marcador de deuda */}
                                     {hasDebt && (
@@ -294,8 +294,8 @@ const Liquidaciones = () => {
                                     <div className="space-y-1 relative z-10">
                                         <span className="text-[9px] font-black uppercase tracking-[0.2em] text-neutral-400 block mb-2">{suc.nombre}</span>
                                         <div className="flex items-baseline gap-1">
-                                            <span className={`text-sm font-bold ${hasDebt ? 'text-black' : 'text-neutral-500'}`}>$</span>
-                                            <p className={`text-5xl font-sport m-0 leading-none ${hasDebt ? 'text-black' : 'text-neutral-800'}`}>
+                                            <span className={`text-sm font-bold ${hasDebt ? 'text-black dark:text-white' : 'text-neutral-500 dark:text-gray-500'}`}>$</span>
+                                            <p className={`text-5xl font-sport m-0 leading-none ${hasDebt ? 'text-black dark:text-white' : 'text-neutral-800 dark:text-gray-400'}`}>
                                                 {getSaldoNeto(suc).toLocaleString()}
                                             </p>
                                         </div>
@@ -318,7 +318,7 @@ const Liquidaciones = () => {
                                         <motion.button 
                                             whileTap={{ scale: 0.95 }}
                                             onClick={() => handleLiquidarClick(suc)}
-                                            className="w-full mt-6 bg-black text-white py-3.5 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] hover:bg-brand-cyan hover:text-black transition-colors flex items-center justify-center gap-2"
+                                            className="w-full mt-6 bg-black dark:bg-gray-700 text-white py-3.5 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] hover:bg-brand-cyan hover:text-black transition-colors flex items-center justify-center gap-2"
                                         >
                                             LIQUIDAR ${getSaldoNeto(suc).toLocaleString()} <CheckCircle2 size={14} />
                                         </motion.button>
@@ -338,10 +338,10 @@ const Liquidaciones = () => {
                     {/* Tabla de Historial */}
                     <div className="pt-8 space-y-4">
                         <div className="flex items-center gap-2 mb-2">
-                            <Settings2 size={16} className="text-black" />
-                            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-black m-0">Historial Consolidado</h3>
+                            <Settings2 size={16} className="text-black dark:text-white" />
+                            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-black dark:text-white m-0">Historial Consolidado</h3>
                         </div>
-                        <div className="bg-white rounded-2xl md:rounded-[2.5rem] shadow-premium border border-neutral-100 p-2 md:p-4 transition-all duration-500 hover:shadow-premium-hover">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-[2.5rem] shadow-premium border border-neutral-100 dark:border-gray-700 p-2 md:p-4 transition-all duration-500 hover:shadow-premium-hover">
                             <DataTable 
                                 data={historial}
                                 columns={columnsHistorial}
@@ -364,10 +364,10 @@ const Liquidaciones = () => {
                         className="space-y-6 p-2"
                     >
                         
-                        <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-lg flex items-start gap-3">
-                            <AlertCircle size={18} className="text-black shrink-0" />
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 leading-relaxed m-0">
-                                Confirme la <span className="text-black font-black">recepción del monto</span>. Al autorizar, el saldo de la sede volverá a CERO y se emitirá el log de auditoría.
+                        <div className="p-4 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg flex items-start gap-3">
+                            <AlertCircle size={18} className="text-black dark:text-white shrink-0" />
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-gray-400 leading-relaxed m-0">
+                                Confirme la <span className="text-black dark:text-white font-black">recepción del monto</span>. Al autorizar, el saldo de la sede volverá a CERO y se emitirá el log de auditoría.
                             </p>
                         </div>
                         
@@ -402,7 +402,7 @@ const Liquidaciones = () => {
                                 whileTap={{ scale: 0.98 }}
                                 onClick={confirmLiquidacion}
                                 disabled={isProcessing}
-                                className="w-full bg-brand-cyan text-black py-4 rounded-lg text-[11px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-white transition-colors border border-transparent hover:border-black"
+                                className="w-full bg-brand-cyan text-black py-4 rounded-lg text-[11px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-white dark:hover:bg-gray-700 dark:hover:text-white transition-colors border border-transparent hover:border-black dark:hover:border-cyan-400"
                             >
                                 {isProcessing ? 'AUTORIZANDO...' : <><CreditCard size={18} /> CONFIRMAR INGRESO</>}
                             </motion.button>

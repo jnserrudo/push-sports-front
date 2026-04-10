@@ -27,9 +27,9 @@ const MapPicker = ({ lat, lng, onLocationSelect }) => {
     const initialCoords = (lat && lng) ? [parseFloat(lng), parseFloat(lat)] : defaultCoords;
 
     return (
-        <div className="space-y-4">
-            <label className="text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] text-black">Ubicación Geográfica (Pin)</label>
-            <div className="w-full h-80 md:h-[400px] rounded-2xl border-4 border-neutral-100 overflow-hidden shadow-inner bg-neutral-50 relative pointer-events-auto">
+        <div className="space-y-2">
+            <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-black dark:text-white">Ubicación Geográfica</label>
+            <div className="w-full h-48 md:h-64 rounded-xl border-2 border-neutral-100 overflow-hidden shadow-inner bg-neutral-50 relative pointer-events-auto">
                 <Map
                     center={initialCoords}
                     zoom={13}
@@ -44,8 +44,8 @@ const MapPicker = ({ lat, lng, onLocationSelect }) => {
                         onDragEnd={(e) => onLocationSelect(e.lat, e.lng)}
                     >
                         <MarkerContent>
-                            <div className="w-12 h-12 bg-brand-cyan rounded-full border-4 border-white shadow-xl flex items-center justify-center cursor-pointer hover:scale-110 transition-transform hover:shadow-[0_0_20px_rgba(0,229,255,0.6)]">
-                                <MapPin size={24} className="text-white" />
+                            <div className="w-8 h-8 bg-brand-cyan rounded-full border-2 border-white shadow-lg flex items-center justify-center cursor-pointer hover:scale-110 transition-transform hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]">
+                                <MapPin size={16} className="text-white" />
                             </div>
                         </MarkerContent>
                     </MapMarker>
@@ -84,41 +84,41 @@ const ImagePicker = ({ value, onChange, label = "Imagen de la Sede" }) => {
 
     return (
         <div className="space-y-2">
-            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">
+            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">
                 {label}
             </label>
             <div
                 onClick={() => !uploading && inputRef.current?.click()}
-                className={`relative w-full h-64 md:h-80 rounded-2xl border-4 border-dashed cursor-pointer transition-all group overflow-hidden
+                className={`relative w-full h-40 md:h-48 rounded-xl border-2 border-dashed cursor-pointer transition-all group overflow-hidden
                     ${value ? 'border-brand-cyan bg-brand-cyan/5' : 'border-neutral-200 bg-neutral-50 hover:border-brand-cyan hover:bg-brand-cyan/5'}`}
             >
                 {uploading ? (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-white/80 backdrop-blur-sm z-10">
-                        <div className="w-8 h-8 border-4 border-brand-cyan border-t-transparent rounded-full animate-spin"></div>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-brand-cyan">Subiendo...</span>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm z-10">
+                        <div className="w-6 h-6 border-2 border-brand-cyan border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-[9px] font-black uppercase tracking-wider text-brand-cyan">Subiendo...</span>
                     </div>
                 ) : value ? (
                     <>
-                        <img src={value} alt="preview" className="absolute inset-0 w-full h-full object-cover rounded-xl" />
+                        <img src={value} alt="preview" className="absolute inset-0 w-full h-full object-cover rounded-lg" />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                            <div className="text-white flex flex-col items-center gap-1">
-                               <Landmark size={24} />
-                               <span className="text-[9px] font-black uppercase tracking-widest text-center">Click para cambiar</span>
+                               <Landmark size={18} />
+                               <span className="text-[8px] font-black uppercase tracking-wider text-center">Click para cambiar</span>
                            </div>
                         </div>
                         <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); onChange(''); }}
-                            className="absolute top-2 right-2 w-6 h-6 bg-black text-white rounded-full flex items-center justify-center hover:bg-red-500 transition-colors z-20"
+                            className="absolute top-1.5 right-1.5 w-5 h-5 bg-black text-white rounded-full flex items-center justify-center hover:bg-red-500 transition-colors z-20"
                         >
-                            <X size={12} />
+                            <X size={10} />
                         </button>
                     </>
                 ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-neutral-400 group-hover:text-brand-cyan transition-colors">
-                        <Landmark size={32} />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Subir foto de la sede</span>
-                        <span className="text-[9px] font-bold text-neutral-300">Formato JPG, PNG (máx. 10MB)</span>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-neutral-400 group-hover:text-brand-cyan transition-colors">
+                        <Landmark size={24} />
+                        <span className="text-[9px] font-black uppercase tracking-wider">Subir foto de la sede</span>
+                        <span className="text-[8px] font-bold text-neutral-300">JPG, PNG (máx. 10MB)</span>
                     </div>
                 )}
             </div>
@@ -159,7 +159,7 @@ const Sucursales = () => {
             accessor: 'nombre',
             render: (row) => (
                 <div className="flex flex-col">
-                    <span className="font-bold text-sm text-black uppercase tracking-widest">{row.nombre}</span>
+                    <span className="font-bold text-sm text-black dark:text-white uppercase tracking-widest">{row.nombre}</span>
                     <div className="flex items-center gap-1">
                         <MapPin size={10} className="text-brand-cyan" />
                         <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">{row.direccion}</span>
@@ -172,7 +172,7 @@ const Sucursales = () => {
             accessor: 'id_tipo_comercio',
             render: (row) => (
                 <div className="flex flex-col">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-black">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-black dark:text-white">
                         {row.tipo_comercio?.nombre || 'General'}
                     </span>
                     <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">{row.tipo_comercio?.descripcion || 'Sin descripción'}</span>
@@ -184,7 +184,7 @@ const Sucursales = () => {
             accessor: 'saldo_acumulado_mili',
             render: (row) => (
                 <div className="flex items-center gap-1">
-                    <span className="font-sport text-2xl text-black">
+                    <span className="font-sport text-2xl text-black dark:text-white">
                         ${Number(row.saldo_acumulado_mili || 0).toLocaleString()}
                     </span>
                 </div>
@@ -217,7 +217,7 @@ const Sucursales = () => {
             render: (row) => (
                 <div className={`inline-flex px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border ${
                     row.activo
-                        ? 'bg-transparent text-black border-black'
+                        ? 'bg-transparent text-black dark:text-white border-black'
                         : 'bg-neutral-100 text-neutral-400 border-neutral-200'
                 }`}>
                     {row.activo ? 'Operativa' : 'Cesada'}
@@ -227,21 +227,21 @@ const Sucursales = () => {
     ];
 
     const renderForm = (formData, setFormData) => (
-        <div className="space-y-8 md:space-y-10 px-2 md:px-6"> 
+        <div className="space-y-4 md:space-y-5 px-1 md:px-3"> 
             
             <ImagePicker 
                 value={formData.imagen_url || ''} 
                 onChange={(url) => setFormData(prev => ({ ...prev, imagen_url: url }))}
             />
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
-                <div className="space-y-4">
-                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] text-black">Nombre de la Sede *</label>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
+                <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-black dark:text-white">Nombre de la Sede *</label>
                     <div className="relative group">
-                        <Store size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
+                        <Store size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
                         <input
                             required type="text"
-                            className="w-full pl-14 pr-6 py-4 bg-neutral-50 border-2 border-neutral-100 rounded-2xl text-base font-bold text-black uppercase placeholder:text-neutral-400 focus:outline-none focus:border-brand-cyan focus:ring-4 focus:ring-brand-cyan/20 transition-all hover:border-neutral-200"
+                            className="w-full pl-10 pr-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-bold text-black dark:text-white uppercase placeholder:text-neutral-400 focus:outline-none focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/20 transition-all"
                             placeholder="EJ: SUCURSAL CENTRO"
                             value={formData.nombre || ''}
                             onChange={e => setFormData({ ...formData, nombre: e.target.value.toUpperCase() })}
@@ -249,13 +249,13 @@ const Sucursales = () => {
                     </div>
                 </div>
 
-                <div className="space-y-4">
-                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] text-black">Tipo de Negocio *</label>
+                <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-black dark:text-white">Tipo de Negocio *</label>
                     <div className="relative group">
-                        <Layout size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none group-focus-within:text-brand-cyan transition-colors" />
+                        <Layout size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none group-focus-within:text-brand-cyan transition-colors" />
                         <select
                             required
-                            className="w-full pl-14 pr-6 py-4 bg-neutral-50 border-2 border-neutral-100 rounded-2xl text-base font-bold text-black uppercase focus:outline-none focus:border-brand-cyan focus:ring-4 focus:ring-brand-cyan/20 transition-all appearance-none cursor-pointer hover:border-neutral-200"
+                            className="w-full pl-10 pr-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-bold text-black dark:text-white uppercase focus:outline-none focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/20 transition-all appearance-none cursor-pointer"
                             value={formData.id_tipo_comercio || ''}
                             onChange={e => setFormData({ ...formData, id_tipo_comercio: parseInt(e.target.value) })}
                         >
@@ -270,13 +270,13 @@ const Sucursales = () => {
                 </div>
             </div>
 
-            <div className="space-y-4">
-                <label className="text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] text-black">Dirección de la Sede *</label>
+            <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-black dark:text-white">Dirección de la Sede *</label>
                 <div className="relative group">
-                    <MapPin size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
+                    <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
                     <input
                         required type="text"
-                        className="w-full pl-14 pr-6 py-4 bg-neutral-50 border-2 border-neutral-100 rounded-2xl text-base font-bold text-black uppercase placeholder:text-neutral-400 focus:outline-none focus:border-brand-cyan focus:ring-4 focus:ring-brand-cyan/20 transition-all hover:border-neutral-200"
+                        className="w-full pl-10 pr-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-bold text-black dark:text-white uppercase placeholder:text-neutral-400 focus:outline-none focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/20 transition-all"
                         placeholder="EJ: AV. BELGRANO 1234, SALTA CAPITAL"
                         value={formData.direccion || ''}
                         onChange={e => setFormData({ ...formData, direccion: e.target.value.toUpperCase() })}
@@ -284,13 +284,13 @@ const Sucursales = () => {
                 </div>
             </div>
 
-            <div className="mt-8 pt-8 border-t-2 border-neutral-100">
-                <div className="p-5 md:p-6 bg-brand-cyan/5 border-2 border-brand-cyan/20 rounded-2xl flex items-start gap-4 shadow-sm mb-6">
-                    <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center flex-shrink-0">
-                        <Info size={20} className="text-brand-cyan" />
+            <div className="mt-4 pt-4 border-t border-neutral-100">
+                <div className="p-3 md:p-4 bg-brand-cyan/5 border border-brand-cyan/20 rounded-xl flex items-start gap-3 shadow-sm mb-4">
+                    <div className="w-8 h-8 bg-white dark:bg-gray-700 rounded-lg shadow-sm flex items-center justify-center flex-shrink-0">
+                        <Info size={16} className="text-brand-cyan" />
                     </div>
-                    <p className="text-xs md:text-sm font-bold text-neutral-700 leading-relaxed m-0 mt-0.5">
-                        Haga click directamente en el mapa o arrastre el marcador de posición para definir la <span className="text-brand-cyan">ubicación geolocalizada</span> en tiempo real.
+                    <p className="text-[10px] md:text-xs font-bold text-neutral-700 leading-relaxed m-0">
+                        Click en el mapa o arrastre el marcador para definir la <span className="text-brand-cyan">ubicación</span>.
                     </p>
                 </div>
 
@@ -301,23 +301,23 @@ const Sucursales = () => {
                 />
             </div>
 
-            <div className="space-y-4 pt-4">
-                <label className="flex items-center justify-between p-5 bg-white border-2 border-neutral-100 rounded-2xl cursor-pointer group hover:border-brand-cyan transition-all">
+            <div className="space-y-2 pt-2">
+                <label className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-neutral-100 dark:border-gray-700 rounded-xl cursor-pointer group hover:border-brand-cyan transition-all">
                     <div className="flex flex-col">
-                        <span className="text-xs font-bold uppercase tracking-[0.2em] text-black">Estado Operativo de la Sede</span>
-                        <span className="text-[10px] text-neutral-400 font-bold tracking-widest mt-1">Determina si la sucursal está visible y recibe operaciones</span>
+                        <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-black dark:text-white">Estado Operativo</span>
+                        <span className="text-[9px] text-neutral-400 font-bold tracking-wider mt-0.5">Visible y recibe operaciones</span>
                     </div>
                     <div
                         onClick={(e) => {
                             e.preventDefault();
                             setFormData(prev => ({ ...prev, activo: prev.activo === false ? true : false }));
                         }}
-                        className={`w-14 h-8 rounded-full transition-all relative shadow-inner flex-shrink-0 ${
+                        className={`w-10 h-6 rounded-full transition-all relative shadow-inner flex-shrink-0 ${
                             formData.activo !== false ? 'bg-brand-cyan' : 'bg-neutral-200'
                         }`}
                     >
-                        <div className={`w-6 h-6 bg-white rounded-full shadow-md absolute top-1 transition-all ${
-                            formData.activo !== false ? 'left-7' : 'left-1'
+                        <div className={`w-4 h-4 bg-white dark:bg-gray-300 rounded-full shadow-md absolute top-1 transition-all ${
+                            formData.activo !== false ? 'left-5' : 'left-1'
                         }`} />
                     </div>
                 </label>

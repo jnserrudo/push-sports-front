@@ -1,6 +1,7 @@
 import React from 'react';
 import { Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { toast } from '../../store/toastStore';
 
 export const ExportButton = ({ 
     data, 
@@ -20,7 +21,7 @@ export const ExportButton = ({
             XLSX.writeFile(wb, `${filename}_${new Date().toISOString().split('T')[0]}.${format}`);
         } catch (error) {
             console.error('Error al exportar:', error);
-            alert('Error al exportar los datos');
+            toast.error('Error al exportar los datos');
         }
     };
     

@@ -16,7 +16,7 @@ const Marcas = () => {
             header: 'Marca / Partner',
             accessor: 'nombre_marca',
             render: (row) => (
-                <span className="font-bold text-sm text-black uppercase tracking-widest">{row.nombre_marca}</span>
+                <span className="font-bold text-sm text-black dark:text-white uppercase tracking-widest">{row.nombre_marca}</span>
             )
         },
     ];

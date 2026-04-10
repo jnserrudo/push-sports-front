@@ -175,9 +175,17 @@ const ReportPDF = ({ products, imageMap = {}, currentDate, showPushPrice = true 
                 <View style={{ flex: 1 }}>
                   <Text style={styles.rowMarca}>{prod.marca?.nombre_marca || 'GENERAL'}</Text>
                   <Text style={styles.rowNombre}>{prod.nombre}</Text>
-                  {prod.atributos?.sabores && prod.atributos.sabores.length > 0 && (
-                    <Text style={styles.rowSabor}>{prod.atributos.sabores.join(' · ')}</Text>
-                  )}
+                  {/* Mostrar todos los atributos del producto */}
+                  {prod.atributos && Object.entries(prod.atributos).map(([key, values]) => {
+                    if (!values || values.length === 0) return null;
+                    const displayKey = key.toUpperCase();
+                    const displayValues = Array.isArray(values) ? values.join(' · ') : values;
+                    return (
+                      <Text key={key} style={styles.rowSabor}>
+                        {displayKey}: {displayValues}
+                      </Text>
+                    );
+                  })}
                 </View>
               </View>
 

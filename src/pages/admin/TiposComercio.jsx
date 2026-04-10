@@ -16,7 +16,7 @@ const TiposComercio = () => {
                         <Tag size={14} className="text-brand-cyan md:hidden" />
                     </div>
                     <div>
-                        <span className="font-bold text-xs md:text-sm text-black tracking-widest uppercase">
+                        <span className="font-bold text-xs md:text-sm text-black dark:text-white tracking-widest uppercase">
                             {row.nombre}
                         </span>
                     </div>

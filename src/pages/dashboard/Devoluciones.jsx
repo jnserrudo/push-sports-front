@@ -114,7 +114,7 @@ const Devoluciones = () => {
                     <div className="w-8 h-8 bg-neutral-100 rounded-lg flex items-center justify-center">
                         <Package size={14} className="text-neutral-400" />
                     </div>
-                    <span className="font-bold text-xs uppercase tracking-widest text-black">{row.producto?.nombre || '—'}</span>
+                    <span className="font-bold text-xs uppercase tracking-widest text-black dark:text-white">{row.producto?.nombre || '—'}</span>
                 </div>
             )
         },
@@ -130,7 +130,7 @@ const Devoluciones = () => {
         {
             header: 'Reembolso',
             render: (row) => (
-                <span className="font-sport text-xl text-black">
+                <span className="font-sport text-xl text-black dark:text-white">
                     ${parseFloat(row.monto_reembolso).toLocaleString()}
                 </span>
             )
@@ -139,7 +139,7 @@ const Devoluciones = () => {
             header: 'Fecha',
             render: (row) => (
                 <div className="flex flex-col">
-                    <span className="text-xs font-bold text-black">{new Date(row.fecha).toLocaleDateString()}</span>
+                    <span className="text-xs font-bold text-black dark:text-white">{new Date(row.fecha).toLocaleDateString()}</span>
                     <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">{new Date(row.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
             )
@@ -168,13 +168,13 @@ const Devoluciones = () => {
             className="space-y-6 max-w-[1400px] mx-auto pb-10"
         >
             {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b-2 border-black pb-6 gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b-2 border-black dark:border-gray-600 pb-6 gap-6">
                 <div>
                     <div className="flex items-center gap-3 mb-2">
                         <RotateCcw size={14} className="text-brand-cyan" />
                         <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-neutral-500">CONTROL DE INVENTARIO</span>
                     </div>
-                    <h2 className="text-4xl md:text-5xl uppercase leading-none m-0 font-sport text-black">
+                    <h2 className="text-4xl md:text-5xl uppercase leading-none m-0 font-sport text-black dark:text-white">
                         Centro de <span className="text-brand-cyan">Devoluciones.</span>
                     </h2>
                     <p className="text-xs text-neutral-400 font-bold uppercase tracking-widest mt-2">
@@ -182,7 +182,7 @@ const Devoluciones = () => {
                     </p>
                 </div>
                 {/* Tabs */}
-                <div className="flex gap-2 bg-neutral-100 p-1 rounded-xl">
+                <div className="flex gap-2 bg-neutral-100 dark:bg-gray-700 p-1 rounded-xl">
                     {[
                         { id: 'nueva', label: 'Nueva Devolución', icon: RotateCcw },
                         { id: 'historial', label: 'Historial', icon: History }
@@ -192,8 +192,8 @@ const Devoluciones = () => {
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
                                 activeTab === tab.id
-                                    ? 'bg-black text-white shadow-sm'
-                                    : 'text-neutral-400 hover:text-black'
+                                    ? 'bg-black dark:bg-cyan-500 text-white shadow-sm'
+                                    : 'text-neutral-400 dark:text-gray-400 hover:text-black dark:hover:text-white'
                             }`}
                         >
                             <tab.icon size={12} />
@@ -213,9 +213,9 @@ const Devoluciones = () => {
                         className="grid grid-cols-1 lg:grid-cols-2 gap-6"
                     >
                         {/* Panel Izquierdo: Buscar Venta */}
-                        <div className="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm">
-                            <div className="p-5 border-b border-neutral-100">
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-black mb-4">
+                        <div className="bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-2xl overflow-hidden shadow-sm">
+                            <div className="p-5 border-b border-neutral-100 dark:border-gray-700">
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-black dark:text-white mb-4">
                                     1 · Seleccionar Ticket de Venta
                                 </h3>
                                 <div className="relative">
@@ -225,17 +225,17 @@ const Devoluciones = () => {
                                         placeholder="Buscar por ID o fecha..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-bold uppercase tracking-widest focus:outline-none focus:border-black transition-colors"
+                                        className="w-full pl-10 pr-4 py-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-xl text-xs font-bold uppercase tracking-widest text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-cyan-400 transition-colors"
                                     />
                                 </div>
                             </div>
-                            <div className="overflow-y-auto max-h-[500px] divide-y divide-neutral-50">
+                            <div className="overflow-y-auto max-h-[500px] divide-y divide-neutral-50 dark:divide-gray-700">
                                 {isLoadingVentas ? (
                                     <div className="flex items-center justify-center py-16">
-                                        <div className="w-6 h-6 border-2 border-neutral-200 border-t-brand-cyan rounded-full animate-spin" />
+                                        <div className="w-6 h-6 border-2 border-neutral-200 dark:border-gray-700 border-t-brand-cyan rounded-full animate-spin" />
                                     </div>
                                 ) : filteredVentas.length === 0 ? (
-                                    <div className="py-16 text-center text-neutral-300">
+                                    <div className="py-16 text-center text-neutral-300 dark:text-gray-600">
                                         <Package size={40} className="mx-auto mb-3" strokeWidth={1} />
                                         <p className="text-[10px] font-black uppercase tracking-widest">Sin ventas encontradas</p>
                                     </div>
@@ -253,10 +253,10 @@ const Devoluciones = () => {
                                             <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1">
                                                 #{venta.id_venta?.toString().split('-')[0]}
                                             </p>
-                                            <p className="text-xs font-bold text-black">
+                                            <p className="text-xs font-bold text-black dark:text-white">
                                                 {new Date(venta.fecha_hora).toLocaleString()} · {venta.metodo_pago}
                                             </p>
-                                            <p className="font-sport text-xl text-black leading-none mt-1">
+                                            <p className="font-sport text-xl text-black dark:text-white leading-none mt-1">
                                                 ${parseFloat(venta.total_venta).toLocaleString()}
                                             </p>
                                         </div>
@@ -267,13 +267,13 @@ const Devoluciones = () => {
                         </div>
 
                         {/* Panel Derecho: Items de la venta seleccionada */}
-                        <div className="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm">
-                            <div className="p-5 border-b border-neutral-100">
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-black">
+                        <div className="bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-2xl overflow-hidden shadow-sm">
+                            <div className="p-5 border-b border-neutral-100 dark:border-gray-700">
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-black dark:text-white">
                                     2 · Seleccionar Producto a Devolver
                                 </h3>
                             </div>
-                            <div className="overflow-y-auto max-h-[500px] divide-y divide-neutral-50">
+                            <div className="overflow-y-auto max-h-[500px] divide-y divide-neutral-50 dark:divide-gray-700">
                                 {!selectedVenta ? (
                                     <div className="py-16 text-center text-neutral-300">
                                         <RotateCcw size={40} className="mx-auto mb-3" strokeWidth={1} />
@@ -291,14 +291,14 @@ const Devoluciones = () => {
                                         className="p-4 flex items-center justify-between gap-4"
                                     >
                                         <div>
-                                            <p className="text-xs font-bold text-black uppercase tracking-tight">{item.producto?.nombre}</p>
+                                            <p className="text-xs font-bold text-black dark:text-white uppercase tracking-tight">{item.producto?.nombre}</p>
                                             <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5">
                                                 {item.cantidad} unid. · ${parseFloat(item.precio_unitario_cobrado).toLocaleString()} c/u
                                             </p>
                                         </div>
                                         <button
                                             onClick={() => handleOpenDevolucion(item)}
-                                            className="px-3 py-2 bg-black text-white text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-brand-cyan hover:text-black transition-colors flex items-center gap-2 flex-shrink-0"
+                                            className="px-3 py-2 bg-black dark:bg-gray-700 text-white text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-brand-cyan hover:text-black transition-colors flex items-center gap-2 flex-shrink-0"
                                         >
                                             <RotateCcw size={12} />
                                             Devolver
@@ -317,7 +317,7 @@ const Devoluciones = () => {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
                     >
-                        <div className="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm">
+                        <div className="bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-2xl overflow-hidden shadow-sm">
                             <DataTable
                                 data={historial}
                                 columns={columnsHistorial}
@@ -332,10 +332,10 @@ const Devoluciones = () => {
             {/* Modal de Confirmación */}
             <Modal isOpen={isConfirmOpen} onClose={() => setIsConfirmOpen(false)} title="Confirmar Devolución">
                 <div className="space-y-6 p-2">
-                    <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-xl flex items-start gap-3">
-                        <AlertCircle size={18} className="text-black shrink-0 mt-0.5" />
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 leading-relaxed m-0">
-                            Esta acción <span className="text-black font-black">re-ingresará las unidades</span> al inventario de la sede y ajustará el saldo de la misma.
+                    <div className="p-4 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-xl flex items-start gap-3">
+                        <AlertCircle size={18} className="text-black dark:text-white shrink-0 mt-0.5" />
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-gray-400 leading-relaxed m-0">
+                            Esta acción <span className="text-black dark:text-white font-black">re-ingresará las unidades</span> al inventario de la sede y ajustará el saldo de la misma.
                         </p>
                     </div>
 
@@ -360,12 +360,12 @@ const Devoluciones = () => {
                             <div className="flex items-center gap-3">
                                 <button
                                     onClick={() => setCantidadDevolucion(Math.max(1, cantidadDevolucion - 1))}
-                                    className="w-10 h-10 bg-neutral-100 rounded-xl flex items-center justify-center font-black text-black hover:bg-black hover:text-white transition-colors"
+                                    className="w-10 h-10 bg-neutral-100 dark:bg-gray-700 rounded-xl flex items-center justify-center font-black text-black dark:text-white hover:bg-black dark:hover:bg-cyan-500 hover:text-white transition-colors"
                                 >−</button>
-                                <span className="font-sport text-3xl text-black w-12 text-center">{cantidadDevolucion}</span>
+                                <span className="font-sport text-3xl text-black dark:text-white w-12 text-center">{cantidadDevolucion}</span>
                                 <button
                                     onClick={() => setCantidadDevolucion(Math.min(selectedItem?.cantidad || 1, cantidadDevolucion + 1))}
-                                    className="w-10 h-10 bg-neutral-100 rounded-xl flex items-center justify-center font-black text-black hover:bg-black hover:text-white transition-colors"
+                                    className="w-10 h-10 bg-neutral-100 dark:bg-gray-700 rounded-xl flex items-center justify-center font-black text-black dark:text-white hover:bg-black dark:hover:bg-cyan-500 hover:text-white transition-colors"
                                 >+</button>
                             </div>
                         </div>
@@ -379,7 +379,7 @@ const Devoluciones = () => {
                                 value={motivo}
                                 onChange={(e) => setMotivo(e.target.value)}
                                 placeholder="Ej: Talle incorrecto, Producto defectuoso..."
-                                className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-bold focus:outline-none focus:border-black transition-colors"
+                                className="w-full px-4 py-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-xl text-xs font-bold text-black dark:text-white placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-black dark:focus:border-cyan-400 transition-colors"
                             />
                         </div>
                     </div>

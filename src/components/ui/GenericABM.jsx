@@ -113,12 +113,18 @@ const GenericABM = ({
             // Strip internal state keys (prefixed with _) AND nested relationship objects
             // This prevents strict backend ORMs like Prisma from crashing with 500 Errors
             // when we send back joined data like 'tipo_comercio: {...}' that we got from a GET request.
+            // EXCEPTION: Keep 'atributos' field as it's needed for product variants (will be JSON stringified)
             const payload = Object.fromEntries(
-                Object.entries(formData).filter(([k, v]) => 
-                    !k.startsWith('_') && 
-                    (v === null || typeof v !== 'object' || Array.isArray(v)) // Allow nulls, primitive values, and arrays (if needed for M:N relations later), block pure objects.
+                Object.entries(formData).filter(([k, v]) =>
+                    !k.startsWith('_') &&
+                    (v === null || typeof v !== 'object' || Array.isArray(v) || k === 'atributos')
                 )
             );
+
+            // Convert atributos to JSON string if it's an object (backend expects JSON string)
+            if (payload.atributos && typeof payload.atributos === 'object') {
+                payload.atributos = JSON.stringify(payload.atributos);
+            }
 
             if (editingItem) {
                 const itemId = editingItem[idField];
@@ -168,53 +174,53 @@ const GenericABM = ({
     };
 
     return (
-        <div className="space-y-3 md:space-y-10 w-full max-w-7xl mx-auto pb-4 md:pb-20 relative animate-in fade-in duration-700">
-            {/* Cabecera del ABM */}
-            <div className="flex items-center justify-between border-b md:border-b border-neutral-100 pb-2 md:pb-10 text-neutral-900 gap-2 md:gap-6 relative">
-                <div className="flex items-center gap-3 md:gap-8">
-                    <div className="hidden sm:flex w-16 h-16 md:w-20 md:h-20 bg-white border-2 border-neutral-100 text-brand-cyan items-center justify-center rounded-[1.5rem] md:rounded-[2rem] shadow-sm flex-shrink-0">
-                        {Icon ? <Icon size={32} className="md:w-9 md:h-9" /> : <Box size={32} />}
+        <div className="space-y-2 md:space-y-4 w-full max-w-7xl mx-auto pb-2 md:pb-8 relative animate-in fade-in duration-700">
+            {/* Cabecera del ABM - Compacta */}
+            <div className="flex items-center justify-between border-b border-neutral-100 dark:border-gray-700 pb-2 md:pb-3 text-neutral-900 dark:text-white gap-2 md:gap-4 relative">
+                <div className="flex items-center gap-2 md:gap-4">
+                    <div className="hidden sm:flex w-10 h-10 md:w-12 md:h-12 bg-white dark:bg-gray-800 border border-neutral-100 dark:border-gray-700 text-brand-cyan dark:text-cyan-400 items-center justify-center rounded-xl shadow-sm flex-shrink-0">
+                        {Icon ? <Icon size={20} className="md:w-6 md:h-6" /> : <Box size={20} />}
                     </div>
                     <div className="flex flex-col">
-                        <span className="hidden md:block text-label-premium text-neutral-500 mb-1">ADMINISTRACIÓN CENTRAL / PUSH</span>
-                        <h1 className="text-xl md:text-5xl font-black tracking-[-0.03em] m-0 text-black uppercase leading-none">
+                        <span className="hidden md:block text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500 mb-0.5">ADMIN / PUSH</span>
+                        <h1 className="text-lg md:text-2xl font-black tracking-tight m-0 text-black dark:text-white uppercase leading-none">
                             {title}
                         </h1>
                         {description && (
-                            <p className="hidden md:block text-[10px] md:text-xs font-bold text-neutral-400 mt-3 max-w-2xl leading-relaxed">
+                            <p className="hidden md:block text-[9px] font-bold text-neutral-400 mt-1 max-w-2xl leading-relaxed">
                                 {description}
                             </p>
                         )}
                     </div>
                 </div>
                 
-                <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
+                <div className="flex items-center gap-1.5 md:gap-2 flex-shrink-0">
                     <button 
                         onClick={loadData}
-                        className="p-1.5 md:p-3 bg-white border border-neutral-200 text-neutral-600 hover:text-black hover:shadow-premium rounded-lg md:rounded-2xl transition-all"
+                        className="p-1.5 md:p-2 bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-600 text-neutral-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:shadow-sm rounded-lg transition-all"
                         title="Actualizar Datos"
                     >
-                        <RefreshCw size={16} className={`md:w-[22px] md:h-[22px] ${isLoading ? 'animate-spin text-brand-cyan' : ''}`} strokeWidth={3} />
+                        <RefreshCw size={14} className={`md:w-4 md:h-4 ${isLoading ? 'animate-spin text-brand-cyan' : ''}`} strokeWidth={3} />
                     </button>
-                    <div className="hidden md:block h-8 w-px bg-neutral-200 mx-1"></div>
-                    <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-brand-cyan shadow-[0_0_12px_rgba(0,194,255,0.4)] animate-pulse hidden md:block"></div>
+                    <div className="hidden md:block h-6 w-px bg-neutral-200 mx-0.5"></div>
+                    <div className="w-1.5 h-1.5 rounded-full bg-brand-cyan shadow-[0_0_8px_rgba(0,194,255,0.4)] animate-pulse hidden md:block"></div>
                 </div>
             </div>
             
             {/* Tabla de Datos */}
             {isLoading ? (
-                <div className="bg-white rounded-2xl md:rounded-[2.5rem] p-4 md:p-8 shadow-premium border border-neutral-100 relative overflow-hidden animate-in fade-in duration-500">
-                    <div className="flex flex-col md:flex-row justify-between mb-8 gap-4">
-                        <div className="w-full md:max-w-md h-12 md:h-16 bg-neutral-100 rounded-xl md:rounded-2xl animate-pulse" />
-                        <div className="w-32 md:w-48 h-12 md:h-16 bg-neutral-100 rounded-xl md:rounded-2xl animate-pulse" />
+                <div className="bg-white dark:bg-gray-800 rounded-xl md:rounded-2xl p-3 md:p-4 shadow-sm border border-neutral-100 dark:border-gray-700 relative overflow-hidden animate-in fade-in duration-500">
+                    <div className="flex flex-col md:flex-row justify-between mb-4 gap-3">
+                        <div className="w-full md:max-w-md h-10 md:h-12 bg-neutral-100 dark:bg-gray-700 rounded-lg animate-pulse" />
+                        <div className="w-28 md:w-40 h-10 md:h-12 bg-neutral-100 dark:bg-gray-700 rounded-lg animate-pulse" />
                     </div>
-                    <div className="rounded-xl md:rounded-3xl border border-neutral-200 overflow-hidden bg-white">
+                    <div className="rounded-lg border border-neutral-200 dark:border-gray-600 overflow-hidden bg-white dark:bg-gray-800">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="bg-neutral-50 border-b border-neutral-200">
+                                <tr className="bg-neutral-50 dark:bg-gray-700 border-b border-neutral-200 dark:border-gray-600">
                                     {[...Array(columns.length + 1)].map((_, i) => (
-                                        <th key={i} className="px-4 md:px-8 py-4 md:py-6">
-                                            <div className="h-4 bg-neutral-200 rounded w-20 animate-pulse" />
+                                        <th key={i} className="px-3 md:px-4 py-2 md:py-3">
+                                            <div className="h-3 bg-neutral-200 dark:bg-gray-600 rounded w-16 animate-pulse" />
                                         </th>
                                     ))}
                                 </tr>
@@ -223,10 +229,10 @@ const GenericABM = ({
                                 {[1, 2, 3, 4, 5].map(i => (
                                     <tr key={i}>
                                         {[...Array(columns.length + 1)].map((_, colI) => (
-                                            <td key={colI} className="px-4 py-4 md:px-8 md:py-6 relative">
-                                                <div className="flex items-center gap-3">
-                                                    {colI === 0 && <div className="w-8 h-8 md:w-10 md:h-10 bg-neutral-100 rounded-xl flex-shrink-0 animate-pulse" />}
-                                                    <div className="h-3 bg-neutral-100 rounded animate-pulse" style={{ width: `${Math.max(30, 80 - (i * colI * 10) % 50)}%` }} />
+                                            <td key={colI} className="px-3 py-2 md:px-4 md:py-3 relative">
+                                                <div className="flex items-center gap-2">
+                                                    {colI === 0 && <div className="w-6 h-6 md:w-8 md:h-8 bg-neutral-100 rounded-lg flex-shrink-0 animate-pulse" />}
+                                                    <div className="h-2.5 bg-neutral-100 rounded animate-pulse" style={{ width: `${Math.max(30, 80 - (i * colI * 10) % 50)}%` }} />
                                                 </div>
                                             </td>
                                         ))}
@@ -264,33 +270,33 @@ const GenericABM = ({
                 title={editingItem ? "Actualizar Registro" : "Nuevo Registro"}
                 maxWidth={modalMaxWidth}
             >
-                <div className="py-2">
-                    <form onSubmit={handleSubmit} className="space-y-10">
-                        <div className="space-y-6">
+                <div className="py-1">
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="space-y-3">
                             {renderForm ? renderForm(formData, setFormData) : (
                                 formFields.map(field => (
-                                    <div key={field.name} className="space-y-4">
+                                    <div key={field.name} className="space-y-1.5">
                                         {field.type === 'checkbox' ? (
-                                            <label className="flex items-center gap-3 cursor-pointer group">
+                                            <label className="flex items-center gap-2 cursor-pointer group">
                                                 <div
                                                     onClick={() => setFormData({ ...formData, [field.name]: !formData[field.name] })}
-                                                    className={`w-10 h-6 rounded-full transition-all relative flex-shrink-0 ${
+                                                    className={`w-8 h-5 rounded-full transition-all relative flex-shrink-0 ${
                                                         formData[field.name] ? 'bg-brand-cyan' : 'bg-neutral-200'
                                                     }`}
                                                 >
-                                                    <div className={`w-4 h-4 bg-white rounded-full shadow absolute top-1 transition-all ${
-                                                        formData[field.name] ? 'left-5' : 'left-1'
+                                                    <div className={`w-3.5 h-3.5 bg-white dark:bg-gray-300 rounded-full shadow absolute top-0.5 transition-all ${
+                                                        formData[field.name] ? 'left-4' : 'left-0.5'
                                                     }`} />
                                                 </div>
-                                                <span className="text-label-premium">{field.label}</span>
+                                                <span className="text-[10px] font-black uppercase tracking-wider text-neutral-600">{field.label}</span>
                                             </label>
                                         ) : (
                                             <>
-                                                <label className="text-label-premium ml-1 block">{field.label}</label>
+                                                <label className="text-[10px] font-black uppercase tracking-wider text-neutral-500 ml-1 block">{field.label}</label>
                                                 <input
                                                     required={field.required}
                                                     type={field.type || 'text'}
-                                                    className="input-premium py-8"
+                                                    className="w-full px-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-lg focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/20 focus:outline-none transition-all text-sm font-bold text-neutral-900 placeholder:text-neutral-400"
                                                     placeholder={field.label.toUpperCase()}
                                                     value={formData[field.name] ?? ''}
                                                     onChange={e => setFormData({ ...formData, [field.name]: field.type === 'number' ? Number(e.target.value) : e.target.value })}
@@ -302,11 +308,11 @@ const GenericABM = ({
                             )}
                         </div>
                         
-                        <div className="pt-10 border-t border-neutral-50 flex flex-col gap-4">
+                        <div className="pt-4 border-t border-neutral-100 dark:border-gray-700 flex flex-col gap-3">
                             <button 
                                 type="submit"
                                 disabled={isSubmitting}
-                                className="w-full btn-premium py-4 flex justify-center items-center gap-3 group h-14 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full bg-black text-white px-4 py-3 rounded-lg font-black text-xs uppercase tracking-[0.2em] hover:bg-brand-cyan hover:text-black transition-all flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed h-11"
                             >
                                 {isSubmitting ? (
                                     <>
@@ -358,9 +364,9 @@ const GenericABM = ({
                             </div>
                         </div>
 
-                        <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-4 text-center">
-                            <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-neutral-400 mb-1">Registro a dar de baja</p>
-                            <p className="text-sm font-black uppercase tracking-widest text-black">
+                        <div className="bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-xl p-4 text-center">
+                            <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-neutral-400 dark:text-gray-400 mb-1">Registro a dar de baja</p>
+                            <p className="text-sm font-black uppercase tracking-widest text-black dark:text-white">
                                 {deleteTarget?.nombre || deleteTarget?.nombre_marca || deleteTarget?.nombre_proveedor || deleteTarget?.codigo || `ID: ${deleteTarget?.[idField]?.toString().split('-')[0]}`}
                             </p>
                         </div>
@@ -374,7 +380,7 @@ const GenericABM = ({
                             </button>
                             <button
                                 onClick={() => setDeleteTarget(null)}
-                                className="w-full py-3 text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-black transition-colors"
+                                className="w-full py-3 text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-black dark:hover:text-white transition-colors"
                             >
                                 Cancelar
                             </button>

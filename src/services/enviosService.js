@@ -31,5 +31,17 @@ export const enviosService = {
             id_tipo_movimiento: 1 // Tipo 1 = Ingreso/Envío
         });
         return response.data;
+    },
+
+    // Crear un envío con desglose de variantes
+    // items_variantes = [{id_variante, cantidad}, ...]
+    crearEnvioConVariantes: async (sucursalId, productoId, itemsVariantes) => {
+        const response = await api.post('/movimientos/con-variantes', {
+            id_comercio: sucursalId,
+            id_producto: productoId,
+            items_variantes: itemsVariantes,
+            id_tipo_movimiento: 1 // Tipo 1 = Ingreso/Envío
+        });
+        return response.data;
     }
 };

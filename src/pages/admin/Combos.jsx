@@ -18,14 +18,14 @@ const Combos = () => {
             header: 'Combo Promocional',
             accessor: 'nombre',
             render: (row) => (
-                <span className="font-bold text-sm text-black uppercase tracking-widest">{row.nombre}</span>
+                <span className="font-bold text-sm text-black dark:text-white uppercase tracking-widest">{row.nombre}</span>
             )
         },
         {
             header: 'Valor Final',
             accessor: 'precio_combo',
             render: (row) => (
-                <div className="flex items-start gap-1 text-black">
+                <div className="flex items-start gap-1 text-black dark:text-white">
                     <span className="text-[10px] font-bold mt-1">$</span>
                     <span className="font-sport text-2xl leading-none">
                         {(Number(row.precio_combo) || 0).toLocaleString()}
@@ -39,7 +39,7 @@ const Combos = () => {
             render: (row) => (
                 <div className={`inline-flex px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border ${
                     row.activo
-                        ? 'bg-brand-cyan text-black border-brand-cyan'
+                        ? 'bg-brand-cyan text-black dark:text-white border-brand-cyan'
                         : 'bg-transparent text-neutral-400 border-neutral-200'
                 }`}>
                     {row.activo ? 'Habilitado' : 'Agotado'}

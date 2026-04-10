@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Truck, Box, Home, PlusCircle, Info, Check, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Truck, Box, Home, PlusCircle, Info, Check, RefreshCw, AlertCircle, CheckCircle2, Package } from 'lucide-react';
 import DataTable from '../../components/ui/DataTable';
 import Modal from '../../components/ui/Modal';
 import { enviosService } from '../../services/enviosService';
@@ -25,6 +25,10 @@ const Envios = () => {
         producto_id: '',
         cantidad: 1,
     });
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [productVariants, setProductVariants] = useState([]);
+    const [variantQuantities, setVariantQuantities] = useState({});
+    const [hasVariants, setHasVariants] = useState(false);
 
     const loadData = useCallback(async () => {
         setIsLoading(true);
@@ -49,11 +53,47 @@ const Envios = () => {
     const handleAdd = () => {
         setFormData({
             sucursal_id: sucursales[0]?.id_comercio || '',
-            producto_id: productos[0]?.id_producto  || '',
+            producto_id: '',
             cantidad: 1,
         });
+        setSelectedProduct(null);
+        setProductVariants([]);
+        setVariantQuantities({});
+        setHasVariants(false);
         setFeedback(null);
         setIsModalOpen(true);
+    };
+
+    // Detectar cuando cambia el producto seleccionado
+    const handleProductChange = (productoId) => {
+        setFormData({ ...formData, producto_id: productoId });
+        
+        const product = productos.find(p => p.id_producto === productoId);
+        setSelectedProduct(product);
+        
+        // Verificar si el producto tiene variantes
+        if (product?.variantes && product.variantes.length > 0) {
+            setHasVariants(true);
+            setProductVariants(product.variantes);
+            // Inicializar cantidades en 0
+            const initialQuantities = {};
+            product.variantes.forEach(v => {
+                initialQuantities[v.id_variante] = 0;
+            });
+            setVariantQuantities(initialQuantities);
+        } else {
+            setHasVariants(false);
+            setProductVariants([]);
+            setVariantQuantities({});
+        }
+    };
+
+    // Actualizar cantidad de una variante
+    const handleVariantQuantityChange = (varianteId, cantidad) => {
+        setVariantQuantities(prev => ({
+            ...prev,
+            [varianteId]: Math.max(0, parseInt(cantidad) || 0)
+        }));
     };
 
     const handleSubmit = async (e) => {
@@ -61,14 +101,35 @@ const Envios = () => {
         setIsSubmitting(true);
         setFeedback(null);
         try {
-            await enviosService.crearEnvio(
-                formData.sucursal_id,
-                formData.producto_id,
-                formData.cantidad,
-                sucursales,
-                productos,
-            );
-            setFeedback({ type: 'ok', msg: 'Orden procesada correctamente.' });
+            if (hasVariants) {
+                // Verificar que hay al menos una variante con cantidad
+                const itemsVariantes = Object.entries(variantQuantities)
+                    .filter(([_, cantidad]) => cantidad > 0)
+                    .map(([id_variante, cantidad]) => ({ id_variante, cantidad }));
+                
+                if (itemsVariantes.length === 0) {
+                    setFeedback({ type: 'error', msg: 'Debes ingresar cantidad para al menos una variante.' });
+                    setIsSubmitting(false);
+                    return;
+                }
+
+                await enviosService.crearEnvioConVariantes(
+                    formData.sucursal_id,
+                    formData.producto_id,
+                    itemsVariantes
+                );
+                
+                const totalUnidades = itemsVariantes.reduce((sum, item) => sum + item.cantidad, 0);
+                setFeedback({ type: 'ok', msg: `Orden procesada: ${totalUnidades} unidades de ${itemsVariantes.length} variantes.` });
+            } else {
+                await enviosService.crearEnvio(
+                    formData.sucursal_id,
+                    formData.producto_id,
+                    formData.cantidad
+                );
+                setFeedback({ type: 'ok', msg: 'Orden procesada correctamente.' });
+            }
+            
             setTimeout(() => {
                 setIsModalOpen(false);
                 setFeedback(null);
@@ -140,41 +201,43 @@ const Envios = () => {
     }
 
     return (
-        <div className="space-y-8 max-w-[1400px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="space-y-3 max-w-[1400px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
 
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b-2 border-black pb-6 gap-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-black dark:border-gray-600 pb-3 gap-3">
                 <div>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-neutral-500 mb-2 block">LOGÍSTICA INTERNA</span>
-                    <h2 className="text-4xl md:text-5xl uppercase leading-none m-0 font-sport text-black">
-                        Gestión de <span className="text-brand-cyan">Stock.</span>
+                    <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-neutral-500 mb-1 block">LOGÍSTICA</span>
+                    <h2 className="text-xl md:text-2xl uppercase leading-none m-0 font-sport text-black dark:text-white">
+                        Gestión <span className="text-brand-cyan">Stock</span>
                     </h2>
-                    <p className="text-neutral-500 text-sm font-medium mt-2 m-0">{envios.length} movimientos registrados</p>
+                    <p className="text-neutral-500 text-xs font-medium mt-1 m-0">{envios.length} movimientos</p>
                 </div>
 
                 <div className="flex gap-3 w-full md:w-auto">
                     <button
                         onClick={loadData}
                         disabled={isLoading}
-                        className="flex items-center gap-2 bg-neutral-100 text-black hover:bg-neutral-200 transition-colors px-4 py-3.5 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] disabled:opacity-50"
+                        className="flex items-center gap-2 bg-neutral-100 dark:bg-gray-700 text-black dark:text-white hover:bg-neutral-200 dark:hover:bg-gray-600 transition-colors px-4 py-3.5 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] disabled:opacity-50"
                     >
                         <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
                     </button>
                     <button
                         onClick={handleAdd}
-                        className="flex-1 md:flex-none bg-brand-cyan text-black hover:bg-black hover:text-white transition-colors px-6 py-3.5 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-md"
+                        className="bg-black text-white text-[9px] font-black uppercase tracking-[0.15em] px-4 py-2 rounded-lg hover:bg-brand-cyan hover:text-black transition-colors flex items-center gap-1.5"
+                        disabled={isSubmitting}
                     >
-                        <PlusCircle size={16} /> REGISTRAR ASIGNACIÓN
+                        <PlusCircle size={12} />
+                        Nueva Orden
                     </button>
                 </div>
             </div>
 
             {isLoading ? (
-                <div className="flex flex-col items-center justify-center py-32 space-y-6">
-                    <div className="w-10 h-10 border-4 border-neutral-200 border-t-brand-cyan rounded-full animate-spin" />
-                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-neutral-400">Sincronizando Historial...</p>
+                <div className="flex flex-col items-center justify-center py-16 space-y-3">
+                    <div className="w-8 h-8 border-3 border-neutral-200 border-t-brand-cyan rounded-full animate-spin" />
+                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-neutral-400">Sincronizando...</p>
                 </div>
             ) : (
-                <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm">
+                <div className="bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
                     <DataTable
                         data={envios}
                         columns={columns}
@@ -189,7 +252,7 @@ const Envios = () => {
                 onClose={() => !isSubmitting && setIsModalOpen(false)}
                 title="Nueva Orden de Asignación"
             >
-                <form onSubmit={handleSubmit} className="space-y-6 p-2">
+                <form onSubmit={handleSubmit} className="space-y-4 p-1">
 
                     {/* Feedback banner */}
                     {feedback && (
@@ -221,7 +284,7 @@ const Envios = () => {
                                 <select
                                     required
                                     disabled={isSubmitting}
-                                    className="w-full pl-10 pr-4 py-3 bg-white border border-neutral-200 rounded-lg text-sm font-bold text-black uppercase focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan transition-all appearance-none disabled:opacity-60"
+                                    className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-sm font-bold text-black dark:text-white uppercase focus:outline-none focus:border-brand-cyan dark:focus:border-cyan-400 focus:ring-1 focus:ring-brand-cyan dark:focus:ring-cyan-400 transition-all appearance-none disabled:opacity-60"
                                     value={formData.sucursal_id}
                                     onChange={e => setFormData({ ...formData, sucursal_id: e.target.value })}
                                 >
@@ -238,9 +301,9 @@ const Envios = () => {
                                 <select
                                     required
                                     disabled={isSubmitting}
-                                    className="w-full pl-10 pr-4 py-3 bg-white border border-neutral-200 rounded-lg text-sm font-bold text-black uppercase focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan transition-all appearance-none disabled:opacity-60"
+                                    className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-sm font-bold text-black dark:text-white uppercase focus:outline-none focus:border-brand-cyan dark:focus:border-cyan-400 focus:ring-1 focus:ring-brand-cyan dark:focus:ring-cyan-400 transition-all appearance-none disabled:opacity-60"
                                     value={formData.producto_id}
-                                    onChange={e => setFormData({ ...formData, producto_id: e.target.value })}
+                                    onChange={e => handleProductChange(e.target.value)}
                                 >
                                     <option value="">Seleccione ítem...</option>
                                     {productos.map(p => <option key={p.id_producto} value={p.id_producto}>{p.nombre}</option>)}
@@ -248,20 +311,77 @@ const Envios = () => {
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Cantidad de Unidades</label>
-                            <div className="relative group">
-                                <Check size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
-                                <input
-                                    required type="number" min="1"
-                                    disabled={isSubmitting}
-                                    className="w-full pl-10 pr-4 py-3 bg-white border border-neutral-200 rounded-lg text-sm font-bold text-black focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan transition-all disabled:opacity-60"
-                                    placeholder="0"
-                                    value={formData.cantidad}
-                                    onChange={e => setFormData({ ...formData, cantidad: Number(e.target.value) })}
-                                />
+                        {/* Mostrar selector de variantes si el producto tiene variantes */}
+                        {hasVariants ? (
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black flex items-center gap-2">
+                                    <Package size={14} className="text-brand-cyan" />
+                                    Variantes a Transferir
+                                </label>
+                                <div className="bg-white dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg overflow-hidden">
+                                    <table className="w-full text-left">
+                                        <thead className="bg-neutral-50 dark:bg-gray-600">
+                                            <tr>
+                                                <th className="px-3 py-2 text-[9px] font-bold uppercase tracking-wider text-neutral-500">SKU / Atributos</th>
+                                                <th className="px-3 py-2 text-[9px] font-bold uppercase tracking-wider text-neutral-500 text-center w-28">Cantidad</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-neutral-100 dark:divide-gray-600">
+                                            {productVariants.map((variante) => {
+                                                const atributos = variante.atributos_valores || {};
+                                                const atributosText = Object.entries(atributos)
+                                                    .map(([key, val]) => `${key}: ${val}`)
+                                                    .join(' · ');
+                                                
+                                                return (
+                                                    <tr key={variante.id_variante} className="hover:bg-neutral-50 dark:hover:bg-gray-600/50">
+                                                        <td className="px-3 py-2">
+                                                            <div className="flex flex-col">
+                                                                <span className="text-[10px] font-bold text-black dark:text-white uppercase">
+                                                                    {variante.sku_variante || 'Sin SKU'}
+                                                                </span>
+                                                                <span className="text-[9px] text-neutral-500 uppercase">
+                                                                    {atributosText}
+                                                                </span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-3 py-2">
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                disabled={isSubmitting}
+                                                                className="w-full px-2 py-1.5 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-500 rounded text-center text-sm font-bold text-black dark:text-white focus:outline-none focus:border-brand-cyan transition-all disabled:opacity-60"
+                                                                placeholder="0"
+                                                                value={variantQuantities[variante.id_variante] || 0}
+                                                                onChange={e => handleVariantQuantityChange(variante.id_variante, e.target.value)}
+                                                            />
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p className="text-[9px] text-neutral-400 text-center">
+                                    Total a transferir: {Object.values(variantQuantities).reduce((a, b) => a + b, 0)} unidades
+                                </p>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Cantidad de Unidades</label>
+                                <div className="relative group">
+                                    <Check size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
+                                    <input
+                                        required type="number" min="1"
+                                        disabled={isSubmitting || hasVariants}
+                                        className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-sm font-bold text-black dark:text-white focus:outline-none focus:border-brand-cyan dark:focus:border-cyan-400 focus:ring-1 focus:ring-brand-cyan dark:focus:ring-cyan-400 transition-all disabled:opacity-60"
+                                        placeholder="0"
+                                        value={formData.cantidad}
+                                        onChange={e => setFormData({ ...formData, cantidad: Number(e.target.value) })}
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="pt-6 flex flex-col gap-3">
