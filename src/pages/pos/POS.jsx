@@ -61,6 +61,10 @@ const POS = () => {
   // Tab activo en mobile
   const [activeTab, setActiveTab] = useState('catalog'); // 'catalog' or 'cart'
   
+  // Modal de selección de variantes
+  const [showVariantesModal, setShowVariantesModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  
   const searchInputRef = useRef(null);
 
   // Load Drafts from local storage on mount
@@ -188,6 +192,56 @@ const POS = () => {
   const filteredProducts = products.filter(item =>
     getProductNombre(item).toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Manejar clic en producto - muestra variantes si las tiene
+  const handleProductClick = (item) => {
+    const stock = getProductStock(item);
+    if (stock <= 0) return;
+    
+    // Si tiene variantes con stock, mostrar modal
+    if (item.variantes && item.variantes.length > 0) {
+      const variantesConStock = item.variantes.filter(v => (v.cantidad_actual || 0) > 0);
+      if (variantesConStock.length > 0) {
+        setSelectedProduct(item);
+        setShowVariantesModal(true);
+        return;
+      }
+    }
+    
+    // Si no tiene variantes, agregar directamente
+    addToCart(item);
+  };
+
+  // Agregar variante específica al carrito
+  const addVarianteToCart = (item, variante) => {
+    const id = `${item.id_inventario}-${variante.id_variante}`;
+    const stockMax = variante.cantidad_actual || 0;
+    const precio = getProductPrecio(item);
+    const nombreVariante = variante.variante?.sku_variante || `Variante ${variante.id_variante.slice(0, 8)}`;
+    
+    const existing = cart.find(c => c.id === id);
+    if (existing) {
+      if (existing.cantidad >= stockMax) {
+        toast.error(`Máximo de stock disponible: ${stockMax} unidades`);
+        return;
+      }
+      setCart(cart.map(c => c.id === id ? { ...c, cantidad: c.cantidad + 1 } : c));
+    } else {
+      setCart([...cart, { 
+        id,
+        id_producto: item.id_producto,
+        id_variante: variante.id_variante,
+        nombre: `${getProductNombre(item)} - ${nombreVariante}`,
+        precio,
+        stock: stockMax,
+        img: getProductImg(item),
+        cantidad: 1
+      }]);
+    }
+    toast.success(`${getProductNombre(item)} (${nombreVariante}) agregado al carrito`);
+    setShowVariantesModal(false);
+    setSelectedProduct(null);
+  };
 
   const addToCart = (item) => {
     if (getProductStock(item) <= 0) return;
@@ -433,7 +487,7 @@ const POS = () => {
                 whileHover={stock > 0 ? { scale: 1.02 } : {}}
                 whileTap={stock > 0 ? { scale: 0.95 } : {}}
                 key={getProductId(item)}
-                onClick={() => addToCart(item)}
+                onClick={() => handleProductClick(item)}
                 className={`group p-3 md:p-4 bg-white dark:bg-gray-800 rounded-2xl md:rounded-3xl transition-all duration-300 relative cursor-pointer border ${
                   stock > 0 
                   ? 'border-neutral-100 dark:border-gray-700 shadow-sm hover:border-brand-cyan/20' 
@@ -781,11 +835,89 @@ const POS = () => {
         </div>
       </div>
 
+      {/* MODAL DE SELECCIÓN DE VARIANTES */}
+      {showVariantesModal && selectedProduct && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setShowVariantesModal(false)}
+        >
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-3xl p-4 md:p-6 max-w-md w-full shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-sm font-black uppercase tracking-tight text-neutral-900 dark:text-white">
+                  Seleccionar Variante
+                </h3>
+                <p className="text-xs text-neutral-500 mt-1">
+                  {getProductNombre(selectedProduct)}
+                </p>
+              </div>
+              <button 
+                onClick={() => setShowVariantesModal(false)}
+                className="text-neutral-400 hover:text-neutral-600 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {selectedProduct.variantes
+                ?.filter(v => (v.cantidad_actual || 0) > 0)
+                .map(variante => {
+                  const sku = variante.variante?.sku_variante || `Variante ${variante.id_variante.slice(0, 8)}`;
+                  const atributos = variante.variante?.atributos_valores || {};
+                  return (
+                    <button
+                      key={variante.id_variante}
+                      onClick={() => addVarianteToCart(selectedProduct, variante)}
+                      className="w-full p-3 md:p-4 bg-neutral-50 dark:bg-gray-700 hover:bg-brand-cyan/10 dark:hover:bg-brand-cyan/20 rounded-xl border border-neutral-100 dark:border-gray-600 hover:border-brand-cyan/30 transition-all text-left"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-bold text-sm text-neutral-900 dark:text-white">
+                            {sku}
+                          </p>
+                          <p className="text-xs text-neutral-500 mt-1">
+                            {Object.entries(atributos).map(([k, v]) => `${k}: ${v}`).join(' | ')}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-black text-sm text-neutral-900 dark:text-white">
+                            ${getProductPrecio(selectedProduct).toLocaleString()}
+                          </p>
+                          <p className={`text-xs font-bold ${(variante.cantidad_actual || 0) < 5 ? 'text-brand-cyan' : 'text-neutral-400'}`}>
+                            {variante.cantidad_actual} DISP.
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+            </div>
+            
+            <button
+              onClick={() => setShowVariantesModal(false)}
+              className="w-full mt-4 py-3 bg-neutral-100 dark:bg-gray-700 text-neutral-600 dark:text-neutral-300 font-bold text-xs uppercase rounded-xl hover:bg-neutral-200 dark:hover:bg-gray-600 transition-colors"
+            >
+              Cancelar
+            </button>
+          </motion.div>
+        </motion.div>
+      )}
+
       {/* MOBILE FLOATING CART BUTTON */}
       {cartItemsCount > 0 && activeTab === 'catalog' && (
         <button 
           onClick={() => setActiveTab('cart')}
-          className="xl:hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-brand-cyan text-black px-6 py-4 rounded-2xl shadow-[0_8px_32px_rgba(0,210,255,0.4)] flex items-center gap-4 animate-bounce-slow z-50 animate-in slide-in-from-bottom-5 duration-500"
+          className="xl:hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-brand-cyan text-black px-6 py-4 rounded-2xl shadow-[0_8px_32px_rgba(0,210,255,0.4)] flex items-center gap-4 animate-bounce-slow z-40 animate-in slide-in-from-bottom-5 duration-500"
         >
           <Receipt size={20} />
           <span className="font-black text-xs uppercase tracking-widest">VER TICKET ({cartItemsCount})</span>

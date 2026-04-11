@@ -42,12 +42,26 @@ const DataTable = ({
         setSortConfig({ key, direction });
     };
 
+    // Función para buscar recursivamente en objetos anidados
+    const searchInValue = (val, term) => {
+        if (val === null || val === undefined) return false;
+        if (typeof val === 'string' || typeof val === 'number' || typeof val === 'boolean') {
+            return String(val).toLowerCase().includes(term);
+        }
+        if (Array.isArray(val)) {
+            return val.some(item => searchInValue(item, term));
+        }
+        if (typeof val === 'object') {
+            return Object.values(val).some(v => searchInValue(v, term));
+        }
+        return false;
+    };
+
     const processedData = React.useMemo(() => {
         let filtered = data.filter(item => {
             if (!searchTerm) return true;
-            return Object.values(item).some(val => 
-                String(val).toLowerCase().includes(searchTerm.toLowerCase())
-            );
+            const term = searchTerm.toLowerCase();
+            return searchInValue(item, term);
         });
 
         if (sortConfig.key) {

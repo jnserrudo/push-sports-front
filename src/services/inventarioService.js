@@ -18,12 +18,14 @@ export const inventarioService = {
                         sucursal_nombre: comercio.nombre
                     }));
                     allInventarios.push(...items);
-                } catch {
-                    // Si un comercio falla, continuar con los demás
+                } catch (err) {
+                    console.error(`Error cargando inventario para comercio ${comercio.id_comercio}:`, err);
                 }
             }
+            console.log('Total inventarios cargados:', allInventarios.length);
             return allInventarios;
-        } catch {
+        } catch (err) {
+            console.error('Error en getAll inventarios:', err);
             return [];
         }
     },
