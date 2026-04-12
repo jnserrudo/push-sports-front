@@ -9,12 +9,15 @@ const getInitialState = () => {
     
     if (savedUser && savedToken) {
         const user = JSON.parse(savedUser);
+        const rawSucId = user.id_comercio_asignado || user.sucursal_id;
+        const sucursalId = typeof rawSucId === 'object' ? rawSucId?.id_comercio : rawSucId;
+
         return {
             user,
             token: savedToken,
             isAuthenticated: true,
-            role: user.rol || user.id_rol, // Handle both name or id if necessary
-            sucursalId: user.id_comercio_asignado || user.sucursal_id
+            role: user.id_rol,
+            sucursalId: String(sucursalId)
         };
     }
     
@@ -36,8 +39,8 @@ export const useAuthStore = create((set) => ({
     set({
       user: userData,
       isAuthenticated: true,
-      role: userData.rol,
-      sucursalId: userData.id_comercio_asignado || userData.sucursal_id,
+      role: userData.id_rol,
+      sucursalId: typeof userData.id_comercio_asignado === 'object' ? userData.id_comercio_asignado?.id_comercio : (userData.id_comercio_asignado || userData.id_comercio || userData.sucursal_id),
       token: token,
     });
   },

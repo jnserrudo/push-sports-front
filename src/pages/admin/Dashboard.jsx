@@ -116,7 +116,7 @@ const Dashboard = () => {
       const [productos, usuarios, todosMovimientos] = await Promise.all([
         productosService.getAll().catch(() => []),
         usuariosService.getAll().catch(() => []),
-        enviosService.getAll().catch(() => []),
+        enviosService.getAll().then(res => res.data || []).catch(() => []),
       ]);
 
       if (!isSuperAdmin && sucursalId) {

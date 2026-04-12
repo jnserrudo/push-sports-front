@@ -34,7 +34,7 @@ const Envios = () => {
         setIsLoading(true);
         try {
             const [envData, sucData, prodData] = await Promise.all([
-                enviosService.getAll(),
+                enviosService.getAll().then(res => res.data || []),
                 sucursalesService.getAll(),
                 productosService.getAll(),
             ]);

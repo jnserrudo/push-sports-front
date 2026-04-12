@@ -1,23 +1,28 @@
 import api from '../api/api';
 
 export const enviosService = {
-    // Obtener todos los movimientos de stock (que son los "envíos" reales)
-    // Acepta un sucursalId opcional. Si se envía, restringe la búsqueda a esa sucursal.
-    getAll: async (sucursalId = null) => {
-        const endpoint = sucursalId ? `/movimientos/comercio/${sucursalId}` : '/movimientos';
+    // Obtener todos los movimientos de stock con filtros y paginación
+    getAll: async (params = {}) => {
+        const queryParams = new URLSearchParams();
+        
+        if (params.desde) queryParams.append('desde', params.desde);
+        if (params.hasta) queryParams.append('hasta', params.hasta);
+        if (params.id_usuario) queryParams.append('id_usuario', params.id_usuario);
+        if (params.id_tipo_movimiento) queryParams.append('id_tipo_movimiento', params.id_tipo_movimiento);
+        if (params.id_producto) queryParams.append('id_producto', params.id_producto);
+        if (params.busqueda) queryParams.append('busqueda', params.busqueda);
+        if (params.limit) queryParams.append('limit', params.limit);
+        if (params.offset) queryParams.append('offset', params.offset);
+
+        const rawSucId = params.sucursalId;
+        const sucursalId = typeof rawSucId === 'object' ? rawSucId?.id_comercio : rawSucId;
+
+        const endpoint = sucursalId 
+            ? `/movimientos/comercio/${sucursalId}${queryParams.toString() ? '?' + queryParams.toString() : ''}` 
+            : `/movimientos${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+        
         const response = await api.get(endpoint);
-        // Mapear los datos del backend al formato que espera el frontend
-        return (response.data || []).map(mov => ({
-            id: mov.id_movimiento,
-            sucursal_id: mov.id_comercio,
-            sucursal_nombre: mov.comercio?.nombre || 'N/A',
-            producto_id: mov.id_producto,
-            producto_nombre: mov.producto?.nombre || 'N/A',
-            cantidad: Math.abs(mov.cantidad_cambio),
-            fecha: mov.fecha_hora,
-            tipo: mov.tipo_movimiento?.nombre_movimiento || 'MOVIMIENTO',
-            usuario: mov.usuario?.nombre || 'Sistema'
-        }));
+        return response.data;
     },
 
     // Crear un envío (movimiento de stock tipo ingreso)
@@ -36,8 +41,9 @@ export const enviosService = {
     // Crear un envío con desglose de variantes
     // items_variantes = [{id_variante, cantidad}, ...]
     crearEnvioConVariantes: async (sucursalId, productoId, itemsVariantes) => {
+        const cleanSid = typeof sucursalId === 'object' ? sucursalId?.id_comercio : sucursalId;
         const response = await api.post('/movimientos/con-variantes', {
-            id_comercio: sucursalId,
+            id_comercio: cleanSid,
             id_producto: productoId,
             items_variantes: itemsVariantes,
             id_tipo_movimiento: 1 // Tipo 1 = Ingreso/Envío
