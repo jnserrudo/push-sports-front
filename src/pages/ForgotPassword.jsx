@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
-import api from '../api/api';
+import { authService } from '../services/authService';
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState('');
@@ -14,10 +14,10 @@ const ForgotPassword = () => {
         setIsLoading(true);
 
         try {
-            const response = await api.post('/forgot-password', { email });
+            const data = await authService.forgotPassword(email);
             setFeedback({ 
                 type: 'success', 
-                message: response.data.message || 'Si el email existe, recibirás instrucciones para recuperar tu contraseña'
+                message: data.message || 'Si el email existe, recibirás instrucciones para recuperar tu contraseña'
             });
             setEmail('');
         } catch (error) {

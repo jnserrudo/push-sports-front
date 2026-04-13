@@ -2,18 +2,27 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../services/authService';
 import { 
-  CheckCircle2, 
-  User, 
   Mail, 
   Lock, 
+  User, 
+  UserPlus, 
+  ArrowLeft, 
+  ArrowRight, 
   ShieldCheck, 
-  ChevronRight,
-  ArrowLeft
+  Timer, 
+  RefreshCw, 
+  AlertCircle, 
+  Phone, 
+  MapPin,
+  CheckCircle2,
+  ChevronRight
 } from 'lucide-react';
 import { toast } from '../store/toastStore';
+import Turnstile from 'react-turnstile';
+import OTPVerification from '../components/auth/OTPVerification';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Register = () => {
-    // ESTADO ACTUALIZADO: Añadido confirmPassword
     const [formData, setFormData] = useState({
         nombre: '',
         apellido: '',
@@ -24,6 +33,8 @@ const Register = () => {
     });
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [captchaToken, setCaptchaToken] = useState(null);
+    const [isVerifying, setIsVerifying] = useState(false);
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -33,44 +44,67 @@ const Register = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        // VALIDACIÓN DE CONTRASEÑAS
         if (formData.password !== formData.confirmPassword) {
             toast.error('Las contraseñas no coinciden. Verifique e intente nuevamente.');
             return;
         }
 
+        if (!captchaToken) {
+            toast.error('Por favor, completa la verificación de seguridad.');
+            return;
+        }
+
         setLoading(true);
         try {
-            // Quitamos confirmPassword antes de enviar al backend
             const { confirmPassword, ...dataToSend } = formData;
-            await authService.register(dataToSend);
+            await authService.register({ ...dataToSend, captchaToken });
+
             setSuccess(true);
+            toast.success('Solicitud enviada. Verifica tu email.');
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Error al procesar la solicitud');
+            toast.error(error.response?.data?.error || 'Error al procesar la solicitud');
         } finally {
             setLoading(false);
         }
     };
 
+    const handleVerifyOTP = async (otp) => {
+        setIsVerifying(true);
+        try {
+            await authService.verifyOTP({ email: formData.email, otp });
+
+            toast.success('Cuenta verificada. Espera aprobación administrativa.');
+            navigate('/login');
+        } catch (error) {
+            toast.error(error.response?.data?.error || 'Error al verificar OTP');
+        } finally {
+            setIsVerifying(false);
+        }
+    };
+
+    const handleResendOTP = async () => {
+        try {
+            await authService.resendOTP(formData.email);
+            toast.success('Código reenviado con éxito.');
+        } catch (error) {
+            toast.error(error.response?.data?.error || 'Error al reenviar código');
+        }
+    };
+
     if (success) {
         return (
-            <div className="min-h-screen bg-neutral-100 flex items-center justify-center p-4 relative font-sans">
-                <style>{`@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap'); .font-sport { font-family: 'Oswald', sans-serif; letter-spacing: -0.02em; }`}</style>
-                <div className="max-w-md w-full bg-white rounded-xl p-10 text-center shadow-2xl relative z-10 animate-in zoom-in-95 duration-500 border border-neutral-200">
-                    <div className="w-16 h-16 bg-black text-brand-cyan rounded-xl flex items-center justify-center mx-auto mb-6 shadow-sm">
-                        <CheckCircle2 size={32} />
-                    </div>
-                    <h2 className="text-3xl font-sport mb-2 text-black uppercase leading-none">Solicitud <br/> Recibida.</h2>
-                    <p className="text-neutral-500 font-medium text-sm mb-8 leading-relaxed">
-                        Su perfil de operador ha sido enviado.<br/>
-                        <span className="text-brand-cyan font-bold uppercase tracking-widest text-[10px] block mt-3 p-2 bg-neutral-50 rounded-md border border-neutral-100">Requiere Autorización Administrativa</span>
-                    </p>
-                    <button 
-                        onClick={() => navigate('/login')}
-                        className="w-full bg-black text-white py-4 rounded-lg text-[13px] font-sport uppercase tracking-widest hover:bg-brand-cyan hover:text-black transition-colors flex items-center justify-center gap-2 group shadow-lg"
-                    >
-                        VOLVER AL LOGIN <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                    </button>
+            <div className="min-h-screen bg-[#070707] flex items-center justify-center p-4 relative font-sans">
+                <div className="absolute inset-0 z-0 pointer-events-none">
+                    <img src="/primera.jpeg" className="w-full h-full object-cover opacity-10 grayscale" alt="Fondo" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black"></div>
+                </div>
+                <div className="relative z-10 w-full max-w-md">
+                   <OTPVerification 
+                    email={formData.email}
+                    onVerify={handleVerifyOTP}
+                    onResend={handleResendOTP}
+                    isLoading={isVerifying}
+                   />
                 </div>
             </div>
         );
@@ -212,6 +246,15 @@ const Register = () => {
                         <p className="text-[9px] font-bold text-neutral-500 leading-snug uppercase tracking-widest m-0">
                             Requiere <span className="text-black">Validación de Supervisor</span> para activar permisos.
                         </p>
+                    </div>
+
+                    {/* Turnstile Integration */}
+                    <div className="flex justify-center py-2 bg-neutral-50/50 rounded-lg border border-neutral-100">
+                         <Turnstile 
+                            sitekey={import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'} 
+                            onVerify={(token) => setCaptchaToken(token)}
+                            theme="light"
+                        />
                     </div>
 
                     <div className="flex flex-col gap-3 pt-3">

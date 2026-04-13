@@ -62,7 +62,7 @@ const Ofertas = () => {
 
     return (
         <GenericABM
-            title="Ofertas Relámpago"
+            title="Gestión de Ofertas"
             description="Configuración de campañas promocionales temporales aplicables a artículos seleccionados, activando descuentos por fecha de vigencia."
             icon={Ticket}
             service={service}

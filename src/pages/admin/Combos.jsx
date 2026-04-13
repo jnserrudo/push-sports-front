@@ -57,7 +57,7 @@ const Combos = () => {
 
     return (
         <GenericABM
-            title="Packs & Combos"
+            title="Packs y Combos"
             description="Agrupaciones especiales de productos con un precio final conveniente para fomentar compras de mayor volumen o liquidar stock."
             icon={PackagePlus}
             service={service}

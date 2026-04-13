@@ -42,10 +42,19 @@ const DashboardLayout = () => {
   const notificationsRef = useRef(null);
   const profileTimeout = useRef(null);
   const notificationsTimeout = useRef(null);
+  const mainContentRef = useRef(null);
   const [notifications, setNotifications] = useState([]);
   const [loadingNotifs, setLoadingNotifs] = useState(false);
 
   const unreadCount = (Array.isArray(notifications) ? notifications : []).filter(n => !n.leido).length;
+
+  // Resetea el scroll al cambiar de ruta
+  useEffect(() => {
+    if (mainContentRef.current) {
+        mainContentRef.current.scrollTop = 0;
+    }
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   const handleProfileEnter = () => {
     if (profileTimeout.current) clearTimeout(profileTimeout.current);
@@ -106,18 +115,18 @@ const DashboardLayout = () => {
     { label: 'Catálogo Base',     icon: Package,         path: '/dashboard/productos',      roles: [1] },
     { label: 'Categorías',        icon: Component,       path: '/dashboard/categorias',     roles: [1] },
     { label: 'Marcas',            icon: Tag,             path: '/dashboard/marcas',         roles: [1] },
-    { label: 'Stock por Sede',    icon: Box,             path: '/dashboard/inventario',     roles: [1, 2, 3] },
-    { label: 'Operadores',        icon: Users,           path: '/dashboard/usuarios',       roles: [1] },
+    { label: 'Control de Inventario', icon: Box,             path: '/dashboard/inventario',     roles: [1, 2, 3] },
+    { label: 'Gestión de Personal',   icon: Users,           path: '/dashboard/usuarios',       roles: [1] },
     { label: 'Sucursales',        icon: MapPin,          path: '/dashboard/sucursales',     roles: [1] },
     { label: 'Tipos de Sede',     icon: Wallet,          path: '/dashboard/tipos-comercio', roles: [1] },
-    { label: 'Ingresar Stock',    icon: Truck,           path: '/dashboard/envios',         roles: [1] },
-    { label: 'Movimientos',       icon: Activity,        path: '/dashboard/movimientos',    roles: [1, 2] },
+    { label: 'Gestión de Ingresos',   icon: Truck,           path: '/dashboard/envios',         roles: [1] },
+    { label: 'Historial de Movimientos', icon: Activity,        path: '/dashboard/movimientos',    roles: [1, 2] },
     { label: 'Reportería',        icon: ClipboardList,   path: '/dashboard/reporteria',     roles: [1] },
-    { label: 'Devoluciones',      icon: RotateCcw,       path: '/dashboard/devoluciones',   roles: [1, 2, 3] },
-    { label: 'Liquidaciones',     icon: CreditCard,      path: '/dashboard/liquidaciones',  roles: [1, 2] },
-    { label: 'Descuentos',        icon: Ticket,          path: '/dashboard/descuentos',     roles: [1] },
-    { label: 'Combos',            icon: Package,         path: '/dashboard/combos',         roles: [1] },
-    { label: 'Ofertas',           icon: Ticket,          path: '/dashboard/ofertas',        roles: [1] },
+    { label: 'Gestión de Devoluciones', icon: RotateCcw,       path: '/dashboard/devoluciones',   roles: [1, 2, 3] },
+    { label: 'Cierres de Caja',   icon: CreditCard,      path: '/dashboard/liquidaciones',  roles: [1, 2] },
+    { label: 'Gestión de Descuentos', icon: Ticket,          path: '/dashboard/descuentos',     roles: [1] },
+    { label: 'Packs y Combos',    icon: Package,         path: '/dashboard/combos',         roles: [1] },
+    { label: 'Gestión de Ofertas', icon: Ticket,          path: '/dashboard/ofertas',        roles: [1] },
     { label: 'Proveedores',       icon: Truck,           path: '/dashboard/proveedores',    roles: [1] },
     { label: 'Auditoría',         icon: Activity,        path: '/dashboard/auditoria',      roles: [1] },
   ];
@@ -193,7 +202,7 @@ const DashboardLayout = () => {
             {filteredMenu.map((item) => {
               const isActive = item.path === '/dashboard'
                 ? location.pathname === item.path
-                : location.pathname.startsWith(item.path);
+                : location.pathname === item.path || location.pathname.startsWith(item.path + '/');
               return (
                 <li key={item.path}>
                   <Link
@@ -202,9 +211,7 @@ const DashboardLayout = () => {
                     className={`flex items-center rounded-xl font-black text-[10px] md:text-[11px] uppercase tracking-[0.2em] transition-all group ${
                       isActive 
                         ? 'bg-neutral-900 dark:bg-cyan-600 text-brand-cyan dark:text-white shadow-md border-b-2 border-brand-cyan dark:border-cyan-400' 
-                        : item.path === '/dashboard/usuarios' 
-                          ? 'text-neutral-900 dark:text-gray-200 bg-brand-cyan/10 dark:bg-cyan-900/20 border border-brand-cyan/20 dark:border-cyan-700/30 hover:bg-brand-cyan dark:hover:bg-cyan-700 hover:text-black dark:hover:text-white'
-                          : 'text-neutral-700 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-gray-700 hover:shadow-sm'
+                        : 'text-neutral-700 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-gray-700 hover:shadow-sm'
                     } ${
                       isSidebarOpen 
                         ? 'gap-2 md:gap-3 px-2.5 md:px-3 py-1.5 md:py-2' 
@@ -212,9 +219,9 @@ const DashboardLayout = () => {
                     }`}
                   >
                     <div className={`w-5 h-5 md:w-6 md:h-6 rounded-md flex-shrink-0 flex items-center justify-center transition-all ${
-                        isActive ? 'text-brand-cyan dark:text-white' : item.path === '/dashboard/usuarios' ? 'bg-neutral-900 dark:bg-gray-700 text-white shadow-lg group-hover:bg-black dark:group-hover:bg-gray-600 group-hover:text-brand-cyan dark:group-hover:text-cyan-400' : 'bg-neutral-200 dark:bg-gray-600 text-neutral-600 dark:text-gray-300 group-hover:bg-black dark:group-hover:bg-gray-500 group-hover:text-white'
+                        isActive ? 'text-brand-cyan dark:text-white' : 'bg-neutral-200 dark:bg-gray-600 text-neutral-600 dark:text-gray-300 group-hover:bg-black dark:group-hover:bg-gray-500 group-hover:text-white'
                     }`}>
-                        <item.icon size={12} md:size={14} />
+                        <item.icon size={12} className="md:w-3.5 md:h-3.5" />
                     </div>
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap text-[9px] md:text-[10px] ${isSidebarOpen ? 'w-auto opacity-100' : 'md:w-0 md:opacity-0'}`}>
                         {item.label}
@@ -286,8 +293,8 @@ const DashboardLayout = () => {
                 <span className="text-lg md:text-xl font-black tracking-tighter text-neutral-900 dark:text-white leading-none">
                     {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
-                <span className="text-[7px] md:text-[8px] font-black text-brand-cyan dark:text-cyan-400 uppercase tracking-[0.3em]">EN VIVO</span>
-            </div>
+{/*                 <span className="text-[7px] md:text-[8px] font-black text-brand-cyan dark:text-cyan-400 uppercase tracking-[0.3em]">EN VIVO</span>
+ */}            </div>
             
             <div className="flex items-center gap-2">
                 <ThemeToggle />
@@ -384,7 +391,10 @@ const DashboardLayout = () => {
         </header>
 
         {/* PAGE CONTENT */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 lg:p-14 bg-neutral-50 dark:bg-gray-900 custom-scrollbar relative overflow-x-hidden">
+        <main 
+            ref={mainContentRef}
+            className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 lg:p-14 bg-neutral-50 dark:bg-gray-900 custom-scrollbar relative overflow-x-hidden"
+        >
             <div className="max-w-7xl mx-auto space-y-4">
                 {isAuthorized ? (
                   <AnimatePresence mode="wait">

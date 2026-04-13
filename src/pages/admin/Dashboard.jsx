@@ -8,12 +8,8 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { sucursalesService } from '../../services/sucursalesService';
-import { productosService } from '../../services/productosService';
-import { usuariosService } from '../../services/genericServices';
-import { auditoriaService } from '../../services/auditoriaService';
-import { inventarioService } from '../../services/inventarioService';
-import { enviosService } from '../../services/enviosService';
-import { devolucionesService } from '../../services/devolucionesService';
+import { dashboardService } from '../../services/dashboardService';
+
 import DataTable from '../../components/ui/DataTable';
 import api from '../../api/api';
 
@@ -111,86 +107,31 @@ const Dashboard = () => {
       const sucursales = await sucursalesService.getAll().catch(() => []);
       if (isSuperAdmin) setSucursalesOptions(sucursales);
 
-      const filterId = isSuperAdmin ? (globalSucursalId === 'ALL' ? null : Number(globalSucursalId)) : sucursalId;
+      const filterId = isSuperAdmin ? (globalSucursalId === 'ALL' ? null : globalSucursalId) : sucursalId;
 
-      const [productos, usuarios, todosMovimientos] = await Promise.all([
-        productosService.getAll().catch(() => []),
-        usuariosService.getAll().catch(() => []),
-        enviosService.getAll().then(res => res.data || []).catch(() => []),
-      ]);
+      const dashboardData = await dashboardService.getStats(filterId);
 
       if (!isSuperAdmin && sucursalId) {
          setCurrentSucursal(sucursales.find(s => s.id_comercio === sucursalId));
       }
 
-      const movimientosFiltrados = filterId 
-        ? todosMovimientos.filter(m => m.sucursal_id === filterId || m.id_comercio === filterId)
-        : todosMovimientos;
-
-      const criticos = productos.filter(p => (p.stock_total || 0) <= (p.stock_minimo || 5) && p.activo);
-
-      const sucursalesCalculo = filterId ? sucursales.filter(s => s.id_comercio === filterId) : sucursales;
-      const totalCaja = sucursalesCalculo.reduce((acc, s) => acc + Number(s.saldo_acumulado_mili || 0), 0);
-
-      // Top 3 deudas de sucursales (para el widget de Liquidaciones en vivo)
-      const sucursalesDeuda = [...sucursalesCalculo]
-        .sort((a, b) => Number(b.saldo_acumulado_mili || 0) - Number(a.saldo_acumulado_mili || 0))
-        .slice(0, 3);
-
-      // ── Ventas reales de los últimos 7 días ──
-      let chartData = [];
-      try {
-        const ventasRes = await api.get('/ventas');
-        const todasVentas = ventasRes.data || [];
-
-        // Filtrar por comercio si aplica
-        const ventasFiltradas = filterId
-          ? todasVentas.filter(v => v.id_comercio === filterId)
-          : todasVentas;
-
-        // Agrupar por día de la semana (últimos 7 días)
-        const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-        const saldoPorDia = {};
-        dias.forEach(d => { saldoPorDia[d] = 0; });
-
-        const ahora = new Date();
-        const haceUnaSemana = new Date(ahora.getTime() - 7 * 24 * 60 * 60 * 1000);
-
-        ventasFiltradas.forEach(v => {
-          const fecha = new Date(v.fecha_hora);
-          if (fecha >= haceUnaSemana) {
-            const diaNombre = dias[fecha.getDay()];
-            saldoPorDia[diaNombre] += parseFloat(v.total_venta || 0);
-          }
-        });
-
-        // Ordenar desde hoy hacia atrás
-        const hoy = ahora.getDay();
-        chartData = [];
-        for (let i = 6; i >= 0; i--) {
-          const diaIdx = (hoy - i + 7) % 7;
-          chartData.push({ name: dias[diaIdx], ventas: Math.round(saldoPorDia[dias[diaIdx]]) });
-        }
-      } catch {
-        chartData = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].map(d => ({ name: d, ventas: 0 }));
-      }
-
       setStats({
-        ventas: totalCaja > 0 ? `$${(totalCaja / 1000).toLocaleString('es-AR', { maximumFractionDigits: 0 })}K` : '$0',
-        usuarios: usuarios.length,
-        productos: productos.filter(p => p.activo).length,
-        stockCritico: criticos.slice(0, 3),
-        movimientos: movimientosFiltrados,
-        sucursalesCount: sucursales.length,
-        chartData,
-        sucursalesDeuda
+        ventas: dashboardData.metrics.totalCaja,
+        usuarios: dashboardData.metrics.usuariosCount,
+        productos: dashboardData.metrics.productosCount,
+        stockCritico: dashboardData.stockCritico || [],
+        movimientos: [], // Optimizamos eliminando fetch redundante de movimientos
+        chartData: dashboardData.chartData || [],
+        sucursalesDeuda: dashboardData.sucursalesDeuda || []
       });
-    } catch (e) {
-      console.error(e);
+
+    } catch (error) {
+      console.error('Error loading dashboard stats:', error);
     } finally {
       setLoading(false);
     }
   };
+
 
   useEffect(() => { loadStats(); }, [isSuperAdmin, sucursalId, globalSucursalId]);
 
@@ -235,9 +176,9 @@ const Dashboard = () => {
                    onChange={(e) => setGlobalSucursalId(e.target.value)}
                    className="bg-transparent text-white text-[9px] font-black uppercase tracking-widest outline-none cursor-pointer flex-1"
                  >
-                   <option value="ALL">VISIÓN GLOBAL</option>
+                   <option value="ALL" className="bg-neutral-900 text-white font-bold">VISIÓN GLOBAL</option>
                    {sucursalesOptions.map(suc => (
-                     <option key={suc.id_comercio} value={suc.id_comercio}>{suc.nombre}</option>
+                     <option key={suc.id_comercio} value={suc.id_comercio} className="bg-neutral-900 text-white font-bold">{suc.nombre}</option>
                    ))}
                  </select>
               </div>
@@ -266,7 +207,7 @@ const Dashboard = () => {
                </div>
           </div>
           
-          <div className="h-48 md:h-60 w-full">
+          <div className="h-48 md:h-60 w-full min-h-[200px] relative">
               {loading ? (
                   <div className="w-full h-full bg-neutral-50 rounded-xl animate-pulse flex items-center justify-center">
                       <span className="text-xs font-black uppercase tracking-widest text-neutral-300">Generando Gráfica...</span>
@@ -282,7 +223,13 @@ const Dashboard = () => {
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e5e5" />
                       <XAxis dataKey="name" tick={{fontSize: 10, fill: '#a3a3a3', fontWeight: 900}} tickLine={false} axisLine={false} />
-                      <YAxis tick={{fontSize: 10, fill: '#a3a3a3', fontWeight: 900}} tickLine={false} axisLine={false} tickFormatter={(val) => `$${val/1000}k`} />
+                      <YAxis 
+                        tick={{fontSize: 10, fill: '#a3a3a3', fontWeight: 900}} 
+                        tickLine={false} 
+                        axisLine={false} 
+                        tickFormatter={(val) => val >= 1000 ? `$${(val/1000).toFixed(1)}k` : `$${val}`} 
+                        domain={[0, 'auto']}
+                      />
                       <RechartsTooltip content={<CustomTooltip />} />
                       <Area type="monotone" dataKey="ventas" stroke="#00c2ff" strokeWidth={4} fillOpacity={1} fill="url(#colorVentas)" />
                     </AreaChart>

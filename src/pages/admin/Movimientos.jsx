@@ -161,33 +161,41 @@ const Movimientos = () => {
     return (
         <div className="space-y-4 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-black dark:border-gray-600 pb-4 gap-4">
-                <div>
+            {/* Header */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-black dark:border-gray-600 pb-4 gap-4 flex-wrap">
+                <div className="flex-1 min-w-0 pr-0 md:pr-4">
                     <div className="flex items-center gap-2 mb-1">
                         <Activity size={14} className="text-brand-cyan" />
                         <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">TRAZABILIDAD</span>
                     </div>
-                    <h2 className="text-2xl md:text-3xl uppercase leading-none m-0 font-sport text-black dark:text-white">
-                        Movimientos <span className="text-brand-cyan">Stock</span>
+                    <h2 className="text-xl md:text-2xl uppercase leading-none m-0 font-sport text-black dark:text-white">
+                        Historial de Movimientos
                     </h2>
-                    <p className="text-neutral-500 text-sm font-medium mt-2">
-                        {total.toLocaleString('es-AR')} movimientos registrados
-                        {Object.keys(filtrosAplicados).length > 0 && (
-                            <span className="ml-2 text-brand-cyan font-bold">• Filtros activos</span>
-                        )}
+                    <p className="text-neutral-500 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed max-w-xl mt-2 whitespace-normal">
+                        Seguimiento logístico detallado. Historial completo de ingresos, egresos, ajustes de inventario y envíos entre sedes.
                     </p>
+                    <div className="flex items-center gap-2 mt-2">
+                        <span className="text-[10px] font-black uppercase text-brand-cyan bg-brand-cyan/10 px-2 py-0.5 rounded">
+                            {total.toLocaleString('es-AR')} MOVIMIENTOS
+                        </span>
+                        {Object.keys(filtrosAplicados).length > 0 && (
+                            <span className="text-[10px] font-black uppercase text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded animate-pulse">
+                                Filtros activos
+                            </span>
+                        )}
+                    </div>
                 </div>
 
-                <div className="flex gap-2 w-full md:w-auto flex-wrap">
+                <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto mt-2 md:mt-0 flex-shrink-0">
                     <button
                         onClick={() => setShowFilters(!showFilters)}
-                        className={`flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-[0.15em] transition-all ${
+                        className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-[10px] font-black uppercase tracking-[0.15em] transition-all shadow-sm active:scale-95 ${
                             showFilters 
-                                ? 'bg-brand-cyan text-black' 
-                                : 'bg-neutral-100 dark:bg-gray-700 text-black dark:text-white hover:bg-neutral-200'
+                                ? 'bg-brand-cyan text-black shadow-md' 
+                                : 'bg-neutral-100 dark:bg-gray-700 text-black dark:text-white hover:bg-neutral-200 hover:shadow-md'
                         }`}
                     >
-                        <Filter size={14} />
+                        <Filter size={16} />
                         Filtros
                         {Object.keys(filtrosAplicados).length > 0 && (
                             <span className="ml-1 w-5 h-5 rounded-full bg-black text-white dark:bg-white dark:text-black flex items-center justify-center text-[9px]">
@@ -198,17 +206,17 @@ const Movimientos = () => {
                     <button
                         onClick={loadData}
                         disabled={isLoading}
-                        className="flex items-center gap-1.5 bg-neutral-100 dark:bg-gray-700 text-black dark:text-white hover:bg-neutral-200 dark:hover:bg-gray-600 transition-colors px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-[0.15em] disabled:opacity-50"
+                        className="w-full sm:w-auto flex items-center justify-center gap-2 bg-neutral-100 dark:bg-gray-700 text-black dark:text-white hover:bg-neutral-200 dark:hover:bg-gray-600 transition-all px-6 py-3 rounded-lg text-[10px] font-black uppercase tracking-[0.15em] shadow-sm disabled:opacity-50 active:scale-95"
                     >
-                        <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
+                        <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
                         ACTUALIZAR
                     </button>
                     <button
                         onClick={handleExport}
                         disabled={!movimientos.length}
-                        className="flex items-center gap-1.5 bg-black text-white hover:bg-brand-cyan hover:text-black dark:text-white transition-colors px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-[0.15em] shadow-sm disabled:opacity-40"
+                        className="w-full sm:w-auto flex items-center justify-center gap-2 bg-black text-white hover:bg-brand-cyan hover:text-black dark:text-white transition-all px-6 py-3 rounded-lg text-[10px] font-black uppercase tracking-[0.15em] shadow-sm disabled:opacity-40 active:scale-95"
                     >
-                        <Download size={14} /> EXPORTAR
+                        <Download size={16} /> EXPORTAR
                     </button>
                 </div>
             </div>
@@ -317,7 +325,7 @@ const Movimientos = () => {
             {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-20 space-y-4">
                     <div className="w-12 h-12 border-4 border-neutral-200 border-t-brand-cyan rounded-full animate-spin" />
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-400">Sincronizando movimientos...</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-400">Recopilando historial de movimientos...</p>
                 </div>
             ) : movimientos.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center">

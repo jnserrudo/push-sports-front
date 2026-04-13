@@ -34,7 +34,12 @@ const Envios = () => {
         setIsLoading(true);
         try {
             const [envData, sucData, prodData] = await Promise.all([
-                enviosService.getAll().then(res => res.data || []),
+                enviosService.getAll().then(res => {
+                    const data = res.data || [];
+                    // Sanitización: Filtrar registros que no tienen los campos básicos necesarios
+                    // Esto evita mostrar la fila #UNDEFINED que reportó el usuario.
+                    return data.filter(item => item && (item.id || item.fecha || item.producto_nombre));
+                }),
                 sucursalesService.getAll(),
                 productosService.getAll(),
             ]);
@@ -205,11 +210,12 @@ const Envios = () => {
 
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-black dark:border-gray-600 pb-3 gap-3">
                 <div>
-                    <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-neutral-500 mb-1 block">LOGÍSTICA</span>
                     <h2 className="text-xl md:text-2xl uppercase leading-none m-0 font-sport text-black dark:text-white">
-                        Gestión <span className="text-brand-cyan">Stock</span>
+                        Gestión de <span className="text-brand-cyan">Ingresos</span>
                     </h2>
-                    <p className="text-neutral-500 text-xs font-medium mt-1 m-0">{envios.length} movimientos</p>
+                    <p className="text-neutral-500 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed max-w-xl mt-2 whitespace-normal line-clamp-3 md:line-clamp-none">
+                        Módulo de logística para la carga de mercadería nueva. Los registros aquí realizados incrementan el stock disponible en las sedes.
+                    </p>
                 </div>
 
                 <div className="flex gap-3 w-full md:w-auto">
@@ -222,35 +228,50 @@ const Envios = () => {
                     </button>
                     <button
                         onClick={handleAdd}
-                        className="bg-black text-white text-[9px] font-black uppercase tracking-[0.15em] px-4 py-2 rounded-lg hover:bg-brand-cyan hover:text-black transition-colors flex items-center gap-1.5"
+                        className="bg-black text-white text-[9px] font-black uppercase tracking-[0.15em] px-4 py-2 rounded-lg hover:bg-brand-cyan hover:text-black transition-colors flex items-center gap-1.5 shadow-lg shadow-brand-cyan/10"
                         disabled={isSubmitting}
                     >
                         <PlusCircle size={12} />
-                        Nueva Orden
+                        Cargar Mercadería
                     </button>
                 </div>
+            </div>
+
+            <div className="bg-brand-cyan/5 border border-brand-cyan/20 p-4 rounded-xl flex items-start gap-4 mb-2">
+                <Info size={18} className="text-brand-cyan shrink-0 mt-0.5" />
+                <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 dark:text-cyan-200 leading-relaxed m-0">
+                    <span className="text-black dark:text-white font-black">Historial de Registros:</span> Debajo puedes auditar los ingresos de stock recientes. Para ver el stock acumulado total por producto, dirígete a <span className="text-brand-cyan">"Stock por Sede"</span>.
+                </p>
             </div>
 
             {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-16 space-y-3">
                     <div className="w-8 h-8 border-3 border-neutral-200 border-t-brand-cyan rounded-full animate-spin" />
-                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-neutral-400">Sincronizando...</p>
+                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-neutral-400 animate-pulse">Recopilando historial de ingresos...</p>
                 </div>
             ) : (
-                <div className="bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
-                    <DataTable
-                        data={envios}
-                        columns={columns}
-                        searchPlaceholder="Filtrar por sede o producto..."
-                        variant="minimal"
-                    />
+                <div className="bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm min-h-[400px] flex flex-col justify-start">
+                    {envios.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-16 text-center">
+                            <Package size={48} className="text-neutral-200 mb-4" />
+                            <p className="text-sm font-bold text-neutral-500 uppercase tracking-widest">Sin registros recientes</p>
+                            <p className="text-[10px] text-neutral-400 mt-1 uppercase tracking-widest">Pulsa "Cargar Mercadería" para registrar la llegada de stock.</p>
+                        </div>
+                    ) : (
+                        <DataTable
+                            data={envios}
+                            columns={columns}
+                            searchPlaceholder="Buscar por sede o ítem..."
+                            variant="minimal"
+                        />
+                    )}
                 </div>
             )}
 
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => !isSubmitting && setIsModalOpen(false)}
-                title="Nueva Orden de Asignación"
+                title="Carga de Mercadería (Ingreso de Stock)"
             >
                 <form onSubmit={handleSubmit} className="space-y-4 p-1">
 
@@ -391,7 +412,7 @@ const Envios = () => {
                             className="w-full bg-black text-white py-4 rounded-lg text-[11px] font-bold uppercase tracking-[0.2em] flex justify-center items-center gap-3 hover:bg-brand-cyan hover:text-black transition-colors disabled:opacity-60"
                         >
                             {isSubmitting
-                                ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> PROCESANDO...</>
+                                ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> PROCESANDO SOLICITUD...</>
                                 : <><Truck size={16} /> PROCESAR ORDEN</>
                             }
                         </button>

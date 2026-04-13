@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Package, AlertTriangle, MapPin, Box, Trash2 } from 'lucide-react';
+import { Search, Package, AlertTriangle, MapPin, Box, Trash2, Plus, Loader2 } from 'lucide-react';
 import { inventarioService } from '../../services/inventarioService';
 import { productosService } from '../../services/productosService';
 import { sucursalesService } from '../../services/sucursalesService';
@@ -45,6 +45,7 @@ const Inventario = () => {
         } catch (e) {
             console.error(e);
             toast.error('Error cargando inventario');
+            setData([]);
         } finally {
             setIsLoading(false);
         }
@@ -126,35 +127,41 @@ const Inventario = () => {
         },
         {
             header: 'Producto',
-            render: (row) => (
+            render: (row) => {
+                const p = row.producto || {};
+                return (
                 <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center overflow-hidden flex-shrink-0">
-                        {row.producto?.imagen_url
-                            ? <img src={row.producto.imagen_url} alt="" className="w-full h-full object-cover" />
+                        {p.imagen_url
+                            ? <img src={p.imagen_url} alt="" className="w-full h-full object-cover" />
                             : <Box size={14} className="text-neutral-400" />
                         }
                     </div>
                     <div className="flex flex-col">
                         <span className="font-bold text-sm text-black uppercase tracking-widest leading-none">
-                            {row.producto?.nombre || 'N/A'}
+                            {p.nombre || 'Producto Desconocido'}
                         </span>
                         <span className="text-[9px] font-bold text-brand-cyan uppercase tracking-widest mt-0.5">
-                            {row.producto?.categoria?.nombre || row.producto?.descripcion || ''}
+                            {p.categoria?.nombre || p.descripcion?.substring(0, 30) || 'Sin categoría'}
                         </span>
                     </div>
                 </div>
-            )
+                );
+            }
         },
         {
             header: 'Sede',
-            render: (row) => (
-                <div className="flex items-center gap-2">
-                    <MapPin size={12} className="text-neutral-400" />
-                    <span className="text-xs font-bold text-neutral-600 uppercase tracking-widest">
-                        {row.comercio?.nombre || row.sucursal_nombre || 'N/A'}
-                    </span>
-                </div>
-            )
+            render: (row) => {
+                const nombre = row.sucursal_nombre || row.comercio?.nombre || sucursales.find(s => s.id_comercio === row.id_comercio)?.nombre || 'N/A';
+                return (
+                    <div className="flex items-center gap-2">
+                        <MapPin size={12} className="text-neutral-400" />
+                        <span className="text-xs font-bold text-neutral-600 uppercase tracking-widest">
+                            {nombre}
+                        </span>
+                    </div>
+                );
+            }
         },
         {
             header: 'Stock',
@@ -204,48 +211,63 @@ const Inventario = () => {
             transition={{ duration: 0.4 }}
             className="space-y-3 max-w-[1400px] mx-auto pb-4"
         >
-            {/* Header - Compacto */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-black dark:border-gray-600 pb-3 gap-3">
-                <div>
+            {/* Page Header */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-black dark:border-gray-600 pb-4 gap-4 flex-wrap relative">
+                <div className="flex-1 min-w-0 pr-0 md:pr-4">
                     <div className="flex items-center gap-2 mb-1">
-                        <Search size={12} className="text-brand-cyan" />
-                        <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-neutral-500">CONTROL STOCK</span>
+                        <Box size={14} className="text-brand-cyan" />
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">Logística & Stock Central</span>
                     </div>
                     <h2 className="text-xl md:text-2xl uppercase leading-none m-0 font-sport text-black dark:text-white">
-                        {isSuperAdmin ? 'Gestión' : 'Mi'} <span className="text-brand-cyan">Inventario</span>
+                        Stock por <span className="text-brand-cyan">Sede</span>
                     </h2>
-                    <p className="hidden md:block text-[9px] font-bold text-neutral-400 mt-1 max-w-2xl leading-relaxed">
-                        Control en tiempo real del stock físico.
+                    <p className="text-neutral-500 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed max-w-xl mt-2 whitespace-normal line-clamp-3 md:line-clamp-none">
+                        Mapa de disponibilidad y mapeo de productos. Vincula el catálogo a cada ubicación para habilitar ventas y controlar niveles mínimos.
                     </p>
-                    <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest mt-1">
-                        {data.length} registros
-                    </p>
+                    <div className="flex items-center gap-2 mt-2">
+                        <span className="text-[10px] font-black uppercase text-brand-cyan bg-brand-cyan/10 px-2 py-0.5 rounded">
+                            {isSuperAdmin ? 'Panel de Control Central' : 'Vista de Sucursal Asignada'}
+                        </span>
+                        {isLoading && data.length > 0 && (
+                            <span className="flex items-center gap-1.5 text-[9px] font-black text-neutral-400 uppercase tracking-widest animate-pulse">
+                                <Loader2 size={10} className="animate-spin text-brand-cyan" /> Sincronizando...
+                            </span>
+                        )}
+                    </div>
                 </div>
-                <button
-                    onClick={handleAdd}
-                    className="bg-black text-white text-[9px] font-black uppercase tracking-[0.15em] px-4 py-2 rounded-lg hover:bg-brand-cyan hover:text-black transition-colors flex items-center gap-1.5"
-                >
-                    <Package size={12} />
-                    Nuevo Stock
-                </button>
             </div>
 
-            {/* Table */}
-            {isLoading ? (
-                <div className="flex items-center justify-center py-32">
-                    <div className="w-8 h-8 border-2 border-neutral-200 border-t-brand-cyan rounded-full animate-spin" />
-                </div>
-            ) : (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-                    <DataTable
-                        data={data}
-                        columns={columns}
-                        onEdit={handleEdit}
-                        onDelete={isSuperAdmin ? handleDelete : undefined}
-                        searchPlaceholder="Buscar producto o sede..."
-                    />
-                </motion.div>
-            )}
+            {/* Table Area */}
+            <div className="relative group">
+                {isLoading && data.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-32 bg-white dark:bg-gray-800 rounded-2xl border border-neutral-100 dark:border-gray-700 shadow-sm relative overflow-hidden">
+                         <div className="absolute top-0 left-0 w-full h-1 bg-neutral-100 dark:bg-gray-700 overflow-hidden">
+                            <div className="h-full bg-brand-cyan animate-pulse w-[30%]" />
+                        </div>
+                        <Loader2 className="w-10 h-10 text-brand-cyan animate-spin mb-4" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black dark:text-white text-center">Recopilando estado de stock...</span>
+                    </div>
+                ) : (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 10 }} 
+                        animate={{ opacity: 1, y: 0 }} 
+                        transition={{ duration: 0.5 }}
+                    >
+                        <DataTable
+                            columns={columns}
+                            data={data}
+                            onAdd={isSuperAdmin ? handleAdd : null}
+                            onEdit={handleEdit}
+                            onDelete={isSuperAdmin ? handleDelete : null}
+                            searchPlaceholder="BUSCAR POR PRODUCTO O SEDE..."
+                            addLabel="VINCULAR PRODUCTO"
+                            emptyTitle="Catálogo sin distribución"
+                            emptySubtitle={isSuperAdmin ? "No hay productos vinculados a ninguna sede todavía. Utiliza el botón 'Vincular Producto' sobre la tabla para comenzar." : "Tu sede no tiene productos asignados. Contacta al administrador central."}
+                            emptyIcon={Package}
+                        />
+                    </motion.div>
+                )}
+            </div>
 
             {/* Modal */}
             <Modal
@@ -257,10 +279,10 @@ const Inventario = () => {
 
                     {/* Preview del registro para edición */}
                     {editingItem && (
-                        <div className="p-4 bg-black rounded-xl">
+                        <div className="p-4 bg-black rounded-xl border border-brand-cyan/20">
                             <p className="text-brand-cyan text-[9px] font-black uppercase tracking-[0.3em] mb-1">Editando</p>
-                            <p className="text-white font-sport text-xl uppercase">{productNombre(formData.id_producto)}</p>
-                            <p className="text-neutral-400 text-[9px] font-black uppercase tracking-widest mt-1">{comercioNombre(formData.id_comercio)}</p>
+                            <p className="text-white font-sport text-xl uppercase truncate">{productNombre(formData.id_producto)}</p>
+                            <p className="text-neutral-400 text-[9px] font-black uppercase tracking-widest mt-1 truncate">{comercioNombre(formData.id_comercio)}</p>
                         </div>
                     )}
 
@@ -268,7 +290,7 @@ const Inventario = () => {
                     {!editingItem && (
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 block">
-                                Producto
+                                Producto a Distribuir
                             </label>
                             <div className="relative">
                                 <Box size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
@@ -276,11 +298,11 @@ const Inventario = () => {
                                     required
                                     value={formData.id_producto}
                                     onChange={e => setFormData({ ...formData, id_producto: e.target.value })}
-                                    className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-bold uppercase focus:outline-none focus:border-black transition-colors appearance-none"
+                                    className="w-full pl-10 pr-4 py-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-xl text-xs font-bold uppercase focus:outline-none focus:border-brand-cyan transition-colors appearance-none text-black dark:text-white"
                                 >
-                                    <option value="">— Seleccionar producto —</option>
+                                    <option value="" className="bg-white dark:bg-gray-800 text-neutral-400">Seleccionar producto</option>
                                     {productos.map(p => (
-                                        <option key={p.id_producto} value={p.id_producto}>{p.nombre}</option>
+                                        <option key={p.id_producto} value={p.id_producto} className="bg-white dark:bg-gray-800 text-black dark:text-white">{p.nombre}</option>
                                     ))}
                                 </select>
                             </div>
@@ -299,11 +321,11 @@ const Inventario = () => {
                                     required
                                     value={formData.id_comercio}
                                     onChange={e => setFormData({ ...formData, id_comercio: e.target.value })}
-                                    className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-bold uppercase focus:outline-none focus:border-black transition-colors appearance-none"
+                                    className="w-full pl-10 pr-4 py-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-xl text-xs font-bold uppercase focus:outline-none focus:border-brand-cyan transition-colors appearance-none text-black dark:text-white"
                                 >
-                                    <option value="">— Seleccionar sede —</option>
+                                    <option value="" className="bg-white dark:bg-gray-800">— Seleccionar sede —</option>
                                     {sucursales.map(s => (
-                                        <option key={s.id_comercio} value={s.id_comercio}>{s.nombre}</option>
+                                        <option key={s.id_comercio} value={s.id_comercio} className="bg-white dark:bg-gray-800">{s.nombre}</option>
                                     ))}
                                 </select>
                             </div>
@@ -322,7 +344,7 @@ const Inventario = () => {
                                 required
                                 value={formData.cantidad_actual}
                                 onChange={e => setFormData({ ...formData, cantidad_actual: Number(e.target.value) })}
-                                className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-bold focus:outline-none focus:border-black transition-colors"
+                                className="w-full px-4 py-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-xl text-xs font-bold focus:outline-none focus:border-brand-cyan transition-colors text-black dark:text-white"
                                 placeholder="0"
                             />
                         </div>
@@ -336,7 +358,7 @@ const Inventario = () => {
                                 required
                                 value={formData.stock_minimo_alerta}
                                 onChange={e => setFormData({ ...formData, stock_minimo_alerta: Number(e.target.value) })}
-                                className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-bold focus:outline-none focus:border-black transition-colors"
+                                className="w-full px-4 py-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-xl text-xs font-bold focus:outline-none focus:border-brand-cyan transition-colors text-black dark:text-white"
                                 placeholder="5"
                             />
                         </div>
@@ -355,7 +377,7 @@ const Inventario = () => {
                             required
                             value={formData.comision_pactada_porcentaje}
                             onChange={e => setFormData({ ...formData, comision_pactada_porcentaje: Number(e.target.value) })}
-                            className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-bold focus:outline-none focus:border-black transition-colors"
+                            className="w-full px-4 py-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-xl text-xs font-bold focus:outline-none focus:border-brand-cyan transition-colors text-black dark:text-white"
                             placeholder="0.00"
                         />
                     </div>

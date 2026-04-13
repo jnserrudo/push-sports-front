@@ -4,11 +4,13 @@ import { useAuthStore } from '../store/authStore';
 import { authService } from '../services/authService';
 import { ArrowRight, Lock, Mail, Home, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from '../store/toastStore';
+import Turnstile from 'react-turnstile';
 
 const Login = () => {
     const [credentials, setCredentials] = useState({ email: '', password: '' });
     const { login } = useAuthStore();
     const [loading, setLoading] = useState(false);
+    const [captchaToken, setCaptchaToken] = useState(null);
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const isExpired = searchParams.get('expired') === 'true';
@@ -19,14 +21,31 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!captchaToken) {
+            toast.error('Por favor, completa la verificación de seguridad (Captcha).');
+            return;
+        }
+
         setLoading(true);
         try {
-            const data = await authService.login(credentials.email, credentials.password);
+            // Pasamos las credenciales junto al captchaToken
+            const data = await authService.login({
+                identifier: credentials.email,
+                password: credentials.password,
+                captchaToken
+            });
+            
             login(data.user, data.token);
             toast.success('¡Bienvenido de nuevo!');
             navigate('/dashboard');
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Error al iniciar sesión. Verifique sus datos.');
+            const data = error.response?.data;
+            if (data?.needsVerification) {
+                toast.warning('Su cuenta no ha sido verificada aún. Revise su email.');
+            } else {
+                toast.error(data?.error || data?.message || 'Error al iniciar sesión.');
+            }
         } finally {
             setLoading(false);
         }
@@ -128,7 +147,17 @@ const Login = () => {
                             </div>
                         </div>
 
-                        <div className="pt-4 flex flex-col gap-4">
+                        {/* Turnstile Integration */}
+                        <div className="flex justify-center py-1">
+                            <Turnstile 
+                                sitekey={import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'} 
+                                onVerify={(token) => setCaptchaToken(token)}
+                                theme="light"
+                                size="flexible"
+                            />
+                        </div>
+
+                        <div className="pt-2 flex flex-col gap-4">
                             {/* Botón Principal */}
                             <button 
                                 type="submit" 

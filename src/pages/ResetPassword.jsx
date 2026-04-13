@@ -1,173 +1,119 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Lock, Eye, EyeOff, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
-import api from '../api/api';
+import { Lock, ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { authService } from '../services/authService';
+import { toast } from '../store/toastStore';
 
 const ResetPassword = () => {
     const { token } = useParams();
     const navigate = useNavigate();
-    
-    const [formData, setFormData] = useState({
-        nueva_password: '',
-        confirmar_password: ''
-    });
-    const [showPassword, setShowPassword] = useState({
-        nueva: false,
-        confirmar: false
-    });
-    const [isLoading, setIsLoading] = useState(false);
-    const [feedback, setFeedback] = useState(null);
+    const [formData, setFormData] = useState({ password: '', confirmPassword: '' });
+    const [loading, setLoading] = useState(false);
+    const [success, setSuccess] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setFeedback(null);
-
-        if (formData.nueva_password !== formData.confirmar_password) {
-            setFeedback({ type: 'error', message: 'Las contraseñas no coinciden' });
-            return;
+        
+        if (formData.password !== formData.confirmPassword) {
+            return toast.error('Las contraseñas no coinciden');
         }
 
-        if (formData.nueva_password.length < 6) {
-            setFeedback({ type: 'error', message: 'La contraseña debe tener al menos 6 caracteres' });
-            return;
+        if (formData.password.length < 6) {
+            return toast.error('La contraseña debe tener al menos 6 caracteres');
         }
 
-        setIsLoading(true);
-
+        setLoading(true);
         try {
-            await api.post('/reset-password', {
-                token,
-                nueva_password: formData.nueva_password
-            });
+            await authService.resetPassword(token, formData.password);
             
-            setFeedback({ 
-                type: 'success', 
-                message: 'Contraseña actualizada correctamente. Redirigiendo al login...' 
-            });
-            
-            setTimeout(() => {
-                navigate('/login');
-            }, 2000);
+            toast.success('Contraseña restablecida correctamente');
+            setSuccess(true);
+            setTimeout(() => navigate('/login'), 3000);
         } catch (error) {
-            setFeedback({ 
-                type: 'error', 
-                message: error.response?.data?.error || 'Error al resetear contraseña'
-            });
+            toast.error(error.response?.data?.error || 'Error al restablecer la contraseña. El link puede haber expirado.');
         } finally {
-            setIsLoading(false);
+            setLoading(false);
         }
     };
 
+    if (success) {
+        return (
+            <div className="min-h-screen bg-[#070707] flex items-center justify-center p-4">
+                <div className="max-w-md w-full bg-white rounded-2xl p-10 text-center shadow-2xl animate-in zoom-in-95 duration-500">
+                    <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <CheckCircle2 size={32} />
+                    </div>
+                    <h2 className="text-2xl font-sport text-black uppercase mb-2">¡Todo listo!</h2>
+                    <p className="text-neutral-500 text-sm mb-8">
+                        Tu contraseña ha sido actualizada. Te redirigiremos al ingreso en unos segundos...
+                    </p>
+                    <Link to="/login" className="text-brand-cyan font-bold uppercase tracking-widest text-xs hover:underline">
+                        Ir al Login ahora
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-black flex items-center justify-center p-4">
-            <div className="w-full max-w-md">
-                <div className="bg-white rounded-2xl shadow-2xl p-8">
-                    {/* Header */}
-                    <div className="text-center mb-8">
-                        <h1 className="text-3xl font-sport uppercase text-black mb-2">
-                            Nueva <span className="text-brand-cyan">Contraseña</span>
-                        </h1>
-                        <p className="text-sm text-neutral-600">
-                            Ingresa tu nueva contraseña
-                        </p>
+        <div className="min-h-screen bg-neutral-100 flex items-center justify-center p-4 relative font-sans overflow-hidden">
+             {/* Background */}
+             <div className="absolute inset-0 z-0 pointer-events-none">
+                <img src="/primera.jpeg" className="w-full h-full object-cover opacity-20 grayscale" alt="Fondo" />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/90"></div>
+            </div>
+
+            <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl relative z-10 overflow-hidden p-8 md:p-10 animate-in fade-in duration-500">
+                <div className="text-center mb-8">
+                    <div className="w-12 h-12 bg-black text-brand-cyan rounded-xl flex items-center justify-center mx-auto mb-4">
+                        <Lock size={24} />
                     </div>
-
-                    {/* Feedback */}
-                    {feedback && (
-                        <div className={`mb-6 p-4 rounded-xl flex items-start gap-3 ${
-                            feedback.type === 'success' 
-                                ? 'bg-green-50 border border-green-200' 
-                                : 'bg-red-50 border border-red-200'
-                        }`}>
-                            {feedback.type === 'success' ? (
-                                <CheckCircle2 size={20} className="text-green-600 shrink-0 mt-0.5" />
-                            ) : (
-                                <AlertCircle size={20} className="text-red-600 shrink-0 mt-0.5" />
-                            )}
-                            <p className={`text-sm font-medium ${
-                                feedback.type === 'success' ? 'text-green-700' : 'text-red-700'
-                            }`}>
-                                {feedback.message}
-                            </p>
-                        </div>
-                    )}
-
-                    {/* Form */}
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div>
-                            <label className="block text-xs font-bold uppercase tracking-wider text-neutral-600 mb-2">
-                                Nueva Contraseña
-                            </label>
-                            <div className="relative">
-                                <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400" />
-                                <input
-                                    type={showPassword.nueva ? 'text' : 'password'}
-                                    value={formData.nueva_password}
-                                    onChange={(e) => setFormData({...formData, nueva_password: e.target.value})}
-                                    required
-                                    placeholder="Mínimo 6 caracteres"
-                                    className="w-full pl-12 pr-12 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:border-black transition-colors"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword({...showPassword, nueva: !showPassword.nueva})}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black"
-                                >
-                                    {showPassword.nueva ? <EyeOff size={18} /> : <Eye size={18} />}
-                                </button>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-bold uppercase tracking-wider text-neutral-600 mb-2">
-                                Confirmar Contraseña
-                            </label>
-                            <div className="relative">
-                                <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400" />
-                                <input
-                                    type={showPassword.confirmar ? 'text' : 'password'}
-                                    value={formData.confirmar_password}
-                                    onChange={(e) => setFormData({...formData, confirmar_password: e.target.value})}
-                                    required
-                                    placeholder="Repite la contraseña"
-                                    className="w-full pl-12 pr-12 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:border-black transition-colors"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword({...showPassword, confirmar: !showPassword.confirmar})}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black"
-                                >
-                                    {showPassword.confirmar ? <EyeOff size={18} /> : <Eye size={18} />}
-                                </button>
-                            </div>
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={isLoading || feedback?.type === 'success'}
-                            className="w-full bg-black text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wider hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isLoading ? 'Actualizando...' : 'Actualizar Contraseña'}
-                        </button>
-                    </form>
-
-                    {/* Back to login */}
-                    <div className="mt-6 text-center">
-                        <Link 
-                            to="/login"
-                            className="inline-flex items-center gap-2 text-sm text-neutral-600 hover:text-black transition-colors font-medium"
-                        >
-                            <ArrowLeft size={16} />
-                            Volver al login
-                        </Link>
-                    </div>
+                    <h1 className="text-3xl font-sport text-black uppercase mb-1">Nueva Contraseña</h1>
+                    <p className="text-neutral-500 text-sm">Ingresa tu nueva clave de acceso</p>
                 </div>
 
-                {/* Footer */}
-                <div className="text-center mt-6">
-                    <p className="text-xs text-neutral-400 uppercase tracking-widest">
-                        PUSH SPORT © 2026
-                    </p>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Nueva Contraseña</label>
+                        <div className="relative group">
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-300 group-focus-within:text-brand-cyan transition-colors" size={18} />
+                            <input 
+                                required type="password"
+                                className="w-full pl-12 pr-4 py-4 bg-neutral-50 border-2 border-neutral-100 rounded-xl text-black focus:outline-none focus:border-black transition-all"
+                                placeholder="••••••••"
+                                value={formData.password}
+                                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Confirmar Contraseña</label>
+                        <div className="relative group">
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-300 group-focus-within:text-brand-cyan transition-colors" size={18} />
+                            <input 
+                                required type="password"
+                                className="w-full pl-12 pr-4 py-4 bg-neutral-50 border-2 border-neutral-100 rounded-xl text-black focus:outline-none focus:border-black transition-all"
+                                placeholder="••••••••"
+                                value={formData.confirmPassword}
+                                onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                            />
+                        </div>
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-black text-white py-4 rounded-xl font-sport uppercase tracking-[0.2em] text-sm hover:bg-brand-cyan hover:text-black transition-all shadow-lg active:scale-[0.98] disabled:opacity-50"
+                    >
+                        {loading ? <Loader2 className="animate-spin mx-auto" size={20} /> : 'Actualizar Contraseña'}
+                    </button>
+                </form>
+
+                <div className="mt-8 text-center border-t border-neutral-100 pt-6">
+                    <Link to="/login" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-neutral-400 hover:text-black transition-colors">
+                        <ArrowLeft size={14} /> Volver al Ingreso
+                    </Link>
                 </div>
             </div>
         </div>

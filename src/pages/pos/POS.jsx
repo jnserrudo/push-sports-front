@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { 
   Search, 
   Trash2, 
@@ -19,7 +19,8 @@ import {
   AlertCircle,
   Zap,
   Printer,
-  Package
+  Package,
+  ShoppingBag
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { useAuthStore } from '../../store/authStore';
@@ -189,9 +190,15 @@ const POS = () => {
   const getProductId = (item) => item.id_inventario;
   const getProductImg = (item) => item.producto?.imagen_url || null;
 
-  const filteredProducts = products.filter(item =>
-    getProductNombre(item).toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProducts = useMemo(() => {
+    if (!products) return [];
+    const term = searchTerm.toLowerCase().trim();
+    if (!term) return products.slice(0, 80); // Mostrar solo una parte inicial si no hay búsqueda para fluidez
+    
+    return products
+      .filter(item => getProductNombre(item).toLowerCase().includes(term))
+      .slice(0, 100); // Límite de seguridad para el DOM
+  }, [products, searchTerm]);
 
   // Manejar clic en producto - muestra variantes si las tiene
   const handleProductClick = (item) => {
@@ -397,60 +404,79 @@ const POS = () => {
       const inventario = await posService.getInventarioSucursal(comercioId);
       setProducts(inventario || []);
     } catch (error) {
-      console.error('Error al procesar venta:', error);
-      toast.error("Error al procesar la venta");
+      console.error('Error al procesar la venta:', error);
+      const msg = error.response?.data?.error || "Error al procesar la venta";
+      toast.error(msg);
     } finally {
       setIsProcessing(false);
     }
   };
 
   return (
-    <div className="h-[calc(100vh-120px)] flex flex-col xl:flex-row gap-4 md:gap-8 font-sans animate-in fade-in duration-700 relative overflow-hidden">
+    <div className="h-[calc(100vh-120px)] flex font-sans animate-in fade-in duration-700 relative overflow-hidden w-full">
       
       {/* CATALOG AREA */}
-      <div className={`flex-1 flex flex-col min-w-0 bg-white dark:bg-gray-800 rounded-3xl md:rounded-[2rem] shadow-premium border border-neutral-100 dark:border-gray-700 overflow-hidden ${activeTab === 'cart' ? 'hidden xl:flex' : 'flex'}`}>
-        <div className="p-4 md:p-8 border-b border-neutral-50 dark:border-gray-700 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
-            <div className="flex items-center gap-3 md:gap-4 w-full md:w-auto">
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-neutral-950 text-brand-cyan flex items-center justify-center rounded-xl shadow-lg flex-shrink-0">
-                    <Box size={20} md:size={24} />
+      <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-gray-800 rounded-3xl md:rounded-[2rem] shadow-premium border border-neutral-100 dark:border-gray-700 overflow-hidden h-full">
+        <div className="p-4 md:p-5 border-b border-neutral-50 dark:border-gray-700 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 md:gap-6 flex-wrap">
+            <div className="flex items-start md:items-center gap-3 md:gap-4 w-full lg:w-auto flex-1">
+                <div className="w-9 h-9 md:w-11 md:h-11 bg-neutral-950 text-brand-cyan flex items-center justify-center rounded-xl shadow-lg flex-shrink-0 mt-1 md:mt-0">
+                    <Box size={18} md:size={22} />
                 </div>
-                <div>
-                  <h2 className="text-xl md:text-3xl font-black tracking-tighter m-0 uppercase leading-none text-neutral-950">Catálogo</h2>
-                  <p className="text-[9px] md:text-xs font-bold text-neutral-400 uppercase tracking-widest mt-1">Inventario {currentSucursal?.nombre || 'local'}</p>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg md:text-xl font-black tracking-tighter m-0 uppercase leading-none text-neutral-950">Catálogo</h2>
+                  <p className="text-[9px] md:text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5 whitespace-normal">Operá el inventario de {currentSucursal?.nombre || 'la sede'}</p>
+                  <p className="text-[10px] text-neutral-500 font-medium mt-1 whitespace-normal">Explorá productos, filtrá por sede y agregalos al carrito.</p>
                 </div>
             </div>
 
-            {/* SuperAdmin sucursal picker */}
-            {isSuperAdmin && (
-                <div className="flex items-center gap-2 bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2">
-                    <MapPin size={14} className="text-brand-cyan flex-shrink-0" />
-                    <select
-                        value={selectedSucursalId || ''}
-                        onChange={e => { setCart([]); setSelectedSucursalId(e.target.value || null); }}
-                        className="bg-transparent text-black text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer appearance-none pr-4"
-                    >
-                        <option value="">SELECCIONAR SEDE...</option>
-                        {sucursalOptions.map(s => (
-                            <option key={s.id_comercio} value={s.id_comercio}>{s.nombre}</option>
-                        ))}
-                    </select>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4 w-full lg:w-auto mt-2 lg:mt-0">
+                {/* SuperAdmin sucursal picker */}
+                {isSuperAdmin && (
+                    <div className="flex items-center gap-2 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-xl px-3 py-2 flex-grow sm:flex-grow-0">
+                        <MapPin size={14} className="text-brand-cyan flex-shrink-0" />
+                        <select
+                            value={selectedSucursalId || ''}
+                            onChange={e => { setCart([]); setSelectedSucursalId(e.target.value || null); }}
+                            className="bg-transparent text-black dark:text-white text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer appearance-none pr-4 w-full"
+                        >
+                            <option value="" className="bg-neutral-900 text-white">SELECCIONAR SEDE...</option>
+                            {sucursalOptions.map(s => (
+                                <option key={s.id_comercio} value={s.id_comercio} className="bg-neutral-900 text-white">{s.nombre}</option>
+                            ))}
+                        </select>
+                    </div>
+                )}
+
+                <div className="relative flex-1 w-full sm:w-64 group min-w-0">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-300 group-focus-within:text-brand-cyan transition-colors" size={16} />
+                    <input 
+                        ref={searchInputRef}
+                        type="text" 
+                        placeholder="BUSCAR..."
+                        className="input-premium-v2 pl-10 py-2.5 md:pl-12 md:py-3.5 text-[8px] md:text-[10px] tracking-[0.2em] uppercase font-black w-full text-ellipsis"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                 </div>
-            )}
-            
-            <div className="relative flex-1 w-full md:max-w-md group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-300 group-focus-within:text-brand-cyan transition-colors" size={20} />
-                <input 
-                    ref={searchInputRef}
-                    type="text" 
-                    placeholder="BUSCAR PRODUCTO (CTRL+F)..."
-                    className="input-premium-v2 pl-12 py-3 md:pl-16 md:py-5 text-[9px] md:text-xs tracking-[0.2em] uppercase font-black w-full"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
+                
+                <button 
+                    onClick={() => setActiveTab('cart')}
+                    className="relative bg-black text-white px-4 md:px-6 py-2.5 md:py-3.5 rounded-xl font-bold uppercase tracking-widest text-[10px] flex items-center gap-2 hover:bg-brand-cyan hover:text-black transition-all shadow-premium active:scale-95 w-full sm:w-auto justify-center flex-shrink-0"
+                >
+                    <div className="flex items-center justify-center p-1 bg-white/20 rounded-md">
+                        <ShoppingBag size={14} />
+                    </div>
+                    Paso 2: Checkout
+                    {cart.length > 0 && (
+                        <span className="absolute -top-2 -right-2 bg-brand-cyan text-black w-5 h-5 flex items-center justify-center rounded-full text-[9px] font-black shadow-md border-2 border-neutral-800">
+                            {cart.reduce((s,i)=>s+i.cantidad,0)}
+                        </span>
+                    )}
+                </button>
             </div>
         </div>
 
-        <div className="flex-1 p-4 md:p-8 overflow-y-auto scrollbar-hide">
+        <div className="flex-1 p-4 md:p-5 overflow-y-auto scrollbar-hide">
           {/* SuperAdmin needs to pick a store first */}
           {isSuperAdmin && !selectedSucursalId ? (
             <div className="flex flex-col items-center justify-center py-24 md:py-40 gap-6 opacity-50">
@@ -587,16 +613,32 @@ const POS = () => {
         </div>
       </div>
 
-      {/* CART AREA */}
-      <div className={`w-full xl:w-[420px] flex flex-col bg-white dark:bg-gray-800 rounded-3xl md:rounded-[2rem] shadow-xl relative border-2 md:border-4 border-neutral-100 dark:border-gray-700 overflow-hidden ${activeTab === 'catalog' ? 'hidden xl:flex' : 'flex'}`}>
-        <div className="p-4 md:p-8 border-b border-neutral-100 dark:border-gray-700 flex justify-between items-center bg-neutral-50/30 dark:bg-gray-700/30">
+      {/* CART AREA (DRAWER) */}
+      <AnimatePresence>
+      {activeTab === 'cart' && (
+      <>
+        <motion.div
+           initial={{ opacity: 0 }}
+           animate={{ opacity: 1 }}
+           exit={{ opacity: 0 }}
+           onClick={() => setActiveTab('catalog')}
+           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
+        />
+        <motion.div 
+           initial={{ x: '100%' }}
+           animate={{ x: 0 }}
+           exit={{ x: '100%' }}
+           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+           className="fixed top-0 right-0 h-[100dvh] w-full sm:w-[420px] pb-10 flex flex-col bg-white dark:bg-gray-800 shadow-2xl z-[101] border-l border-neutral-200 dark:border-gray-700 overflow-hidden"
+        >
+        <div className="p-4 md:p-5 border-b border-neutral-100 dark:border-gray-700 flex justify-between items-center bg-neutral-50/30 dark:bg-gray-700/30">
             <div className="flex items-center gap-3 md:gap-4">
-                {/* Back button for mobile */}
+                {/* Close Drawer Button */}
                 <button 
                   onClick={() => setActiveTab('catalog')}
-                  className="xl:hidden w-10 h-10 rounded-xl bg-white dark:bg-gray-700 border border-neutral-100 dark:border-gray-600 flex items-center justify-center text-neutral-400 dark:text-gray-400 active:text-black dark:active:text-white"
+                  className="w-10 h-10 rounded-xl bg-white dark:bg-gray-700 border border-neutral-100 dark:border-gray-600 flex items-center justify-center text-neutral-400 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
                 >
-                  <ChevronRight size={20} className="rotate-180" />
+                  <ChevronRight size={20} />
                 </button>
                 <div className="w-10 h-10 md:w-12 md:h-12 bg-white dark:bg-gray-700 text-brand-cyan dark:text-cyan-400 flex items-center justify-center rounded-xl border-2 border-neutral-100 dark:border-gray-600 shadow-sm relative group cursor-pointer" onClick={() => setShowDrafts(!showDrafts)}>
                     <Receipt size={20} md:size={24} className="group-hover:opacity-0 transition-opacity absolute" />
@@ -608,13 +650,14 @@ const POS = () => {
                     )}
                 </div>
                 <div>
-                    <h2 className="text-xl md:text-3xl font-black tracking-tighter m-0 uppercase leading-none text-neutral-900">Ticket</h2>
+                    <h2 className="text-lg md:text-xl font-black tracking-tighter m-0 uppercase leading-none text-neutral-900">Ticket</h2>
                     <span 
                       onClick={() => setShowDrafts(!showDrafts)}
-                      className="text-[9px] md:text-[10px] font-bold text-neutral-400 hover:text-amber-500 uppercase tracking-widest mt-1 block cursor-pointer transition-colors"
+                      className="text-[8px] md:text-[9px] font-bold text-neutral-400 hover:text-amber-500 uppercase tracking-widest mt-0.5 block cursor-pointer transition-colors"
                     >
-                      {drafts.length > 0 ? `${drafts.length} En Espera` : 'Operación Actual'}
+                      Resumen de venta actual
                     </span>
+                    <p className="text-[10px] text-neutral-500 font-medium mt-1 hidden md:block">Gestioná los productos seleccionados, aplica cupones y finaliza la venta.</p>
                 </div>
             </div>
             <motion.div 
@@ -628,7 +671,7 @@ const POS = () => {
             </motion.div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 md:space-y-4 scrollbar-hide">
+        <div className="flex-1 overflow-y-auto p-4 md:p-5 space-y-3 md:space-y-4 scrollbar-hide">
           {showDrafts ? (
             <div className="space-y-3">
                <div className="flex items-center justify-between mb-2">
@@ -712,7 +755,7 @@ const POS = () => {
           )}
         </div>
 
-        <div className="p-4 md:p-6 bg-neutral-50 dark:bg-gray-700 border-t border-neutral-100 dark:border-gray-700 space-y-3">
+        <div className="p-4 md:p-5 bg-neutral-50 dark:bg-gray-700 border-t border-neutral-100 dark:border-gray-700 space-y-3">
 
             {/* Banner oferta vigente */}
             {ofertasVigentes.length > 0 && (
@@ -797,7 +840,7 @@ const POS = () => {
                         initial={{ scale: 1.05, color: '#00d2ff' }}
                         animate={{ scale: 1, color: '#171717' }}
                         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                        className="text-3xl md:text-4xl font-black tracking-tighter leading-none"
+                        className="text-xl md:text-2xl font-black tracking-tighter leading-none"
                     >
                         ${total.toLocaleString()}
                     </motion.span>
@@ -833,7 +876,10 @@ const POS = () => {
                 </button>
             </div>
         </div>
-      </div>
+        </motion.div>
+      </>
+      )}
+      </AnimatePresence>
 
       {/* MODAL DE SELECCIÓN DE VARIANTES */}
       {showVariantesModal && selectedProduct && (

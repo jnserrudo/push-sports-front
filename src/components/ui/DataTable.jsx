@@ -42,17 +42,19 @@ const DataTable = ({
         setSortConfig({ key, direction });
     };
 
-    // Función para buscar recursivamente en objetos anidados
-    const searchInValue = (val, term) => {
+    // Función para buscar en objetos (limitada a 2 niveles de profundidad para rendimiento)
+    const searchInValue = (val, term, depth = 0) => {
+        if (depth > 2) return false; // Límite de seguridad
         if (val === null || val === undefined) return false;
-        if (typeof val === 'string' || typeof val === 'number' || typeof val === 'boolean') {
+        if (typeof val === 'string' || typeof val === 'number') {
             return String(val).toLowerCase().includes(term);
         }
         if (Array.isArray(val)) {
-            return val.some(item => searchInValue(item, term));
+            return val.some(item => searchInValue(item, term, depth + 1));
         }
         if (typeof val === 'object') {
-            return Object.values(val).some(v => searchInValue(v, term));
+            if (val instanceof Date) return false; 
+            return Object.values(val).some(v => searchInValue(v, term, depth + 1));
         }
         return false;
     };
@@ -97,8 +99,8 @@ const DataTable = ({
             <div className="absolute top-0 right-0 w-48 h-48 bg-brand-cyan/5 blur-3xl pointer-events-none rounded-full -translate-y-1/2 translate-x-1/2" />
 
             {/* Toolbar Principal - Compacto */}
-            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 md:gap-4 mb-4 md:mb-5 relative z-10">
-                <div className="relative flex-1 group w-full min-w-0">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 md:gap-4 mb-4 md:mb-5 relative z-10 flex-wrap">
+                <div className="relative flex-1 group w-full min-w-0 sm:min-w-[250px]">
                     <label className="hidden md:block text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400 mb-1 ml-1">Explorador</label>
                     <div className="relative flex items-center">
                         <div className="absolute left-4 md:left-6 flex items-center pointer-events-none text-neutral-400 group-focus-within:text-brand-cyan transition-colors">
@@ -112,7 +114,7 @@ const DataTable = ({
                                 setSearchTerm(e.target.value);
                                 setCurrentPage(1);
                             }}
-                            className="w-full pl-10 md:pl-12 pr-8 md:pr-10 h-10 md:h-12 bg-neutral-50/50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 focus:border-brand-cyan dark:focus:border-cyan-400 focus:bg-white dark:focus:bg-gray-600 text-neutral-900 dark:text-white text-xs md:text-sm font-bold tracking-wider uppercase rounded-lg transition-all outline-none placeholder:text-neutral-400 dark:placeholder:text-gray-500 shadow-inner"
+                            className="w-full pl-10 md:pl-12 pr-8 md:pr-10 h-10 md:h-12 bg-neutral-50/50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 focus:border-brand-cyan dark:focus:border-cyan-400 focus:bg-white dark:focus:bg-gray-600 text-neutral-900 dark:text-white text-xs md:text-sm font-bold tracking-wider uppercase rounded-lg transition-all outline-none placeholder:text-neutral-400 dark:placeholder:text-gray-500 shadow-inner text-ellipsis"
                         />
                         {searchTerm && (
                             <button 
@@ -126,10 +128,10 @@ const DataTable = ({
                 </div>
 
                 {onAdd && (
-                    <div className="flex items-end h-full mt-auto">
+                    <div className="flex items-end h-full sm:mt-auto w-full sm:w-auto mt-2 sm:mt-0">
                         <button 
                             onClick={onAdd}
-                            className="w-full md:w-auto bg-black text-white px-4 md:px-6 h-10 md:h-12 flex items-center justify-center gap-2 group rounded-lg transition-all hover:bg-brand-cyan hover:text-black hover:shadow-md hover:-translate-y-0.5"
+                            className="w-full sm:w-auto bg-black text-white px-4 md:px-6 h-10 md:h-12 flex items-center justify-center gap-2 group rounded-lg transition-all hover:bg-brand-cyan hover:text-black hover:shadow-md hover:-translate-y-0.5 flex-shrink-0"
                             title={addLabel}
                         >
                             <Plus size={16} className="md:w-4 md:h-4 transition-transform group-hover:rotate-90" strokeWidth={3} />
@@ -251,7 +253,7 @@ const DataTable = ({
                           <Activity className="text-brand-cyan" strokeWidth={2.5} size={18} />
                      </div>
                     <div className="flex flex-col">
-                        <span className="text-[9px] md:text-[10px] font-black text-neutral-400 uppercase tracking-[0.3em] leading-none mb-1">DATASTREAM</span>
+                        <span className="text-[9px] md:text-[10px] font-black text-neutral-400 uppercase tracking-[0.3em] leading-none mb-1">SISTEMA</span>
                         <span className="font-black text-xs md:text-sm uppercase tracking-widest text-black leading-none">
                             {processedData.length} REGISTROS
                         </span>

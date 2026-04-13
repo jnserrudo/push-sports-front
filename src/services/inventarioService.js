@@ -5,25 +5,9 @@ export const inventarioService = {
     // Solo tiene GET /inventarios/:id_comercio
     // Para "getAll" de SUPER_ADMIN, obtenemos comercios y luego el inventario de cada uno.
     getAll: async () => {
-        // Intentar obtener todos los comercios y luego el inventario de cada uno
         try {
-            const comerciosRes = await api.get('/comercios');
-            const comercios = comerciosRes.data || [];
-            const allInventarios = [];
-            for (const comercio of comercios) {
-                try {
-                    const invRes = await api.get(`/inventarios/${comercio.id_comercio}`);
-                    const items = (invRes.data || []).map(item => ({
-                        ...item,
-                        sucursal_nombre: comercio.nombre
-                    }));
-                    allInventarios.push(...items);
-                } catch (err) {
-                    console.error(`Error cargando inventario para comercio ${comercio.id_comercio}:`, err);
-                }
-            }
-            console.log('Total inventarios cargados:', allInventarios.length);
-            return allInventarios;
+            const response = await api.get('/inventarios');
+            return response.data;
         } catch (err) {
             console.error('Error en getAll inventarios:', err);
             return [];

@@ -174,8 +174,8 @@ const Devoluciones = () => {
                         <RotateCcw size={14} className="text-brand-cyan" />
                         <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-neutral-500">CONTROL DE INVENTARIO</span>
                     </div>
-                    <h2 className="text-4xl md:text-5xl uppercase leading-none m-0 font-sport text-black dark:text-white">
-                        Centro de <span className="text-brand-cyan">Devoluciones.</span>
+                    <h2 className="text-xl md:text-2xl uppercase leading-none m-0 font-sport text-black dark:text-white">
+                        Gestión de <span className="text-brand-cyan">Devoluciones</span>
                     </h2>
                     <p className="text-xs text-neutral-400 font-bold uppercase tracking-widest mt-2">
                         Revertí ventas y actualizá el stock automáticamente
@@ -231,8 +231,9 @@ const Devoluciones = () => {
                             </div>
                             <div className="overflow-y-auto max-h-[500px] divide-y divide-neutral-50 dark:divide-gray-700">
                                 {isLoadingVentas ? (
-                                    <div className="flex items-center justify-center py-16">
+                                    <div className="flex flex-col items-center justify-center py-16 space-y-4">
                                         <div className="w-6 h-6 border-2 border-neutral-200 dark:border-gray-700 border-t-brand-cyan rounded-full animate-spin" />
+                                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-400">Recopilando historial de ventas...</p>
                                     </div>
                                 ) : filteredVentas.length === 0 ? (
                                     <div className="py-16 text-center text-neutral-300 dark:text-gray-600">

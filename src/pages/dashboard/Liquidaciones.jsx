@@ -228,29 +228,32 @@ const Liquidaciones = () => {
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4 }}
-            className="space-y-8 max-w-[1400px] mx-auto"
+            className="space-y-6 max-w-[1400px] mx-auto pb-6"
         >
             
             {/* Header Técnico */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b-2 border-black dark:border-gray-600 pb-6 gap-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-black dark:border-gray-600 pb-4 gap-4">
                  <div>
-                    <div className="flex items-center gap-3 mb-2">
-                         <ShieldCheck size={16} className="text-brand-cyan" />
-                         <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-neutral-500">TESORERÍA CENTRAL</span>
+                    <div className="flex items-center gap-2 mb-1">
+                         <ShieldCheck size={14} className="text-brand-cyan" />
+                         <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">TESORERÍA CENTRAL</span>
                          <div className={`px-2 py-0.5 rounded border text-[9px] font-black uppercase tracking-widest bg-black text-white border-black`}>
                              {isSuperAdmin ? 'GLOBAL' : 'SEDE'}
                          </div>
                     </div>
-                     <h2 className="text-4xl md:text-5xl uppercase leading-none m-0 font-sport text-black dark:text-white">
-                        {isSuperAdmin ? 'Cierre de' : 'Conciliación de'} <span className="text-brand-cyan">{isSuperAdmin ? 'Caja.' : 'Fondos.'}</span>
+                     <h2 className="text-xl md:text-2xl uppercase leading-none m-0 font-sport text-black dark:text-white">
+                        Cierre de Caja <span className="text-brand-cyan">/ Liquidaciones</span>
                     </h2>
+                    <p className="text-neutral-500 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed max-w-xl mt-2 whitespace-normal">
+                        Conciliación de fondos y arqueos de caja. Verifica y autoriza los saldos acumulados de las sedes.
+                    </p>
                  </div>
                  
-                 <div className="px-5 py-3.5 bg-neutral-100 border border-neutral-200 rounded-lg flex items-center gap-4 shadow-sm">
-                    <CreditCard size={20} className="text-brand-cyan" />
+                 <div className="px-4 py-2 bg-neutral-100 border border-neutral-200 rounded-lg flex items-center gap-3 shadow-sm">
+                    <CreditCard size={16} className="text-brand-cyan" />
                     <div className="flex flex-col">
-                        <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-[0.2em]">Estado Financiero</span>
-                        <span className="text-[10px] font-black text-black dark:text-white uppercase tracking-widest">Auditado & Verificado</span>
+                        <span className="text-[8px] font-bold text-neutral-400 uppercase tracking-[0.2em]">Estado Financiero</span>
+                        <span className="text-[9px] font-black text-black dark:text-white uppercase tracking-widest">Auditado</span>
                     </div>
                  </div>
             </div>
@@ -258,7 +261,7 @@ const Liquidaciones = () => {
             {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-32 space-y-6">
                     <div className="w-10 h-10 border-4 border-neutral-200 border-t-brand-cyan rounded-full animate-spin"></div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-neutral-400">Recuperando Saldos...</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-neutral-400">Recopilando historial de liquidaciones...</p>
                 </div>
             ) : (
                 <>
@@ -280,37 +283,32 @@ const Liquidaciones = () => {
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: i * 0.1 }}
-                                    className={`bg-white dark:bg-gray-800 border p-6 rounded-2xl flex flex-col justify-between min-h-[220px] transition-all duration-300 shadow-sm relative overflow-hidden group hover:-translate-y-1 hover:shadow-md ${hasDebt ? 'border-neutral-200 dark:border-gray-700 hover:border-neutral-300 dark:hover:border-gray-600' : 'border-neutral-100 dark:border-gray-700'}`}
+                                    className={`bg-white dark:bg-gray-800 border p-4 rounded-xl flex flex-col justify-between min-h-[180px] transition-all duration-300 shadow-sm relative overflow-hidden group hover:-translate-y-1 hover:shadow-md ${hasDebt ? 'border-neutral-200 dark:border-gray-700 hover:border-neutral-300 dark:hover:border-gray-600' : 'border-neutral-100 dark:border-gray-700'}`}
                                 >
                                     {/* Marcador de deuda */}
                                     {hasDebt && (
                                         <div className="absolute top-0 right-0 w-16 h-16 overflow-hidden">
-                                            <div className="absolute top-0 right-0 bg-brand-cyan text-black text-[8px] font-black uppercase tracking-widest py-1 px-8 rotate-45 translate-x-[25px] translate-y-[10px] shadow-sm">
+                                            <div className="absolute top-0 right-0 bg-brand-cyan text-black text-[7px] font-black uppercase tracking-widest py-0.5 px-8 rotate-45 translate-x-[28px] translate-y-[8px] shadow-sm">
                                                 PENDIENTE
                                             </div>
                                         </div>
                                     )}
 
                                     <div className="space-y-1 relative z-10">
-                                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-neutral-400 block mb-2">{suc.nombre}</span>
+                                        <span className="text-[8px] font-black uppercase tracking-[0.2em] text-neutral-400 block mb-1">{suc.nombre}</span>
                                         <div className="flex items-baseline gap-1">
-                                            <span className={`text-sm font-bold ${hasDebt ? 'text-black dark:text-white' : 'text-neutral-500 dark:text-gray-500'}`}>$</span>
-                                            <p className={`text-5xl font-sport m-0 leading-none ${hasDebt ? 'text-black dark:text-white' : 'text-neutral-800 dark:text-gray-400'}`}>
+                                            <span className={`text-xs font-bold ${hasDebt ? 'text-black dark:text-white' : 'text-neutral-500 dark:text-gray-500'}`}>$</span>
+                                            <p className={`text-3xl font-sport m-0 leading-none ${hasDebt ? 'text-black dark:text-white' : 'text-neutral-800 dark:text-gray-400'}`}>
                                                 {getSaldoNeto(suc).toLocaleString()}
                                             </p>
                                         </div>
                                         {getSaldo(suc) > 0 && getDevolucionTotal(suc) > 0 && (
-                                            <div className="flex items-center gap-2 mt-2">
-                                                <RotateCcw size={10} className="text-amber-500" />
-                                                <span className="text-[9px] font-bold text-amber-500 uppercase tracking-widest">
-                                                    Dev. descontadas: -${getDevolucionTotal(suc).toLocaleString()}
+                                            <div className="flex items-center gap-1.5 mt-1.5">
+                                                <RotateCcw size={8} className="text-amber-500" />
+                                                <span className="text-[8px] font-bold text-amber-500 uppercase tracking-widest">
+                                                    Dev: -${getDevolucionTotal(suc).toLocaleString()}
                                                 </span>
                                             </div>
-                                        )}
-                                        {hasDebt && (
-                                            <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest mt-1">
-                                                Responsabilidad: Central
-                                            </p>
                                         )}
                                     </div>
                                     
@@ -318,15 +316,15 @@ const Liquidaciones = () => {
                                         <motion.button 
                                             whileTap={{ scale: 0.95 }}
                                             onClick={() => handleLiquidarClick(suc)}
-                                            className="w-full mt-6 bg-black dark:bg-gray-700 text-white py-3.5 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] hover:bg-brand-cyan hover:text-black transition-colors flex items-center justify-center gap-2"
+                                            className="w-full mt-4 bg-black dark:bg-gray-700 text-white py-2.5 rounded-lg text-[9px] font-black uppercase tracking-[0.15em] hover:bg-brand-cyan hover:text-black transition-colors flex items-center justify-center gap-2"
                                         >
-                                            LIQUIDAR ${getSaldoNeto(suc).toLocaleString()} <CheckCircle2 size={14} />
+                                            LIQUIDAR <CheckCircle2 size={12} />
                                         </motion.button>
                                     ) : (
-                                        <div className="mt-6 pt-3 border-t border-neutral-100 flex items-center gap-2">
-                                            <div className={`w-1.5 h-1.5 rounded-full ${hasDebt ? 'bg-amber-400 animate-pulse' : 'bg-green-500'}`}></div>
-                                            <span className={`text-[9px] font-black uppercase tracking-[0.2em] ${hasDebt ? 'text-amber-500' : 'text-green-500'}`}>
-                                                {!hasDebt ? 'CUENTA SALDADA (OK)' : 'ESPERANDO COBRO CENTRAL'}
+                                        <div className="mt-4 pt-2 border-t border-neutral-100 dark:border-gray-700 flex items-center gap-2">
+                                            <div className={`w-1 h-1 rounded-full ${hasDebt ? 'bg-amber-400 animate-pulse' : 'bg-green-500'}`}></div>
+                                            <span className={`text-[8px] font-black uppercase tracking-[0.15em] ${hasDebt ? 'text-amber-500' : 'text-green-500'}`}>
+                                                {!hasDebt ? 'OK' : 'PENDIENTE COBRO'}
                                             </span>
                                         </div>
                                     )}

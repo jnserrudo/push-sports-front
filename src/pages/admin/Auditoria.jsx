@@ -7,6 +7,11 @@ import {
 } from 'lucide-react';
 import { auditoriaService } from '../../services/auditoriaService';
 import { sucursalesService } from '../../services/sucursalesService';
+import { productosService } from '../../services/productosService';
+import { 
+    usuariosService, marcasService, categoriasService, 
+    descuentosService, combosService, ofertasService 
+} from '../../services/genericServices';
 import { useAuthStore } from '../../store/authStore';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -41,13 +46,19 @@ const ENTIDADES_LEGIBLES = {
 const ACCIONES_LEGIBLES = {
     'CREATE': 'Creación',
     'UPDATE': 'Modificación',
-    'DELETE': 'Eliminación'
+    'DELETE': 'Eliminación',
+    'createMany': 'Creación Masiva',
+    'updateMany': 'Modificación Masiva',
+    'deleteMany': 'Eliminación Masiva'
 };
 
 const ACCIONES_VERBO = {
     'CREATE': 'Creó',
     'UPDATE': 'Modificó',
-    'DELETE': 'Eliminó'
+    'DELETE': 'Eliminó',
+    'createMany': 'Creó (Masivo)',
+    'updateMany': 'Modificó (Masivo)',
+    'deleteMany': 'Eliminó (Masivo)'
 };
 
 const CAMPOS_LEGIBLES = {
@@ -118,22 +129,8 @@ const CAMPOS_LEGIBLES = {
     'password_hash': 'Contraseña',
     'username': 'Nombre de Usuario',
     'apellido': 'Apellido',
-    'id_rol': 'Rol',
-    'id_tipo_comercio': 'Tipo de Sede',
-    'id_categoria': 'Categoría',
-    'id_marca': 'Marca',
-    'id_proveedor': 'Proveedor',
-    'id_comercio_asignado': 'Sucursal Asignada',
     'id_comercio': 'Sucursal',
-    'id_producto': 'Producto',
-    'id_variante': 'Variante',
-    'id_venta': 'Venta',
-    'id_usuario': 'Usuario',
-    'id_tipo_movimiento': 'Tipo de Movimiento',
-    'id_inventario': 'Inventario',
-    'id_movimiento_var': 'ID Mov. Variante',
-    'id_movimiento': 'ID Movimiento',
-    'id_inventario_var': 'ID Stock Variante',
+    'id_comercio_asignado': 'Sucursal Asignada',
     'requiere_migracion': 'Requiere Migración',
     'factor_multiplicador': 'Factor Multiplicador',
     'nombre_movimiento': 'Tipo de Movimiento',
@@ -167,88 +164,31 @@ const CAMPOS_LEGIBLES = {
     'subtotal': 'Subtotal',
     'iva': 'IVA',
     'recargo': 'Recargo',
-    'stock_disponible': 'Stock Disponible'
+    'stock_disponible': 'Stock Disponible',
+    'id_producto': 'Producto',
+    'id_variante': 'Variante',
+    'id_usuario': 'Usuario',
+    'id_venta': 'Referencia de Venta',
+    'id_movimiento': 'Referencia de Movimiento'
 };
 
-// Campos que NO se deben mostrar en el detalle de cambios (IDs internos, timestamps, etc.)
-const CAMPOS_OCULTOS = [
-    'id_auditoria', 'id_producto', 'id_variante', 'id_comercio', 'id_usuario',
-    'id_venta', 'id_detalle', 'id_detalle_var', 'id_inventario', 'id_inventario_var',
-    'id_movimiento', 'id_movimiento_var', 'id_proveedor', 'id_descuento', 'id_oferta',
-    'id_combo', 'id_devolucion', 'id_liquidacion', 'id_tipo_comercio', 'id_categoria',
-    'id_marca', 'id_rol', 'id_tipo_movimiento', 'id_comercio_asignado', 'id_notificacion',
-    'createdAt', 'updatedAt', 'password_hash', 'deletedAt', 'reset_token', 'reset_token_expires',
-    'token', 'refresh_token', '__v', 'id', 'uuid', 'id_migracion'
+const CAMPOS_CONTEXTO = [
+    'nombre', 'sku', 'codigo', 'titulo', 'nombre_cliente', 
+    'nombre_marca', 'nombre_proveedor', 'nombre_rol',
+    'username', 'apellido', 'talle', 'color', 'sucursal', 'comercio',
+    'id_comercio', 'id_comercio_asignado', 'id_venta', 'nro_ticket',
+    'id_producto', 'id_variante', 'id_usuario', 'id_proveedor',
+    'id_categoria', 'id_marca', 'id_descuento', 'id_combo', 'id_oferta'
 ];
 
-const parseJSON = (str) => {
-    if (!str) return null;
-    if (typeof str === 'object') return str;
-    try {
-        let parsed = JSON.parse(str);
-        // Manejar JSON doblemente stringificado (común en algunas migraciones)
-        if (typeof parsed === 'string') {
-            try { return JSON.parse(parsed); } catch { return parsed; }
-        }
-        return parsed;
-    } catch {
-        return null;
-    }
-};
+// Campos que NO se deben mostrar en el detalle de cambios (SÓLO IDs REALMENTE TÉCNICOS o sensibles)
+const CAMPOS_OCULTOS = [
+    'id_auditoria', 'id_detalle', 'id_detalle_var', 'id_inventario', 'id_inventario_var',
+    'id_movimiento_var', 'id_notificacion', 'id_migracion', 'id_rol', 'id_tipo_comercio', 
+    'id_tipo_movimiento', 'createdAt', 'updatedAt', 'password_hash', 'deletedAt', 
+    'reset_token', 'reset_token_expires', 'token', 'refresh_token', '__v', 'id', 'uuid'
+];
 
-const getNombreCampoLegible = (campo) => {
-    return CAMPOS_LEGIBLES[campo] || campo.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-};
-
-const formatearValor = (valor, campo = '', sucursalesMap = {}) => {
-    if (valor === null || valor === undefined) return '—';
-    if (typeof valor === 'boolean') return valor ? 'Sí' : 'No';
-    
-    // Mapeo especial para Sucursales
-    if ((campo === 'id_comercio' || campo === 'id_comercio_asignado') && sucursalesMap[valor]) {
-        return sucursalesMap[valor];
-    }
-    
-    // Si el nombre del campo sugiere dinero, formatear como moneda
-    const esMoneda = campo.toLowerCase().includes('precio') || 
-                     campo.toLowerCase().includes('costo') || 
-                     campo.toLowerCase().includes('monto') ||
-                     campo.toLowerCase().includes('valor') ||
-                     campo.toLowerCase().includes('saldo') ||
-                     campo.toLowerCase().includes('total');
-
-    if (typeof valor === 'number') {
-        if (esMoneda) return `$${valor.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
-        return valor.toLocaleString('es-AR');
-    }
-    if (typeof valor === 'string') {
-        if (/^\d{4}-\d{2}-\d{2}/.test(valor)) {
-            try {
-                return format(new Date(valor), 'dd/MM/yyyy HH:mm', { locale: es });
-            } catch { return valor; }
-        }
-        if (valor === 'true') return 'Sí';
-        if (valor === 'false') return 'No';
-        if (valor.length > 40) return valor.substring(0, 37) + '...';
-    }
-    if (typeof valor === 'object') {
-        try {
-            const str = JSON.stringify(valor);
-            if (str.length > 40) return str.substring(0, 37) + '...';
-            return str;
-        } catch { return '—'; }
-    }
-    return String(valor);
-};
-
-const getDescripcionLegible = (item) => {
-    const entidad = ENTIDADES_LEGIBLES[item.entidad_afectada] || item.entidad_afectada;
-    const verbo = ACCIONES_VERBO[item.accion] || item.accion;
-    const datos = parseJSON(item.datos_nuevos) || parseJSON(item.datos_anteriores) || {};
-    const nombre = datos.nombre || datos.sku || datos.codigo || datos.titulo || datos.nombre_marca || datos.nombre_proveedor || '';
-    
-    return nombre ? `${verbo} ${entidad}: "${nombre}"` : `${verbo} ${entidad}`;
-};
 
 const ITEMS_PER_PAGE = 25;
 
@@ -290,16 +230,152 @@ const Auditoria = () => {
     const [selectedItem, setSelectedItem] = useState(null);
     const [showFilters, setShowFilters] = useState(false);
     const [sucursalesMap, setSucursalesMap] = useState({});
+    const [productosMap, setProductosMap] = useState({});
+    const [usuariosMap, setUsuariosMap] = useState({});
+    const [marcasMap, setMarcasMap] = useState({});
+    const [categoriasMap, setCategoriasMap] = useState({});
+    const [proveedoresMap, setProveedoresMap] = useState({});
+    const [descuentosMap, setDescuentosMap] = useState({});
+    const [ofertasMap, setOfertasMap] = useState({});
+    const [combosMap, setCombosMap] = useState({});
+    const [tiposMovimientoMap, setTiposMovimientoMap] = useState({});
+    const [variantesMap, setVariantesMap] = useState({});
     
-    // Cargar nombres de sucursales para mapear IDs
+    
+    // Cargar catálogos para mapear IDs
+    const cargarCatalogos = async () => {
+        try {
+            const [
+                sucData, prodData, userData, marcaData, catData, 
+                provData, descData, oferData, combData
+            ] = await Promise.allSettled([
+                sucursalesService.getAll(),
+                productosService.getAll(),
+                usuariosService.getAll(),
+                marcasService.getAll(),
+                categoriasService.getAll(),
+                productosService.getProveedores(),
+                descuentosService.getAll(),
+                ofertasService.getAll(),
+                combosService.getAll()
+            ]);
+            
+            // Mapear Sucursales
+            if (sucData.status === 'fulfilled') {
+                const sMap = {};
+                sucData.value.forEach(s => sMap[s.id_comercio] = s.nombre);
+                setSucursalesMap(sMap);
+            }
+
+            // Mapear Productos + Variantes (las variantes vienen incluidas en la respuesta de productos)
+            if (prodData.status === 'fulfilled') {
+                const pMap = {};
+                const vMap = {};
+                prodData.value.forEach(p => {
+                    const idProd = p.id_producto?.toLowerCase();
+                    if (idProd) pMap[idProd] = p.nombre;
+                    // Extraer variantes del producto
+                    if (p.variantes && Array.isArray(p.variantes)) {
+                        p.variantes.forEach(v => {
+                            let attrs = v.atributos_valores || {};
+                            if (typeof attrs === 'string') {
+                                try { attrs = JSON.parse(attrs); } catch (e) { attrs = {}; }
+                            }
+                            const partes = Object.values(attrs).filter(Boolean);
+                            const nombreVariante = partes.length > 0 
+                                ? `${p.nombre} — ${partes.join(' / ')}` 
+                                : v.sku_variante 
+                                    ? `${p.nombre} — SKU: ${v.sku_variante}`
+                                    : p.nombre;
+                            const idVar = v.id_variante?.toLowerCase();
+                            if (idVar) vMap[idVar] = nombreVariante;
+                        });
+                    }
+                });
+                setProductosMap(pMap);
+                setVariantesMap(vMap);
+            }
+
+            // Mapear Usuarios
+            if (userData.status === 'fulfilled') {
+                const uMap = {};
+                userData.value.forEach(u => uMap[u.id_usuario] = `${u.nombre} ${u.apellido || ''}`.trim());
+                setUsuariosMap(uMap);
+            }
+
+            // Mapear Marcas (Corregido campo nombre_marca)
+            if (marcaData.status === 'fulfilled') {
+                const mMap = {};
+                marcaData.value.forEach(m => mMap[m.id_marca] = m.nombre_marca || m.nombre);
+                setMarcasMap(mMap);
+            }
+
+            // Mapear Categorías
+            if (catData.status === 'fulfilled') {
+                const cMap = {};
+                catData.value.forEach(c => cMap[c.id_categoria] = c.nombre);
+                setCategoriasMap(cMap);
+            }
+
+            // Mapear Proveedores
+            if (provData.status === 'fulfilled') {
+                const provMap = {};
+                provData.value.forEach(p => provMap[p.id_proveedor] = p.nombre_proveedor);
+                setProveedoresMap(provMap);
+            }
+
+            // Mapear Descuentos
+            if (descData.status === 'fulfilled') {
+                const dMap = {};
+                descData.value.forEach(d => dMap[d.id_descuento] = d.codigo);
+                setDescuentosMap(dMap);
+            }
+
+            // Mapear Ofertas
+            if (oferData.status === 'fulfilled') {
+                const oMap = {};
+                oferData.value.forEach(o => oMap[o.id_oferta] = o.nombre);
+                setOfertasMap(oMap);
+            }
+
+            // Mapear Combos
+            if (combData.status === 'fulfilled') {
+                const combMap = {};
+                combData.value.forEach(c => combMap[c.id_combo] = c.nombre);
+                setCombosMap(combMap);
+            }
+
+        } catch (error) {
+            console.error('Error cargando catálogos para auditoría:', error);
+        }
+    };
+
     useEffect(() => {
-        sucursalesService.getAll().then(sucs => {
-            const map = {};
-            sucs.forEach(s => map[s.id_comercio] = s.nombre);
-            setSucursalesMap(map);
-        }).catch(() => {});
+        cargarCatalogos();
     }, []);
     
+    // Master Map unificado para todas las funciones
+    const masterMaps = useMemo(() => {
+        const m = {
+            sucursales: sucursalesMap,
+            productos: productosMap,
+            variantes: variantesMap,
+            usuarios: usuariosMap,
+            marcas: marcasMap,
+            categorias: categoriasMap,
+            proveedores: proveedoresMap,
+            descuentos: descuentosMap,
+            ofertas: ofertasMap,
+            combos: combosMap,
+            tiposMovimiento: tiposMovimientoMap
+        };
+        return m;
+    }, [
+        sucursalesMap, productosMap, variantesMap, usuariosMap, marcasMap, 
+        categoriasMap, proveedoresMap, descuentosMap, ofertasMap, 
+        combosMap, tiposMovimientoMap
+    ]);
+
     // Filtros
     const [filtros, setFiltros] = useState({
         entidad: '',
@@ -378,96 +454,277 @@ const Auditoria = () => {
         URL.revokeObjectURL(url);
     };
 
+    // ═══════════════════════════════════════════════════
+    // HELPERS DE FORMATEO (dentro del componente)
+    // ═══════════════════════════════════════════════════
+
+    const parseJSON = (str) => {
+        if (!str) return null;
+        if (typeof str === 'object') return str;
+        try {
+            let parsed = JSON.parse(str);
+            if (typeof parsed === 'string') {
+                try { return JSON.parse(parsed); } catch { return parsed; }
+            }
+            return parsed;
+        } catch { return null; }
+    };
+
+    const getNombreCampoLegible = (campo) => {
+        return CAMPOS_LEGIBLES[campo] || campo.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    };
+
     const formatFecha = (fecha) => {
         if (!fecha) return '—';
-        return format(new Date(fecha), 'dd/MM/yyyy HH:mm', { locale: es });
+        try { return format(new Date(fecha), 'dd/MM/yyyy HH:mm', { locale: es }); }
+        catch { return String(fecha); }
     };
 
     const getAccionBadge = (accion) => {
         switch (accion) {
-            case 'CREATE': return { label: 'Creación', bg: 'bg-green-50 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', border: 'border-green-200 dark:border-green-800', icon: Plus };
-            case 'UPDATE': return { label: 'Modificación', bg: 'bg-blue-50 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-800', icon: Edit3 };
-            case 'DELETE': return { label: 'Eliminación', bg: 'bg-red-50 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-400', border: 'border-red-200 dark:border-red-800', icon: Trash2 };
+            case 'CREATE': case 'createMany':
+                return { label: accion === 'createMany' ? 'Creación Masiva' : 'Creación', bg: 'bg-green-50 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', border: 'border-green-200 dark:border-green-800', icon: Plus };
+            case 'UPDATE': case 'updateMany':
+                return { label: accion === 'updateMany' ? 'Modif. Masiva' : 'Modificación', bg: 'bg-blue-50 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-800', icon: Edit3 };
+            case 'DELETE': case 'deleteMany':
+                return { label: accion === 'deleteMany' ? 'Eliminación Masiva' : 'Eliminación', bg: 'bg-red-50 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-400', border: 'border-red-200 dark:border-red-800', icon: Trash2 };
             default: return { label: accion, bg: 'bg-neutral-50', text: 'text-neutral-600', border: 'border-neutral-200', icon: Activity };
         }
     };
 
-    // Obtener los cambios filtrados (sin IDs internos ni timestamps)
-    const getCambiosFiltrados = (item) => {
-        let cambios = parseJSON(item.cambios_detectados);
+    const formatearValor = (valor, campo, maps = masterMaps, context = {}) => {
+        if (valor === null || valor === undefined) return '—';
+        if (typeof valor === 'boolean') return valor ? 'Sí' : 'No';
+
+        const isUUID = (val) => typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(val);
+
+        // Campo especial: atributos_valores → mostrar como "Sabor: Vainilla / Tamaño: 1KG"
+        if (campo === 'atributos_valores' && typeof valor === 'object' && valor !== null && !Array.isArray(valor)) {
+            const partes = Object.entries(valor).map(([k, v]) => `${k}: ${v}`);
+            return partes.length > 0 ? partes.join(' / ') : '—';
+        }
+
+        // Mapeos por campo con fallback a contexto del registro
+        const valLower = typeof valor === 'string' ? valor.toLowerCase() : valor;
         
-        // Si no hay cambios_detectados (ej: creaciones viejas o borrados), 
-        // intentar reconstruir de datos_nuevos/anteriores o valor_nuevo/anterior (legacy)
+        if (campo === 'id_comercio' || campo === 'id_comercio_asignado') {
+            if (maps.sucursales?.[valLower]) return maps.sucursales[valLower];
+            if (context.comercio_nombre) return context.comercio_nombre;
+        }
+        if (campo === 'id_producto') {
+            if (maps.productos?.[valLower]) return maps.productos[valLower];
+            if (context.producto_nombre || context.nombre) return context.producto_nombre || context.nombre;
+        }
+        if (campo === 'id_variante') {
+            if (maps.variantes?.[valLower]) return maps.variantes[valLower];
+            if (context.talle && context.color) return `${context.talle} / ${context.color}`;
+            if (context.talle) return context.talle;
+            if (context.color) return context.color;
+            if (context.sku_variante || context.sku) return context.sku_variante || context.sku;
+            // Intentar con atributos_valores del contexto
+            if (context.atributos_valores) {
+                const attrs = typeof context.atributos_valores === 'string' 
+                    ? JSON.parse(context.atributos_valores) 
+                    : context.atributos_valores;
+                const partes = Object.values(attrs).filter(Boolean);
+                if (partes.length > 0) return partes.join(' / ');
+            }
+        }
+        if (campo === 'id_usuario' && maps.usuarios?.[valor]) return maps.usuarios[valor];
+        if (campo === 'id_marca' && maps.marcas?.[valor]) return maps.marcas[valor];
+        if (campo === 'id_categoria' && maps.categorias?.[valor]) return maps.categorias[valor];
+        if (campo === 'id_proveedor' && maps.proveedores?.[valor]) return maps.proveedores[valor];
+        if (campo === 'id_descuento' && maps.descuentos?.[valor]) return maps.descuentos[valor];
+        if (campo === 'id_oferta' && maps.ofertas?.[valor]) return maps.ofertas[valor];
+        if (campo === 'id_combo' && maps.combos?.[valor]) return maps.combos[valor];
+        if (campo === 'id_tipo_movimiento' && maps.tiposMovimiento?.[valor]) return maps.tiposMovimiento[valor];
+
+        // Fallback UUID — intentar buscar en TODOS los mapas antes de truncar
+        if (isUUID(valor)) {
+            // Buscar en todos los mapas posibles
+            for (const [, mapObj] of Object.entries(maps)) {
+                if (mapObj?.[valLower]) return mapObj[valLower];
+            }
+            const fieldBase = campo.replace('id_', '');
+            if (context[`${fieldBase}_nombre`]) return context[`${fieldBase}_nombre`];
+            // Mostrar ID truncado solo para campos id_
+            if (campo.startsWith('id_')) return valor.substring(0, 8) + '…';
+            return '(ID Técnico)';
+        }
+
+        // Moneda
+        const esMoneda = /precio|costo|monto|valor_descuento|saldo|total|comision/i.test(campo);
+        if (typeof valor === 'number') {
+            if (esMoneda) return `$${valor.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
+            return valor.toLocaleString('es-AR');
+        }
+        if (typeof valor === 'string') {
+            if (/^\d{4}-\d{2}-\d{2}/.test(valor)) {
+                try { return format(new Date(valor), 'dd/MM/yyyy HH:mm', { locale: es }); } catch { return valor; }
+            }
+            if (valor === 'true') return 'Sí';
+            if (valor === 'false') return 'No';
+            if (valor.length > 80) return valor.substring(0, 77) + '…';
+        }
+        if (typeof valor === 'object' && valor !== null) {
+            // Objetos key-value (como atributos) → mostrar legible
+            if (!Array.isArray(valor)) {
+                const entries = Object.entries(valor).filter(([k]) => !k.startsWith('id_'));
+                if (entries.length > 0 && entries.length <= 5) {
+                    return entries.map(([k, v]) => `${k}: ${v}`).join(' / ');
+                }
+            }
+            try { const s = JSON.stringify(valor); return s.length > 60 ? s.substring(0, 57) + '…' : s; } catch { return '—'; }
+        }
+        return String(valor);
+    };
+
+    const getDescripcionLegible = (item, maps = masterMaps) => {
+        const entidad = ENTIDADES_LEGIBLES[item.entidad_afectada] || item.entidad_afectada;
+        const verbo = ACCIONES_VERBO[item.accion] || item.accion;
+        const datosNuevos = parseJSON(item.datos_nuevos) || parseJSON(item.valor_nuevo) || {};
+        const datosAnteriores = parseJSON(item.datos_anteriores) || parseJSON(item.valor_anterior) || {};
+        const datos = { ...datosAnteriores, ...datosNuevos };
+
+        const idProducto = datos.id_producto || item.id_producto;
+        const idComercio = datos.id_comercio || item.id_comercio;
+
+        let nombreProducto = (idProducto && maps.productos?.[idProducto]) || datos.nombre || '';
+        let nombreVariante = '';
+        if (item.entidad_afectada.includes('Variante')) {
+            const talle = datos.talle || datos.talla || '';
+            const color = datos.color || '';
+            if (talle || color) nombreVariante = `${talle}${talle && color ? ' / ' : ''}${color}`;
+            else if (datos.sku_variante) nombreVariante = `SKU: ${datos.sku_variante}`;
+        }
+
+        let id = datos.nombre || datos.titulo || datos.username || datos.nombre_marca || datos.nombre_proveedor || '';
+        if (item.entidad_afectada.includes('Variante')) {
+            if (nombreProducto && nombreVariante) id = `${nombreProducto} (${nombreVariante})`;
+            else id = nombreProducto || nombreVariante || id;
+        } else if (!id && nombreProducto) {
+            id = nombreProducto;
+        }
+
+        const sucursal = maps.sucursales?.[idComercio] || '';
+        if (sucursal) id = id ? `${id} en ${sucursal}` : `en ${sucursal}`;
+
+        return id ? `${verbo} ${entidad}: "${id}"` : `${verbo} ${entidad}`;
+    };
+
+    // Obtener los cambios filtrados (sin IDs internos ni timestamps)
+    const getCambiosFiltrados = (item, maps = masterMaps) => {
+        const accion = item.accion;
+        const nuevosRaw = parseJSON(item.datos_nuevos) || parseJSON(item.valor_nuevo);
+        const anterioresRaw = parseJSON(item.datos_anteriores) || parseJSON(item.valor_anterior);
+
+        // Caso Masivo (Array)
+        if (Array.isArray(nuevosRaw) || Array.isArray(anterioresRaw)) {
+            return { type: 'massive', data: nuevosRaw || anterioresRaw };
+        }
+
+        let cambios = parseJSON(item.cambios_detectados);
         if (!cambios) {
-            const nuevos = parseJSON(item.datos_nuevos) || parseJSON(item.valor_nuevo) || {};
-            const anteriores = parseJSON(item.datos_anteriores) || parseJSON(item.valor_anterior) || {};
-            
-            if (item.accion === 'CREATE') {
-                cambios = {};
-                Object.entries(nuevos).forEach(([k, v]) => {
-                    cambios[k] = { antes: null, despues: v };
-                });
-            } else if (item.accion === 'DELETE') {
-                cambios = {};
-                Object.entries(anteriores).forEach(([k, v]) => {
-                    cambios[k] = { antes: v, despues: null };
+            const nuevos = nuevosRaw || {};
+            const anteriores = anterioresRaw || {};
+            cambios = {};
+            if (accion.includes('CREATE')) {
+                Object.entries(nuevos).forEach(([k, v]) => { cambios[k] = { antes: null, despues: v }; });
+            } else if (accion.includes('DELETE')) {
+                Object.entries(anteriores).forEach(([k, v]) => { cambios[k] = { antes: v, despues: null }; });
+            } else if (accion.includes('UPDATE')) {
+                const allKeys = new Set([...Object.keys(anteriores), ...Object.keys(nuevos)]);
+                allKeys.forEach(k => {
+                    if (JSON.stringify(anteriores[k]) !== JSON.stringify(nuevos[k])) {
+                        cambios[k] = { antes: anteriores[k], despues: nuevos[k] };
+                    }
                 });
             } else {
-                return [];
+                return { type: 'field', data: [] };
             }
         }
 
-        return Object.entries(cambios)
+        // ← AQUÍ estaba el bug: datosReferencia no se declaraba
+        const datosReferencia = parseJSON(item.datos_anteriores) || parseJSON(item.datos_nuevos)
+                             || parseJSON(item.valor_anterior) || parseJSON(item.valor_nuevo) || {};
+        const contextExtendido = { ...item, ...datosReferencia };
+
+        const entries = Object.entries(cambios)
             .filter(([campo, valores]) => {
-                // Si el campo tiene una traducción explícita, LO MOSTRAMOS (aunque sea un ID)
-                if (CAMPOS_LEGIBLES[campo]) return true;
-
-                // Filtro de campos técnicos que NO queremos ver nunca
-                const esTecnico = CAMPOS_OCULTOS.some(oculto => campo === oculto);
-                if (esTecnico) return false;
-
-                // Ocultar IDs que no tienen traducción (probablemente IDs internos irrelevantes)
-                if (campo.startsWith('id_')) return false;
-                
-                // Si es un update, ocultar si el valor no cambió realmente (redundancia)
-                if (item.accion === 'UPDATE' && valores.antes === valores.despues) {
-                    return false;
-                }
-                
+                if (CAMPOS_OCULTOS.includes(campo)) return false;
+                if (accion.includes('UPDATE') && JSON.stringify(valores.antes) === JSON.stringify(valores.despues)) return false;
                 return true;
             });
+
+        // Forzar IDs de contexto genéricos transversalmente (sin harcodear por entidad específica)
+        const forzarCtx = (key, value) => {
+            if (!value) return;
+            // Si ya existe en entries (ej: por ser un CREATE insertado o un UPDATE modificado), lo convertimos a contexto
+            const entryIndex = entries.findIndex(([k]) => k === key);
+            if (entryIndex !== -1) {
+                entries[entryIndex][1].isContext = true;
+                return;
+            }
+            const fmtVal = formatearValor(value, key, maps, contextExtendido);
+            if (fmtVal !== '(ID Técnico)') {
+                entries.unshift([key, { antes: value, despues: value, isContext: true }]);
+            }
+        };
+
+        // Recorrer el universo de CAMPOS_CONTEXTO y forzar su extracción al bloque "Contexto"
+        CAMPOS_CONTEXTO.forEach(ctxKey => {
+            if (contextExtendido[ctxKey] !== undefined && contextExtendido[ctxKey] !== null) {
+                forzarCtx(ctxKey, contextExtendido[ctxKey]);
+            }
+        });
+
+        // Filtrar IDs técnicos que no pudimos resolver
+        const finalEntries = entries.filter(([campo, valores]) => {
+            const valor = valores.despues || valores.antes;
+            if (valor === undefined || valor === null) return true;
+            return formatearValor(valor, campo, maps, contextExtendido) !== '(ID Técnico)';
+        });
+
+        return { type: 'field', data: finalEntries };
     };
 
     return (
         <div className="space-y-4 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-black dark:border-gray-600 pb-4 gap-4">
-                <div>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-black dark:border-gray-600 pb-4 gap-4 flex-wrap">
+                <div className="flex-1 min-w-0 pr-0 md:pr-4">
                     <div className="flex items-center gap-2 mb-1">
                         <ShieldAlert size={14} className="text-brand-cyan" />
                         <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">SISTEMA DE REGISTRO</span>
                     </div>
-                    <h2 className="text-2xl md:text-3xl uppercase leading-none m-0 font-sport text-black dark:text-white">
-                        Auditoría <span className="text-brand-cyan">Plumada</span>
+                    <h2 className="text-xl md:text-2xl uppercase leading-none m-0 font-sport text-black dark:text-white">
+                        Gestión de <span className="text-brand-cyan">Auditoría</span>
                     </h2>
-                    <p className="text-neutral-500 text-sm font-medium mt-2">
-                        {total.toLocaleString('es-AR')} registros totales
-                        {Object.keys(filtrosAplicados).length > 0 && (
-                            <span className="ml-2 text-brand-cyan font-bold">• Filtros activos</span>
-                        )}
+                    <p className="text-neutral-500 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed max-w-xl mt-2 whitespace-normal">
+                        Control de integridad y trazabilidad. Consultá el historial de cambios, creaciones y eliminaciones realizadas por los operadores del sistema.
                     </p>
+                    <div className="flex items-center gap-2 mt-2">
+                        <span className="text-[10px] font-black uppercase text-brand-cyan bg-brand-cyan/10 px-2 py-0.5 rounded">
+                            {total.toLocaleString('es-AR')} REGISTROS
+                        </span>
+                        {Object.keys(filtrosAplicados).length > 0 && (
+                            <span className="text-[10px] font-black uppercase text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded animate-pulse">
+                                Filtros activos
+                            </span>
+                        )}
+                    </div>
                 </div>
 
-                <div className="flex gap-2 w-full md:w-auto">
+                <div className="flex gap-2 w-full md:w-auto mt-2 md:mt-0 flex-shrink-0">
                     <button
                         onClick={() => setShowFilters(!showFilters)}
-                        className={`flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-[0.15em] transition-all ${
+                        className={`w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-[10px] font-black uppercase tracking-[0.15em] transition-all shadow-sm active:scale-95 ${
                             showFilters 
-                                ? 'bg-brand-cyan text-black' 
-                                : 'bg-neutral-100 dark:bg-gray-700 text-black dark:text-white hover:bg-neutral-200'
+                                ? 'bg-brand-cyan text-black shadow-md' 
+                                : 'bg-neutral-100 dark:bg-gray-700 text-black dark:text-white hover:bg-neutral-200 hover:shadow-md'
                         }`}
                     >
-                        <Filter size={14} />
+                        <Filter size={16} />
                         Filtros
                         {Object.keys(filtrosAplicados).length > 0 && (
                             <span className="ml-1 w-5 h-5 rounded-full bg-black text-white dark:bg-white dark:text-black flex items-center justify-center text-[9px]">
@@ -570,7 +827,7 @@ const Auditoria = () => {
             {loading ? (
                 <div className="flex flex-col items-center justify-center py-20 space-y-4">
                     <div className="w-12 h-12 border-4 border-neutral-200 border-t-brand-cyan rounded-full animate-spin" />
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-400">Sincronizando registros...</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-400">Recopilando historial de auditoría...</p>
                 </div>
             ) : auditorias.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -594,9 +851,9 @@ const Auditoria = () => {
                             </thead>
                             <tbody className="divide-y divide-neutral-100 dark:divide-gray-700">
                                 {auditorias.map((item) => {
+                                    const cambios = getCambiosFiltrados(item, masterMaps);
                                     const badge = getAccionBadge(item.accion);
                                     const BadgeIcon = badge.icon;
-                                    const cambios = getCambiosFiltrados(item);
                                     
                                     return (
                                         <tr
@@ -629,11 +886,16 @@ const Auditoria = () => {
                                             {/* Descripción */}
                                             <td className="px-4 py-3 max-w-[300px]">
                                                 <p className="text-xs text-neutral-600 dark:text-neutral-300 truncate">
-                                                    {item.descripcion_accion || getDescripcionLegible(item)}
+                                                    {item.descripcion_accion || getDescripcionLegible(item, masterMaps)}
                                                 </p>
-                                                {cambios.length > 0 && (
+                                                {cambios.type === 'field' && cambios.data.length > 0 && (
                                                     <span className="text-[10px] text-brand-cyan font-medium">
-                                                        {cambios.length} campo{cambios.length !== 1 ? 's' : ''} modificado{cambios.length !== 1 ? 's' : ''}
+                                                        {cambios.data.length} campo{cambios.data.length !== 1 ? 's' : ''} modificado{cambios.data.length !== 1 ? 's' : ''}
+                                                    </span>
+                                                )}
+                                                {cambios.type === 'massive' && (
+                                                    <span className="text-[10px] text-amber-500 font-medium whitespace-nowrap">
+                                                        {cambios.data.length} registros afectados
                                                     </span>
                                                 )}
                                             </td>
@@ -729,74 +991,146 @@ const Auditoria = () => {
                         </div>
 
                         <div className="p-5 space-y-5">
-                            {/* Resumen */}
-                            <div className="bg-neutral-50 dark:bg-gray-700/50 rounded-xl p-4">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <FileText size={16} className="text-brand-cyan" />
-                                    <span className="font-bold text-sm text-neutral-700 dark:text-neutral-200">Resumen</span>
-                                </div>
-                                <p className="text-neutral-600 dark:text-neutral-300 text-sm leading-relaxed">
-                                    {selectedItem.descripcion_accion || getDescripcionLegible(selectedItem)}
-                                </p>
-                            </div>
-
                             {/* Tabla de Cambios */}
                             {(() => {
                                 const cambios = getCambiosFiltrados(selectedItem);
-                                if (cambios.length === 0) return (
-                                    <div className="text-center py-6 border-2 border-dashed border-neutral-100 rounded-xl">
-                                        <p className="text-xs text-neutral-400 font-medium">No hay cambios significativos registrados en los datos.</p>
+                                
+                                if (cambios.type === 'massive') {
+                                    return (
+                                        <div className="space-y-3">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <Database size={16} className="text-amber-500" />
+                                                <span className="font-bold text-sm text-neutral-700 dark:text-neutral-200">
+                                                    Registros Afectados ({cambios.data.length})
+                                                </span>
+                                            </div>
+                                            <div className="bg-neutral-50 dark:bg-gray-700/30 rounded-xl p-4 border border-neutral-200 dark:border-gray-600 overflow-auto max-h-[300px]">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                    {cambios.data.map((reg, idx) => (
+                                                        <div key={idx} className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-neutral-100 dark:border-gray-700 shadow-sm flex flex-col gap-2">
+                                                            <div className="flex items-center justify-between border-b border-neutral-50 dark:border-gray-700/50 pb-2 mb-1">
+                                                                <span className="text-[10px] font-black text-brand-cyan uppercase tracking-widest">ÍTEM #{idx + 1}</span>
+                                                                <div className="w-2 h-2 rounded-full bg-brand-cyan/20"></div>
+                                                            </div>
+                                                            <div className="space-y-1.5">
+                                                                {Object.entries(reg).filter(([k]) => !CAMPOS_OCULTOS.includes(k) && !k.startsWith('id_')).map(([k, v]) => (
+                                                                    <div key={k} className="flex justify-between items-start gap-3">
+                                                                        <span className="text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase shrink-0">
+                                                                            {getNombreCampoLegible(k)}
+                                                                        </span>
+                                                                        <span className="text-[11px] font-medium text-neutral-700 dark:text-neutral-200 text-right leading-tight">
+                                                                            {formatearValor(v, k, masterMaps, reg)}
+                                                                        </span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+
+                                if (cambios.data.length === 0) return (
+                                    <div className="flex flex-col items-center justify-center py-10 px-4 border-2 border-dashed border-neutral-100 dark:border-gray-700 rounded-2xl bg-neutral-50/30 dark:bg-gray-800/20">
+                                        <AlertTriangle size={32} className="text-amber-400 mb-3" />
+                                        <p className="text-xs text-neutral-500 dark:text-neutral-400 font-bold uppercase tracking-wider text-center max-w-[250px]">
+                                            No se detectaron cambios significativos en los datos operativos.
+                                        </p>
+                                        <p className="text-[10px] text-neutral-400 dark:text-neutral-500 mt-2 text-center">
+                                            Es posible que se hayan actualizado registros técnicos o metadatos internos del sistema.
+                                        </p>
                                     </div>
                                 );
                                 
-                                const esCreacion = selectedItem.accion === 'CREATE';
-                                const esEliminacion = selectedItem.accion === 'DELETE';
+                                const esCreacion = selectedItem.accion.includes('CREATE');
+                                const esEliminacion = selectedItem.accion.includes('DELETE');
+                                const camposContexto = cambios.data.filter(([_, v]) => v.isContext);
+                                const camposModificados = cambios.data.filter(([_, v]) => !v.isContext);
                                 
                                 return (
-                                    <div>
-                                        <div className="flex items-center justify-between mb-3">
-                                            <div className="flex items-center gap-2">
-                                                <Edit3 size={16} className="text-brand-cyan" />
-                                                <span className="font-bold text-sm text-neutral-700 dark:text-neutral-200">
-                                                    {esCreacion ? 'Datos Ingresados' : esEliminacion ? 'Datos Eliminados' : 'Cambios Realizados'} ({cambios.length})
-                                                </span>
-                                            </div>
-                                            {!esCreacion && !esEliminacion && (
-                                                <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest bg-neutral-100 px-2 py-0.5 rounded">MODIFICACIÓN</span>
-                                            )}
-                                        </div>
-                                        <div className="border border-neutral-200 dark:border-gray-600 rounded-xl overflow-hidden shadow-sm">
-                                            <table className="w-full text-left">
-                                                <thead>
-                                                    <tr className="bg-neutral-50 dark:bg-gray-700/50 border-b border-neutral-200 dark:border-gray-600">
-                                                        <th className="px-4 py-3 text-[10px] font-black uppercase tracking-wider text-neutral-500 w-[35%]">Campo</th>
-                                                        {(!esCreacion && !esEliminacion) && (
-                                                            <th className="px-4 py-3 text-[10px] font-black uppercase tracking-wider text-neutral-400">Valor Anterior</th>
-                                                        )}
-                                                        <th className={`px-4 py-3 text-[10px] font-black uppercase tracking-wider ${esEliminacion ? 'text-red-500' : 'text-brand-cyan'}`}>
-                                                            {esCreacion ? 'Valor Inicial' : esEliminacion ? 'Valor al Eliminar' : 'Valor Nuevo'}
-                                                        </th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-neutral-100 dark:divide-gray-700">
-                                                    {cambios.map(([campo, valores]) => (
-                                                        <tr key={campo} className="hover:bg-neutral-50 dark:hover:bg-gray-700/30 transition-colors">
-                                                            <td className="px-4 py-3 text-xs font-bold text-neutral-700 dark:text-neutral-200">
-                                                                {getNombreCampoLegible(campo)}
-                                                            </td>
-                                                            {(!esCreacion && !esEliminacion) && (
-                                                                <td className="px-4 py-3 text-xs text-neutral-400 line-through decoration-red-300">
-                                                                    {formatearValor(valores.antes, campo, sucursalesMap)}
-                                                                </td>
-                                                            )}
-                                                            <td className={`px-4 py-3 text-xs font-medium ${esEliminacion ? 'text-red-500' : 'text-neutral-800 dark:text-neutral-100'}`}>
-                                                                {formatearValor(esEliminacion ? valores.antes : valores.despues, campo, sucursalesMap)}
-                                                            </td>
-                                                        </tr>
+                                    <div className="space-y-4">
+                                        {/* Contexto */}
+                                        {camposContexto.length > 0 && (
+                                            <div className="bg-neutral-50 dark:bg-gray-700/30 rounded-xl p-3 border border-neutral-200 dark:border-gray-600">
+                                                <div className="flex items-center gap-2 mb-2 px-1">
+                                                    <MapPin size={14} className="text-neutral-400" />
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Contexto de la Operación</span>
+                                                </div>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {camposContexto.map(([campo, valores]) => (
+                                                        <div key={campo} className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-600 px-3 py-1.5 rounded-lg shadow-sm">
+                                                            <span className="text-[10px] font-bold text-neutral-400 uppercase">{getNombreCampoLegible(campo)}:</span>
+                                                            <span className="text-xs font-bold text-neutral-700 dark:text-neutral-200">
+                                                                {formatearValor(valores.despues, campo, masterMaps, parseJSON(selectedItem.datos_nuevos) || {})}
+                                                            </span>
+                                                        </div>
                                                     ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Cambios */}
+                                        {camposModificados.length > 0 && (
+                                            <div>
+                                                <div className="flex items-center justify-between mb-3 mt-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <Edit3 size={16} className="text-brand-cyan" />
+                                                        <span className="font-bold text-sm text-neutral-700 dark:text-neutral-200">
+                                                            {esCreacion ? 'Datos Ingresados' : esEliminacion ? 'Datos Eliminados' : 'Cambios Realizados'} ({camposModificados.length})
+                                                        </span>
+                                                    </div>
+                                                    {!esCreacion && !esEliminacion && (
+                                                        <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest bg-neutral-100 px-2 py-0.5 rounded">MODIFICACIÓN</span>
+                                                    )}
+                                                </div>
+                                                <div className="border border-neutral-200 dark:border-gray-700 rounded-2xl overflow-hidden shadow-sm bg-white dark:bg-gray-800">
+                                                    <table className="w-full text-left border-collapse">
+                                                        <thead>
+                                                            <tr className="bg-neutral-50 dark:bg-gray-700/50 border-b border-neutral-200 dark:border-gray-700">
+                                                                <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-neutral-500 w-[30%]">Campo</th>
+                                                                {(!esCreacion && !esEliminacion) && (
+                                                                    <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-neutral-400">Estado Anterior</th>
+                                                                )}
+                                                                <th className={`px-5 py-4 text-[10px] font-black uppercase tracking-widest ${esEliminacion ? 'text-red-500' : 'text-brand-cyan'}`}>
+                                                                    {esCreacion ? 'Valor Registrado' : esEliminacion ? 'Valor Final' : 'Nuevo Estado'}
+                                                                </th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody className="divide-y divide-neutral-100 dark:divide-gray-700">
+                                                            {camposModificados.map(([campo, valores]) => (
+                                                                <tr key={campo} className="group hover:bg-neutral-50/50 dark:hover:bg-gray-700/20 transition-all">
+                                                                    <td className="px-5 py-4">
+                                                                        <span className="text-xs font-bold text-neutral-800 dark:text-neutral-200 block">
+                                                                            {getNombreCampoLegible(campo)}
+                                                                        </span>
+                                                                    </td>
+                                                                    {(!esCreacion && !esEliminacion) && (
+                                                                        <td className="px-5 py-4">
+                                                                            <div className="text-xs text-neutral-400 font-medium line-through decoration-red-300/50">
+                                                                                {formatearValor(valores.antes, campo, masterMaps, parseJSON(selectedItem.datos_anteriores) || parseJSON(selectedItem.valor_anterior) || {})}
+                                                                            </div>
+                                                                        </td>
+                                                                    )}
+                                                                    <td className="px-5 py-4">
+                                                                        <div className={`text-xs font-black p-2 rounded-lg inline-block break-all max-w-[250px] ${
+                                                                            esEliminacion 
+                                                                                ? 'bg-red-50 dark:bg-red-900/20 text-red-600' 
+                                                                                : esCreacion 
+                                                                                    ? 'bg-green-50 dark:bg-green-900/20 text-green-600'
+                                                                                    : 'bg-cyan-50 dark:bg-cyan-900/20 text-brand-cyan'
+                                                                        }`}>
+                                                                            {formatearValor(esEliminacion ? valores.antes : valores.despues, campo, masterMaps, parseJSON(selectedItem.datos_nuevos) || parseJSON(selectedItem.valor_nuevo) || {})}
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })()}

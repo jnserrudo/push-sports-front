@@ -3,7 +3,7 @@ import api from '../api/api';
 export const posService = {
     // Obtiene solo los productos que la sucursal tiene en inventario
     getInventarioSucursal: async (sucursalId) => {
-        const response = await api.get(`/inventarios/${sucursalId}`);
+        const response = await api.get(`/inventarios/${sucursalId}?soloConStock=true`);
         return response.data;
     },
 

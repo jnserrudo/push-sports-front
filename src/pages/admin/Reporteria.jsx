@@ -13,8 +13,10 @@ import {
   CheckCircle2,
   ChevronRight,
   AlertCircle,
-  X
+  X,
+  Mail
 } from 'lucide-react';
+import api from '../../api/api';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { motion, AnimatePresence } from 'framer-motion';
 import { productosService } from '../../services/productosService';
@@ -163,34 +165,34 @@ const Reporteria = () => {
       </AnimatePresence>
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
-        <div className="flex items-center gap-2 md:gap-4">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-black rounded-xl flex items-center justify-center shadow-lg border-2 border-white shrink-0">
-                <ClipboardList className="text-brand-cyan w-5 h-5 md:w-6 md:h-6" strokeWidth={2.5} />
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-black dark:border-gray-600 pb-4 gap-4 flex-wrap">
+        <div className="flex-1 min-w-0 pr-0 md:pr-4">
+            <div className="flex items-center gap-2 mb-1">
+                <ClipboardList size={14} className="text-brand-cyan" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">PUSH SPORT</span>
             </div>
-            <div className="flex flex-col">
-                <span className="text-[9px] font-black text-brand-cyan uppercase tracking-[0.2em] leading-none">Push Sport</span>
-                <h1 className="text-xl md:text-2xl font-black text-neutral-900 dark:text-white tracking-tight mt-0.5 leading-none uppercase">Reportería</h1>
-                <p className="text-[9px] text-neutral-400 dark:text-gray-400 font-bold uppercase tracking-wider mt-0.5 hidden md:block">
-                  Reportes de precios y visitas
-                </p>
-            </div>
+            <h1 className="text-xl md:text-2xl uppercase leading-none m-0 font-sport text-black dark:text-white">
+                Reportería <span className="text-brand-cyan">Central</span>
+            </h1>
+            <p className="text-neutral-500 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed max-w-xl mt-2 whitespace-normal">
+                Generá reportes de precios para comercios o listados de visitas para envíos. Todo en formato PDF profesional de manera instantánea.
+            </p>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex bg-neutral-100 dark:bg-gray-800 p-1 rounded-xl w-full md:w-auto gap-1">
+        <div className="flex flex-col sm:flex-row bg-neutral-100 dark:bg-gray-800 p-1.5 rounded-xl w-full md:w-auto gap-1.5 mt-2 md:mt-0 flex-shrink-0">
             <button 
                 onClick={() => setActiveTab('global')}
-                className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 md:px-4 py-2 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-wider transition-all ${activeTab === 'global' ? 'bg-white dark:bg-gray-700 text-black dark:text-white shadow-sm' : 'text-neutral-500 dark:text-gray-400 hover:text-neutral-800 dark:hover:text-gray-200'}`}
+                className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'global' ? 'bg-white dark:bg-gray-700 text-black dark:text-white shadow-md border border-neutral-200 dark:border-gray-600' : 'text-neutral-500 dark:text-gray-400 hover:text-neutral-800 dark:hover:text-gray-200'}`}
             >
-                <Download size={13} />
+                <Download size={14} />
                 Lista de Precios
             </button>
             <button 
                 onClick={() => setActiveTab('shop')}
-                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 md:px-8 py-3 md:py-3.5 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'shop' ? 'bg-white dark:bg-gray-700 text-black dark:text-white shadow-md' : 'text-neutral-500 dark:text-gray-400 hover:text-neutral-800 dark:hover:text-gray-200'}`}
+                className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'shop' ? 'bg-white dark:bg-gray-700 text-black dark:text-white shadow-md border border-neutral-200 dark:border-gray-600' : 'text-neutral-500 dark:text-gray-400 hover:text-neutral-800 dark:hover:text-gray-200'}`}
             >
-                <Store size={13} />
+                <Store size={14} />
                 Visita a Comercio
             </button>
         </div>
@@ -233,14 +235,33 @@ const Reporteria = () => {
                 <PDFDownloadLink
                   document={<ReportPDF products={filteredProducts} imageMap={imageMap} currentDate={new Date().toLocaleDateString()} showPushPrice={showPushPriceGlobal} />}
                   fileName={`Lista_Precios_${new Date().toLocaleDateString()}.pdf`}
-                  className="h-9 px-5 bg-brand-cyan text-black rounded-xl flex items-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-lg text-[10px] font-black uppercase tracking-widest"
+                  className="h-9 px-5 bg-neutral-100 dark:bg-gray-700 text-black dark:text-white rounded-xl flex items-center gap-2 hover:bg-neutral-200 dark:hover:bg-gray-600 transition-all shadow-md text-[10px] font-black uppercase tracking-widest"
                 >
                   {({ loading: pdfLoading }) => (
                     pdfLoading
                       ? <><Loader2 size={13} className="animate-spin" /> Generando...</>
-                      : <><Download size={13} /> Descargar PDF</>
+                      : <><Download size={13} /> PDF Lista Precios</>
                   )}
                 </PDFDownloadLink>
+
+                <button
+                  onClick={async () => {
+                    setLoading(true);
+                    try {
+                      await api.post('/reportes/send-weekly');
+                      setToaster({ type: 'success', message: 'Reporte semanal enviado a tu email' });
+                    } catch (error) {
+                      console.error(error);
+                      setToaster({ type: 'error', message: 'Error al enviar reporte por email' });
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  disabled={loading}
+                  className="h-9 px-5 bg-black text-brand-cyan rounded-xl flex items-center gap-2 hover:bg-neutral-800 transition-all shadow-lg text-[10px] font-black uppercase tracking-widest border border-brand-cyan/30"
+                >
+                  <Mail size={13} /> Enviar Reporte Semanal
+                </button>
               </div>
             </div>
 

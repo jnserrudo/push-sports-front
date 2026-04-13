@@ -176,31 +176,32 @@ const GenericABM = ({
     return (
         <div className="space-y-2 md:space-y-4 w-full max-w-7xl mx-auto pb-2 md:pb-8 relative animate-in fade-in duration-700">
             {/* Cabecera del ABM - Compacta */}
-            <div className="flex items-center justify-between border-b border-neutral-100 dark:border-gray-700 pb-2 md:pb-3 text-neutral-900 dark:text-white gap-2 md:gap-4 relative">
-                <div className="flex items-center gap-2 md:gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-neutral-100 dark:border-gray-700 pb-4 gap-4">
+                <div className="flex flex-1 min-w-0 pr-0 md:pr-4 items-start md:items-center gap-3 md:gap-4">
                     <div className="hidden sm:flex w-10 h-10 md:w-12 md:h-12 bg-white dark:bg-gray-800 border border-neutral-100 dark:border-gray-700 text-brand-cyan dark:text-cyan-400 items-center justify-center rounded-xl shadow-sm flex-shrink-0">
                         {Icon ? <Icon size={20} className="md:w-6 md:h-6" /> : <Box size={20} />}
                     </div>
-                    <div className="flex flex-col">
-                        <span className="hidden md:block text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500 mb-0.5">ADMIN / PUSH</span>
-                        <h1 className="text-lg md:text-2xl font-black tracking-tight m-0 text-black dark:text-white uppercase leading-none">
+                    <div className="flex flex-col flex-1 min-w-0">
+                        <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500 mb-0.5">GESTIÓN CENTRAL</span>
+                        <h1 className="text-xl md:text-2xl font-black tracking-tight m-0 text-black dark:text-white uppercase leading-none">
                             {title}
                         </h1>
                         {description && (
-                            <p className="hidden md:block text-[9px] font-bold text-neutral-400 mt-1 max-w-2xl leading-relaxed">
+                            <p className="text-[10px] md:text-xs font-bold text-neutral-400 mt-2 max-w-2xl leading-relaxed whitespace-normal line-clamp-3 md:line-clamp-none">
                                 {description}
                             </p>
                         )}
                     </div>
                 </div>
                 
-                <div className="flex items-center gap-1.5 md:gap-2 flex-shrink-0">
+                <div className="flex gap-2 w-full md:w-auto mt-2 md:mt-0 flex-shrink-0 items-center">
                     <button 
                         onClick={loadData}
-                        className="p-1.5 md:p-2 bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-600 text-neutral-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:shadow-sm rounded-lg transition-all"
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-neutral-100 dark:bg-gray-800 border border-neutral-200 dark:border-gray-600 text-neutral-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-neutral-200 dark:hover:bg-gray-700 hover:shadow-sm rounded-lg transition-all"
                         title="Actualizar Datos"
                     >
                         <RefreshCw size={14} className={`md:w-4 md:h-4 ${isLoading ? 'animate-spin text-brand-cyan' : ''}`} strokeWidth={3} />
+                        <span className="text-[10px] font-black uppercase tracking-[0.1em] md:hidden">Actualizar</span>
                     </button>
                     <div className="hidden md:block h-6 w-px bg-neutral-200 mx-0.5"></div>
                     <div className="w-1.5 h-1.5 rounded-full bg-brand-cyan shadow-[0_0_8px_rgba(0,194,255,0.4)] animate-pulse hidden md:block"></div>
@@ -317,7 +318,7 @@ const GenericABM = ({
                                 {isSubmitting ? (
                                     <>
                                         <div className="w-5 h-5 border-2 border-brand-cyan border-t-transparent rounded-full animate-spin" />
-                                        <span className="font-black tracking-[0.3em] text-sm uppercase text-brand-cyan">Procesando...</span>
+                                        <span className="font-black tracking-[0.3em] text-sm uppercase text-brand-cyan">Guardando Cambios...</span>
                                     </>
                                 ) : editingItem ? (
                                     <>
