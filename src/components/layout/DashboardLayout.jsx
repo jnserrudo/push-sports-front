@@ -19,7 +19,8 @@ import {
   ClipboardList,
   Package,
   Component,
-  Tag
+  Tag,
+  CalendarDays
 } from 'lucide-react';
 import { X } from 'lucide-react'; // Explicit import to bypass HMR cache issues
 import { motion, AnimatePresence } from 'framer-motion';
@@ -125,6 +126,7 @@ const DashboardLayout = () => {
     { label: 'Gestión de Devoluciones', icon: RotateCcw,       path: '/dashboard/devoluciones',   roles: [1, 2, 3] },
     { label: 'Cierres de Caja',   icon: CreditCard,      path: '/dashboard/liquidaciones',  roles: [1, 2] },
     { label: 'Gestión de Descuentos', icon: Ticket,          path: '/dashboard/descuentos',     roles: [1] },
+    { label: 'Eventos & Campañas',    icon: CalendarDays,    path: '/dashboard/eventos',        roles: [1] },
     { label: 'Packs y Combos',    icon: Package,         path: '/dashboard/combos',         roles: [1] },
     { label: 'Gestión de Ofertas', icon: Ticket,          path: '/dashboard/ofertas',        roles: [1] },
     { label: 'Proveedores',       icon: Truck,           path: '/dashboard/proveedores',    roles: [1] },

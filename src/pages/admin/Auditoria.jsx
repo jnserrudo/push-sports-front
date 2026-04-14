@@ -12,6 +12,7 @@ import {
     usuariosService, marcasService, categoriasService, 
     descuentosService, combosService, ofertasService 
 } from '../../services/genericServices';
+import { eventosService } from '../../services/eventosService';
 import { useAuthStore } from '../../store/authStore';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -40,7 +41,8 @@ const ENTIDADES_LEGIBLES = {
     'Oferta': 'Oferta',
     'Combo': 'Combo',
     'Devolucion': 'Devolución',
-    'Liquidacion': 'Liquidación'
+    'Liquidacion': 'Liquidación',
+    'Evento': 'Evento / Campaña'
 };
 
 const ACCIONES_LEGIBLES = {
@@ -169,7 +171,12 @@ const CAMPOS_LEGIBLES = {
     'id_variante': 'Variante',
     'id_usuario': 'Usuario',
     'id_venta': 'Referencia de Venta',
-    'id_movimiento': 'Referencia de Movimiento'
+    'id_movimiento': 'Referencia de Movimiento',
+    // Campos de Evento/Campaña
+    'recompensa_texto': 'Mensaje de Recompensa',
+    'id_evento_origen': 'Evento de Origen',
+    'acepta_marketing': 'Acepta Marketing',
+    'leads': 'Leads Capturados'
 };
 
 const CAMPOS_CONTEXTO = [
@@ -178,7 +185,8 @@ const CAMPOS_CONTEXTO = [
     'username', 'apellido', 'talle', 'color', 'sucursal', 'comercio',
     'id_comercio', 'id_comercio_asignado', 'id_venta', 'nro_ticket',
     'id_producto', 'id_variante', 'id_usuario', 'id_proveedor',
-    'id_categoria', 'id_marca', 'id_descuento', 'id_combo', 'id_oferta'
+    'id_categoria', 'id_marca', 'id_descuento', 'id_combo', 'id_oferta',
+    'id_evento_origen', 'recompensa_texto'
 ];
 
 // Campos que NO se deben mostrar en el detalle de cambios (SÓLO IDs REALMENTE TÉCNICOS o sensibles)
@@ -209,6 +217,7 @@ const TIPOS_ENTIDAD = [
     { value: 'Combo', label: 'Combos' },
     { value: 'Devolucion', label: 'Devoluciones' },
     { value: 'Liquidacion', label: 'Liquidaciones' },
+    { value: 'Evento', label: 'Eventos / Campañas' },
 ];
 
 const TIPOS_ACCION = [
@@ -240,6 +249,7 @@ const Auditoria = () => {
     const [combosMap, setCombosMap] = useState({});
     const [tiposMovimientoMap, setTiposMovimientoMap] = useState({});
     const [variantesMap, setVariantesMap] = useState({});
+    const [eventosMap, setEventosMap] = useState({});
     
     
     // Cargar catálogos para mapear IDs
@@ -247,7 +257,7 @@ const Auditoria = () => {
         try {
             const [
                 sucData, prodData, userData, marcaData, catData, 
-                provData, descData, oferData, combData
+                provData, descData, oferData, combData, eventData
             ] = await Promise.allSettled([
                 sucursalesService.getAll(),
                 productosService.getAll(),
@@ -257,7 +267,8 @@ const Auditoria = () => {
                 productosService.getProveedores(),
                 descuentosService.getAll(),
                 ofertasService.getAll(),
-                combosService.getAll()
+                combosService.getAll(),
+                eventosService.getAll()
             ]);
             
             // Mapear Sucursales
@@ -345,6 +356,13 @@ const Auditoria = () => {
                 setCombosMap(combMap);
             }
 
+            // Mapear Eventos
+            if (eventData.status === 'fulfilled') {
+                const evMap = {};
+                eventData.value.forEach(e => evMap[e.id_evento] = e.nombre);
+                setEventosMap(evMap);
+            }
+
         } catch (error) {
             console.error('Error cargando catálogos para auditoría:', error);
         }
@@ -367,13 +385,14 @@ const Auditoria = () => {
             descuentos: descuentosMap,
             ofertas: ofertasMap,
             combos: combosMap,
-            tiposMovimiento: tiposMovimientoMap
+            tiposMovimiento: tiposMovimientoMap,
+            eventos: eventosMap
         };
         return m;
     }, [
         sucursalesMap, productosMap, variantesMap, usuariosMap, marcasMap, 
         categoriasMap, proveedoresMap, descuentosMap, ofertasMap, 
-        combosMap, tiposMovimientoMap
+        combosMap, tiposMovimientoMap, eventosMap
     ]);
 
     // Filtros
@@ -538,6 +557,8 @@ const Auditoria = () => {
         if (campo === 'id_oferta' && maps.ofertas?.[valor]) return maps.ofertas[valor];
         if (campo === 'id_combo' && maps.combos?.[valor]) return maps.combos[valor];
         if (campo === 'id_tipo_movimiento' && maps.tiposMovimiento?.[valor]) return maps.tiposMovimiento[valor];
+        if (campo === 'id_evento_origen' && maps.eventos?.[valor]) return `🎯 ${maps.eventos[valor]}`;
+        if (campo === 'acepta_marketing') return valor ? '✅ Acepta marketing' : '❌ No acepta marketing';
 
         // Fallback UUID — intentar buscar en TODOS los mapas antes de truncar
         if (isUUID(valor)) {

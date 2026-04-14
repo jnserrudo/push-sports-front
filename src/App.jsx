@@ -21,6 +21,8 @@ import POS from './pages/pos/POS';
 import Inventario from './pages/admin/Inventario';
 import Movimientos from './pages/admin/Movimientos';
 import Register from './pages/Register';
+import Eventos from './pages/admin/Eventos';
+import EventLanding from './pages/EventLanding';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Toaster from './components/ui/Toaster';
@@ -41,6 +43,8 @@ const App = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
+        {/* Evento landing público (QR) */}
+        <Route path="/e/:id" element={<EventLanding />} />
 
         {/* PROTECTED ROUTES - UNIFIED DASHBOARD */}
         <Route 
@@ -64,6 +68,7 @@ const App = () => {
           <Route path="liquidaciones" element={<Liquidaciones />} />
           <Route path="descuentos" element={<Descuentos />} />
           <Route path="auditoria" element={<Auditoria />} />
+          <Route path="eventos" element={<Eventos />} />
           <Route path="proveedores" element={<Proveedores />} />
           <Route path="combos" element={<Combos />} />
           <Route path="ofertas" element={<Ofertas />} />
