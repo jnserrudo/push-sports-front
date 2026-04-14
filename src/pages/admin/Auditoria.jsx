@@ -194,7 +194,8 @@ const CAMPOS_OCULTOS = [
     'id_auditoria', 'id_detalle', 'id_detalle_var', 'id_inventario', 'id_inventario_var',
     'id_movimiento_var', 'id_notificacion', 'id_migracion', 'id_rol', 'id_tipo_comercio', 
     'id_tipo_movimiento', 'createdAt', 'updatedAt', 'password_hash', 'deletedAt', 
-    'reset_token', 'reset_token_expires', 'token', 'refresh_token', '__v', 'id', 'uuid'
+    'reset_token', 'reset_token_expires', 'token', 'refresh_token', '__v', 'id', 'uuid',
+    'otp_code', 'otp_expira_en'
 ];
 
 
@@ -557,8 +558,8 @@ const Auditoria = () => {
         if (campo === 'id_oferta' && maps.ofertas?.[valor]) return maps.ofertas[valor];
         if (campo === 'id_combo' && maps.combos?.[valor]) return maps.combos[valor];
         if (campo === 'id_tipo_movimiento' && maps.tiposMovimiento?.[valor]) return maps.tiposMovimiento[valor];
-        if (campo === 'id_evento_origen' && maps.eventos?.[valor]) return `🎯 ${maps.eventos[valor]}`;
-        if (campo === 'acepta_marketing') return valor ? '✅ Acepta marketing' : '❌ No acepta marketing';
+        if (campo === 'id_evento_origen' && maps.eventos?.[valor]) return maps.eventos[valor];
+        if (campo === 'acepta_marketing') return valor ? 'Acepta marketing' : 'No acepta marketing';
 
         // Fallback UUID — intentar buscar en TODOS los mapas antes de truncar
         if (isUUID(valor)) {
@@ -598,6 +599,71 @@ const Auditoria = () => {
             try { const s = JSON.stringify(valor); return s.length > 60 ? s.substring(0, 57) + '…' : s; } catch { return '—'; }
         }
         return String(valor);
+    };
+
+    const getTituloAccion = (item) => {
+        const entidad = ENTIDADES_LEGIBLES[item.entidad_afectada] || item.entidad_afectada;
+        const accion = item.accion;
+
+        // Caso especial: Registro de leads desde eventos
+        if (item.entidad_afectada === 'Usuario' && accion === 'CREATE' && item.valor_nuevo) {
+            try {
+                const data = JSON.parse(item.valor_nuevo);
+                if (data.id_evento_origen) return 'Registro desde Evento';
+            } catch (e) {}
+        }
+
+        // Mapeo por Entidad + Acción
+        const mapping = {
+            'Usuario': {
+                'CREATE': 'Alta de Usuario',
+                'UPDATE': 'Modificación de Usuario',
+                'DELETE': 'Baja de Usuario'
+            },
+            'Producto': {
+                'CREATE': 'Lanzamiento de Producto',
+                'UPDATE': 'Actualización de Ficha',
+                'DELETE': 'Baja de Producto'
+            },
+            'InventarioComercio': {
+                'UPDATE': 'Ajuste de Stock en Sucursal',
+                'CREATE': 'Carga inicial de Stock'
+            },
+            'InventarioComercioVariante': {
+                'UPDATE': 'Ajuste de Stock de Variante'
+            },
+            'MovimientoStock': {
+                'CREATE': 'Registro de Movimiento'
+            },
+            'VentaCabecera': {
+                'CREATE': 'Registro de Venta',
+                'UPDATE': 'Anulación/Modificación de Venta'
+            },
+            'Evento': {
+                'CREATE': 'Nueva Campaña de Marketing',
+                'UPDATE': 'Ajuste de Campaña',
+                'DELETE': 'Finalización de Evento'
+            },
+            'Descuento': {
+                'CREATE': 'Nuevo Cupón de Descuento',
+                'UPDATE': 'Modificación de Beneficio'
+            }
+        };
+
+        const titulo = mapping[item.entidad_afectada]?.[accion];
+        if (titulo) return titulo;
+
+        // Fallback genérico profesional
+        const verbos = {
+            'CREATE': 'Alta de',
+            'UPDATE': 'Modificación de',
+            'DELETE': 'Baja de',
+            'createMany': 'Creación Masiva de',
+            'updateMany': 'Modificación Masiva de',
+            'deleteMany': 'Eliminación Masiva de'
+        };
+
+        return `${verbos[accion] || accion} ${entidad}`;
     };
 
     const getDescripcionLegible = (item, maps = masterMaps) => {
@@ -895,7 +961,7 @@ const Auditoria = () => {
                                             <td className="px-4 py-3">
                                                 <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${badge.bg} ${badge.text} ${badge.border}`}>
                                                     <BadgeIcon size={12} />
-                                                    {badge.label}
+                                                    {getTituloAccion(item)}
                                                 </span>
                                             </td>
                                             {/* Entidad */}
@@ -995,12 +1061,18 @@ const Auditoria = () => {
                                     {React.createElement(getAccionBadge(selectedItem.accion).icon, { size: 22 })}
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-lg text-neutral-900 dark:text-white">
-                                        {getAccionBadge(selectedItem.accion).label} de {ENTIDADES_LEGIBLES[selectedItem.entidad_afectada] || selectedItem.entidad_afectada}
+                                    <h3 className="text-xl font-sport text-black dark:text-white leading-none">
+                                        {getTituloAccion(selectedItem)}
                                     </h3>
-                                    <p className="text-sm text-neutral-500 mt-0.5">
-                                        {formatFecha(selectedItem.fecha_hora)} — {selectedItem.usuario ? `${selectedItem.usuario.nombre} ${selectedItem.usuario.apellido || ''}`.trim() : 'Sistema'}
-                                    </p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-xs font-semibold text-neutral-400">
+                                            {format(new Date(selectedItem.fecha_hora), 'dd/MM/yyyy HH:mm', { locale: es })}
+                                        </span>
+                                        <span className="text-neutral-300 dark:text-gray-600">—</span>
+                                        <span className="text-xs font-bold text-brand-cyan uppercase tracking-wider">
+                                            {selectedItem.usuario ? `${selectedItem.usuario.nombre} ${selectedItem.usuario.apellido || ''}` : 'Sistema'}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                             <button 

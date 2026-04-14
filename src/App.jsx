@@ -30,6 +30,10 @@ import { GlobalLoader } from './components/ui/GlobalLoader';
 import Devoluciones from './pages/dashboard/Devoluciones';
 const Reporteria = React.lazy(() => import('./pages/admin/Reporteria'));
 import Perfil from './pages/dashboard/Perfil';
+import PublicLayout from './components/layout/PublicLayout';
+import Catalog from './pages/public/Catalog';
+import Unsubscribe from './pages/public/Unsubscribe';
+import PublicSucursales from './pages/public/Sucursales';
 
 const App = () => {
   return (
@@ -45,6 +49,14 @@ const App = () => {
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         {/* Evento landing público (QR) */}
         <Route path="/e/:id" element={<EventLanding />} />
+        {/* Desuscripción de marketing (sin auth) */}
+        <Route path="/unsubscribe" element={<Unsubscribe />} />
+
+        {/* PORTAL PÚBLICO B2C — bajo /shop */}
+        <Route path="/shop" element={<PublicLayout />}>
+          <Route index element={<Catalog />} />
+          <Route path="sucursales" element={<PublicSucursales />} />
+        </Route>
 
         {/* PROTECTED ROUTES - UNIFIED DASHBOARD */}
         <Route 

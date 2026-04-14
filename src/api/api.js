@@ -24,9 +24,15 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && [401, 403].includes(error.response.status)) {
-      // Clear store state and redirect
-      useAuthStore.getState().logout();
-      window.location.replace('/#/login?expired=true');
+      // No redirigir si el usuario está en una ruta pública (B2C o landing de evento)
+      const currentHash = window.location.hash || '';
+      const isPublicRoute = currentHash.startsWith('#/shop') ||
+                            currentHash.startsWith('#/unsubscribe') ||
+                            currentHash.startsWith('#/e/');
+      if (!isPublicRoute) {
+        useAuthStore.getState().logout();
+        window.location.replace('/#/login?expired=true');
+      }
     }
     return Promise.reject(error);
   }

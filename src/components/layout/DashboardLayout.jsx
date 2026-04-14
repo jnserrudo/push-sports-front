@@ -137,7 +137,9 @@ const DashboardLayout = () => {
     switch(roleId) {
         case 1: return { short: 'AD', name: 'ADMINISTRADOR', dot: 'bg-brand-cyan shadow-[0_0_8px_rgba(0,194,255,0.6)]', ring: 'ring-brand-cyan/20 ring-2', bg: 'bg-brand-cyan', text: 'text-black' };
         case 2: return { short: 'SU', name: 'SUPERVISOR', dot: 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]', ring: 'ring-amber-400/20 ring-2', bg: 'bg-amber-400', text: 'text-black' };
-        default: return { short: 'VD', name: 'VENDEDOR', dot: 'bg-neutral-400', ring: 'border-neutral-200 border-2', bg: 'bg-neutral-800', text: 'text-white' };
+        case 3: return { short: 'VD', name: 'VENDEDOR', dot: 'bg-neutral-400', ring: 'border-neutral-200 border-2', bg: 'bg-neutral-800', text: 'text-white' };
+        case 4: return { short: 'CL', name: 'CLIENTE', dot: 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]', ring: 'ring-green-500/20 ring-2', bg: 'bg-green-500', text: 'text-white' };
+        default: return { short: '??', name: 'DESCONOCIDO', dot: 'bg-red-500', ring: 'border-red-200 border-2', bg: 'bg-neutral-800', text: 'text-white' };
     }
   };
   const roleBranding = getRoleBranding(user?.id_rol);
@@ -156,6 +158,11 @@ const DashboardLayout = () => {
   // Guardia de seguridad maestro: Si no hay usuario (ej. después de Cerrar Sesión), abortar render y salir.
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Guardia B2C: Si el usuario es un cliente (rol 4), sacarlo del framework admin y mandarlo al portal.
+  if (user.id_rol === 4) {
+    return <Navigate to="/shop" replace />;
   }
 
   return (
