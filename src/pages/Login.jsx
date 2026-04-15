@@ -22,10 +22,12 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        /* 
         if (!captchaToken) {
             toast.error('Por favor, completa la verificación de seguridad (Captcha).');
             return;
         }
+        */
 
         setLoading(true);
         try {
