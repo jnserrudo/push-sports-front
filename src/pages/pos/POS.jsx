@@ -718,14 +718,14 @@ const POS = () => {
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.2, delay: i * 0.05 }}
                 key={item.id} 
-                className="p-2 md:p-3 bg-neutral-50/50 dark:bg-gray-700/50 rounded-lg md:rounded-xl border border-neutral-100 dark:border-gray-600 flex flex-col gap-2 group"
+                className="p-1.5 md:p-2 bg-neutral-50/50 dark:bg-gray-700/50 rounded-lg md:rounded-xl border border-neutral-100 dark:border-gray-600 flex flex-col gap-1 group"
               >
                 <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-3 md:gap-4">
-                         <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl overflow-hidden border border-neutral-200 bg-neutral-100 flex items-center justify-center">
+                    <div className="flex items-center gap-2 md:gap-3">
+                         <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl overflow-hidden border border-neutral-200 bg-neutral-100 flex items-center justify-center">
                             {item.img 
                               ? <img src={item.img} alt={item.nombre} className="w-full h-full object-cover" />
-                              : <Box size={16} className="text-neutral-400" />
+                              : <Box size={14} className="text-neutral-400" />
                             }
                          </div>
                          <div className="flex flex-col min-w-0 max-w-[140px] md:max-w-none">
@@ -739,11 +739,11 @@ const POS = () => {
                 </div>
                 <div className="flex justify-between items-center">
                     <div className="flex items-center gap-1 bg-white dark:bg-gray-700 border border-neutral-100 dark:border-gray-600 rounded-lg p-0.5 shadow-sm">
-                        <button onClick={() => updateQuantity(item.id, -1)} className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center text-neutral-400 active:text-brand-cyan"><Minus size={14} /></button>
-                        <span className="w-6 md:w-8 text-center font-bold text-xs md:text-sm tabular-nums text-neutral-900 dark:text-white">{item.cantidad}</span>
-                        <button onClick={() => updateQuantity(item.id, 1)} className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center text-neutral-400 active:text-brand-cyan"><Plus size={14} /></button>
+                        <button onClick={() => updateQuantity(item.id, -1)} className="w-6 h-6 md:w-7 md:h-7 flex items-center justify-center text-neutral-400 active:text-brand-cyan"><Minus size={12} /></button>
+                        <span className="w-5 md:w-7 text-center font-bold text-xs md:text-sm tabular-nums text-neutral-900 dark:text-white">{item.cantidad}</span>
+                        <button onClick={() => updateQuantity(item.id, 1)} className="w-6 h-6 md:w-7 md:h-7 flex items-center justify-center text-neutral-400 active:text-brand-cyan"><Plus size={12} /></button>
                     </div>
-                    <span className="font-black text-neutral-900 text-base md:text-lg tracking-tighter">${(item.precio * item.cantidad).toLocaleString()}</span>
+                    <span className="font-black text-neutral-900 text-sm md:text-base tracking-tighter">${(item.precio * item.cantidad).toLocaleString()}</span>
                 </div>
               </motion.div>
             ))}
@@ -751,7 +751,7 @@ const POS = () => {
           )}
         </div>
 
-        <div className="p-4 md:p-5 bg-neutral-50 dark:bg-gray-700 border-t border-neutral-100 dark:border-gray-700 space-y-3">
+        <div className="p-3 md:p-4 bg-neutral-50 dark:bg-gray-700 border-t border-neutral-100 dark:border-gray-700 space-y-2">
 
             {/* Banner oferta vigente */}
             {ofertasVigentes.length > 0 && (
