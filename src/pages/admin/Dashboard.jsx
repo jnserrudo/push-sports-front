@@ -163,7 +163,7 @@ const Dashboard = () => {
               Panel <span className="text-brand-cyan">Analítico</span>
             </h1>
             <p className="text-neutral-400 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed max-w-md">
-                Auditoría en tiempo real y métricas.
+                Resumen operativo global. Visualiza métricas clave, saldos de caja y alertas de stock de forma inmediata.
             </p>
           </div>
           {/* Controls */}

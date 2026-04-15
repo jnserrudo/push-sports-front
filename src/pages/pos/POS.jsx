@@ -649,16 +649,12 @@ const POS = () => {
                         </div>
                     )}
                 </div>
-                <div>
-                    <h2 className="text-lg md:text-xl font-black tracking-tighter m-0 uppercase leading-none text-neutral-900">Ticket</h2>
-                    <span 
-                      onClick={() => setShowDrafts(!showDrafts)}
-                      className="text-[8px] md:text-[9px] font-bold text-neutral-400 hover:text-amber-500 uppercase tracking-widest mt-0.5 block cursor-pointer transition-colors"
-                    >
-                      Resumen de venta actual
-                    </span>
-                    <p className="text-[10px] text-neutral-500 font-medium mt-1 hidden md:block">Gestioná los productos seleccionados, aplica cupones y finaliza la venta.</p>
-                </div>
+                    <div>
+                        <h2 className="text-lg md:text-xl font-black tracking-tighter m-0 uppercase leading-none text-neutral-900">Ticket</h2>
+                        <span className="text-[10px] md:text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5 block">
+                            Terminal de venta rápida. Agregá productos y finalizá cobros en segundos.
+                        </span>
+                    </div>
             </div>
             <motion.div 
                 key={cartItemsCount}
@@ -722,7 +718,7 @@ const POS = () => {
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.2, delay: i * 0.05 }}
                 key={item.id} 
-                className="p-3 md:p-5 bg-neutral-50/50 dark:bg-gray-700/50 rounded-xl md:rounded-2xl border border-neutral-100 dark:border-gray-600 flex flex-col gap-3 group"
+                className="p-2 md:p-3 bg-neutral-50/50 dark:bg-gray-700/50 rounded-lg md:rounded-xl border border-neutral-100 dark:border-gray-600 flex flex-col gap-2 group"
               >
                 <div className="flex justify-between items-start">
                     <div className="flex items-center gap-3 md:gap-4">
