@@ -28,9 +28,21 @@ const QRModal = ({ evento, onClose }) => {
     const handleDownload = () => {
         const canvas = document.getElementById('evento-qr-canvas');
         if (!canvas) return;
+        
+        // Crear canvas temporal de 400x400px para mejor calidad de impresión
+        const tempCanvas = document.createElement('canvas');
+        const scale = 2; // 200px * 2 = 400px
+        tempCanvas.width = 400;
+        tempCanvas.height = 400;
+        const ctx = tempCanvas.getContext('2d');
+        
+        // Dibujar el QR escalado
+        ctx.drawImage(canvas, 0, 0, 400, 400);
+        
+        // Descargar la versión de 400px
         const link = document.createElement('a');
         link.download = `QR_${evento.nombre.replace(/\s+/g, '_')}.png`;
-        link.href = canvas.toDataURL('image/png');
+        link.href = tempCanvas.toDataURL('image/png');
         link.click();
     };
 
@@ -199,6 +211,86 @@ const FormModal = ({ evento, onClose, onSave }) => {
     );
 };
 
+// --- Hub QR Modal ---
+const HubQRModal = ({ onClose }) => {
+    const BASE_URL = 'https://push-sports-front.onrender.com/#/hub';
+    const url = BASE_URL;
+
+    const handleDownload = () => {
+        const canvas = document.getElementById('hub-qr-canvas');
+        if (!canvas) return;
+        
+        // Crear canvas temporal de 400x400px para mejor calidad de impresión
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = 400;
+        tempCanvas.height = 400;
+        const ctx = tempCanvas.getContext('2d');
+        
+        // Dibujar el QR escalado
+        ctx.drawImage(canvas, 0, 0, 400, 400);
+        
+        // Descargar la versión de 400px
+        const link = document.createElement('a');
+        link.download = 'QR_Hub_PushSport.png';
+        link.href = tempCanvas.toDataURL('image/png');
+        link.click();
+    };
+
+    return (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-300">
+                <div className="bg-black p-6 text-center relative">
+                    <button onClick={onClose} className="absolute top-3 right-3 text-neutral-500 hover:text-white transition-colors p-1.5 rounded-full bg-neutral-900 hover:bg-neutral-700">
+                        <X size={16} />
+                    </button>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-cyan block mb-2">QR Hub Social</span>
+                    <h3 className="text-white text-2xl font-sport uppercase leading-tight m-0">Enlaces Oficiales</h3>
+                </div>
+
+                <div className="p-8 flex flex-col items-center gap-6">
+                    {/* QR Code con logo */}
+                    <div className="p-4 bg-white rounded-2xl shadow-lg border-4 border-neutral-100">
+                        <QRCodeCanvas
+                            id="hub-qr-canvas"
+                            value={url}
+                            size={200}
+                            level="H"
+                            marginSize={1}
+                            imageSettings={{
+                                src: '/icono.jpeg',
+                                x: undefined,
+                                y: undefined,
+                                height: 40,
+                                width: 40,
+                                excavate: true,
+                            }}
+                        />
+                    </div>
+
+                    <div className="text-center w-full">
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 dark:text-gray-500 mb-1">URL del Hub</p>
+                        <p className="text-[10px] font-mono font-bold text-neutral-600 dark:text-gray-300 bg-neutral-50 dark:bg-gray-700 px-3 py-2 rounded-lg break-all">{url}</p>
+                    </div>
+
+                    <div className="w-full bg-brand-cyan/10 border border-brand-cyan/30 rounded-xl px-4 py-3">
+                        <p className="text-xs font-bold text-neutral-700 dark:text-gray-200 leading-relaxed m-0 text-center">
+                            QR fijo para acceso al sistema y redes sociales de Push Sport
+                        </p>
+                    </div>
+
+                    <button
+                        onClick={handleDownload}
+                        className="w-full py-3.5 bg-black text-brand-cyan rounded-xl font-sport text-sm uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-brand-cyan hover:text-black transition-all shadow-lg hover:-translate-y-0.5"
+                    >
+                        <Download size={16} />
+                        Descargar QR (PNG)
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // --- Main Page ---
 const Eventos = () => {
     const [eventos, setEventos] = useState([]);
@@ -206,6 +298,7 @@ const Eventos = () => {
     const [qrEvento, setQrEvento] = useState(null);
     const [formEvento, setFormEvento] = useState(null);
     const [showForm, setShowForm] = useState(false);
+    const [showHubQR, setShowHubQR] = useState(false);
 
     const cargar = useCallback(async () => {
         setLoading(true);
@@ -264,13 +357,22 @@ const Eventos = () => {
                         </div>
                     </div>
                 </div>
-                <button
-                    onClick={() => { setFormEvento(null); setShowForm(true); }}
-                    className="flex items-center gap-2 px-5 py-3 bg-black text-white rounded-xl text-[11px] font-bold uppercase tracking-widest hover:bg-brand-cyan hover:text-black transition-all shadow-md hover:-translate-y-0.5 flex-shrink-0"
-                >
-                    <Plus size={16} />
-                    Nueva Campaña
-                </button>
+                <div className="flex gap-3 flex-wrap">
+                    <button
+                        onClick={() => setShowHubQR(true)}
+                        className="flex items-center gap-2 px-5 py-3 bg-white dark:bg-gray-700 text-black dark:text-white border-2 border-black dark:border-gray-600 rounded-xl text-[11px] font-bold uppercase tracking-widest hover:bg-black hover:text-brand-cyan dark:hover:bg-gray-600 transition-all shadow-md hover:-translate-y-0.5 flex-shrink-0"
+                    >
+                        <QrCode size={16} />
+                        QR Hub Social
+                    </button>
+                    <button
+                        onClick={() => { setFormEvento(null); setShowForm(true); }}
+                        className="flex items-center gap-2 px-5 py-3 bg-black text-white rounded-xl text-[11px] font-bold uppercase tracking-widest hover:bg-brand-cyan hover:text-black transition-all shadow-md hover:-translate-y-0.5 flex-shrink-0"
+                    >
+                        <Plus size={16} />
+                        Nueva Campaña
+                    </button>
+                </div>
             </div>
 
             {/* Table */}
@@ -374,6 +476,7 @@ const Eventos = () => {
 
             {/* Modals */}
             {qrEvento && <QRModal evento={qrEvento} onClose={() => setQrEvento(null)} />}
+            {showHubQR && <HubQRModal onClose={() => setShowHubQR(false)} />}
             {showForm && (
                 <FormModal
                     evento={formEvento}

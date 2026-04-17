@@ -120,7 +120,17 @@ const TicketStep = ({ nombre, eventoNombre, recompensaTexto }) => (
             </p>
         </div>
 
-        <p className="mt-8 text-xs font-bold text-neutral-600 uppercase tracking-widest">
+        <a 
+            href="https://push-sports-front.onrender.com/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="mt-6 w-full py-4 bg-brand-cyan text-black font-sport text-base uppercase tracking-widest rounded-2xl flex items-center justify-center gap-3 hover:bg-white transition-all shadow-[0_0_30px_rgba(0,229,255,0.3)] hover:-translate-y-0.5"
+        >
+            <ArrowRight size={20} />
+            Ir al Sistema Principal
+        </a>
+
+        <p className="mt-6 text-xs font-bold text-neutral-600 uppercase tracking-widest">
             Sos parte del equipo PushSport Salta
         </p>
     </div>

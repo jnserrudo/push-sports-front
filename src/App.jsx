@@ -23,6 +23,7 @@ import Movimientos from './pages/admin/Movimientos';
 import Register from './pages/Register';
 import Eventos from './pages/admin/Eventos';
 import EventLanding from './pages/EventLanding';
+import Hub from './pages/Hub';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Toaster from './components/ui/Toaster';
@@ -49,6 +50,8 @@ const App = () => {
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         {/* Evento landing público (QR) */}
         <Route path="/e/:id" element={<EventLanding />} />
+        {/* Hub de enlaces sociales */}
+        <Route path="/hub" element={<Hub />} />
         {/* Desuscripción de marketing (sin auth) */}
         <Route path="/unsubscribe" element={<Unsubscribe />} />
 
