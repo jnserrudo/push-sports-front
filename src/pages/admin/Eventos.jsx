@@ -442,7 +442,7 @@ const Eventos = () => {
                                             </button>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="flex items-center gap-2">
                                                 <button
                                                     onClick={() => setQrEvento(ev)}
                                                     title="Ver QR"
