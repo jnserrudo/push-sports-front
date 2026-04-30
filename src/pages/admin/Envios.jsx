@@ -343,7 +343,8 @@ const Envios = () => {
                                         <thead className="bg-neutral-50 dark:bg-gray-600">
                                             <tr>
                                                 <th className="px-3 py-2 text-[9px] font-bold uppercase tracking-wider text-neutral-500">SKU / Atributos</th>
-                                                <th className="px-3 py-2 text-[9px] font-bold uppercase tracking-wider text-neutral-500 text-center w-28">Cantidad</th>
+                                                <th className="px-3 py-2 text-[9px] font-bold uppercase tracking-wider text-neutral-500 text-center">Disponible</th>
+                                                <th className="px-3 py-2 text-[9px] font-bold uppercase tracking-wider text-neutral-500 text-center w-28">Transferir</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-neutral-100 dark:divide-gray-600">
@@ -364,6 +365,11 @@ const Envios = () => {
                                                                     {atributosText}
                                                                 </span>
                                                             </div>
+                                                        </td>
+                                                        <td className="px-3 py-2 text-center align-middle">
+                                                            <span className="inline-block text-[10px] font-black text-brand-cyan uppercase tracking-widest bg-brand-cyan/10 border border-brand-cyan/20 px-2 py-1 rounded">
+                                                                {variante.stock_central ?? 0} UN.
+                                                            </span>
                                                         </td>
                                                         <td className="px-3 py-2">
                                                             <input
@@ -388,7 +394,14 @@ const Envios = () => {
                             </div>
                         ) : (
                             <div className="space-y-2">
-                                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Cantidad de Unidades</label>
+                                <div className="flex justify-between items-end mb-1">
+                                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Cantidad de Unidades</label>
+                                    {selectedProduct && (
+                                        <span className="text-[9px] font-black text-brand-cyan uppercase tracking-widest bg-brand-cyan/10 border border-brand-cyan/20 px-2 py-1 rounded">
+                                            Disponible: {selectedProduct.stock_central ?? 0} UN.
+                                        </span>
+                                    )}
+                                </div>
                                 <div className="relative group">
                                     <Check size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
                                     <input
