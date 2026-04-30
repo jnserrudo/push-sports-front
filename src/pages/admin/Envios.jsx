@@ -143,7 +143,8 @@ const Envios = () => {
                 loadData();
             }, 1200);
         } catch (err) {
-            setFeedback({ type: 'error', msg: err?.message || 'Error al procesar la orden.' });
+            const backendError = err.response?.data?.error || err.message || 'Error al procesar la orden.';
+            setFeedback({ type: 'error', msg: backendError });
         } finally {
             setIsSubmitting(false);
         }
