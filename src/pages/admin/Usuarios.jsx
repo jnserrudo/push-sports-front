@@ -74,6 +74,20 @@ const Usuarios = () => {
                 );
             }
         },
+        {
+            header: 'Estado',
+            accessor: 'activo',
+            render: (row) => (
+                <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full border text-[9px] font-black tracking-widest uppercase ${
+                    row.activo 
+                    ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+                    : 'bg-red-50 text-red-600 border-red-100'
+                }`}>
+                    <div className={`w-1.5 h-1.5 rounded-full ${row.activo ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                    {row.activo ? 'Operativo' : 'Inactivo'}
+                </div>
+            )
+        },
     ];
 
     const renderForm = (formData, setFormData) => (
@@ -170,9 +184,29 @@ const Usuarios = () => {
                 </div>
             </div>
 
-            <div className="p-4 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg flex items-start gap-3">
-                <ShieldCheck size={16} className="text-black dark:text-white mt-0.5 shrink-0" />
-                <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-gray-400 leading-relaxed m-0">
+            <div className="p-4 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg space-y-4">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <ShieldCheck size={16} className="text-black dark:text-white shrink-0" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-neutral-600 dark:text-gray-300">Estado de la cuenta</span>
+                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                        <div
+                            onClick={() => setFormData({ ...formData, activo: !formData.activo })}
+                            className={`w-10 h-6 rounded-full transition-all relative flex-shrink-0 ${
+                                formData.activo ? 'bg-brand-cyan shadow-[0_0_10px_rgba(0,194,255,0.3)]' : 'bg-neutral-200'
+                            }`}
+                        >
+                            <div className={`w-4 h-4 bg-white rounded-full shadow absolute top-1 transition-all ${
+                                formData.activo ? 'left-5' : 'left-1'
+                            }`} />
+                        </div>
+                        <span className={`text-[10px] font-black uppercase tracking-widest ${formData.activo ? 'text-emerald-600' : 'text-red-600'}`}>
+                            {formData.activo ? 'Activa' : 'Desactivada'}
+                        </span>
+                    </label>
+                </div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-gray-400 leading-relaxed m-0 border-t border-neutral-100 dark:border-gray-600 pt-3">
                     Los permisos impactan en tiempo real. Un <span className="text-brand-cyan">ADMIN. CORE</span> tiene control total sin importar la asignación física.
                 </p>
             </div>

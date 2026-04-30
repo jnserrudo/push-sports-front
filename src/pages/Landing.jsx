@@ -115,6 +115,7 @@ const Landing = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [preview, setPreview] = useState({ isOpen: false, category: '' });
   const [activeLocation, setActiveLocation] = useState(0);
+  const [activeAthlete, setActiveAthlete] = useState(0);
 
   const [locations, setLocations] = useState([
     { nombre: 'Cargando Sedes...', dir: 'Aguarde un momento', h: '-' }
@@ -420,6 +421,216 @@ const Landing = () => {
                 
             </div>
         </div>
+      </section>
+
+      {/* NOSOTROS SECTION */}
+      <section id="nosotros" className="py-16 md:py-24 bg-black relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-cyan/10 rounded-full blur-[120px] pointer-events-none"></div>
+          <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-brand-cyan/5 rounded-full blur-[100px] pointer-events-none"></div>
+          
+          <div className="container mx-auto px-6 max-w-7xl relative z-10">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+                  <div className="space-y-6 md:space-y-8">
+                      <div className="inline-flex items-center gap-2 py-1.5 px-4 border border-white/10 bg-white/5 rounded-full mb-2">
+                          <Flash size={16} className="text-brand-cyan" variant="Bold"/>
+                          <span className="text-xs font-bold uppercase tracking-widest text-white m-0">Nuestra Filosofía</span>
+                      </div>
+                      <h2 className="text-4xl md:text-6xl lg:text-7xl text-white uppercase leading-[0.9] m-0 font-sport tracking-tight">
+                          NO VENDEMOS <br/> <span className="text-brand-cyan italic">SUPLEMENTOS.</span>
+                      </h2>
+                      <div className="w-16 md:w-20 h-2 bg-brand-cyan rounded-full"></div>
+                      <p className="text-neutral-400 text-base md:text-lg leading-relaxed font-medium">
+                          PushSport nació con una única misión: elevar el estándar del rendimiento atlético en Salta. No somos solo una tienda, somos el motor detrás de cada récord personal, cada repetición extra y cada meta alcanzada.
+                      </p>
+                      <p className="text-neutral-400 text-base md:text-lg leading-relaxed font-medium hidden md:block">
+                          Trabajamos directamente con laboratorios de élite para garantizar que cada producto en nuestras estanterías cumpla con las exigencias del deporte profesional. Si no lo usaríamos nosotros, no te lo vendemos.
+                      </p>
+                      <div className="flex gap-8 md:gap-12 pt-6 border-t border-white/10">
+                          <div>
+                              <h4 className="text-3xl md:text-4xl font-sport text-white mb-1">
+                                  {locations.filter(l => !['Cargando Sedes...', 'Plataforma en Mantenimiento', 'Error de Conexión'].includes(l.nombre)).length || 0}
+                              </h4>
+                              <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-brand-cyan">Sedes Activas</span>
+                          </div>
+                      </div>
+                  </div>
+                  
+                  <div className="relative mt-8 lg:mt-0">
+                      <div className="absolute inset-0 bg-gradient-to-tr from-brand-cyan to-transparent opacity-20 rounded-[2rem] blur-xl"></div>
+                      <img src="/fondo.jpeg" alt="Filosofía PushSport" className="relative z-10 w-full h-[300px] md:h-[500px] lg:h-[600px] object-cover rounded-[2rem] border border-white/10 shadow-2xl grayscale hover:grayscale-0 transition-all duration-700" />
+                      <div className="absolute bottom-6 -left-6 md:bottom-10 md:-left-10 bg-white p-4 md:p-6 rounded-2xl shadow-2xl z-20 border border-neutral-100 hidden sm:block">
+                          <div className="flex items-center gap-3 md:gap-4">
+                              <div className="w-10 h-10 md:w-14 md:h-14 bg-black rounded-full flex items-center justify-center">
+                                  <TickCircle size={24} className="text-brand-cyan" variant="Bold" />
+                              </div>
+                              <div>
+                                  <h5 className="font-sport uppercase text-xl md:text-2xl text-black m-0 leading-none">Calidad Elite</h5>
+                                  <span className="text-[10px] md:text-xs font-bold text-neutral-500 uppercase tracking-widest">Garantía PushSport</span>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </section>
+
+      {/* EVENTOS SECTION (BENTO GRID) */}
+      <section id="eventos" className="py-24 bg-neutral-100 relative">
+          <div className="container mx-auto px-6 max-w-7xl">
+              <div className="text-center mb-16">
+                  <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-brand-cyan mb-2 md:mb-4 block">Evento Destacado</span>
+                  <h2 className="uppercase text-5xl md:text-7xl lg:text-8xl text-black m-0 leading-[0.9] font-sport tracking-tight">
+                      UN DESAFÍO CON <br/><span className="text-brand-cyan italic">PROPÓSITO.</span>
+                  </h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-[250px] md:auto-rows-[280px]">
+                  
+                  {/* Bloque Principal (Texto + Imagen) */}
+                  <div className="md:col-span-2 lg:col-span-2 row-span-2 bg-black rounded-[2rem] p-8 md:p-10 relative overflow-hidden group border border-neutral-800 shadow-2xl">
+                      <img src="/eventos/lh1.jpeg" className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-50 transition-all duration-700 group-hover:scale-105" alt="Corremos" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
+                      <div className="relative z-10 h-full flex flex-col justify-end">
+                          <span className="text-brand-cyan font-bold uppercase tracking-widest text-[10px] md:text-xs mb-3 block">Por qué corremos</span>
+                          <h3 className="text-white font-sport text-4xl md:text-5xl lg:text-6xl uppercase leading-[0.9] mb-4">No es solo una carrera</h3>
+                          <p className="text-neutral-300 font-medium text-sm md:text-base max-w-md">
+                             Este evento busca reunir donantes de sangre. Es una iniciativa para activar a la comunidad alrededor del deporte, la solidaridad y la salud.
+                          </p>
+                      </div>
+                  </div>
+
+                  {/* 80 Donantes */}
+                  <div className="bg-white rounded-[2rem] p-6 md:p-8 shadow-xl flex flex-col justify-between group overflow-hidden relative border border-neutral-200">
+                      <div className="absolute -right-6 -top-6 w-24 h-24 md:w-32 md:h-32 bg-brand-cyan/10 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                      <span className="text-neutral-500 font-bold uppercase tracking-widest text-[10px]">Objetivo</span>
+                      <div className="relative z-10">
+                         <h4 className="text-black font-sport text-7xl md:text-8xl leading-none tracking-tighter">80</h4>
+                         <span className="text-black font-bold uppercase tracking-widest text-[10px] md:text-sm block mt-2">Donantes</span>
+                      </div>
+                  </div>
+
+                  {/* 240 Vidas */}
+                  <div className="md:col-span-1 lg:col-span-1 bg-brand-cyan rounded-[2rem] p-6 md:p-8 shadow-xl flex flex-col justify-between relative overflow-hidden group">
+                      <div className="absolute -left-6 -bottom-6 w-24 h-24 md:w-32 md:h-32 bg-white/20 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                      <span className="text-black/60 font-bold uppercase tracking-widest text-[10px] relative z-10">Impacto</span>
+                      <div className="relative z-10">
+                         <h4 className="text-black font-sport text-7xl md:text-8xl leading-none tracking-tighter">240</h4>
+                         <span className="text-black font-bold uppercase tracking-widest text-[10px] md:text-sm block mt-2">Vidas Salvadas</span>
+                      </div>
+                      <p className="text-black/70 text-[10px] md:text-xs mt-4 font-medium relative z-10 leading-relaxed">Cada donante puede salvar hasta 3 vidas.</p>
+                  </div>
+
+                  {/* 1 Comunidad - Foto */}
+                  <div className="md:col-span-2 lg:col-span-2 row-span-1 bg-black rounded-[2rem] relative overflow-hidden group shadow-xl">
+                       <img src="/eventos/lh2.jpeg" className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-all duration-700 group-hover:scale-105" alt="Comunidad" />
+                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                       <div className="absolute bottom-6 left-6 md:bottom-8 md:left-8">
+                           <h4 className="text-white font-sport text-5xl md:text-6xl leading-none mb-1 md:mb-2">1</h4>
+                           <span className="text-brand-cyan font-bold uppercase tracking-widest text-[10px] md:text-sm block">Comunidad en Movimiento</span>
+                       </div>
+                  </div>
+
+                  {/* CTA Instagram */}
+                  <a href="https://www.instagram.com/push_sportsalta?igsh=MWhwejA1dmIyZ2YzOQ==" target="_blank" rel="noopener noreferrer" className="md:col-span-1 lg:col-span-2 row-span-1 bg-black rounded-[2rem] p-6 md:p-8 shadow-xl flex flex-col items-center justify-center group hover:-translate-y-2 transition-all duration-500 border border-neutral-800 hover:border-brand-cyan relative overflow-hidden">
+                       <div className="absolute inset-0 bg-gradient-to-br from-brand-cyan/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                       <Instagram size={40} className="text-brand-cyan mb-3 md:mb-4 group-hover:scale-110 transition-transform duration-500 relative z-10 md:w-12 md:h-12" />
+                       <span className="text-white font-bold uppercase tracking-widest text-[10px] md:text-sm text-center relative z-10">Ver Cobertura Oficial</span>
+                  </a>
+              </div>
+          </div>
+      </section>
+
+      {/* EQUIPO PUSHSPORT SECTION (DEPORTIVO OSCURO / ALTO RENDIMIENTO) */}
+      <section id="team" className="py-24 md:py-32 bg-gray-900 relative overflow-hidden">
+          {/* Elemento decorativo de fondo */}
+          <div className="absolute top-1/4 right-0 w-96 h-96 bg-brand-cyan/10 rounded-full blur-3xl opacity-30 pointer-events-none"></div>
+          <div className="absolute bottom-1/4 left-0 w-80 h-80 bg-brand-cyan/5 rounded-full blur-3xl opacity-20 pointer-events-none"></div>
+          
+          <div className="container mx-auto px-6 max-w-7xl relative z-10">
+              <div className="text-center mb-16">
+                  <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-brand-cyan mb-2 md:mb-4 block">Nuestro Equipo</span>
+                  <h2 className="uppercase text-5xl md:text-7xl lg:text-8xl text-white m-0 leading-none font-black tracking-tight italic">
+                      EQUIPO PUSH<span className="text-brand-cyan">SPORT.</span>
+                  </h2>
+              </div>
+
+              {/* Grid de Miembros del Equipo */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {[
+                      { name: 'Milagros Burgos', role: 'Fundadora & CEO, Mama, intento de atleta, repartidora, preventista, cajera, administradora', img: '/fondo.jpeg' },
+                      /* { name: 'Nahuel Serrudo', role: 'Atleta / Coordinador Técnico', img: '/primera.jpeg' },
+                      { name: 'Tomás Ruiz', role: 'Asesor Técnico', img: '/segunda.jpeg' },
+                      { name: 'Sofía Díaz', role: 'Nutrición Deportiva', img: '/eventos/lh1.jpeg' }, */
+                  ].map((miembro, i) => (
+                      <div 
+                          key={i}
+                          className="group relative overflow-hidden rounded-3xl aspect-[3/4] bg-gray-800"
+                      >
+                          {/* Imagen con efecto hover */}
+                          <img 
+                              src={miembro.img} 
+                              alt={miembro.name} 
+                              className="w-full h-full object-cover opacity-80 mix-blend-luminosity group-hover:opacity-100 group-hover:mix-blend-normal group-hover:scale-110 transition-all duration-500"
+                          />
+                          
+                          {/* Degradado para legibilidad del texto */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
+                          
+                          {/* Información del miembro */}
+                          <div className="absolute bottom-0 left-0 p-6">
+                              <h4 className="text-white text-2xl font-black uppercase leading-tight mb-1">
+                                  {miembro.name}
+                              </h4>
+                              <span className="text-brand-cyan text-xs font-bold uppercase tracking-widest">
+                                  {miembro.role}
+                              </span>
+                          </div>
+                      </div>
+                  ))}
+              </div>
+          </div>
+      </section>
+
+      {/* GALERÍA SECTION */}
+      <section id="galeria" className="py-0 bg-black relative w-full overflow-hidden">
+          <div className="py-16 md:py-24 text-center">
+              <h2 className="uppercase text-4xl md:text-6xl lg:text-7xl text-white m-0 leading-none font-sport tracking-tight">
+                  VIVIENDO <span className="text-brand-cyan italic">PUSH.</span>
+              </h2>
+              <div className="w-16 md:w-20 h-2 bg-brand-cyan mx-auto mt-4 md:mt-6 rounded-full"></div>
+              <p className="text-neutral-400 mt-4 md:mt-6 font-medium text-sm md:text-lg max-w-xl mx-auto px-6">La exigencia no se cuenta, se demuestra. Sumate a la comunidad.</p>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-1 md:gap-2 px-1 md:px-2 pb-1 md:pb-2 auto-rows-[120px] md:auto-rows-[180px]">
+              <div className="col-span-2 row-span-2 overflow-hidden relative group">
+                  <img src="/eventos/lh2.jpeg" alt="Galeria" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 opacity-60 group-hover:opacity-100" />
+                  <div className="absolute inset-0 bg-brand-cyan/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 mix-blend-overlay"></div>
+              </div>
+              <div className="overflow-hidden relative group">
+                  <img src="/primera.jpeg" alt="Galeria" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 opacity-60 group-hover:opacity-100 grayscale group-hover:grayscale-0" />
+              </div>
+              <div className="overflow-hidden relative group row-span-2">
+                  <img src="/eventos/lh4.jpeg" alt="Galeria" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 opacity-60 group-hover:opacity-100" />
+              </div>
+              <div className="col-span-2 md:col-span-1 overflow-hidden relative group">
+                  <img src="/fondo.jpeg" alt="Galeria" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 opacity-60 group-hover:opacity-100 grayscale group-hover:grayscale-0" />
+              </div>
+              <div className="col-span-2 overflow-hidden relative group">
+                  <img src="/eventos/lh1.jpeg" alt="Galeria" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 opacity-60 group-hover:opacity-100" />
+              </div>
+              <div className="overflow-hidden relative group">
+                  <img src="/segunda.jpeg" alt="Galeria" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 opacity-60 group-hover:opacity-100 grayscale group-hover:grayscale-0" />
+              </div>
+              <div className="col-span-2 md:col-span-1 lg:col-span-2 overflow-hidden relative group">
+                  <img src="/eventos/lh3.jpeg" alt="Galeria" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 opacity-60 group-hover:opacity-100" />
+              </div>
+          </div>
+
+          <div className="py-16 md:py-24 text-center bg-gradient-to-t from-black via-black/80 to-transparent absolute bottom-0 left-0 w-full flex items-end justify-center pointer-events-none">
+              <a href="https://www.instagram.com/push_sportsalta?igsh=MWhwejA1dmIyZ2YzOQ==" target="_blank" rel="noopener noreferrer" className="pointer-events-auto inline-flex items-center gap-2 md:gap-3 px-6 py-3 md:px-10 md:py-5 bg-brand-cyan text-black rounded-xl font-bold text-[10px] md:text-sm uppercase tracking-widest hover:bg-white hover:-translate-y-1 transition-all shadow-[0_0_30px_rgba(0,229,255,0.3)]">
+                  <Instagram size={20} className="md:w-6 md:h-6" /> SEGUINOS EN INSTAGRAM
+              </a>
+          </div>
       </section>
 
       {/* FOOTER */}

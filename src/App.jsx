@@ -29,6 +29,7 @@ import ResetPassword from './pages/ResetPassword';
 import Toaster from './components/ui/Toaster';
 import { GlobalLoader } from './components/ui/GlobalLoader';
 import Devoluciones from './pages/dashboard/Devoluciones';
+import Rectificaciones from './pages/dashboard/Rectificaciones';
 const Reporteria = React.lazy(() => import('./pages/admin/Reporteria'));
 import Perfil from './pages/dashboard/Perfil';
 import PublicLayout from './components/layout/PublicLayout';
@@ -89,6 +90,7 @@ const App = () => {
           <Route path="ofertas" element={<Ofertas />} />
           <Route path="inventario" element={<Inventario />} />
           <Route path="devoluciones" element={<Devoluciones />} />
+          <Route path="rectificaciones" element={<Rectificaciones />} />
           <Route path="perfil" element={<Perfil />} />
           {/* POS also accessible under /dashboard for Vendedores */}
           <Route path="pos" element={<POS />} />

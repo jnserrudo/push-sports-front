@@ -1,6 +1,12 @@
 import api from '../api/api';
 
 export const liquidacionesService = {
+    // Preview: obtener resumen pre-liquidación de un comercio
+    getPreview: async (sucursalId) => {
+        const response = await api.get(`/liquidaciones/${sucursalId}/preview`);
+        return response.data;
+    },
+
     // Obtener historial de liquidaciones de un comercio (o todas si no se pasa ID)
     getHistorial: async (sucursalId = null) => {
         if (!sucursalId) {
@@ -8,20 +14,19 @@ export const liquidacionesService = {
             try {
                 const comerciosRes = await api.get('/comercios');
                 const comercios = comerciosRes.data || [];
-                const allLiquidaciones = [];
-                for (const comercio of comercios) {
+                const promesas = comercios.map(async (comercio) => {
                     try {
                         const liqRes = await api.get(`/liquidaciones/${comercio.id_comercio}`);
-                        const items = (liqRes.data || []).map(l => ({
-                            ...l,
-                            sucursal_nombre: comercio.nombre,
-                            sucursal_id: comercio.id_comercio
-                        }));
-                        allLiquidaciones.push(...items);
+                        return liqRes.data || [];
                     } catch {
-                        // Si un comercio falla, continuar
+                        return [];
                     }
-                }
+                });
+                
+                const resultados = await Promise.all(promesas);
+                const allLiquidaciones = resultados.flat();
+                // Ordenar por fecha descendente
+                allLiquidaciones.sort((a, b) => new Date(b.fecha_cierre) - new Date(a.fecha_cierre));
                 return allLiquidaciones;
             } catch {
                 return [];
@@ -33,11 +38,12 @@ export const liquidacionesService = {
     },
 
     // Generar una liquidación para un comercio
-    liquidarSucursal: async (sucursalId, totalVendido, comisionPorcentaje, netoPagado) => {
-        const response = await api.post('/liquidaciones', {
-            id_comercio: sucursalId,
-            observacion: `Liquidación manual — Total vendido: $${totalVendido}, Comisión: ${comisionPorcentaje}%, Neto: $${netoPagado}`
-        });
+    liquidarSucursal: async (sucursalId, montoRecibido = null) => {
+        const body = { id_comercio: sucursalId };
+        if (montoRecibido !== null && montoRecibido !== undefined) {
+            body.monto_recibido = parseFloat(montoRecibido);
+        }
+        const response = await api.post('/liquidaciones', body);
         return response.data;
     }
 };
