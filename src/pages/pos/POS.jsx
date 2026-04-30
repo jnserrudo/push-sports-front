@@ -29,6 +29,9 @@ import { sucursalesService } from '../../services/sucursalesService';
 import { combosService } from '../../services/combosService';
 import { toast } from '../../store/toastStore';
 import { motion, AnimatePresence } from 'framer-motion';
+import { parseImagenes } from '../../lib/supabaseStorage';
+import PremiumSelect from '../../components/ui/PremiumSelect';
+import { CreditCard, DollarSign, Landmark } from 'lucide-react';
 
 const POS = () => {
   const { user, sucursalId } = useAuthStore();
@@ -188,7 +191,10 @@ const POS = () => {
   };
   const getProductStock = (item) => item.cantidad_actual ?? 0;
   const getProductId = (item) => item.id_inventario;
-  const getProductImg = (item) => item.producto?.imagen_url || null;
+  const getProductImg = (item) => {
+    const images = parseImagenes(item.producto?.imagen_url);
+    return images.length > 0 ? images[0] : null;
+  };
 
   const filteredProducts = useMemo(() => {
     if (!products) return [];
@@ -205,14 +211,11 @@ const POS = () => {
     const stock = getProductStock(item);
     if (stock <= 0) return;
     
-    // Si tiene variantes con stock, mostrar modal
-    if (item.variantes && item.variantes.length > 0) {
-      const variantesConStock = item.variantes.filter(v => (v.cantidad_actual || 0) > 0);
-      if (variantesConStock.length > 0) {
-        setSelectedProduct(item);
-        setShowVariantesModal(true);
-        return;
-      }
+    // Si el producto está configurado para usar variantes, SIEMPRE abrir el modal
+    if (item.producto?.usa_variantes || item.usa_desglose_variantes || (item.variantes && item.variantes.length > 0)) {
+      setSelectedProduct(item);
+      setShowVariantesModal(true);
+      return;
     }
     
     // Si no tiene variantes, agregar directamente
@@ -224,7 +227,13 @@ const POS = () => {
     const id = `${item.id_inventario}-${variante.id_variante}`;
     const stockMax = variante.cantidad_actual || 0;
     const precio = getProductPrecio(item);
-    const nombreVariante = variante.variante?.sku_variante || `Variante ${variante.id_variante.slice(0, 8)}`;
+    let atributos = variante.variante?.atributos_valores || {};
+    if (typeof atributos === 'string') {
+      try { atributos = JSON.parse(atributos); } catch(e) {}
+    }
+    const atributosString = Object.values(atributos).join(' ');
+    const fallbackName = atributosString ? `Variante ${atributosString}` : `Variante ${variante.id_variante.slice(0, 8)}`;
+    const nombreVariante = variante.variante?.sku_variante || fallbackName;
     
     const existing = cart.find(c => c.id === id);
     if (existing) {
@@ -389,6 +398,7 @@ const POS = () => {
       const comercioId = sucursalId || user?.id_comercio_asignado;
       const itemsPayload = cart.map(item => ({
         id_producto: item.id_producto,
+        id_variante: item.id_variante, // Soportar variantes
         cantidadAComprar: item.cantidad,
         precio_venta: item.precio
       }));
@@ -432,18 +442,15 @@ const POS = () => {
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4 w-full lg:w-auto mt-2 lg:mt-0">
                 {/* SuperAdmin sucursal picker */}
                 {isSuperAdmin && (
-                    <div className="flex items-center gap-2 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-xl px-3 py-2 flex-grow sm:flex-grow-0">
-                        <MapPin size={14} className="text-brand-cyan flex-shrink-0" />
-                        <select
+                    <div className="w-full sm:w-64">
+                        <PremiumSelect
+                            icon={MapPin}
+                            placeholder="SELECCIONAR SEDE..."
+                            options={sucursalOptions.map(s => ({ value: s.id_comercio, label: s.nombre }))}
                             value={selectedSucursalId || ''}
-                            onChange={e => { setCart([]); setSelectedSucursalId(e.target.value || null); }}
-                            className="bg-transparent text-black dark:text-white text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer appearance-none pr-4 w-full"
-                        >
-                            <option value="" className="bg-neutral-900 text-white">SELECCIONAR SEDE...</option>
-                            {sucursalOptions.map(s => (
-                                <option key={s.id_comercio} value={s.id_comercio} className="bg-neutral-900 text-white">{s.nombre}</option>
-                            ))}
-                        </select>
+                            onChange={val => { setCart([]); setSelectedSucursalId(val || null); }}
+                            className="!py-1"
+                        />
                     </div>
                 )}
 
@@ -461,7 +468,8 @@ const POS = () => {
                 
                 <button 
                     onClick={() => setActiveTab('cart')}
-                    className="relative bg-black text-white px-4 md:px-6 py-2.5 md:py-3.5 rounded-xl font-bold uppercase tracking-widest text-[10px] flex items-center gap-2 hover:bg-brand-cyan hover:text-black transition-all shadow-premium active:scale-95 w-full sm:w-auto justify-center flex-shrink-0"
+                    disabled={isProcessing}
+                    className="relative bg-black text-white px-4 md:px-6 py-2.5 md:py-3.5 rounded-xl font-bold uppercase tracking-widest text-[10px] flex items-center gap-2 hover:bg-brand-cyan hover:text-black transition-all shadow-premium active:scale-95 w-full sm:w-auto justify-center flex-shrink-0 disabled:opacity-50"
                 >
                     <div className="flex items-center justify-center p-1 bg-white/20 rounded-md">
                         <ShoppingBag size={14} />
@@ -474,30 +482,68 @@ const POS = () => {
                     )}
                 </button>
             </div>
+
+            {/* Instructional Guide - contextual help */}
+            {(() => {
+                let stepNum = '';
+                let stepMsg = '';
+                let stepIcon = null;
+
+                if (isSuperAdmin && !selectedSucursalId) {
+                    stepNum = 'Paso 1';
+                    stepMsg = 'Seleccioná una sede en el desplegable de arriba para cargar su inventario.';
+                    stepIcon = <MapPin size={13} className="text-brand-cyan shrink-0" />;
+                } else if (cart.length === 0 && activeTab === 'catalog') {
+                    stepNum = 'Paso 2';
+                    stepMsg = 'Tocá un producto del catálogo para sumarlo al carrito. Usá el buscador para encontrarlo más rápido.';
+                    stepIcon = <Package size={13} className="text-brand-cyan shrink-0" />;
+                } else if (cart.length > 0 && activeTab === 'catalog') {
+                    stepNum = 'Paso 3';
+                    stepMsg = `Tenés ${cart.reduce((s,i)=>s+i.cantidad,0)} artículo(s). Presioná "Checkout" para revisar el resumen y finalizar la venta.`;
+                    stepIcon = <ShoppingBag size={13} className="text-brand-cyan shrink-0" />;
+                } else if (activeTab === 'cart' && !isProcessing) {
+                    stepNum = 'Paso 4';
+                    stepMsg = 'Revisá los ítems, aplicá un código promo si tenés, elegí el método de pago y presioná "Finalizar Venta".';
+                    stepIcon = <Receipt size={13} className="text-brand-cyan shrink-0" />;
+                } else if (isProcessing) {
+                    stepNum = 'Procesando';
+                    stepMsg = 'Guardando la venta, no cierres la pantalla...';
+                    stepIcon = <Loader2 size={13} className="text-brand-cyan shrink-0 animate-spin" />;
+                }
+
+                return stepMsg ? (
+                    <div className="mx-4 md:mx-5 mb-3 flex items-center gap-2.5 px-3.5 py-2.5 bg-neutral-50 dark:bg-gray-700/40 border border-neutral-200/70 dark:border-gray-600 rounded-xl">
+                        {stepIcon}
+                        <p className="text-[9px] md:text-[10px] font-bold text-neutral-500 dark:text-gray-300 leading-relaxed m-0">
+                            <span className="font-black text-black dark:text-white mr-1">{stepNum}:</span>{stepMsg}
+                        </p>
+                    </div>
+                ) : null;
+            })()}
         </div>
 
-        <div className="flex-1 p-4 md:p-5 overflow-y-auto scrollbar-hide">
+        <div className="flex-1 p-2 md:p-3 overflow-y-auto scrollbar-hide">
           {/* SuperAdmin needs to pick a store first */}
           {isSuperAdmin && !selectedSucursalId ? (
-            <div className="flex flex-col items-center justify-center py-24 md:py-40 gap-6 opacity-50">
-              <MapPin size={80} strokeWidth={0.5} className="text-brand-cyan" />
+            <div className="flex flex-col items-center justify-center py-20 md:py-32 gap-4 opacity-50">
+              <MapPin size={60} strokeWidth={0.5} className="text-brand-cyan" />
               <div className="text-center space-y-1">
-                <p className="text-[11px] font-black uppercase tracking-[1em] text-neutral-600">Seleccioná una sede</p>
-                <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400">Usá el selector de arriba para cargar el inventario</p>
+                <p className="text-[10px] font-black uppercase tracking-[1em] text-neutral-600">Seleccioná una sede</p>
+                <p className="text-[8px] font-bold uppercase tracking-widest text-neutral-400">Cargar el inventario</p>
               </div>
             </div>
           ) : isLoadingProducts ? (
-            <div className="flex flex-col items-center justify-center py-20 md:py-32 gap-6 opacity-60">
-                <div className="w-12 h-12 border-4 border-neutral-100 dark:border-gray-700 border-t-brand-cyan rounded-full animate-spin"></div>
-                <p className="text-[10px] font-black uppercase tracking-[0.5em] text-neutral-400">Accediendo a la RED...</p>
+            <div className="flex flex-col items-center justify-center py-16 md:py-24 gap-4 opacity-60">
+                <div className="w-10 h-10 border-4 border-neutral-100 dark:border-gray-700 border-t-brand-cyan rounded-full animate-spin"></div>
+                <p className="text-[9px] font-black uppercase tracking-[0.5em] text-neutral-400">Accediendo a la RED...</p>
             </div>
           ) : filteredProducts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 md:py-40 opacity-20 filter grayscale">
-              <Store size={100} strokeWidth={0.5} />
-              <p className="text-xs font-black uppercase tracking-[1em] mt-10">Sin Productos</p>
+            <div className="flex flex-col items-center justify-center py-16 md:py-32 opacity-20 filter grayscale">
+              <Store size={80} strokeWidth={0.5} />
+              <p className="text-xs font-black uppercase tracking-[1em] mt-8">Sin Productos</p>
             </div>
           ) : (
-          <motion.div layout className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 pb-20 md:pb-0">
+          <motion.div layout className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 pb-20 md:pb-0">
             <AnimatePresence>
             {filteredProducts.map(item => {
               const stock = getProductStock(item);
@@ -510,35 +556,39 @@ const POS = () => {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                whileHover={stock > 0 ? { scale: 1.02 } : {}}
-                whileTap={stock > 0 ? { scale: 0.95 } : {}}
+                whileHover={stock > 0 ? { scale: 1.01 } : {}}
+                whileTap={stock > 0 ? { scale: 0.98 } : {}}
                 key={getProductId(item)}
                 onClick={() => handleProductClick(item)}
-                className={`group p-3 md:p-4 bg-white dark:bg-gray-800 rounded-2xl md:rounded-3xl transition-all duration-300 relative cursor-pointer border ${
+                className={`group p-2 md:p-3 bg-white dark:bg-gray-800 rounded-xl md:rounded-2xl transition-all duration-300 relative cursor-pointer border ${
                   stock > 0 
                   ? 'border-neutral-100 dark:border-gray-700 shadow-sm hover:border-brand-cyan/20' 
                   : 'bg-neutral-50/50 dark:bg-gray-700/50 opacity-40 grayscale border-transparent cursor-not-allowed'
                 }`}
               >
-                <div className="aspect-square bg-neutral-50 mb-3 md:mb-6 rounded-xl md:rounded-2xl overflow-hidden relative border border-neutral-50">
+                <div className="aspect-square bg-neutral-50 mb-2 md:mb-3 rounded-lg md:rounded-xl overflow-hidden relative border border-neutral-50">
                     {img ? (
-                      <img src={img} alt={nombre} className="w-full h-full object-cover grayscale brightness-110 group-active:grayscale-0 transition-all duration-700" />
+                      <img src={img} alt={nombre} className="w-full h-full object-cover transition-all duration-700" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-neutral-200">
-                        <Box size={32} />
+                        <Box size={24} />
                       </div>
                     )}
-                    {stock <= 0 && (
+                    {stock <= 0 ? (
                         <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex items-center justify-center">
-                            <span className="text-white font-bold text-[7px] uppercase tracking-[0.3em] border border-white/20 px-3 py-1.5 rounded-full">AGOTADO</span>
+                            <span className="text-white font-bold text-[6px] uppercase tracking-[0.2em] border border-white/20 px-2 py-1 rounded-full">AGOTADO</span>
                         </div>
-                    )}
+                    ) : (item.producto?.usa_variantes || item.usa_desglose_variantes || (item.variantes && item.variantes.length > 0)) ? (
+                        <div className="absolute top-1 right-1 bg-black/80 backdrop-blur-md text-white text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded shadow-sm border border-white/10 flex items-center gap-1">
+                            <span>Opciones</span>
+                        </div>
+                    ) : null}
                 </div>
                 
-                <h3 className="font-bold text-[10px] md:text-sm uppercase tracking-tight mb-1 text-neutral-900 truncate">{nombre}</h3>
+                <h3 className="font-bold text-[9px] md:text-xs uppercase tracking-tight mb-0.5 text-neutral-900 truncate">{nombre}</h3>
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center text-neutral-900">
-                    <span className="font-black text-lg md:text-2xl tracking-tighter">${precio.toLocaleString()}</span>
-                    <span className={`text-[8px] md:text-[10px] font-black uppercase tracking-widest ${stock < 5 ? 'text-brand-cyan' : 'text-neutral-400'}`}>
+                    <span className="font-black text-base md:text-lg tracking-tighter">${precio.toLocaleString()}</span>
+                    <span className={`text-[7px] md:text-[8px] font-black uppercase tracking-widest ${stock < 5 ? 'text-brand-cyan' : 'text-neutral-400'}`}>
                         {stock} DISP.
                     </span>
                 </div>
@@ -666,6 +716,24 @@ const POS = () => {
                 {cartItemsCount} ITEMS
             </motion.div>
         </div>
+        
+        {/* Step 4 Guide inside Drawer */}
+        {!showDrafts && activeTab === 'cart' && !isProcessing && (
+            <div className="mx-4 md:mx-5 mt-4 flex items-center gap-2.5 px-3.5 py-2.5 bg-neutral-50 dark:bg-gray-700/40 border border-neutral-200/70 dark:border-gray-600 rounded-xl shadow-sm">
+                <Receipt size={13} className="text-brand-cyan shrink-0" />
+                <p className="text-[9px] md:text-[10px] font-bold text-neutral-500 dark:text-gray-300 leading-relaxed m-0">
+                    <span className="font-black text-black dark:text-white mr-1">Paso 4:</span>Revisá los ítems, aplicá un código promo si tenés, elegí el método de pago y presioná "Finalizar Venta".
+                </p>
+            </div>
+        )}
+        {isProcessing && (
+            <div className="mx-4 md:mx-5 mt-4 flex items-center gap-2.5 px-3.5 py-2.5 bg-neutral-50 dark:bg-gray-700/40 border border-neutral-200/70 dark:border-gray-600 rounded-xl shadow-sm">
+                <Loader2 size={13} className="text-brand-cyan shrink-0 animate-spin" />
+                <p className="text-[9px] md:text-[10px] font-bold text-neutral-500 dark:text-gray-300 leading-relaxed m-0">
+                    <span className="font-black text-black dark:text-white mr-1">Procesando:</span>Guardando la venta, no cierres la pantalla...
+                </p>
+            </div>
+        )}
 
         <div className="flex-1 overflow-y-auto p-4 md:p-5 space-y-3 md:space-y-4 scrollbar-hide">
           {showDrafts ? (
@@ -819,15 +887,19 @@ const POS = () => {
                 )}
                 <div className="flex justify-between items-center font-bold text-[10px] tracking-[0.2em] text-neutral-500">
                     <span>Método de pago</span>
-                    <select
-                      value={metodoPago}
-                      onChange={e => setMetodoPago(e.target.value)}
-                      className="bg-white dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg px-2 py-1 text-[9px] md:text-[10px] font-black text-black dark:text-white"
-                    >
-                      <option>Efectivo</option>
-                      <option>Tarjeta</option>
-                      <option>Transf. Bancaria</option>
-                    </select>
+                    <div className="w-32">
+                        <PremiumSelect
+                            searchable={false}
+                            options={[
+                                { value: 'Efectivo', label: 'Efectivo', icon: DollarSign },
+                                { value: 'Tarjeta', label: 'Tarjeta', icon: CreditCard },
+                                { value: 'Transf. Bancaria', label: 'Transf. Bancaria', icon: Landmark }
+                            ]}
+                            value={metodoPago}
+                            onChange={val => setMetodoPago(val)}
+                            className="!py-0"
+                        />
+                    </div>
                 </div>
                 <div className="pt-3 border-t border-neutral-200 flex justify-between items-end">
                     <span className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.3em]">Total</span>
@@ -848,7 +920,8 @@ const POS = () => {
                 {cart.length > 0 && (
                     <button
                         onClick={saveDraft}
-                        className="flex-shrink-0 bg-neutral-100 text-neutral-500 font-black text-[9px] uppercase tracking-widest px-3 py-3.5 rounded-xl hover:bg-amber-100 hover:text-amber-600 transition-colors flex items-center gap-1.5"
+                        disabled={isProcessing}
+                        className="flex-shrink-0 bg-neutral-100 text-neutral-500 font-black text-[9px] uppercase tracking-widest px-3 py-3.5 rounded-xl hover:bg-amber-100 hover:text-amber-600 transition-colors flex items-center gap-1.5 disabled:opacity-20"
                     >
                         <Clock size={13} />
                     </button>
@@ -911,34 +984,58 @@ const POS = () => {
             </div>
             
             <div className="space-y-2 max-h-64 overflow-y-auto">
-              {selectedProduct.variantes
-                ?.filter(v => (v.cantidad_actual || 0) > 0)
-                .map(variante => {
-                  const sku = variante.variante?.sku_variante || `Variante ${variante.id_variante.slice(0, 8)}`;
-                  const atributos = variante.variante?.atributos_valores || {};
+              {(selectedProduct.producto?.variantes || selectedProduct.variantes || [])
+                .map(v => {
+                  // Si no tiene la propiedad 'variante', viene de producto.variantes
+                  const isFromProduct = !v.variante;
+                  const varDef = isFromProduct ? v : v.variante;
+                  const idVar = isFromProduct ? v.id_variante : v.id_variante;
+                  
+                  const localStockItem = selectedProduct.variantes?.find(sv => sv.id_variante === idVar);
+                  const stockVar = localStockItem?.cantidad_actual || 0;
+                  
+                  // Intentar parsear atributos si por alguna razón vienen como string
+                  let atributos = varDef?.atributos_valores || {};
+                  if (typeof atributos === 'string') {
+                    try { atributos = JSON.parse(atributos); } catch(e) {}
+                  }
+
+                  const formatAtributos = () => {
+                     const entries = Object.entries(atributos);
+                     if (entries.length === 0) return 'Sin atributos definidos';
+                     return entries.map(([k, val]) => `${k}: ${val}`).join(' | ');
+                  };
+
+                  // Generar un nombre bonito usando los atributos si no hay SKU
+                  const atributosString = Object.values(atributos).join(' ');
+                  const fallbackName = atributosString ? `Variante ${atributosString}` : `Variante ${idVar.slice(0, 8)}`;
+                  const sku = varDef?.sku_variante || fallbackName;
+                  
                   return (
                     <button
-                      key={variante.id_variante}
-                      onClick={() => addVarianteToCart(selectedProduct, variante)}
-                      className="w-full p-3 md:p-4 bg-neutral-50 dark:bg-gray-700 hover:bg-brand-cyan/10 dark:hover:bg-brand-cyan/20 rounded-xl border border-neutral-100 dark:border-gray-600 hover:border-brand-cyan/30 transition-all text-left"
+                      key={idVar}
+                      onClick={() => stockVar > 0 ? addVarianteToCart(selectedProduct, { ...localStockItem, id_variante: idVar, variante: varDef }) : null}
+                      disabled={stockVar <= 0}
+                      className={`w-full p-3 md:p-4 rounded-xl border transition-all text-left flex items-center justify-between
+                        ${stockVar > 0 
+                          ? 'bg-neutral-50 dark:bg-gray-700 hover:bg-brand-cyan/10 dark:hover:bg-brand-cyan/20 border-neutral-100 dark:border-gray-600 hover:border-brand-cyan/30' 
+                          : 'bg-neutral-50/50 dark:bg-gray-800/50 border-transparent opacity-50 cursor-not-allowed grayscale'}`}
                     >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-bold text-sm text-neutral-900 dark:text-white">
-                            {sku}
-                          </p>
-                          <p className="text-xs text-neutral-500 mt-1">
-                            {Object.entries(atributos).map(([k, v]) => `${k}: ${v}`).join(' | ')}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-black text-sm text-neutral-900 dark:text-white">
-                            ${getProductPrecio(selectedProduct).toLocaleString()}
-                          </p>
-                          <p className={`text-xs font-bold ${(variante.cantidad_actual || 0) < 5 ? 'text-brand-cyan' : 'text-neutral-400'}`}>
-                            {variante.cantidad_actual} DISP.
-                          </p>
-                        </div>
+                      <div>
+                        <p className="font-bold text-sm text-neutral-900 dark:text-white">
+                          {sku}
+                        </p>
+                        <p className="text-xs text-neutral-500 mt-1">
+                          {formatAtributos()}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-black text-sm text-neutral-900 dark:text-white">
+                          ${getProductPrecio(selectedProduct).toLocaleString()}
+                        </p>
+                        <p className={`text-xs font-bold ${stockVar < 5 && stockVar > 0 ? 'text-brand-cyan' : 'text-neutral-400'}`}>
+                          {stockVar > 0 ? `${stockVar} DISP.` : 'AGOTADO'}
+                        </p>
                       </div>
                     </button>
                   );

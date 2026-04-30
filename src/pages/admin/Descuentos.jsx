@@ -1,5 +1,6 @@
 import React from 'react';
-import { Ticket, CircleDollarSign, Percent, Hash } from 'lucide-react';
+import { Ticket, Percent, Hash, CircleDollarSign } from 'lucide-react';
+import PremiumSelect from '../../components/ui/PremiumSelect';
 import GenericABM from '../../components/ui/GenericABM';
 import { descuentosService } from '../../services/genericServices';
 
@@ -88,15 +89,16 @@ const Descuentos = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">Mecánica</label>
-                    <select
-                        required
-                        className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-bold text-black dark:text-white focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan transition-all appearance-none"
+                    <PremiumSelect
+                        placeholder="SELECCIONAR..."
+                        searchable={false}
+                        options={[
+                            { value: 'porcentaje', label: 'Porcentaje (%)', icon: Percent },
+                            { value: 'fijo', label: 'Monto Fijo ($)', icon: CircleDollarSign }
+                        ]}
                         value={formData.tipo_descuento || 'porcentaje'}
-                        onChange={e => setFormData({ ...formData, tipo_descuento: e.target.value })}
-                    >
-                        <option value="porcentaje">Porcentaje (%)</option>
-                        <option value="fijo">Monto Fijo ($)</option>
-                    </select>
+                        onChange={val => setFormData({ ...formData, tipo_descuento: val })}
+                    />
                 </div>
                 <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">Valor del Descuento</label>
@@ -109,8 +111,8 @@ const Descuentos = () => {
                             required type="number" min="1"
                             className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-bold text-black dark:text-white focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan transition-all"
                             placeholder="0.00"
-                            value={formData.valor_descuento || ''}
-                            onChange={e => setFormData({ ...formData, valor_descuento: Number(e.target.value) })}
+                            value={formData.valor_descuento ?? ''}
+                            onChange={e => setFormData({ ...formData, valor_descuento: e.target.value })}
                         />
                     </div>
                 </div>
@@ -122,8 +124,8 @@ const Descuentos = () => {
                     type="number" min="1"
                     placeholder="Dejar vacío para ilimitado"
                     className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-bold text-black dark:text-white placeholder:text-neutral-400 focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan transition-all"
-                    value={formData.usos_maximos || ''}
-                    onChange={e => setFormData({ ...formData, usos_maximos: e.target.value ? Number(e.target.value) : null })}
+                    value={formData.usos_maximos ?? ''}
+                    onChange={e => setFormData({ ...formData, usos_maximos: e.target.value })}
                 />
             </div>
         </div>

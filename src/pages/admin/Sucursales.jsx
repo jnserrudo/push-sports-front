@@ -5,6 +5,7 @@ import { toast } from '../../store/toastStore';
 import GenericABM from '../../components/ui/GenericABM';
 import { sucursalesService as service } from '../../services/sucursalesService';
 import { uploadProductImage, deleteProductImage } from '../../lib/supabaseStorage';
+import PremiumSelect from '../../components/ui/PremiumSelect';
 
 const MapClickCapture = ({ onLocationSelect }) => {
     const { map, isLoaded } = useMap();
@@ -251,22 +252,17 @@ const Sucursales = () => {
 
                 <div className="space-y-1.5">
                     <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-black dark:text-white">Tipo de Negocio *</label>
-                    <div className="relative group">
-                        <Layout size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none group-focus-within:text-brand-cyan transition-colors" />
-                        <select
-                            required
-                            className="w-full pl-10 pr-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-bold text-black dark:text-white uppercase focus:outline-none focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/20 transition-all appearance-none cursor-pointer"
-                            value={formData.id_tipo_comercio || ''}
-                            onChange={e => setFormData({ ...formData, id_tipo_comercio: parseInt(e.target.value) })}
-                        >
-                            <option value="">SELECCIONAR TIPO...</option>
-                            {(Array.isArray(tiposComercio) ? tiposComercio : []).map(t => (
-                                <option key={t.id_tipo_comercio} value={t.id_tipo_comercio}>
-                                    {t.nombre}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                    <PremiumSelect
+                        icon={Layout}
+                        placeholder="SELECCIONAR TIPO..."
+                        options={(Array.isArray(tiposComercio) ? tiposComercio : []).map(t => ({
+                            value: t.id_tipo_comercio,
+                            label: t.nombre,
+                            subtitle: t.descripcion
+                        }))}
+                        value={formData.id_tipo_comercio || ''}
+                        onChange={val => setFormData({ ...formData, id_tipo_comercio: parseInt(val) })}
+                    />
                 </div>
             </div>
 

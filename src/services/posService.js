@@ -16,6 +16,7 @@ export const posService = {
             total_venta: montoTotal, // Aclaro monto total por si acaso el backend lo requiere
             detalles: items.map(item => ({
                 id_producto: item.id_producto,
+                id_variante: item.id_variante, // Soportar variantes
                 cantidad: item.cantidadAComprar,
                 precio_unitario: item.precio_venta
             }))

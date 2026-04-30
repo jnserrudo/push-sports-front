@@ -29,6 +29,7 @@ import {
   prefetchProductImages
 } from '../../lib/supabaseStorage';
 import Toaster from '../../components/ui/Toaster';
+import DataTable from '../../components/ui/DataTable';
 
 const Reporteria = () => {
   const [activeTab, setActiveTab] = useState('global');
@@ -282,95 +283,61 @@ const Reporteria = () => {
                 </p>
               </div>
 
-              <div className="overflow-x-auto -mx-4 md:mx-0 rounded-none md:rounded-3xl border-y md:border border-neutral-100 dark:border-gray-700">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="bg-neutral-50/80 dark:bg-gray-700/50 text-neutral-400 dark:text-gray-400 text-[10px] font-black uppercase tracking-widest">
-                      <th className="px-6 py-5">Producto</th>
-                      {showPushPriceGlobal && (
-                        <th className="px-6 py-5 text-center">
-                          <span className="inline-flex items-center gap-1.5 bg-brand-cyan/10 text-brand-cyan px-3 py-1 rounded-lg">
-                            <Eye size={10} /> P. Push
-                          </span>
-                        </th>
-                      )}
-                      <th className="px-6 py-5 text-center">
-                        <span className="inline-flex items-center gap-1.5">P. Público</span>
-                        <span className="block text-[8px] text-neutral-300 normal-case font-bold tracking-normal mt-0.5">siempre visible en PDF</span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-neutral-50 dark:divide-gray-700">
-                    {loading && filteredProducts.length === 0 ? (
-                      <tr>
-                        <td colSpan={showPushPriceGlobal ? 3 : 2} className="py-20 text-center opacity-30">
-                          <div className="flex flex-col items-center justify-center">
-                            <span className="animate-spin w-10 h-10 border-4 border-brand-cyan border-t-transparent rounded-full mb-3"></span>
-                            <p className="text-xs font-black uppercase tracking-widest">Cargando catálogo...</p>
+              <DataTable 
+                data={filteredProducts}
+                columns={[
+                  { 
+                    header: 'Producto', 
+                    render: (p) => (
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-white dark:bg-gray-700 flex items-center justify-center border border-neutral-100 dark:border-gray-600 overflow-hidden shrink-0">
+                          {imageMap[p.id_producto] ? (
+                            <img src={imageMap[p.id_producto]} className="w-full h-full object-cover" />
+                          ) : parseImagenes(p.imagen_url)[0] ? (
+                            <img src={parseImagenes(p.imagen_url)[0]} className="w-full h-full object-cover" />
+                          ) : <Package className="text-neutral-200" size={16} />}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-black text-neutral-900 dark:text-gray-100 uppercase leading-none truncate max-w-[200px]">{p.nombre}</p>
+                          <div className="flex flex-wrap gap-1 mt-0.5">
+                            <span className="text-[8px] font-black text-brand-cyan uppercase tracking-widest">{p.marca?.nombre_marca || 'General'}</span>
                           </div>
-                        </td>
-                      </tr>
-                    ) : filteredProducts.map(p => (
-                      <tr key={p.id_producto} className="hover:bg-neutral-50/50 dark:hover:bg-gray-700/50 transition-colors group">
-                        <td className="px-6 py-5">
-                          <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-xl bg-white dark:bg-gray-700 flex items-center justify-center border-2 border-neutral-100 dark:border-gray-600 overflow-hidden shrink-0 group-hover:border-brand-cyan/30 dark:group-hover:border-cyan-400/30 transition-all">
-                              {imageMap[p.id_producto] ? (
-                                <img src={imageMap[p.id_producto]} className="w-full h-full object-cover" />
-                              ) : parseImagenes(p.imagen_url)[0] ? (
-                                <img src={parseImagenes(p.imagen_url)[0]} className="w-full h-full object-cover" />
-                              ) : <Package className="text-neutral-200" size={22} />}
-                            </div>
-                            <div>
-                              <p className="text-sm font-black text-neutral-900 dark:text-gray-100 uppercase leading-none">{p.nombre}</p>
-                              <div className="flex flex-wrap gap-1.5 mt-1.5">
-                                <span className="text-[10px] font-black text-brand-cyan uppercase tracking-widest">{p.marca?.nombre_marca || 'General'}</span>
-                                {/* Mostrar todos los atributos del producto */}
-                                {p.atributos && Object.entries(p.atributos).map(([key, values]) => {
-                                  if (!values || values.length === 0) return null;
-                                  const displayKey = key.toUpperCase();
-                                  const displayValues = Array.isArray(values) ? values.join(', ') : values;
-                                  return (
-                                    <span key={key} className="text-[9px] font-bold text-neutral-400 dark:text-gray-500 uppercase tracking-widest">
-                                      · {displayKey}: {displayValues}
-                                    </span>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        {showPushPriceGlobal && (
-                          <td className="px-6 py-5">
-                            <div className="flex items-center justify-center gap-1.5">
-                              <span className="text-neutral-300 dark:text-gray-500 text-xs font-black">$</span>
-                              <input
-                                type="number"
-                                min="0"
-                                value={p.precio_pushsport}
-                                onChange={(e) => handlePriceChange(p.id_producto, 'precio_pushsport', e.target.value)}
-                                className="w-28 h-10 bg-brand-cyan/5 dark:bg-cyan-900/20 border-2 border-brand-cyan/20 dark:border-cyan-700/30 rounded-lg text-center font-black text-sm text-neutral-900 dark:text-gray-100 outline-none focus:border-brand-cyan dark:focus:border-cyan-400 transition-all"
-                              />
-                            </div>
-                          </td>
-                        )}
-                        <td className="px-6 py-5">
-                          <div className="flex items-center justify-center gap-1.5">
-                            <span className="text-neutral-300 dark:text-gray-500 text-xs font-black">$</span>
-                            <input
-                              type="number"
-                              min="0"
-                              value={p.precio_venta_sugerido}
-                              onChange={(e) => handlePriceChange(p.id_producto, 'precio_venta_sugerido', e.target.value)}
-                              className="w-28 h-10 bg-neutral-50 dark:bg-gray-700 border-2 border-neutral-100 dark:border-gray-600 rounded-lg text-center font-black text-sm text-neutral-900 dark:text-gray-100 outline-none focus:border-brand-cyan dark:focus:border-cyan-400 transition-all"
-                            />
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        </div>
+                      </div>
+                    )
+                  },
+                  ...(showPushPriceGlobal ? [{
+                    header: 'P. Push',
+                    render: (p) => (
+                      <div className="flex items-center justify-center gap-1">
+                        <span className="text-neutral-400 text-[8px] font-black">$</span>
+                        <input
+                          type="number"
+                          min="0"
+                          value={p.precio_pushsport}
+                          onChange={(e) => handlePriceChange(p.id_producto, 'precio_pushsport', e.target.value)}
+                          className="w-20 h-7 bg-brand-cyan/5 dark:bg-cyan-900/10 border border-brand-cyan/20 rounded text-center font-black text-[10px] text-neutral-900 dark:text-gray-100 outline-none focus:border-brand-cyan transition-all"
+                        />
+                      </div>
+                    )
+                  }] : []),
+                  {
+                    header: 'P. Público',
+                    render: (p) => (
+                      <div className="flex items-center justify-center gap-1">
+                        <span className="text-neutral-400 text-[8px] font-black">$</span>
+                        <input
+                          type="number"
+                          min="0"
+                          value={p.precio_venta_sugerido}
+                          onChange={(e) => handlePriceChange(p.id_producto, 'precio_venta_sugerido', e.target.value)}
+                          className="w-20 h-7 bg-neutral-50 dark:bg-gray-700 border border-neutral-100 dark:border-gray-600 rounded text-center font-black text-[10px] text-neutral-900 dark:text-gray-100 outline-none focus:border-brand-cyan transition-all"
+                        />
+                      </div>
+                    )
+                  }
+                ]}
+              />
             </div>
           </motion.div>
         ) : (

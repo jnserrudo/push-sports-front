@@ -404,9 +404,9 @@ const DashboardLayout = () => {
         {/* PAGE CONTENT */}
         <main 
             ref={mainContentRef}
-            className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 lg:p-14 bg-neutral-50 dark:bg-gray-900 custom-scrollbar relative overflow-x-hidden"
+            className="flex-1 overflow-y-auto p-1.5 sm:p-2 md:p-3 lg:p-4 bg-neutral-50 dark:bg-gray-900 custom-scrollbar relative overflow-x-hidden"
         >
-            <div className="max-w-7xl mx-auto space-y-4">
+            <div className="max-w-[1400px] mx-auto space-y-3">
                 {isAuthorized ? (
                   <AnimatePresence mode="wait">
                     <motion.div

@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Truck, Box, Home, PlusCircle, Info, Check, RefreshCw, AlertCircle, CheckCircle2, Package } from 'lucide-react';
+import { Truck, Box, Home, PlusCircle, Info, Check, RefreshCw, AlertCircle, CheckCircle2, Package, Clock } from 'lucide-react';
 import DataTable from '../../components/ui/DataTable';
 import Modal from '../../components/ui/Modal';
 import { enviosService } from '../../services/enviosService';
 import { sucursalesService } from '../../services/sucursalesService';
 import { productosService } from '../../services/productosService';
 import { useAuthStore } from '../../store/authStore';
+import PremiumSelect from '../../components/ui/PremiumSelect';
 
 const Envios = () => {
     const { user } = useAuthStore();
@@ -23,7 +24,7 @@ const Envios = () => {
     const [formData, setFormData] = useState({
         sucursal_id: '',
         producto_id: '',
-        cantidad: 1,
+        cantidad: '',
     });
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [productVariants, setProductVariants] = useState([]);
@@ -36,9 +37,8 @@ const Envios = () => {
             const [envData, sucData, prodData] = await Promise.all([
                 enviosService.getAll().then(res => {
                     const data = res.data || [];
-                    // Sanitización: Filtrar registros que no tienen los campos básicos necesarios
-                    // Esto evita mostrar la fila #UNDEFINED que reportó el usuario.
-                    return data.filter(item => item && (item.id || item.fecha || item.producto_nombre));
+                    // Sanitización mejorada para MovimientoStock (usa id_movimiento y fecha_hora)
+                    return data.filter(item => item && (item.id_movimiento || item.fecha_hora || item.producto?.nombre));
                 }),
                 sucursalesService.getAll(),
                 productosService.getAll(),
@@ -59,7 +59,7 @@ const Envios = () => {
         setFormData({
             sucursal_id: sucursales[0]?.id_comercio || '',
             producto_id: '',
-            cantidad: 1,
+            cantidad: '',
         });
         setSelectedProduct(null);
         setProductVariants([]);
@@ -95,9 +95,11 @@ const Envios = () => {
 
     // Actualizar cantidad de una variante
     const handleVariantQuantityChange = (varianteId, cantidad) => {
+        // Limpiar ceros a la izquierda y manejar vacío
+        const cleanVal = cantidad === '' ? '' : parseInt(cantidad).toString();
         setVariantQuantities(prev => ({
             ...prev,
-            [varianteId]: Math.max(0, parseInt(cantidad) || 0)
+            [varianteId]: cleanVal
         }));
     };
 
@@ -109,8 +111,8 @@ const Envios = () => {
             if (hasVariants) {
                 // Verificar que hay al menos una variante con cantidad
                 const itemsVariantes = Object.entries(variantQuantities)
-                    .filter(([_, cantidad]) => cantidad > 0)
-                    .map(([id_variante, cantidad]) => ({ id_variante, cantidad }));
+                    .filter(([_, cantidad]) => Number(cantidad) > 0)
+                    .map(([id_variante, cantidad]) => ({ id_variante, cantidad: Number(cantidad) }));
                 
                 if (itemsVariantes.length === 0) {
                     setFeedback({ type: 'error', msg: 'Debes ingresar cantidad para al menos una variante.' });
@@ -130,7 +132,7 @@ const Envios = () => {
                 await enviosService.crearEnvio(
                     formData.sucursal_id,
                     formData.producto_id,
-                    formData.cantidad
+                    Number(formData.cantidad) || 0
                 );
                 setFeedback({ type: 'ok', msg: 'Orden procesada correctamente.' });
             }
@@ -149,52 +151,54 @@ const Envios = () => {
 
     const columns = [
         {
-            header: 'ID Asignación',
-            accessor: 'id',
+            header: 'ID',
+            accessor: 'id_movimiento',
             render: (row) => (
-                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">
-                    #{String(row.id).split('-')[0]}
+                <span className="text-[9px] font-black uppercase tracking-widest text-neutral-400">
+                    #{String(row.id_movimiento || '').split('-')[0]}
                 </span>
             )
         },
         {
             header: 'Fecha',
-            accessor: 'fecha',
+            accessor: 'fecha_hora',
             render: (row) => (
-                <div className="flex flex-col">
-                    <span className="font-bold text-sm text-black uppercase tracking-widest">
-                        {row.fecha ? new Date(row.fecha).toLocaleDateString() : '—'}
+                <div className="flex items-center gap-1.5">
+                    <Clock size={10} className="text-neutral-400" />
+                    <span className="font-bold text-[10px] text-black uppercase tracking-tight">
+                        {row.fecha_hora ? new Date(row.fecha_hora).toLocaleDateString() : '—'}
                     </span>
-                    <span className="text-[9px] font-bold text-brand-cyan uppercase tracking-widest">Registrado</span>
                 </div>
             )
         },
         {
             header: 'Destino',
-            accessor: 'sucursal_nombre',
+            accessor: 'comercio.nombre',
             render: (row) => (
-                <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-black rounded-full flex-shrink-0" />
-                    <span className="font-bold text-sm text-black uppercase tracking-widest">{row.sucursal_nombre || '—'}</span>
+                <div className="flex items-center gap-1.5">
+                    <Home size={10} className="text-brand-cyan" />
+                    <span className="font-bold text-[10px] text-black uppercase tracking-tight">{row.comercio?.nombre || '—'}</span>
                 </div>
             )
         },
         {
             header: 'Producto',
-            accessor: 'producto_nombre',
+            accessor: 'producto.nombre',
             render: (row) => (
-                <span className="text-xs font-bold text-neutral-600 uppercase tracking-widest leading-snug">
-                    {row.producto_nombre || '—'}
-                </span>
+                <div className="flex items-center gap-1.5">
+                    <Box size={10} className="text-neutral-400" />
+                    <span className="text-[10px] font-bold text-neutral-600 uppercase tracking-tight leading-snug">
+                        {row.producto?.nombre || '—'}
+                    </span>
+                </div>
             )
         },
         {
-            header: 'Volumen',
-            accessor: 'cantidad',
+            header: 'Cantidad',
+            accessor: 'cantidad_cambio',
             render: (row) => (
-                <div className="inline-flex items-baseline gap-1 px-3 py-1.5 bg-black text-white rounded-lg font-sport text-lg leading-none tracking-widest">
-                    {row.cantidad}
-                    <span className="text-[10px] font-sans font-bold ml-1 mb-0.5">UN.</span>
+                <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-black text-white rounded text-[10px] font-black uppercase tracking-widest">
+                    {row.cantidad_cambio} UN.
                 </div>
             )
         },
@@ -300,36 +304,30 @@ const Envios = () => {
                     <div className="space-y-5">
                         <div className="space-y-2">
                             <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Sede de Destino</label>
-                            <div className="relative group">
-                                <Home size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
-                                <select
-                                    required
-                                    disabled={isSubmitting}
-                                    className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-sm font-bold text-black dark:text-white uppercase focus:outline-none focus:border-brand-cyan dark:focus:border-cyan-400 focus:ring-1 focus:ring-brand-cyan dark:focus:ring-cyan-400 transition-all appearance-none disabled:opacity-60"
-                                    value={formData.sucursal_id}
-                                    onChange={e => setFormData({ ...formData, sucursal_id: e.target.value })}
-                                >
-                                    <option value="">Seleccione destino...</option>
-                                    {sucursales.map(s => <option key={s.id_comercio} value={s.id_comercio}>{s.nombre}</option>)}
-                                </select>
-                            </div>
+                            <PremiumSelect
+                                icon={Home}
+                                placeholder="Seleccione destino..."
+                                options={sucursales.map(s => ({ value: s.id_comercio, label: s.nombre }))}
+                                value={formData.sucursal_id}
+                                onChange={val => setFormData({ ...formData, sucursal_id: val })}
+                                disabled={isSubmitting}
+                            />
                         </div>
 
                         <div className="space-y-2">
                             <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Producto a Transferir</label>
-                            <div className="relative group">
-                                <Box size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
-                                <select
-                                    required
-                                    disabled={isSubmitting}
-                                    className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-sm font-bold text-black dark:text-white uppercase focus:outline-none focus:border-brand-cyan dark:focus:border-cyan-400 focus:ring-1 focus:ring-brand-cyan dark:focus:ring-cyan-400 transition-all appearance-none disabled:opacity-60"
-                                    value={formData.producto_id}
-                                    onChange={e => handleProductChange(e.target.value)}
-                                >
-                                    <option value="">Seleccione ítem...</option>
-                                    {productos.map(p => <option key={p.id_producto} value={p.id_producto}>{p.nombre}</option>)}
-                                </select>
-                            </div>
+                            <PremiumSelect
+                                icon={Box}
+                                placeholder="Seleccione ítem..."
+                                options={productos.map(p => ({ 
+                                    value: p.id_producto, 
+                                    label: p.nombre,
+                                    subtitle: p.categoria?.nombre
+                                }))}
+                                value={formData.producto_id}
+                                onChange={val => handleProductChange(val)}
+                                disabled={isSubmitting}
+                            />
                         </div>
 
                         {/* Mostrar selector de variantes si el producto tiene variantes */}
@@ -373,7 +371,7 @@ const Envios = () => {
                                                                 disabled={isSubmitting}
                                                                 className="w-full px-2 py-1.5 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-500 rounded text-center text-sm font-bold text-black dark:text-white focus:outline-none focus:border-brand-cyan transition-all disabled:opacity-60"
                                                                 placeholder="0"
-                                                                value={variantQuantities[variante.id_variante] || 0}
+                                                                value={variantQuantities[variante.id_variante] ?? ''}
                                                                 onChange={e => handleVariantQuantityChange(variante.id_variante, e.target.value)}
                                                             />
                                                         </td>
@@ -384,7 +382,7 @@ const Envios = () => {
                                     </table>
                                 </div>
                                 <p className="text-[9px] text-neutral-400 text-center">
-                                    Total a transferir: {Object.values(variantQuantities).reduce((a, b) => a + b, 0)} unidades
+                                    Total a transferir: {Object.values(variantQuantities).reduce((a, b) => parseInt(a || 0) + parseInt(b || 0), 0)} unidades
                                 </p>
                             </div>
                         ) : (
@@ -398,7 +396,7 @@ const Envios = () => {
                                         className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-sm font-bold text-black dark:text-white focus:outline-none focus:border-brand-cyan dark:focus:border-cyan-400 focus:ring-1 focus:ring-brand-cyan dark:focus:ring-cyan-400 transition-all disabled:opacity-60"
                                         placeholder="0"
                                         value={formData.cantidad}
-                                        onChange={e => setFormData({ ...formData, cantidad: Number(e.target.value) })}
+                                        onChange={e => setFormData({ ...formData, cantidad: e.target.value })}
                                     />
                                 </div>
                             </div>
@@ -413,7 +411,7 @@ const Envios = () => {
                         >
                             {isSubmitting
                                 ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> PROCESANDO SOLICITUD...</>
-                                : <><Truck size={16} /> PROCESAR ORDEN</>
+                                : <><Truck size={16} /> Cargar</>
                             }
                         </button>
                         <button

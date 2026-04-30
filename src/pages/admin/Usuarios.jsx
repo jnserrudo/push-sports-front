@@ -3,6 +3,7 @@ import { Users, ShieldCheck, Store, UserCircle, User, Mail, Lock, Shield } from 
 import GenericABM from '../../components/ui/GenericABM';
 import { usuariosService as service } from '../../services/genericServices';
 import { sucursalesService } from '../../services/sucursalesService';
+import PremiumSelect from '../../components/ui/PremiumSelect';
 
 const Usuarios = () => {
     const [sucursales, setSucursales] = useState([]);
@@ -149,38 +150,32 @@ const Usuarios = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-neutral-100">
                 <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">Nivel de Permisos</label>
-                    <div className="relative group">
-                        <Shield size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
-                        <select
-                            required
-                            className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-xs font-bold text-black dark:text-white uppercase focus:outline-none focus:border-brand-cyan dark:focus:border-cyan-400 focus:ring-1 focus:ring-brand-cyan transition-all appearance-none"
-                            value={formData.id_rol || ''}
-                            onChange={e => setFormData({ ...formData, id_rol: parseInt(e.target.value) })}
-                        >
-                            <option value="">SELECCIONAR ROL...</option>
-                            <option value={1}>ADMIN. CORE — Control total</option>
-                            <option value={2}>SUPERVISOR / GESTOR — Inventario, Envios y Caja</option>
-                            <option value={3}>VENDEDOR POS — Caja únicamente</option>
-                            <option value={4}>VISOR — Solo lectura</option>
-                        </select>
-                    </div>
+                    <PremiumSelect
+                        icon={Shield}
+                        placeholder="SELECCIONAR ROL..."
+                        options={[
+                            { value: 1, label: 'ADMIN. CORE', subtitle: 'Control total' },
+                            { value: 2, label: 'SUPERVISOR / GESTOR', subtitle: 'Inventario, Envios y Caja' },
+                            { value: 3, label: 'VENDEDOR POS', subtitle: 'Caja únicamente' },
+                            { value: 4, label: 'VISOR', subtitle: 'Solo lectura' }
+                        ]}
+                        value={formData.id_rol || ''}
+                        onChange={val => setFormData({ ...formData, id_rol: parseInt(val) })}
+                    />
                 </div>
 
                 <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">Sucursal / Sede Asignada</label>
-                    <div className="relative group">
-                        <Store size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
-                        <select
-                            className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-xs font-bold text-black dark:text-gray-200 uppercase focus:outline-none focus:border-brand-cyan dark:focus:border-cyan-400 focus:ring-1 focus:ring-brand-cyan transition-all appearance-none"
-                            value={formData.id_comercio_asignado || ''}
-                            onChange={e => setFormData({ ...formData, id_comercio_asignado: e.target.value === '' ? null : e.target.value })}
-                        >
-                            <option value="">GLOBAL — Aplica a todas las sedes</option>
-                            {sucursales.map(s => (
-                                <option key={s.id_comercio} value={s.id_comercio}>{s.nombre}</option>
-                            ))}
-                        </select>
-                    </div>
+                    <PremiumSelect
+                        icon={Store}
+                        placeholder="GLOBAL — Aplica a todas las sedes"
+                        options={[
+                            { value: '', label: 'GLOBAL', subtitle: 'Todas las sedes' },
+                            ...sucursales.map(s => ({ value: s.id_comercio, label: s.nombre }))
+                        ]}
+                        value={formData.id_comercio_asignado || ''}
+                        onChange={val => setFormData({ ...formData, id_comercio_asignado: val === '' ? null : val })}
+                    />
                 </div>
             </div>
 

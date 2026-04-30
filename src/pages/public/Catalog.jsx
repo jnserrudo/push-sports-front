@@ -1,9 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Filter, MapPin, Package, ChevronDown, X, Tag, Layers } from 'lucide-react';
 import publicService from '../../services/publicService';
+import PremiumSelect from '../../components/ui/PremiumSelect';
+import { parseImagenes } from '../../lib/supabaseStorage';
 
 const ProductCard = ({ producto, onClick }) => {
   const disponible = producto.disponibilidad?.length > 0;
+
+  const images = parseImagenes(producto.imagen);
+  const mainImage = images.length > 0 ? images[0] : null;
 
   return (
     <div
@@ -12,9 +17,9 @@ const ProductCard = ({ producto, onClick }) => {
     >
       {/* Imagen */}
       <div className="relative aspect-square bg-neutral-100 dark:bg-neutral-800 overflow-hidden">
-        {producto.imagen ? (
+        {mainImage ? (
           <img
-            src={producto.imagen}
+            src={mainImage}
             alt={producto.nombre}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
@@ -82,6 +87,8 @@ const ProductModal = ({ producto, onClose }) => {
   if (!producto) return null;
   const disponible = producto.disponibilidad?.length > 0;
 
+  const images = parseImagenes(producto.imagen);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
@@ -92,9 +99,9 @@ const ProductModal = ({ producto, onClose }) => {
         onClick={e => e.stopPropagation()}
       >
         {/* Imagen */}
-        {producto.imagen && (
+        {images.length > 0 && (
           <div className="aspect-[16/9] bg-neutral-100 dark:bg-neutral-800 overflow-hidden">
-            <img src={producto.imagen} alt={producto.nombre} className="w-full h-full object-cover" />
+            <img src={images[0]} alt={producto.nombre} className="w-full h-full object-cover" />
           </div>
         )}
 
@@ -265,17 +272,18 @@ const Catalog = () => {
         </div>
 
         {/* Categoría */}
-        <div className="relative">
-          <Tag size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
-          <select
+        <div className="w-full sm:w-64">
+          <PremiumSelect
+            icon={Tag}
+            placeholder="Todas las categorías"
+            options={[
+              { value: '', label: 'Todas las categorías' },
+              ...categorias.map(cat => ({ value: cat, label: cat }))
+            ]}
             value={categoriaFiltro}
-            onChange={e => setCategoriaFiltro(e.target.value)}
-            className="pl-9 pr-8 py-2.5 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl text-sm font-medium text-black dark:text-white focus:outline-none focus:border-brand-cyan transition-colors appearance-none cursor-pointer"
-          >
-            <option value="">Todas las categorías</option>
-            {categorias.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-          </select>
-          <ChevronDown size={13} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
+            onChange={val => setCategoriaFiltro(val)}
+            className="!py-1"
+          />
         </div>
 
         {/* Solo con stock */}

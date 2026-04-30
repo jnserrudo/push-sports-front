@@ -17,13 +17,15 @@ import {
     CheckCircle2,
     AlertCircle,
     ImagePlus,
-    Trash2
+    Trash2,
+    Component
 } from 'lucide-react';
 import GenericABM from '../../components/ui/GenericABM';
 import { ExportButton } from '../../components/ui/ExportButton';
 import { useAuthStore } from '../../store/authStore';
 import { productosService } from '../../services/productosService';
 import { variantesService } from '../../services/variantesService';
+import PremiumSelect from '../../components/ui/PremiumSelect';
 import {
     uploadProductImage,
     deleteProductImage,
@@ -606,7 +608,7 @@ const VariantesManager = ({ producto }) => {
     };
 
     // Actualizar una variante (SKU, stock, precio, estado)
-    const handleActualizarVariante = async (id_variante, cambios) => {
+    const handleActualizarVariante = async (id_variante, cambios, silent = false) => {
         try {
             await variantesService.actualizarVariante(id_variante, cambios);
             
@@ -615,16 +617,18 @@ const VariantesManager = ({ producto }) => {
                 v.id_variante === id_variante ? { ...v, ...cambios } : v
             ));
             
-            // Mostrar mensaje según el cambio
-            if (cambios.precio_variante !== undefined) {
-                toast.success(cambios.precio_variante > 0 
-                    ? `Precio específico guardado: $${cambios.precio_variante}`
-                    : 'Usando precio base del producto'
-                );
-            } else if (cambios.stock_central !== undefined) {
-                toast.success(`Stock actualizado: ${cambios.stock_central} unidades`);
-            } else if (cambios.activo !== undefined) {
-                toast.success(cambios.activo ? 'Variante activada' : 'Variante desactivada');
+            // Mostrar mensaje según el cambio solo si no es silencioso
+            if (!silent) {
+                if (cambios.precio_variante !== undefined) {
+                    toast.success(cambios.precio_variante > 0 
+                        ? `Precio específico guardado: $${cambios.precio_variante}`
+                        : 'Usando precio base del producto'
+                    );
+                } else if (cambios.stock_central !== undefined) {
+                    toast.success(`Stock actualizado: ${cambios.stock_central} unidades`);
+                } else if (cambios.activo !== undefined) {
+                    toast.success(cambios.activo ? 'Variante activada' : 'Variante desactivada');
+                }
             }
         } catch (err) {
             toast.error(err.response?.data?.error || 'Error al actualizar variante');
@@ -1021,7 +1025,8 @@ const VariantesManager = ({ producto }) => {
                             <p className="text-[9px] text-neutral-600 leading-relaxed">
                                 <strong>SKU único:</strong> Código de identificación que no se puede modificar.<br />
                                 <strong>Desactivar (Inactivo):</strong> Oculta la variante del catálogo pero conserva stock e historial. Podés reactivarla cuando quieras.<br />
-                                <strong>Eliminar (🗑️):</strong> Borra permanentemente SOLO si stock = 0. Si tiene stock o historial de ventas, no se puede eliminar.
+                                <strong>Eliminar (🗑️):</strong> Borra permanentemente SOLO si stock = 0. Si tiene stock o historial de ventas, no se puede eliminar.<br /><br />
+                                <strong className="text-amber-600 bg-amber-50 px-1 rounded">⚠️ IMPORTANTE SOBRE EL STOCK:</strong> El stock que modifiques en esta tabla corresponde <strong>ÚNICAMENTE al Depósito Central</strong>. Para que las sucursales puedan vender estas variantes en su Punto de Venta (POS), debés enviarles el stock utilizando la sección de <strong>Gestión de Ingresos</strong>.
                             </p>
                         </div>
                     </div>
@@ -1093,9 +1098,17 @@ const VariantesManager = ({ producto }) => {
                                         <input
                                             type="number"
                                             min="0"
-                                            value={variante.stock_central}
-                                            onChange={e => handleActualizarVariante(variante.id_variante, { stock_central: parseInt(e.target.value) || 0 })}
+                                            value={variante.stock_central === 0 ? '' : variante.stock_central}
+                                            onChange={e => {
+                                                const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+                                                setVariantes(prev => prev.map(v => v.id_variante === variante.id_variante ? { ...v, stock_central: val } : v));
+                                            }}
+                                            onBlur={e => {
+                                                const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+                                                handleActualizarVariante(variante.id_variante, { stock_central: val }, true);
+                                            }}
                                             className="w-full px-2 py-1 text-[10px] text-center bg-white border border-neutral-200 rounded focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan/20 focus:outline-none transition-all"
+                                            placeholder="0"
                                         />
                                     </td>
                                     <td className="px-3 py-2.5 align-middle" style={{ width: '18%' }}>
@@ -1106,8 +1119,15 @@ const VariantesManager = ({ producto }) => {
                                                     type="number"
                                                     min="0"
                                                     step="0.01"
-                                                    value={variante.precio_variante || 0}
-                                                    onChange={e => handleActualizarVariante(variante.id_variante, { precio_variante: parseFloat(e.target.value) || 0 })}
+                                                    value={variante.precio_variante === 0 ? '' : (variante.precio_variante ?? '')}
+                                                    onChange={e => {
+                                                        const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                                                        setVariantes(prev => prev.map(v => v.id_variante === variante.id_variante ? { ...v, precio_variante: val } : v));
+                                                    }}
+                                                    onBlur={e => {
+                                                        const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                                                        handleActualizarVariante(variante.id_variante, { precio_variante: val }, true);
+                                                    }}
                                                     className="w-20 px-2 py-1 text-[10px] text-right bg-white border border-neutral-200 rounded focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan/20 focus:outline-none transition-all"
                                                     placeholder={producto.precio_venta_sugerido}
                                                 />
@@ -1392,58 +1412,43 @@ const Productos = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Categoría *</label>
-                            <div className="relative group">
-                                <Layout size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
-                                <select
-                                    required
-                                    className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-bold text-black uppercase focus:outline-none focus:border-brand-cyan transition-all appearance-none"
-                                    value={formData.id_categoria || ''}
-                                    onChange={e => {
-                                        const nextVal = parseInt(e.target.value);
-                                        // Reset attributes if category changes to avoid mixing
-                                        if (nextVal !== formData.id_categoria) {
-                                            setFormData({ ...formData, id_categoria: nextVal, atributos: {} });
-                                        } else {
-                                            setFormData({ ...formData, id_categoria: nextVal });
-                                        }
-                                    }}
-                                >
-                                    <option value="">SELECCIONAR...</option>
-                                    {categorias.map(c => <option key={c.id_categoria} value={c.id_categoria}>{c.nombre}</option>)}
-                                </select>
-                            </div>
+                            <PremiumSelect
+                                icon={Component}
+                                placeholder="SELECCIONAR..."
+                                options={categorias.map(c => ({ value: c.id_categoria, label: c.nombre }))}
+                                value={formData.id_categoria || ''}
+                                onChange={val => {
+                                    const nextVal = parseInt(val);
+                                    if (nextVal !== formData.id_categoria) {
+                                        setFormData({ ...formData, id_categoria: nextVal, atributos: {} });
+                                    } else {
+                                        setFormData({ ...formData, id_categoria: nextVal });
+                                    }
+                                }}
+                            />
                         </div>
                         <div className="space-y-2">
                             <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Marca *</label>
-                            <div className="relative group">
-                                <Tag size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
-                                <select
-                                    required
-                                    className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-bold text-black uppercase focus:outline-none focus:border-brand-cyan transition-all appearance-none"
-                                    value={formData.id_marca || ''}
-                                    onChange={e => setFormData({ ...formData, id_marca: parseInt(e.target.value) })}
-                                >
-                                    <option value="">SELECCIONAR...</option>
-                                    {marcas.map(m => <option key={m.id_marca} value={m.id_marca}>{m.nombre_marca}</option>)}
-                                </select>
-                            </div>
+                            <PremiumSelect
+                                icon={Tag}
+                                placeholder="SELECCIONAR..."
+                                options={marcas.map(m => ({ value: m.id_marca, label: m.nombre_marca }))}
+                                value={formData.id_marca || ''}
+                                onChange={val => setFormData({ ...formData, id_marca: parseInt(val) })}
+                            />
                         </div>
                     </div>
 
                     {/* Proveedor */}
                     <div className="space-y-2">
                         <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Proveedor</label>
-                        <div className="relative group">
-                            <Truck size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
-                            <select
-                                className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-bold text-black uppercase focus:outline-none focus:border-brand-cyan transition-all appearance-none"
-                                value={formData.id_proveedor || ''}
-                                onChange={e => setFormData({ ...formData, id_proveedor: e.target.value || null })}
-                            >
-                                <option value="">SIN PROVEEDOR</option>
-                                {proveedores.map(p => <option key={p.id_proveedor} value={p.id_proveedor}>{p.nombre_proveedor}</option>)}
-                            </select>
-                        </div>
+                        <PremiumSelect
+                            icon={Truck}
+                            placeholder="SIN PROVEEDOR"
+                            options={proveedores.map(p => ({ value: p.id_proveedor, label: p.nombre_proveedor }))}
+                            value={formData.id_proveedor || ''}
+                            onChange={val => setFormData({ ...formData, id_proveedor: val || null })}
+                        />
                     </div>
 
                     {/* Atributos Variables (Dinámico) - MOVED TO BOTTOM */}
@@ -1465,8 +1470,8 @@ const Productos = () => {
                                     required type="number" step="0.01" min="0"
                                     className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-xs sm:text-sm font-bold text-black focus:outline-none focus:border-brand-cyan transition-all"
                                     placeholder="0.00"
-                                    value={formData.costo_compra || ''}
-                                    onChange={e => setFormData({ ...formData, costo_compra: Number(e.target.value) })}
+                                    value={formData.costo_compra ?? ''}
+                                    onChange={e => setFormData({ ...formData, costo_compra: e.target.value })}
                                 />
                             </div>
                         </div>
@@ -1491,8 +1496,8 @@ const Productos = () => {
                                         : 'bg-brand-cyan/5 border border-brand-cyan text-brand-cyan focus:ring-brand-cyan'
                                     }`}
                                     placeholder="0.00"
-                                    value={formData.precio_pushsport || ''}
-                                    onChange={e => setFormData({ ...formData, precio_pushsport: Number(e.target.value) })}
+                                    value={formData.precio_pushsport ?? ''}
+                                    onChange={e => setFormData({ ...formData, precio_pushsport: e.target.value })}
                                 />
                                 {formData.precio_pushsport > 0 && formData.precio_pushsport < formData.costo_compra && (
                                     <AlertCircle size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none" />
@@ -1523,8 +1528,8 @@ const Productos = () => {
                                         : 'bg-white dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 text-black dark:text-white focus:ring-black dark:focus:ring-cyan-400'
                                     }`}
                                     placeholder="0.00"
-                                    value={formData.precio_venta_sugerido || ''}
-                                    onChange={e => setFormData({ ...formData, precio_venta_sugerido: Number(e.target.value) })}
+                                    value={formData.precio_venta_sugerido ?? ''}
+                                    onChange={e => setFormData({ ...formData, precio_venta_sugerido: e.target.value })}
                                 />
                                 {formData.precio_venta_sugerido > 0 && formData.precio_venta_sugerido < formData.precio_pushsport && (
                                     <AlertCircle size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none animate-pulse" />
@@ -1543,8 +1548,8 @@ const Productos = () => {
                                     type="number" min="0"
                                     className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-xs sm:text-sm font-bold text-black focus:outline-none focus:border-brand-cyan transition-all"
                                     placeholder="5"
-                                    value={formData.stock_minimo || formData.stock_minimo === 0 ? formData.stock_minimo : ''}
-                                    onChange={e => setFormData({ ...formData, stock_minimo: Number(e.target.value) })}
+                                    value={formData.stock_minimo ?? ''}
+                                    onChange={e => setFormData({ ...formData, stock_minimo: e.target.value })}
                                 />
                             </div>
                         </div>
@@ -1561,7 +1566,7 @@ const Productos = () => {
                                 className="w-full pl-10 pr-4 py-3 bg-cyan-50 border-2 border-brand-cyan/30 rounded-lg text-sm font-bold text-black focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan transition-all"
                                 placeholder="0"
                                 value={formData.stock_central ?? ''}
-                                onChange={e => setFormData({ ...formData, stock_central: Number(e.target.value) })}
+                                onChange={e => setFormData({ ...formData, stock_central: e.target.value })}
                             />
                         </div>
                     </div>
@@ -1638,6 +1643,9 @@ const Productos = () => {
             formFields={[]}
             renderForm={renderForm}
             validate={handleValidate}
+            onSaveSuccess={(newProduct) => {
+                toast.success('Producto creado. Ya podés configurar las variantes debajo.');
+            }}
             idField="id_producto"
             modalMaxWidth="max-w-4xl"
         />

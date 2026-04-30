@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { Activity } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Search, 
   ChevronDown, 
@@ -12,8 +11,69 @@ import {
   Pencil,
   Trash2,
   Eye,
-  Database
+  Database,
+  Check,
+  Rows3,
+  ChevronsLeft,
+  ChevronsRight
 } from 'lucide-react';
+
+/* ──────────────────────────────────────────────
+   Mini custom dropdown for rows-per-page
+   Matches the PremiumSelect design language
+   ────────────────────────────────────────────── */
+const RowsPerPageSelect = ({ value, onChange }) => {
+    const OPTIONS = [5, 8, 10, 15, 20, 50];
+    const [open, setOpen] = useState(false);
+    const ref = useRef(null);
+
+    useEffect(() => {
+        const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    return (
+        <div ref={ref} className="relative">
+            <button
+                type="button"
+                onClick={() => setOpen(!open)}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all text-[10px] font-black uppercase tracking-wider cursor-pointer ${
+                    open
+                        ? 'border-brand-cyan bg-brand-cyan/5 text-brand-cyan shadow-[0_0_8px_rgba(0,194,255,0.12)]'
+                        : 'border-neutral-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-white hover:border-neutral-400 dark:hover:border-gray-500'
+                }`}
+            >
+                <Rows3 size={11} className={open ? 'text-brand-cyan' : 'text-neutral-400'} />
+                <span>{value} filas</span>
+                <ChevronDown size={11} className={`transition-transform duration-200 ${open ? 'rotate-180 text-brand-cyan' : 'text-neutral-400'}`} />
+            </button>
+
+            {open && (
+                <div className="absolute bottom-full mb-1.5 left-0 z-[80] bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden min-w-[120px] animate-in fade-in slide-in-from-bottom-2 duration-200">
+                    <div className="px-3 py-1.5 border-b border-neutral-100 dark:border-gray-700">
+                        <span className="text-[8px] font-black uppercase tracking-[0.2em] text-neutral-400">Filas por página</span>
+                    </div>
+                    {OPTIONS.map(opt => (
+                        <button
+                            key={opt}
+                            type="button"
+                            onClick={() => { onChange(opt); setOpen(false); }}
+                            className={`w-full flex items-center justify-between px-3 py-2 text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${
+                                opt === value
+                                    ? 'bg-brand-cyan/10 text-brand-cyan border-l-2 border-brand-cyan'
+                                    : 'text-neutral-700 dark:text-gray-300 hover:bg-neutral-50 dark:hover:bg-gray-700 border-l-2 border-transparent'
+                            }`}
+                        >
+                            <span>{opt} filas</span>
+                            {opt === value && <Check size={11} className="text-brand-cyan" />}
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
 
 const DataTable = ({ 
     columns, 
@@ -24,7 +84,7 @@ const DataTable = ({
     onEdit,
     onDelete,
     onView,
-    variant, // pass 'minimal' for compact layout (no outer shadow/rounded)
+    variant,
     emptyIcon: EmptyIcon = Database,
     emptyTitle = "No hay datos disponibles",
     emptySubtitle = "Todavía no existen registros en esta sección. Puedes comenzar agregando nueva información."
@@ -32,7 +92,7 @@ const DataTable = ({
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-    const itemsPerPage = 8;
+    const [itemsPerPage, setItemsPerPage] = useState(8);
     
     const handleSort = (key) => {
         let direction = 'asc';
@@ -42,9 +102,8 @@ const DataTable = ({
         setSortConfig({ key, direction });
     };
 
-    // Función para buscar en objetos (limitada a 2 niveles de profundidad para rendimiento)
     const searchInValue = (val, term, depth = 0) => {
-        if (depth > 2) return false; // Límite de seguridad
+        if (depth > 2) return false;
         if (val === null || val === undefined) return false;
         if (typeof val === 'string' || typeof val === 'number') {
             return String(val).toLowerCase().includes(term);
@@ -85,6 +144,9 @@ const DataTable = ({
         currentPage * itemsPerPage
     );
 
+    const rangeStart = processedData.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+    const rangeEnd = Math.min(currentPage * itemsPerPage, processedData.length);
+
     const renderSortIcon = (col) => {
         if (!col.accessor) return null;
         if (sortConfig.key !== col.accessor) return <ChevronsUpDown size={14} className="ml-3 opacity-20" />;
@@ -94,17 +156,16 @@ const DataTable = ({
     };
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-xl md:rounded-2xl p-3 md:p-4 shadow-sm border border-neutral-100 dark:border-gray-700 relative overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-500">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-2 md:p-3 shadow-sm border border-neutral-100 dark:border-gray-700 relative overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-500">
             {/* Ambient Accent (Subtle) */}
-            <div className="absolute top-0 right-0 w-48 h-48 bg-brand-cyan/5 blur-3xl pointer-events-none rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-cyan/5 blur-3xl pointer-events-none rounded-full -translate-y-1/2 translate-x-1/2" />
 
             {/* Toolbar Principal - Compacto */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 md:gap-4 mb-4 md:mb-5 relative z-10 flex-wrap">
-                <div className="relative flex-1 group w-full min-w-0 sm:min-w-[250px]">
-                    <label className="hidden md:block text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400 mb-1 ml-1">Explorador</label>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 md:gap-3 mb-3 md:mb-4 relative z-10 flex-wrap">
+                <div className="relative flex-1 group w-full min-w-0 sm:min-w-[200px]">
                     <div className="relative flex items-center">
-                        <div className="absolute left-4 md:left-6 flex items-center pointer-events-none text-neutral-400 group-focus-within:text-brand-cyan transition-colors">
-                            <Search size={20} className="md:w-6 md:h-6" />
+                        <div className="absolute left-3 md:left-4 flex items-center pointer-events-none text-neutral-400 group-focus-within:text-brand-cyan transition-colors">
+                            <Search size={16} className="md:w-5 md:h-5" />
                         </div>
                         <input 
                             type="text" 
@@ -114,49 +175,49 @@ const DataTable = ({
                                 setSearchTerm(e.target.value);
                                 setCurrentPage(1);
                             }}
-                            className="w-full pl-10 md:pl-12 pr-8 md:pr-10 h-10 md:h-12 bg-neutral-50/50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 focus:border-brand-cyan dark:focus:border-cyan-400 focus:bg-white dark:focus:bg-gray-600 text-neutral-900 dark:text-white text-xs md:text-sm font-bold tracking-wider uppercase rounded-lg transition-all outline-none placeholder:text-neutral-400 dark:placeholder:text-gray-500 shadow-inner text-ellipsis"
+                            className="w-full pl-9 md:pl-10 pr-7 md:pr-8 h-9 md:h-10 bg-neutral-50/50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 focus:border-brand-cyan dark:focus:border-cyan-400 focus:bg-white dark:focus:bg-gray-600 text-neutral-900 dark:text-white text-[11px] md:text-xs font-bold tracking-wider uppercase rounded-md transition-all outline-none placeholder:text-neutral-400 dark:placeholder:text-gray-500 shadow-inner text-ellipsis"
                         />
                         {searchTerm && (
                             <button 
                                 onClick={() => { setSearchTerm(''); setCurrentPage(1); }}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-gray-500 hover:text-red-500 transition-all bg-white dark:bg-gray-700 rounded-full p-1"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-gray-500 hover:text-red-500 transition-all bg-white dark:bg-gray-700 rounded-full p-1"
                             >
-                                <XCircle size={18} className="md:w-5 md:h-5" />
+                                <XCircle size={14} className="md:w-4 md:h-4" />
                             </button>
                         )}
                     </div>
                 </div>
 
                 {onAdd && (
-                    <div className="flex items-end h-full sm:mt-auto w-full sm:w-auto mt-2 sm:mt-0">
+                    <div className="flex items-end h-full sm:mt-auto w-full sm:w-auto mt-1 sm:mt-0">
                         <button 
                             onClick={onAdd}
-                            className="w-full sm:w-auto bg-black text-white px-4 md:px-6 h-10 md:h-12 flex items-center justify-center gap-2 group rounded-lg transition-all hover:bg-brand-cyan hover:text-black hover:shadow-md hover:-translate-y-0.5 flex-shrink-0"
+                            className="w-full sm:w-auto bg-black text-white px-3 md:px-4 h-9 md:h-10 flex items-center justify-center gap-2 group rounded-md transition-all hover:bg-brand-cyan hover:text-black hover:shadow-md flex-shrink-0"
                             title={addLabel}
                         >
-                            <Plus size={16} className="md:w-4 md:h-4 transition-transform group-hover:rotate-90" strokeWidth={3} />
-                            <span className="font-black tracking-[0.15em] text-[10px] md:text-xs uppercase whitespace-nowrap">{addLabel}</span>
+                            <Plus size={14} className="md:w-3.5 md:h-3.5 transition-transform group-hover:rotate-90" strokeWidth={3} />
+                            <span className="font-black tracking-[0.1em] text-[9px] md:text-[10px] uppercase whitespace-nowrap">{addLabel}</span>
                         </button>
                     </div>
                 )}
             </div>
 
-            {/* Table Area - Compacta */}
-            <div className="rounded-lg border border-neutral-200 dark:border-gray-600 overflow-hidden bg-white dark:bg-gray-800 shadow-sm relative z-10 w-full mb-3">
+            {/* Table Area */}
+            <div className="rounded border border-neutral-200 dark:border-gray-600 overflow-hidden bg-white dark:bg-gray-800 shadow-sm relative z-10 w-full mb-2">
                 <div className="overflow-x-auto custom-scrollbar">
-                    <table className="w-full text-left border-collapse min-w-full md:min-w-[800px]">
+                    <table className="w-full text-left border-collapse min-w-full md:min-w-[700px]">
                         <thead>
-                            <tr className="bg-neutral-50/50 dark:bg-gray-700/50 text-neutral-500 dark:text-gray-400 text-[10px] md:text-xs font-semibold border-b border-neutral-200 dark:border-gray-600">
+                            <tr className="bg-neutral-50/50 dark:bg-gray-700/50 text-neutral-500 dark:text-gray-400 border-b border-neutral-200 dark:border-gray-600">
                                 {columns.map((col, idx) => (
                                     <th 
                                         key={idx} 
-                                        className={`px-3 py-2 md:px-4 md:py-3 font-black uppercase tracking-wider text-[9px] md:text-[10px] ${idx === 0 ? 'pl-4 md:pl-6' : ''} ${col.width || ''}`}
+                                        className={`px-2 py-1.5 md:px-3 md:py-2 font-black uppercase tracking-wider text-[8px] md:text-[9px] ${idx === 0 ? 'pl-3 md:pl-4' : ''} ${col.width || ''}`}
                                     >
                                         {col.header}
                                     </th>
                                 ))}
                                 {(onEdit || onDelete || onView) && (
-                                    <th className="px-4 md:px-8 py-3 md:py-5 text-right font-semibold">Acciones</th>
+                                    <th className="px-3 py-1.5 md:px-4 md:py-2 text-right font-black uppercase tracking-wider text-[8px] md:text-[9px]">Acciones</th>
                                 )}
                             </tr>
                         </thead>
@@ -164,75 +225,61 @@ const DataTable = ({
                             {paginatedData.length === 0 ? (
                                 <tr>
                                     <td colSpan={columns.length + ((onEdit || onDelete || onView) ? 1 : 0)} className="p-0 border-0">
-                                        <div className="flex flex-col items-center justify-center p-8 md:p-16 w-full min-h-[200px] text-center bg-white dark:bg-gray-800 border-transparent">
-                                            <div className="w-12 h-12 md:w-14 md:h-14 bg-neutral-50 dark:bg-gray-700 rounded-xl flex items-center justify-center shadow-inner border border-neutral-100 dark:border-gray-600 mb-4 transition-all duration-300 hover:scale-105">
+                                        <div className="flex flex-col items-center justify-center p-6 md:p-10 w-full min-h-[150px] text-center bg-white dark:bg-gray-800 border-transparent">
+                                            <div className="w-10 h-10 bg-neutral-50 dark:bg-gray-700 rounded-lg flex items-center justify-center shadow-inner border border-neutral-100 dark:border-gray-600 mb-2">
                                                 {searchTerm
-                                                    ? <Search className="text-neutral-300 dark:text-gray-500 w-6 h-6 md:w-7 md:h-7" />
-                                                    : <EmptyIcon className="text-neutral-300 dark:text-gray-500 w-6 h-6 md:w-7 md:h-7" />
+                                                    ? <Search className="text-neutral-300 dark:text-gray-500 w-5 h-5" />
+                                                    : <EmptyIcon className="text-neutral-300 dark:text-gray-500 w-5 h-5" />
                                                 }
                                             </div>
-                                            <div className="space-y-2 w-full max-w-md">
-                                                <h4 className="text-sm md:text-base font-bold text-neutral-800 dark:text-gray-200 leading-normal text-center w-full">
+                                            <div className="space-y-1 w-full max-w-md">
+                                                <h4 className="text-xs font-bold text-neutral-800 dark:text-gray-200 leading-normal text-center w-full">
                                                     {searchTerm ? 'No se encontraron resultados' : emptyTitle}
                                                 </h4>
-                                                <p className="text-xs text-neutral-500 dark:text-gray-400 leading-relaxed text-center w-full">
+                                                <p className="text-[10px] text-neutral-500 dark:text-gray-400 leading-relaxed text-center w-full">
                                                     {searchTerm 
-                                                        ? 'No pudimos encontrar datos que coincidan con tu búsqueda.'
+                                                        ? 'No coinciden resultados.'
                                                         : emptySubtitle}
                                                 </p>
-                                                {!searchTerm && onAdd && (
-                                                    <div className="pt-4 flex justify-center w-full">
-                                                        <button 
-                                                            onClick={onAdd} 
-                                                            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-black rounded-lg hover:bg-brand-cyan hover:text-black hover:-translate-y-0.5 transition-all w-full md:w-auto shadow-md"
-                                                        >
-                                                            <Plus size={16} strokeWidth={2.5} />
-                                                            Crear Primer Registro
-                                                        </button>
-                                                    </div>
-                                                )}
                                             </div>
                                         </div>
                                     </td>
                                 </tr>
                             ) : (
                                 paginatedData.map((row, rowIdx) => (
-                                    <tr key={rowIdx} className={`group hover:bg-neutral-50 dark:hover:bg-gray-700 border-b border-neutral-100 dark:border-gray-700 last:border-0 transition-colors text-xs md:text-sm text-neutral-700 dark:text-gray-300 ${
+                                    <tr key={rowIdx} className={`group hover:bg-neutral-50 dark:hover:bg-gray-700 border-b border-neutral-100 dark:border-gray-700 last:border-0 transition-colors text-[10px] md:text-[11px] text-neutral-700 dark:text-gray-300 ${
                                         row.activo === false ? 'opacity-50 grayscale' : 'bg-white dark:bg-gray-800'
                                     }`}>
                                         {columns.map((col, colIdx) => (
-                                            <td key={colIdx} className={`px-3 py-2.5 md:px-4 md:py-3 align-middle ${colIdx > 1 ? 'hidden sm:table-cell' : ''} ${colIdx === 0 ? 'text-black font-bold' : ''}`}>
-                                                {col.render ? col.render(row) : <span className="text-neutral-600">{row[col.accessor] ?? '—'}</span>}
+                                            <td key={colIdx} className={`px-2 py-1.5 md:px-3 md:py-2 align-middle ${colIdx > 1 ? 'hidden sm:table-cell' : ''} ${colIdx === 0 ? 'text-black font-bold' : ''}`}>
+                                                {col.render ? col.render(row) : <span className="text-neutral-600 dark:text-neutral-400">{row[col.accessor] ?? '—'}</span>}
                                             </td>
                                         ))}
                                         {(onEdit || onDelete || onView) && (
-                                            <td className="px-3 py-2.5 md:px-4 md:py-3 text-right align-middle">
-                                                <div className="flex items-center justify-end gap-1.5">
+                                            <td className="px-2 py-1.5 md:px-3 md:py-2 text-right align-middle">
+                                                <div className="flex items-center justify-end gap-1">
                                                     {onView && (
                                                         <button
                                                             onClick={() => onView(row)}
-                                                            title="Inspeccionar"
-                                                            className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg text-brand-cyan bg-brand-cyan/10 hover:bg-brand-cyan hover:text-black transition-all"
+                                                            className="w-6 h-6 flex items-center justify-center rounded bg-brand-cyan/10 text-brand-cyan hover:bg-brand-cyan hover:text-black transition-all"
                                                         >
-                                                            <Eye size={14} className="md:w-4 md:h-4" />
+                                                            <Eye size={12} />
                                                         </button>
                                                     )}
                                                     {onEdit && (
                                                         <button
                                                             onClick={() => onEdit(row)}
-                                                            title="Modificar"
-                                                            className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg text-neutral-500 dark:text-gray-400 bg-neutral-100 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 hover:bg-black dark:hover:bg-gray-600 hover:text-white hover:border-black dark:hover:border-gray-500 transition-all"
+                                                            className="w-6 h-6 flex items-center justify-center rounded border border-neutral-200 dark:border-gray-600 bg-neutral-50 dark:bg-gray-700 text-neutral-500 dark:text-gray-400 hover:bg-black hover:text-white transition-all"
                                                         >
-                                                            <Pencil size={14} strokeWidth={2.5} />
+                                                            <Pencil size={12} />
                                                         </button>
                                                     )}
                                                     {onDelete && (
                                                         <button
                                                             onClick={() => onDelete(row)}
-                                                            title="Eliminar"
-                                                            className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg text-red-500 bg-red-50 border border-red-100 hover:bg-red-500 hover:text-white transition-all"
+                                                            className="w-6 h-6 flex items-center justify-center rounded border border-red-100 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all"
                                                         >
-                                                            <Trash2 size={14} strokeWidth={2.5} />
+                                                            <Trash2 size={12} />
                                                         </button>
                                                     )}
                                                 </div>
@@ -246,42 +293,61 @@ const DataTable = ({
                 </div>
             </div>
 
-            {/* Pagination */}
-            <div className="mt-6 md:mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 z-10 relative">
-                <div className="flex items-center gap-3 md:gap-4 px-4 py-2 bg-neutral-50 dark:bg-gray-700 rounded-xl border border-neutral-100 dark:border-gray-600">
-                     <div className="w-8 h-8 md:w-10 md:h-10 bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-600 rounded-lg flex items-center justify-center shadow-sm">
-                          <Activity className="text-brand-cyan" strokeWidth={2.5} size={18} />
-                     </div>
-                    <div className="flex flex-col">
-                        <span className="text-[9px] md:text-[10px] font-black text-neutral-400 uppercase tracking-[0.3em] leading-none mb-1">SISTEMA</span>
-                        <span className="font-black text-xs md:text-sm uppercase tracking-widest text-black leading-none">
-                            {processedData.length} REGISTROS
-                        </span>
-                    </div>
+            {/* ── Premium Pagination Footer ── */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 z-10 relative mt-1 px-1">
+                {/* Left: rows-per-page + count */}
+                <div className="flex items-center gap-3">
+                    <RowsPerPageSelect
+                        value={itemsPerPage}
+                        onChange={(v) => { setItemsPerPage(v); setCurrentPage(1); }}
+                    />
+                    <div className="h-4 w-px bg-neutral-200 dark:bg-gray-700" />
+                    <span className="text-[9px] font-black text-neutral-400 uppercase tracking-widest">
+                        {rangeStart}–{rangeEnd} <span className="text-neutral-300">de</span> {processedData.length}
+                    </span>
                 </div>
                 
+                {/* Right: page navigation */}
                 {totalPages > 1 && (
-                    <div className="flex items-center gap-4 md:gap-6 bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-600 p-2 rounded-2xl shadow-sm">
+                    <div className="flex items-center gap-1">
+                        <button 
+                            onClick={() => setCurrentPage(1)}
+                            disabled={currentPage === 1}
+                            className="w-7 h-7 rounded-lg border border-neutral-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-neutral-400 hover:text-black dark:hover:text-white hover:border-neutral-400 disabled:opacity-25 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+                            title="Primera página"
+                        >
+                            <ChevronsLeft size={13} />
+                        </button>
                         <button 
                             onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                             disabled={currentPage === 1}
-                            className="w-10 h-10 md:w-12 md:h-12 bg-neutral-50 dark:bg-gray-700 rounded-xl text-neutral-500 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-gray-600 disabled:opacity-30 disabled:hover:bg-neutral-50 dark:disabled:hover:bg-gray-700 transition-all flex items-center justify-center border border-neutral-200 dark:border-gray-600 cursor-pointer"
+                            className="w-7 h-7 rounded-lg border border-neutral-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-neutral-400 hover:text-black dark:hover:text-white hover:border-neutral-400 disabled:opacity-25 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+                            title="Anterior"
                         >
-                            <ChevronLeft size={20} strokeWidth={3} />
+                            <ChevronLeft size={14} />
                         </button>
                         
-                        <div className="font-black tracking-widest text-sm md:text-base text-neutral-400">
-                            <span className="text-black">{currentPage.toString().padStart(2, '0')}</span> 
-                            <span className="mx-2">/</span> 
-                            {totalPages.toString().padStart(2, '0')}
+                        <div className="flex items-center gap-0.5 mx-1">
+                            <span className="px-2.5 py-1 rounded-lg bg-black text-white text-[10px] font-black min-w-[28px] text-center">{currentPage}</span>
+                            <span className="text-[9px] text-neutral-300 font-bold mx-0.5">/</span>
+                            <span className="text-[10px] font-black text-neutral-400">{totalPages}</span>
                         </div>
 
                         <button 
                             onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                             disabled={currentPage === totalPages}
-                            className="w-10 h-10 md:w-12 md:h-12 bg-black rounded-xl text-white hover:bg-neutral-800 disabled:opacity-30 disabled:bg-black transition-all flex items-center justify-center font-bold cursor-pointer shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                            className="w-7 h-7 rounded-lg border border-neutral-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-neutral-400 hover:text-black dark:hover:text-white hover:border-neutral-400 disabled:opacity-25 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+                            title="Siguiente"
                         >
-                            <ChevronRight size={20} strokeWidth={3} />
+                            <ChevronRight size={14} />
+                        </button>
+                        <button 
+                            onClick={() => setCurrentPage(totalPages)}
+                            disabled={currentPage === totalPages}
+                            className="w-7 h-7 rounded-lg border border-neutral-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-neutral-400 hover:text-black dark:hover:text-white hover:border-neutral-400 disabled:opacity-25 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+                            title="Última página"
+                        >
+                            <ChevronsRight size={13} />
                         </button>
                     </div>
                 )}

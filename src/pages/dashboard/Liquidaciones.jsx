@@ -26,6 +26,9 @@ const Liquidaciones = () => {
     const [isLoadingPreview, setIsLoadingPreview] = useState(false);
     const [montoRecibidoManual, setMontoRecibidoManual] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [showAllProducts, setShowAllProducts] = useState(false);
+    const [currentModalPage, setCurrentModalPage] = useState(1);
+    const [rowsPerModalPage, setRowsPerModalPage] = useState(5);
 
     const loadData = async () => {
         setIsLoading(true);
@@ -55,6 +58,9 @@ const Liquidaciones = () => {
         setIsPreviewOpen(true);
         setIsLoadingPreview(true);
         setMontoRecibidoManual(''); // Resetear el input manual
+        setShowAllProducts(false); // Resetear paginación de productos
+        setCurrentModalPage(1);
+        setRowsPerModalPage(5);
         
         try {
             const data = await liquidacionesService.getPreview(sucursal.id_comercio || sucursal.id);
@@ -144,8 +150,63 @@ const Liquidaciones = () => {
             yPos += 2;
         }
 
+        // Detalle de Productos
+        if (row.resumen_productos && row.resumen_productos.length > 0) {
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 100);
+            doc.text("--- DETALLE DE ARTÍCULOS VENDIDOS ---", 10, yPos);
+            yPos += 8;
+
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'bold');
+            doc.text("PRODUCTO", 10, yPos);
+            doc.text("CANT", 90, yPos);
+            doc.text("BRUTO", 110, yPos);
+            doc.text("NETO PUSH", 138, yPos, { align: 'right' });
+            yPos += 6;
+
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(50, 50, 50);
+
+            for (const prod of row.resumen_productos) {
+                // Salto de página si el recibo se hace muy largo
+                if (yPos > 185) {
+                    doc.addPage();
+                    yPos = 20;
+                    
+                    doc.setFillColor(0, 0, 0);
+                    doc.rect(0, 0, 148, 15, 'F');
+                    doc.setTextColor(0, 229, 255);
+                    doc.setFontSize(8);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text("PUSH SPORTS - CONTINUACIÓN RECIBO", 10, 10);
+                    
+                    doc.setTextColor(50, 50, 50);
+                    doc.setFontSize(7);
+                    doc.setFont('helvetica', 'normal');
+                }
+
+                // Truncar nombres muy largos
+                const MAX_LEN = 45;
+                const nombreCorto = prod.nombre.length > MAX_LEN ? prod.nombre.substring(0, MAX_LEN) + '...' : prod.nombre;
+
+                doc.text(nombreCorto, 10, yPos);
+                doc.text(String(prod.cantidad), 90, yPos);
+                doc.text(`$${Math.round(prod.total_bruto).toLocaleString()}`, 110, yPos);
+                doc.text(`$${Math.round(prod.total_neto).toLocaleString()}`, 138, yPos, { align: 'right' });
+                yPos += 5;
+            }
+            yPos += 4;
+        }
+
         doc.line(10, yPos, 138, yPos);
         yPos += 10;
+
+        // Validar salto de página antes del final
+        if (yPos > 170) {
+            doc.addPage();
+            yPos = 20;
+        }
 
         doc.setFontSize(14);
         doc.setFont('helvetica', 'bold');
@@ -244,51 +305,51 @@ const Liquidaciones = () => {
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4 }}
-            className="space-y-6 max-w-[1400px] mx-auto pb-6"
+            className="space-y-4 max-w-[1400px] mx-auto pb-4"
         >
             
             {/* Header Técnico */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-black dark:border-gray-600 pb-4 gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-black dark:border-gray-600 pb-3 gap-3">
                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                         <ShieldCheck size={14} className="text-brand-cyan" />
-                         <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">TESORERÍA CENTRAL</span>
-                         <div className={`px-2 py-0.5 rounded border text-[9px] font-black uppercase tracking-widest bg-black text-white border-black`}>
+                    <div className="flex items-center gap-1.5 mb-1">
+                         <ShieldCheck size={12} className="text-brand-cyan" />
+                         <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-neutral-500">TESORERÍA CENTRAL</span>
+                         <div className={`px-1.5 py-0.5 rounded border text-[8px] font-black uppercase tracking-widest bg-black text-white border-black`}>
                              {isSuperAdmin ? 'GLOBAL' : 'SEDE'}
                          </div>
                     </div>
-                     <h2 className="text-xl md:text-2xl uppercase leading-none m-0 font-sport text-black dark:text-white">
+                     <h2 className="text-lg md:text-xl uppercase leading-none m-0 font-sport text-black dark:text-white">
                         Cierre de Caja <span className="text-brand-cyan">/ Liquidaciones</span>
                     </h2>
-                    <p className="text-neutral-500 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed max-w-xl mt-2 whitespace-normal">
+                    <p className="text-neutral-500 text-[9px] md:text-[10px] font-bold uppercase tracking-widest leading-relaxed max-w-xl mt-1.5 whitespace-normal">
                         Módulo de auditoría y cierre. Revisa las ventas pendientes de cada sucursal, comprueba los desgloses de métodos de pago y emite los comprobantes finales.
                     </p>
                  </div>
                  
-                 <div className="px-4 py-2 bg-neutral-100 dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-lg flex items-center gap-3 shadow-sm">
-                    <CreditCard size={16} className="text-brand-cyan" />
+                 <div className="px-3 py-1.5 bg-neutral-100 dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-md flex items-center gap-2 shadow-sm">
+                    <CreditCard size={14} className="text-brand-cyan" />
                     <div className="flex flex-col">
-                        <span className="text-[8px] font-bold text-neutral-400 uppercase tracking-[0.2em]">Estado Financiero</span>
-                        <span className="text-[9px] font-black text-black dark:text-white uppercase tracking-widest">Auditado</span>
+                        <span className="text-[7px] font-bold text-neutral-400 uppercase tracking-[0.2em]">Estado Financiero</span>
+                        <span className="text-[8px] font-black text-black dark:text-white uppercase tracking-widest">Auditado</span>
                     </div>
                  </div>
             </div>
             
             {isLoading ? (
-                <div className="flex flex-col items-center justify-center py-32 space-y-6">
-                    <div className="w-10 h-10 border-4 border-neutral-200 border-t-brand-cyan rounded-full animate-spin"></div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-neutral-400">Recopilando registros financieros...</p>
+                <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                    <div className="w-8 h-8 border-4 border-neutral-200 border-t-brand-cyan rounded-full animate-spin"></div>
+                    <p className="text-[9px] font-black uppercase tracking-[0.3em] text-neutral-400">Recopilando registros financieros...</p>
                 </div>
             ) : (
                 <>
                     {/* Tarjetas de Sucursales */}
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-2 mb-2">
-                            <Send size={16} className="text-black dark:text-white" />
-                            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-black dark:text-white m-0">Estado de Sucursales</h3>
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                            <Send size={14} className="text-black dark:text-white" />
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-black dark:text-white m-0">Estado de Sucursales</h3>
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                             {sucursales.map((suc, i) => {
                                 const saldo = getSaldo(suc);
                                 const hasDebt = saldo > 0;
@@ -299,30 +360,30 @@ const Liquidaciones = () => {
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: i * 0.1 }}
-                                    className={`bg-white dark:bg-gray-800 border p-4 md:p-5 rounded-2xl flex flex-col justify-between transition-all duration-300 shadow-sm relative overflow-hidden group hover:-translate-y-1 hover:shadow-premium ${hasDebt ? 'border-neutral-200 dark:border-gray-600 hover:border-brand-cyan' : 'border-neutral-100 dark:border-gray-700'}`}
+                                    className={`bg-white dark:bg-gray-800 border p-3 md:p-4 rounded-xl flex flex-col justify-between transition-all duration-300 shadow-sm relative overflow-hidden group hover:-translate-y-1 hover:shadow-premium ${hasDebt ? 'border-neutral-200 dark:border-gray-600 hover:border-brand-cyan' : 'border-neutral-100 dark:border-gray-700'}`}
                                 >
                                     {/* Marcador de deuda */}
                                     {hasDebt && (
-                                        <div className="absolute top-0 right-0 w-20 h-20 overflow-hidden pointer-events-none">
-                                            <div className="absolute top-0 right-0 bg-brand-cyan text-black text-[7px] font-black uppercase tracking-[0.2em] py-1 px-10 rotate-45 translate-x-[32px] translate-y-[12px] shadow-sm">
+                                        <div className="absolute top-0 right-0 w-16 h-16 overflow-hidden pointer-events-none">
+                                            <div className="absolute top-0 right-0 bg-brand-cyan text-black text-[6px] font-black uppercase tracking-[0.2em] py-0.5 px-8 rotate-45 translate-x-[28px] translate-y-[10px] shadow-sm">
                                                 PENDIENTE
                                             </div>
                                         </div>
                                     )}
 
-                                    <div className="space-y-2 relative z-10">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-6 h-6 rounded bg-neutral-100 dark:bg-gray-700 flex items-center justify-center">
-                                                <Wallet size={12} className={hasDebt ? 'text-brand-cyan' : 'text-neutral-400'} />
+                                    <div className="space-y-1.5 relative z-10">
+                                        <div className="flex items-center gap-1.5">
+                                            <div className="w-5 h-5 rounded bg-neutral-100 dark:bg-gray-700 flex items-center justify-center">
+                                                <Wallet size={10} className={hasDebt ? 'text-brand-cyan' : 'text-neutral-400'} />
                                             </div>
-                                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black dark:text-white block">{suc.nombre}</span>
+                                            <span className="text-[9px] font-black uppercase tracking-[0.15em] text-black dark:text-white block">{suc.nombre}</span>
                                         </div>
                                         
-                                        <div className="pt-2">
-                                            <span className="text-[8px] font-bold text-neutral-400 uppercase tracking-widest block mb-0.5">Saldo a cobrar (Neto PUSH)</span>
+                                        <div className="pt-1">
+                                            <span className="text-[7px] font-bold text-neutral-400 uppercase tracking-widest block mb-0.5">Saldo a cobrar (Neto PUSH)</span>
                                             <div className="flex items-baseline gap-1">
-                                                <span className={`text-sm font-bold ${hasDebt ? 'text-black dark:text-white' : 'text-neutral-500 dark:text-gray-500'}`}>$</span>
-                                                <p className={`text-4xl font-sport m-0 leading-none ${hasDebt ? 'text-black dark:text-white' : 'text-neutral-800 dark:text-gray-400'}`}>
+                                                <span className={`text-xs font-bold ${hasDebt ? 'text-black dark:text-white' : 'text-neutral-500 dark:text-gray-500'}`}>$</span>
+                                                <p className={`text-3xl font-sport m-0 leading-none ${hasDebt ? 'text-black dark:text-white' : 'text-neutral-800 dark:text-gray-400'}`}>
                                                     {saldo.toLocaleString()}
                                                 </p>
                                             </div>
@@ -333,14 +394,14 @@ const Liquidaciones = () => {
                                         <motion.button 
                                             whileTap={{ scale: 0.95 }}
                                             onClick={() => handleOpenPreview(suc)}
-                                            className="w-full mt-5 bg-black dark:bg-gray-700 text-white py-3 rounded-xl text-[9px] font-black uppercase tracking-[0.15em] hover:bg-brand-cyan hover:text-black transition-colors flex items-center justify-center gap-2 shadow-sm"
+                                            className="w-full mt-4 bg-black dark:bg-gray-700 text-white py-2 rounded-lg text-[8px] font-black uppercase tracking-[0.15em] hover:bg-brand-cyan hover:text-black transition-colors flex items-center justify-center gap-2 shadow-sm"
                                         >
-                                            <Settings2 size={14} /> VER RESUMEN Y LIQUIDAR
+                                            <Settings2 size={12} /> VER RESUMEN Y LIQUIDAR
                                         </motion.button>
                                     ) : (
-                                        <div className="mt-5 pt-3 border-t border-neutral-100 dark:border-gray-700 flex items-center gap-2">
-                                            <div className={`w-1.5 h-1.5 rounded-full ${hasDebt ? 'bg-amber-400 animate-pulse' : 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]'}`}></div>
-                                            <span className={`text-[9px] font-black uppercase tracking-[0.15em] ${hasDebt ? 'text-amber-500' : 'text-green-500'}`}>
+                                        <div className="mt-4 pt-2 border-t border-neutral-100 dark:border-gray-700 flex items-center gap-2">
+                                            <div className={`w-1 h-1 rounded-full ${hasDebt ? 'bg-amber-400 animate-pulse' : 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]'}`}></div>
+                                            <span className={`text-[8px] font-black uppercase tracking-[0.15em] ${hasDebt ? 'text-amber-500' : 'text-green-500'}`}>
                                                 {!hasDebt ? 'CAJA AL DÍA' : 'LIQUIDACIÓN PENDIENTE'}
                                             </span>
                                         </div>
@@ -351,12 +412,12 @@ const Liquidaciones = () => {
                     </div>
 
                     {/* Tabla de Historial */}
-                    <div className="pt-8 space-y-4">
-                        <div className="flex items-center gap-2 mb-2">
-                            <History size={16} className="text-black dark:text-white" />
-                            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-black dark:text-white m-0">Historial Consolidado</h3>
+                    <div className="pt-4 space-y-2">
+                        <div className="flex items-center gap-2 mb-1">
+                            <History size={14} className="text-black dark:text-white" />
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-black dark:text-white m-0">Historial Consolidado</h3>
                         </div>
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-[2.5rem] shadow-premium border border-neutral-100 dark:border-gray-700 p-2 md:p-4 transition-all duration-500 hover:shadow-premium-hover">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-premium border border-neutral-100 dark:border-gray-700 p-1 md:p-2 transition-all duration-500 hover:shadow-premium-hover">
                             <DataTable 
                                 data={historial}
                                 columns={columnsHistorial}
@@ -396,118 +457,191 @@ const Liquidaciones = () => {
                                 </button>
                             </div>
                         ) : (
-                            <div className="space-y-6">
-                                {/* Encabezado Informativo */}
-                                <div className="bg-neutral-50 dark:bg-gray-800 p-4 rounded-xl border border-neutral-200 dark:border-gray-700 flex flex-wrap gap-4 justify-between items-center">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-white dark:bg-gray-700 rounded-lg shadow-sm border border-neutral-100 dark:border-gray-600 flex items-center justify-center">
-                                            <CalendarDays size={18} className="text-brand-cyan" />
+                            <div className="space-y-1.5">
+                                {/* Encabezado compacto: periodo + tickets + métodos de pago inline */}
+                                <div className="bg-neutral-50 dark:bg-gray-800 p-2 rounded border border-neutral-200 dark:border-gray-700">
+                                    <div className="flex flex-wrap items-center justify-between gap-1 mb-1.5">
+                                        <div className="flex items-center gap-1.5">
+                                            <CalendarDays size={12} className="text-brand-cyan" />
+                                            <span className="text-[8px] font-bold text-black dark:text-white uppercase">
+                                                {new Date(previewData.rangoFechas.desde).toLocaleDateString()} al {new Date(previewData.rangoFechas.hasta).toLocaleDateString()}
+                                            </span>
                                         </div>
-                                        <div>
-                                            <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">Período Analizado</p>
-                                            <p className="text-xs font-bold text-black dark:text-white uppercase">
-                                                {new Date(previewData.rangoFechas.desde).toLocaleDateString()} 
-                                                <span className="text-neutral-400 mx-1">al</span> 
-                                                {new Date(previewData.rangoFechas.hasta).toLocaleDateString()}
-                                            </p>
-                                        </div>
+                                        <span className="text-[8px] font-black text-brand-cyan uppercase">{previewData.cantVentas} tickets</span>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">Tickets Pendientes</p>
-                                        <p className="text-lg font-sport text-black dark:text-white leading-none">{previewData.cantVentas}</p>
-                                    </div>
-                                </div>
-
-                                {/* Desglose por Método de Pago */}
-                                <div>
-                                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500 mb-3 ml-1">Desglose de Ingresos Brutos</h4>
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                    {/* Métodos de pago inline */}
+                                    <div className="flex flex-wrap gap-1.5">
                                         {Object.entries(previewData.desgloseMetodoPago || {}).map(([metodo, data]) => (
-                                            <div key={metodo} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-neutral-200 dark:border-gray-700 shadow-sm flex flex-col justify-between">
-                                                <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest mb-2 truncate">{metodo}</span>
-                                                <span className="text-sm font-sport text-black dark:text-white">${Math.round(data.bruto).toLocaleString()}</span>
-                                                <span className="text-[8px] font-bold text-neutral-400 mt-1">{data.cantidad} transacciones</span>
+                                            <div key={metodo} className="bg-white dark:bg-gray-700 px-2 py-1 rounded border border-neutral-200 dark:border-gray-600 flex items-center gap-1.5">
+                                                <span className="text-[7px] font-bold text-neutral-500 uppercase">{metodo}</span>
+                                                <span className="text-[9px] font-sport text-black dark:text-white">${Math.round(data.bruto).toLocaleString()}</span>
+                                                <span className="text-[7px] text-neutral-400">({data.cantidad})</span>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
-                                {/* Resumen Financiero Total */}
-                                <div className="bg-black p-5 md:p-6 rounded-2xl border border-neutral-800 shadow-xl overflow-hidden relative">
-                                    <div className="absolute -right-10 -top-10 w-40 h-40 bg-brand-cyan/20 blur-3xl rounded-full pointer-events-none" />
+                                {/* Detalle de Artículos Vendidos — pagina después de 5 */}
+                                {previewData.resumenProductos && previewData.resumenProductos.length > 0 && (() => {
+                                     const itemsPerPage = rowsPerModalPage;
+                                     const totalModalPages = Math.ceil(previewData.resumenProductos.length / itemsPerPage);
+                                     const paginatedItemsModal = previewData.resumenProductos.slice(
+                                         (currentModalPage - 1) * itemsPerPage,
+                                         currentModalPage * itemsPerPage
+                                     );
+
+                                     return (
+                                    <div>
+                                                                                 <div className="flex items-center justify-between mb-1 ml-1">
+                                             <h4 className="text-[9px] font-black uppercase tracking-[0.1em] text-neutral-500">Artículos Vendidos</h4>
+                                             <div className="flex items-center gap-1.5">
+                                                 <span className="text-[7px] font-black text-neutral-400 uppercase">VER:</span>
+                                                 <select 
+                                                     value={rowsPerModalPage}
+                                                     onChange={(e) => {
+                                                         setRowsPerModalPage(Number(e.target.value));
+                                                         setCurrentModalPage(1);
+                                                     }}
+                                                     className="bg-transparent border-none text-[8px] font-black text-neutral-500 focus:ring-0 cursor-pointer outline-none p-0 appearance-none hover:text-brand-cyan transition-colors"
+                                                 >
+                                                     {[5, 10, 20, 50].map(val => (
+                                                         <option key={val} value={val}>{val}</option>
+                                                     ))}
+                                                 </select>
+                                             </div>
+                                         </div>
+                                        <div className="bg-white dark:bg-gray-800 rounded border border-neutral-200 dark:border-gray-700 overflow-hidden">
+                                            <table className="w-full text-left border-collapse">
+                                                <thead className="bg-neutral-50 dark:bg-gray-700">
+                                                    <tr>
+                                                        <th className="px-2 py-1.5 text-[9px] font-black uppercase tracking-widest text-neutral-500 border-b border-neutral-200 dark:border-gray-600">Prod / Var</th>
+                                                        <th className="px-1 py-1.5 text-[9px] font-black uppercase tracking-widest text-neutral-500 border-b border-neutral-200 dark:border-gray-600 text-center">Cant</th>
+                                                        <th className="px-1 py-1.5 text-[9px] font-black uppercase tracking-widest text-neutral-500 border-b border-neutral-200 dark:border-gray-600 text-right">Bruto</th>
+                                                        <th className="px-2 py-1.5 text-[9px] font-black uppercase tracking-widest text-brand-cyan border-b border-neutral-200 dark:border-gray-600 text-right">Neto</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {paginatedItemsModal.map((prod, idx) => (
+                                                        <tr key={idx} className="border-b border-neutral-100 dark:border-gray-700 last:border-0">
+                                                            <td className="px-2 py-1.5">
+                                                                <span className="text-[11px] font-bold text-neutral-800 dark:text-gray-200 uppercase">{prod.nombre}</span>
+                                                            </td>
+                                                            <td className="px-1 py-1.5 text-center">
+                                                                <span className="text-[11px] font-bold text-neutral-600 dark:text-gray-400">{prod.cantidad}</span>
+                                                            </td>
+                                                            <td className="px-1 py-1.5 text-right">
+                                                                <span className="text-[11px] font-sport text-neutral-500">${Math.round(prod.total_bruto).toLocaleString()}</span>
+                                                            </td>
+                                                            <td className="px-2 py-1.5 text-right">
+                                                                <span className="text-[11px] font-sport text-black dark:text-white">${Math.round(prod.total_neto).toLocaleString()}</span>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                            {totalModalPages > 1 && (
+                                                 <div className="flex items-center justify-center gap-4 py-1.5 bg-neutral-50 dark:bg-gray-700/50 border-t border-neutral-200 dark:border-gray-600">
+                                                     <button 
+                                                         onClick={() => setCurrentModalPage(prev => Math.max(prev - 1, 1))}
+                                                         disabled={currentModalPage === 1}
+                                                         className="text-neutral-400 hover:text-black dark:hover:text-white disabled:opacity-20 transition-all cursor-pointer"
+                                                     >
+                                                         <ChevronLeft size={12} />
+                                                     </button>
+                                                     <span className="text-[8px] font-black text-neutral-400">
+                                                         {currentModalPage} / {totalModalPages}
+                                                     </span>
+                                                     <button 
+                                                         onClick={() => setCurrentModalPage(prev => Math.min(prev + 1, totalModalPages))}
+                                                         disabled={currentModalPage === totalModalPages}
+                                                         className="text-neutral-400 hover:text-black dark:hover:text-white disabled:opacity-20 transition-all cursor-pointer"
+                                                     >
+                                                         <ChevronRight size={12} />
+                                                     </button>
+                                                 </div>
+                                             )}
+                                         </div>
+                                     </div>
+                                 )})}
+
+
+                                {/* Resumen Financiero Compacto */}
+                                <div className="bg-black p-2 rounded border border-neutral-800 overflow-hidden relative">
+                                    <div className="absolute -right-4 -top-4 w-16 h-16 bg-brand-cyan/20 blur-2xl rounded-full pointer-events-none" />
                                     
-                                    <div className="relative z-10 space-y-4">
+                                    <div className="relative z-10 space-y-1">
                                         <div className="flex justify-between items-center text-neutral-300">
-                                            <span className="text-[10px] font-bold uppercase tracking-widest">Volumen Bruto Total:</span>
-                                            <span className="font-sport text-sm">${Math.round(previewData.totalVentasBruto).toLocaleString()}</span>
+                                            <span className="text-[7px] font-bold uppercase tracking-widest">Bruto Total:</span>
+                                            <span className="font-sport text-[9px]">${Math.round(previewData.totalVentasBruto).toLocaleString()}</span>
                                         </div>
                                         
                                         {previewData.totalDevoluciones > 0 && (
-                                            <div className="flex justify-between items-center text-amber-400 border-b border-neutral-800 pb-3">
-                                                <span className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
-                                                    <RotateCcw size={10} /> Devoluciones ({previewData.cantDevoluciones}):
+                                            <div className="flex justify-between items-center text-amber-400 border-b border-neutral-800 pb-0.5">
+                                                <span className="text-[7px] font-bold uppercase tracking-widest flex items-center gap-1">
+                                                    <RotateCcw size={7} /> Devol. ({previewData.cantDevoluciones}):
                                                 </span>
-                                                <span className="font-sport text-sm">-${Math.round(previewData.totalDevoluciones).toLocaleString()}</span>
+                                                <span className="font-sport text-[9px]">-${Math.round(previewData.totalDevoluciones).toLocaleString()}</span>
                                             </div>
                                         )}
 
-                                        <div className="flex flex-col md:flex-row justify-between items-start md:items-end pt-2 gap-4">
-                                            <div>
-                                                <span className="text-[11px] font-black text-brand-cyan uppercase tracking-[0.3em] block mb-1">NETO A COBRAR:</span>
-                                                <div className="flex items-baseline gap-1 text-white">
-                                                    <span className="text-lg font-bold">$</span>
-                                                    <span className="text-5xl md:text-6xl font-sport leading-none">
-                                                        {Math.round(previewData.netoFinal).toLocaleString()}
-                                                    </span>
-                                                </div>
+                                        <div className="flex justify-between items-end pt-0.5">
+                                            <span className="text-[8px] font-black text-brand-cyan uppercase tracking-[0.1em]">NETO:</span>
+                                            <div className="flex items-baseline gap-0.5 text-white">
+                                                <span className="text-[10px] font-bold">$</span>
+                                                <span className="text-xl font-sport leading-none">
+                                                    {Math.round(previewData.netoFinal).toLocaleString()}
+                                                </span>
                                             </div>
+                                        </div>
 
-                                            {/* Input opcional para arqueo real */}
-                                            <div className="w-full md:w-auto bg-neutral-900 border border-neutral-700 rounded-lg p-3 shrink-0">
-                                                <label className="text-[8px] font-bold text-neutral-400 uppercase tracking-widest block mb-1">Monto Físico Recibido (Opcional)</label>
-                                                <div className="flex items-center gap-2">
-                                                    <DollarSign size={14} className="text-neutral-500" />
+                                        {/* Input monto recibido inline */}
+                                        <div className="bg-neutral-900 border border-neutral-700 rounded p-1 mt-1">
+                                            <div className="flex items-center gap-1">
+                                                <label className="text-[6px] font-bold text-neutral-500 uppercase tracking-widest whitespace-nowrap">Recibido:</label>
+                                                <div className="flex items-center gap-1 flex-1">
+                                                    <DollarSign size={8} className="text-neutral-600" />
                                                     <input 
                                                         type="number"
                                                         value={montoRecibidoManual}
                                                         onChange={(e) => setMontoRecibidoManual(e.target.value)}
                                                         placeholder={Math.round(previewData.netoFinal).toString()}
-                                                        className="bg-transparent border-none outline-none text-white font-sport text-lg w-24 md:w-32 placeholder-neutral-700"
+                                                        className="bg-transparent border-none outline-none text-white font-sport text-[10px] w-full placeholder-neutral-700 h-4"
                                                     />
                                                 </div>
                                                 {montoRecibidoManual && !isNaN(montoRecibidoManual) && parseFloat(montoRecibidoManual) !== previewData.netoFinal && (
-                                                    <p className={`text-[8px] font-bold uppercase tracking-widest mt-2 ${parseFloat(montoRecibidoManual) > previewData.netoFinal ? 'text-green-400' : 'text-red-400'}`}>
-                                                        {parseFloat(montoRecibidoManual) > previewData.netoFinal ? 'SOBRANTE: +' : 'FALTANTE: '}
-                                                        ${Math.abs(parseFloat(montoRecibidoManual) - previewData.netoFinal).toLocaleString()}
-                                                    </p>
+                                                    <span className={`text-[7px] font-black uppercase whitespace-nowrap ${parseFloat(montoRecibidoManual) > previewData.netoFinal ? 'text-green-400' : 'text-red-400'}`}>
+                                                        {parseFloat(montoRecibidoManual) > previewData.netoFinal ? '+' : ''}
+                                                        ${Math.round(parseFloat(montoRecibidoManual) - previewData.netoFinal).toLocaleString()}
+                                                    </span>
                                                 )}
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="p-3 bg-brand-cyan/10 border border-brand-cyan/20 rounded-lg flex items-start gap-3">
-                                    <AlertCircle size={16} className="text-brand-cyan shrink-0 mt-0.5" />
-                                    <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-600 dark:text-gray-300 leading-relaxed m-0">
-                                        Al confirmar, las <span className="text-black dark:text-white">{previewData.cantVentas} ventas</span> se marcarán como liquidadas y el saldo de la sede volverá a CERO.
+                                {/* Alerta + Botones compactos */}
+                                <div className="p-1.5 bg-brand-cyan/10 border border-brand-cyan/20 rounded flex items-center gap-1.5">
+                                    <AlertCircle size={10} className="text-brand-cyan shrink-0" />
+                                    <p className="text-[7px] font-bold uppercase tracking-widest text-neutral-600 dark:text-gray-300 m-0">
+                                        {previewData.cantVentas} ventas se liquidarán. Saldo → CERO.
                                     </p>
                                 </div>
 
-                                <div className="flex flex-col gap-2 pt-2">
+                                <div className="flex gap-1.5 pt-0.5">
+                                    <button 
+                                        onClick={() => setIsPreviewOpen(false)}
+                                        className="px-3 py-1.5 text-[8px] font-bold uppercase tracking-widest text-neutral-500 hover:text-black dark:hover:text-white transition-colors border border-neutral-200 dark:border-gray-600 rounded"
+                                    >
+                                        CANCELAR
+                                    </button>
                                     <motion.button 
                                         whileTap={{ scale: 0.98 }}
                                         onClick={confirmLiquidacion}
                                         disabled={isProcessing}
-                                        className="w-full bg-brand-cyan text-black py-4 rounded-xl text-[11px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-black hover:text-white transition-all border-2 border-transparent hover:border-brand-cyan shadow-md"
+                                        className="flex-1 bg-brand-cyan text-black py-1.5 rounded text-[9px] font-black uppercase tracking-[0.1em] flex items-center justify-center gap-1.5 hover:bg-black hover:text-white transition-all border-2 border-transparent hover:border-brand-cyan"
                                     >
-                                        {isProcessing ? 'PROCESANDO...' : <><CheckCircle2 size={18} /> CONFIRMAR LIQUIDACIÓN</>}
+                                        {isProcessing ? 'PROCESANDO...' : <><CheckCircle2 size={12} /> CONFIRMAR LIQUIDACIÓN</>}
                                     </motion.button>
-                                    <button 
-                                        onClick={() => setIsPreviewOpen(false)}
-                                        className="w-full py-3 text-[10px] font-bold uppercase tracking-widest text-neutral-500 hover:text-black dark:hover:text-white transition-colors"
-                                    >
-                                        CANCELAR
-                                    </button>
                                 </div>
                             </div>
                         )}

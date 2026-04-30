@@ -17,6 +17,7 @@ const GenericABM = ({
     modalMaxWidth = "max-w-md",
     fetchMethod = null,
     validate = null, // Custom validation function returns string/array or null
+    onSaveSuccess = null, // Allows keeping modal open after create
 }) => {
     const [data, setData] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -118,7 +119,18 @@ const GenericABM = ({
                 Object.entries(formData).filter(([k, v]) =>
                     !k.startsWith('_') &&
                     (v === null || typeof v !== 'object' || Array.isArray(v) || k === 'atributos')
-                )
+                ).map(([k, v]) => {
+                    // Auto-convert numeric strings to Numbers for known numeric fields
+                    const isNumericField = /precio|costo|monto|cantidad|stock|porcentaje|valor|id_/.test(k.toLowerCase());
+                    if (isNumericField && typeof v === 'string' && v.trim() !== '' && !isNaN(v)) {
+                        return [k, Number(v)];
+                    }
+                    // Handle empty strings for numeric fields as 0
+                    if (isNumericField && v === '') {
+                        return [k, 0];
+                    }
+                    return [k, v];
+                })
             );
 
             // Convert atributos to JSON string if it's an object (backend expects JSON string)
@@ -140,8 +152,9 @@ const GenericABM = ({
                         letterSpacing: '0.1em'
                     }
                 });
+                setIsModalOpen(false);
             } else {
-                await service.create(payload);
+                const newRecord = await service.create(payload);
                 toast.success('Registro creado exitosamente', {
                     style: {
                         background: '#000',
@@ -153,8 +166,14 @@ const GenericABM = ({
                         letterSpacing: '0.1em'
                     }
                 });
+                if (onSaveSuccess) {
+                    onSaveSuccess(newRecord);
+                    setEditingItem(newRecord);
+                    setFormData({ ...formData, ...newRecord });
+                } else {
+                    setIsModalOpen(false);
+                }
             }
-            setIsModalOpen(false);
             loadData();
         } catch (error) {
             console.error(error);
@@ -174,20 +193,20 @@ const GenericABM = ({
     };
 
     return (
-        <div className="space-y-2 md:space-y-4 w-full max-w-7xl mx-auto pb-2 md:pb-8 relative animate-in fade-in duration-700">
+        <div className="space-y-1.5 md:space-y-3 w-full max-w-[1400px] mx-auto pb-1 md:pb-4 relative animate-in fade-in duration-700">
             {/* Cabecera del ABM - Compacta */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-neutral-100 dark:border-gray-700 pb-4 gap-4">
-                <div className="flex flex-1 min-w-0 pr-0 md:pr-4 items-start md:items-center gap-3 md:gap-4">
-                    <div className="hidden sm:flex w-10 h-10 md:w-12 md:h-12 bg-white dark:bg-gray-800 border border-neutral-100 dark:border-gray-700 text-brand-cyan dark:text-cyan-400 items-center justify-center rounded-xl shadow-sm flex-shrink-0">
-                        {Icon ? <Icon size={20} className="md:w-6 md:h-6" /> : <Box size={20} />}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-neutral-100 dark:border-gray-700 pb-1.5 gap-2">
+                <div className="flex flex-1 min-w-0 pr-0 md:pr-4 items-start md:items-center gap-2 md:gap-2.5">
+                    <div className="hidden sm:flex w-7 h-7 md:w-8 md:h-8 bg-white dark:bg-gray-800 border border-neutral-100 dark:border-gray-700 text-brand-cyan dark:text-cyan-400 items-center justify-center rounded-lg shadow-sm flex-shrink-0">
+                        {Icon ? <Icon size={14} className="md:w-4 md:h-4" /> : <Box size={14} />}
                     </div>
                     <div className="flex flex-col flex-1 min-w-0">
-                        <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500 mb-0.5">GESTIÓN CENTRAL</span>
-                        <h1 className="text-xl md:text-2xl font-black tracking-tight m-0 text-black dark:text-white uppercase leading-none">
+                        <span className="text-[7px] md:text-[8px] font-black uppercase tracking-[0.2em] text-neutral-500 mb-0">GESTIÓN CENTRAL</span>
+                        <h1 className="text-md md:text-lg font-black tracking-tighter m-0 text-black dark:text-white uppercase leading-tight">
                             {title}
                         </h1>
                         {description && (
-                            <p className="text-[10px] md:text-xs font-bold text-neutral-400 mt-2 max-w-2xl leading-relaxed whitespace-normal line-clamp-3 md:line-clamp-none">
+                            <p className="text-[9px] md:text-[9px] font-bold text-neutral-400 mt-0.5 max-w-2xl leading-relaxed whitespace-normal line-clamp-2 md:line-clamp-none">
                                 {description}
                             </p>
                         )}
@@ -300,7 +319,7 @@ const GenericABM = ({
                                                     className="w-full px-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-lg focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/20 focus:outline-none transition-all text-sm font-bold text-neutral-900 placeholder:text-neutral-400"
                                                     placeholder={field.label.toUpperCase()}
                                                     value={formData[field.name] ?? ''}
-                                                    onChange={e => setFormData({ ...formData, [field.name]: field.type === 'number' ? Number(e.target.value) : e.target.value })}
+                                                    onChange={e => setFormData({ ...formData, [field.name]: e.target.value })}
                                                 />
                                             </>
                                         )}

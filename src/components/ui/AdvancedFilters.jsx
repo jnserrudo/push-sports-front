@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Filter, X } from 'lucide-react';
+import PremiumSelect from './PremiumSelect';
 
 export const AdvancedFilters = ({ filters, onApply, onClear }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -52,18 +53,15 @@ export const AdvancedFilters = ({ filters, onApply, onClear }) => {
                                         {filter.label}
                                     </label>
                                     {filter.type === 'select' ? (
-                                        <select
+                                        <PremiumSelect
+                                            placeholder="Todos"
+                                            options={[
+                                                { value: '', label: 'Todos' },
+                                                ...(filter.options || [])
+                                            ]}
                                             value={values[filter.key] || ''}
-                                            onChange={e => setValues({...values, [filter.key]: e.target.value})}
-                                            className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:border-black"
-                                        >
-                                            <option value="">Todos</option>
-                                            {filter.options?.map(opt => (
-                                                <option key={opt.value} value={opt.value}>
-                                                    {opt.label}
-                                                </option>
-                                            ))}
-                                        </select>
+                                            onChange={val => setValues({...values, [filter.key]: val})}
+                                        />
                                     ) : filter.type === 'range' ? (
                                         <div className="flex gap-2">
                                             <input

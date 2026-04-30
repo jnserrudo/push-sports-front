@@ -16,6 +16,8 @@ import { eventosService } from '../../services/eventosService';
 import { useAuthStore } from '../../store/authStore';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import PremiumSelect from '../../components/ui/PremiumSelect';
+import DataTable from '../../components/ui/DataTable';
 
 // ═══════════════════════════════════════════════════════════
 // DICCIONARIOS DE TRADUCCIÓN
@@ -51,7 +53,10 @@ const ACCIONES_LEGIBLES = {
     'DELETE': 'Eliminación',
     'createMany': 'Creación Masiva',
     'updateMany': 'Modificación Masiva',
-    'deleteMany': 'Eliminación Masiva'
+    'deleteMany': 'Eliminación Masiva',
+    'CREATEMANY': 'Creación Masiva',
+    'UPDATEMANY': 'Modificación Masiva',
+    'DELETEMANY': 'Eliminación Masiva'
 };
 
 const ACCIONES_VERBO = {
@@ -60,10 +65,14 @@ const ACCIONES_VERBO = {
     'DELETE': 'Eliminó',
     'createMany': 'Creó (Masivo)',
     'updateMany': 'Modificó (Masivo)',
-    'deleteMany': 'Eliminó (Masivo)'
+    'deleteMany': 'Eliminó (Masivo)',
+    'CREATEMANY': 'Creó (Masivo)',
+    'UPDATEMANY': 'Modificó (Masivo)',
+    'DELETEMANY': 'Eliminó (Masivo)'
 };
 
 const CAMPOS_LEGIBLES = {
+    'count': 'Cantidad de Registros Afectados',
     'nombre': 'Nombre',
     'descripcion': 'Descripción',
     'precio': 'Precio',
@@ -92,7 +101,6 @@ const CAMPOS_LEGIBLES = {
     'porcentaje': 'Porcentaje',
     'valor_descuento': 'Valor del Descuento',
     'descuento_porcentaje': 'Porcentaje de Descuento',
-    'comision_pactada_porcentaje': 'Comisión Pactada (%)',
     'fecha_inicio': 'Fecha Inicio',
     'fecha_fin': 'Fecha Fin',
     'observaciones': 'Observaciones',
@@ -491,7 +499,8 @@ const Auditoria = () => {
     };
 
     const getNombreCampoLegible = (campo) => {
-        return CAMPOS_LEGIBLES[campo] || campo.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        const campoStr = String(campo);
+        return CAMPOS_LEGIBLES[campoStr] || CAMPOS_LEGIBLES[campoStr.toLowerCase()] || campoStr.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     };
 
     const formatFecha = (fecha) => {
@@ -843,23 +852,21 @@ const Auditoria = () => {
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
                         <div>
                             <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-1.5 block">Entidad</label>
-                            <select
+                            <PremiumSelect
+                                placeholder="Todas las entidades"
+                                options={TIPOS_ENTIDAD.map(t => ({ value: t.value, label: t.label }))}
                                 value={filtros.entidad}
-                                onChange={(e) => setFiltros({...filtros, entidad: e.target.value})}
-                                className="w-full px-3 py-2 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white"
-                            >
-                                {TIPOS_ENTIDAD.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                            </select>
+                                onChange={val => setFiltros({ ...filtros, entidad: val })}
+                            />
                         </div>
                         <div>
                             <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-1.5 block">Tipo de Acción</label>
-                            <select
+                            <PremiumSelect
+                                placeholder="Todas las acciones"
+                                options={TIPOS_ACCION.map(t => ({ value: t.value, label: t.label }))}
                                 value={filtros.accion}
-                                onChange={(e) => setFiltros({...filtros, accion: e.target.value})}
-                                className="w-full px-3 py-2 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white"
-                            >
-                                {TIPOS_ACCION.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                            </select>
+                                onChange={val => setFiltros({ ...filtros, accion: val })}
+                            />
                         </div>
                         <div>
                             <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-1.5 block">Fecha Desde</label>
@@ -923,125 +930,81 @@ const Auditoria = () => {
                     <p className="text-xs text-neutral-400 mt-1">No hay auditorías que coincidan con los filtros aplicados</p>
                 </div>
             ) : (
-                <div className="bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse min-w-[900px]">
-                            <thead>
-                                <tr className="bg-neutral-50/50 dark:bg-gray-700/50 border-b border-neutral-200 dark:border-gray-600">
-                                    <th className="px-4 py-3 text-[10px] font-black uppercase tracking-wider text-neutral-500">Fecha</th>
-                                    <th className="px-4 py-3 text-[10px] font-black uppercase tracking-wider text-neutral-500">Acción</th>
-                                    <th className="px-4 py-3 text-[10px] font-black uppercase tracking-wider text-neutral-500">Entidad</th>
-                                    <th className="px-4 py-3 text-[10px] font-black uppercase tracking-wider text-neutral-500">Descripción</th>
-                                    <th className="px-4 py-3 text-[10px] font-black uppercase tracking-wider text-neutral-500">Usuario</th>
-                                    <th className="px-4 py-3 text-[10px] font-black uppercase tracking-wider text-neutral-500 text-center">Detalle</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-neutral-100 dark:divide-gray-700">
-                                {auditorias.map((item) => {
-                                    const cambios = getCambiosFiltrados(item, masterMaps);
-                                    const badge = getAccionBadge(item.accion);
-                                    const BadgeIcon = badge.icon;
-                                    
-                                    return (
-                                        <tr
-                                            key={item.id_auditoria}
-                                            className="hover:bg-neutral-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
-                                            onClick={() => setSelectedItem(item)}
-                                        >
-                                            {/* Fecha */}
-                                            <td className="px-4 py-3">
-                                                <div className="flex items-center gap-1.5">
-                                                    <Clock size={12} className="text-neutral-400 flex-shrink-0" />
-                                                    <span className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 whitespace-nowrap">
-                                                        {formatFecha(item.fecha_hora)}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            {/* Acción */}
-                                            <td className="px-4 py-3">
-                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${badge.bg} ${badge.text} ${badge.border}`}>
-                                                    <BadgeIcon size={12} />
-                                                    {getTituloAccion(item)}
-                                                </span>
-                                            </td>
-                                            {/* Entidad */}
-                                            <td className="px-4 py-3">
-                                                <span className="text-xs font-bold text-neutral-800 dark:text-neutral-200">
-                                                    {ENTIDADES_LEGIBLES[item.entidad_afectada] || item.entidad_afectada}
-                                                </span>
-                                            </td>
-                                            {/* Descripción */}
-                                            <td className="px-4 py-3 max-w-[300px]">
-                                                <p className="text-xs text-neutral-600 dark:text-neutral-300 truncate">
-                                                    {item.descripcion_accion || getDescripcionLegible(item, masterMaps)}
-                                                </p>
-                                                {cambios.type === 'field' && cambios.data.length > 0 && (
-                                                    <span className="text-[10px] text-brand-cyan font-medium">
-                                                        {cambios.data.length} campo{cambios.data.length !== 1 ? 's' : ''} modificado{cambios.data.length !== 1 ? 's' : ''}
-                                                    </span>
-                                                )}
-                                                {cambios.type === 'massive' && (
-                                                    <span className="text-[10px] text-amber-500 font-medium whitespace-nowrap">
-                                                        {cambios.data.length} registros afectados
-                                                    </span>
-                                                )}
-                                            </td>
-                                            {/* Usuario */}
-                                            <td className="px-4 py-3">
-                                                <div className="flex items-center gap-1.5">
-                                                    <User size={12} className="text-neutral-400 flex-shrink-0" />
-                                                    <span className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
-                                                        {item.usuario ? `${item.usuario.nombre} ${item.usuario.apellido || ''}`.trim() : 'Sistema'}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            {/* Ver Detalle */}
-                                            <td className="px-4 py-3 text-center">
-                                                <button 
-                                                    className="p-2 hover:bg-neutral-100 dark:hover:bg-gray-600 rounded-lg transition-colors mx-auto"
-                                                    onClick={(e) => { e.stopPropagation(); setSelectedItem(item); }}
-                                                >
-                                                    <Eye size={16} className="text-neutral-400 hover:text-brand-cyan transition-colors" />
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Paginación */}
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 bg-neutral-50/50 dark:bg-gray-700/30 border-t border-neutral-200 dark:border-gray-600">
-                        <div className="flex items-center gap-2">
-                            <Activity size={14} className="text-brand-cyan" />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">
-                                {((page * ITEMS_PER_PAGE) + 1).toLocaleString('es-AR')}–{Math.min((page + 1) * ITEMS_PER_PAGE, total).toLocaleString('es-AR')} de {total.toLocaleString('es-AR')}
-                            </span>
-                        </div>
-                        {totalPages > 1 && (
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setPage(p => Math.max(p - 1, 0))}
-                                    disabled={page === 0}
-                                    className="w-9 h-9 flex items-center justify-center rounded-lg bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-600 text-neutral-500 hover:border-brand-cyan hover:text-brand-cyan disabled:opacity-30 transition-all"
-                                >
-                                    <ChevronLeft size={16} />
-                                </button>
-                                <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300 min-w-[60px] text-center">
-                                    {page + 1} / {totalPages}
+                <DataTable 
+                    data={auditorias}
+                    totalItems={total}
+                    onPageChange={(p) => setPage(p - 1)}
+                    itemsPerPageDefault={ITEMS_PER_PAGE}
+                    columns={[
+                        { 
+                            header: 'Fecha', 
+                            render: (item) => (
+                                <div className="flex items-center gap-1.5">
+                                    <Clock size={10} className="text-neutral-400 flex-shrink-0" />
+                                    <span className="text-[10px] font-bold whitespace-nowrap">
+                                        {formatFecha(item.fecha_hora)}
+                                    </span>
+                                </div>
+                            )
+                        },
+                        { 
+                            header: 'Acción', 
+                            render: (item) => {
+                                const badge = getAccionBadge(item.accion);
+                                const BadgeIcon = badge.icon;
+                                return (
+                                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider border ${badge.bg} ${badge.text} ${badge.border}`}>
+                                        <BadgeIcon size={10} />
+                                        {getTituloAccion(item)}
+                                    </span>
+                                );
+                            }
+                        },
+                        { 
+                            header: 'Entidad', 
+                            render: (item) => (
+                                <span className="text-[10px] font-bold">
+                                    {ENTIDADES_LEGIBLES[item.entidad_afectada] || item.entidad_afectada}
                                 </span>
-                                <button
-                                    onClick={() => setPage(p => Math.min(p + 1, totalPages - 1))}
-                                    disabled={page >= totalPages - 1}
-                                    className="w-9 h-9 flex items-center justify-center rounded-lg bg-black text-white hover:bg-brand-cyan hover:text-black disabled:opacity-30 transition-all"
-                                >
-                                    <ChevronRight size={16} />
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                </div>
+                            )
+                        },
+                        { 
+                            header: 'Descripción', 
+                            render: (item) => {
+                                const cambios = getCambiosFiltrados(item, masterMaps);
+                                return (
+                                    <div className="max-w-[250px]">
+                                        <p className="text-[10px] text-neutral-600 dark:text-neutral-300 truncate">
+                                            {item.descripcion_accion || getDescripcionLegible(item, masterMaps)}
+                                        </p>
+                                        {cambios.type === 'field' && cambios.data.length > 0 && (
+                                            <span className="text-[8px] text-brand-cyan font-black uppercase">
+                                                {cambios.data.length} campo{cambios.data.length !== 1 ? 's' : ''} modificado{cambios.data.length !== 1 ? 's' : ''}
+                                            </span>
+                                        )}
+                                        {cambios.type === 'massive' && (
+                                            <span className="text-[8px] text-amber-500 font-black uppercase">
+                                                {cambios.data.length} registros afectados
+                                            </span>
+                                        )}
+                                    </div>
+                                );
+                            }
+                        },
+                        { 
+                            header: 'Usuario', 
+                            render: (item) => (
+                                <div className="flex items-center gap-1.5">
+                                    <User size={10} className="text-neutral-400 flex-shrink-0" />
+                                    <span className="text-[10px] font-bold">
+                                        {item.usuario ? `${item.usuario.nombre} ${item.usuario.apellido || ''}`.trim() : 'Sistema'}
+                                    </span>
+                                </div>
+                            )
+                        }
+                    ]}
+                    onView={(item) => setSelectedItem(item)}
+                />
             )}
 
             {/* Modal de Detalle */}

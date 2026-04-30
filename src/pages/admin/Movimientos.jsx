@@ -7,6 +7,9 @@ import {
 import { enviosService } from '../../services/enviosService';
 import { useAuthStore } from '../../store/authStore';
 import { sucursalesService } from '../../services/sucursalesService';
+import { usuariosService } from '../../services/genericServices';
+import PremiumSelect from '../../components/ui/PremiumSelect';
+import DataTable from '../../components/ui/DataTable';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -229,45 +232,42 @@ const Movimientos = () => {
                         {isSuperAdmin && (
                             <div>
                                 <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-1.5 block">Sucursal</label>
-                                <select
+                                <PremiumSelect
+                                    placeholder="Todas las sucursales"
+                                    options={[
+                                        { value: 'ALL', label: 'Todas las sucursales' },
+                                        ...sucursalesOptions.map(suc => ({ value: suc.id_comercio, label: suc.nombre }))
+                                    ]}
                                     value={filtros.sucursalId}
-                                    onChange={(e) => setFiltros({...filtros, sucursalId: e.target.value})}
-                                    className="w-full px-3 py-2 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white"
-                                >
-                                    <option value="ALL">Todas las sucursales</option>
-                                    {sucursalesOptions.map(suc => (
-                                        <option key={suc.id_comercio} value={suc.id_comercio}>{suc.nombre}</option>
-                                    ))}
-                                </select>
+                                    onChange={val => setFiltros({ ...filtros, sucursalId: val })}
+                                />
                             </div>
                         )}
                         {/* Tipo de operación */}
                         <div>
                             <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-1.5 block">Tipo de Operación</label>
-                            <select
+                            <PremiumSelect
+                                placeholder="Todos los tipos"
+                                options={[
+                                    { value: '', label: 'Todos los tipos' },
+                                    ...tiposMovimiento.map(t => ({ value: t.id_tipo_movimiento, label: t.nombre_movimiento }))
+                                ]}
                                 value={filtros.id_tipo_movimiento}
-                                onChange={(e) => setFiltros({...filtros, id_tipo_movimiento: e.target.value})}
-                                className="w-full px-3 py-2 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white"
-                            >
-                                <option value="">Todos los tipos</option>
-                                {tiposMovimiento.map(t => (
-                                    <option key={t.id_tipo_movimiento} value={t.id_tipo_movimiento}>{t.nombre_movimiento}</option>
-                                ))}
-                            </select>
+                                onChange={val => setFiltros({ ...filtros, id_tipo_movimiento: val })}
+                            />
                         </div>
                         {/* Operador */}
                         <div>
                             <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-1.5 block">Operador</label>
-                            <select
+                            <PremiumSelect
+                                placeholder="Todos los operadores"
+                                options={[
+                                    { value: '', label: 'Todos los operadores' },
+                                    ...usuariosDisponibles.map(u => ({ value: u.id_usuario, label: `${u.nombre} ${u.apellido || ''}` }))
+                                ]}
                                 value={filtros.id_usuario}
-                                onChange={(e) => setFiltros({...filtros, id_usuario: e.target.value})}
-                                className="w-full px-3 py-2 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white"
-                            >
-                                <option value="">Todos los operadores</option>
-                                {usuariosDisponibles.map(u => (
-                                    <option key={u.id_usuario} value={u.id_usuario}>{u.nombre} {u.apellido || ''}</option>
-                                ))}
-                            </select>
+                                onChange={val => setFiltros({ ...filtros, id_usuario: val })}
+                            />
                         </div>
                         {/* Fecha Desde */}
                         <div>
@@ -322,164 +322,111 @@ const Movimientos = () => {
             )}
 
             {/* Tabla de Movimientos */}
-            {isLoading ? (
-                <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                    <div className="w-12 h-12 border-4 border-neutral-200 border-t-brand-cyan rounded-full animate-spin" />
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-400">Recopilando historial de movimientos...</p>
-                </div>
-            ) : movimientos.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 text-center">
-                    <Package size={48} className="text-neutral-300 mb-4" />
-                    <p className="text-sm font-bold text-neutral-500 uppercase tracking-wider">Sin movimientos</p>
-                    <p className="text-xs text-neutral-400 mt-1">No se encontraron movimientos de stock con los filtros aplicados</p>
-                </div>
             ) : (
-                <div className="bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse min-w-[1000px]">
-                            <thead>
-                                <tr className="bg-neutral-50/50 dark:bg-gray-700/50 border-b border-neutral-200 dark:border-gray-600">
-                                    <th className="px-4 py-3 text-[10px] font-black uppercase tracking-wider text-neutral-500">Fecha</th>
-                                    <th className="px-4 py-3 text-[10px] font-black uppercase tracking-wider text-neutral-500">Tipo</th>
-                                    <th className="px-4 py-3 text-[10px] font-black uppercase tracking-wider text-neutral-500">Producto</th>
-                                    <th className="px-4 py-3 text-[10px] font-black uppercase tracking-wider text-neutral-500">Sucursal</th>
-                                    <th className="px-4 py-3 text-[10px] font-black uppercase tracking-wider text-neutral-500 text-center">Cantidad</th>
-                                    <th className="px-4 py-3 text-[10px] font-black uppercase tracking-wider text-neutral-500 text-center">Saldo</th>
-                                    <th className="px-4 py-3 text-[10px] font-black uppercase tracking-wider text-neutral-500">Operador</th>
-                                    <th className="px-4 py-3 text-[10px] font-black uppercase tracking-wider text-neutral-500 text-center">Detalle</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-neutral-100 dark:divide-gray-700">
-                                {movimientos.map((mov) => {
-                                    const tipoNombre = mov.tipo_movimiento?.nombre_movimiento || 'Movimiento';
-                                    const tipoInfo = getTipoInfo(tipoNombre);
-                                    const TipoIcon = tipoInfo.icon;
-                                    const variantesLabel = getVarianteLabel(mov.variantes);
-                                    
-                                    return (
-                                        <tr
-                                            key={mov.id_movimiento}
-                                            className="hover:bg-neutral-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
-                                            onClick={() => setSelectedMov(mov)}
-                                        >
-                                            {/* Fecha */}
-                                            <td className="px-4 py-3">
-                                                <div className="flex items-center gap-1.5">
-                                                    <Clock size={12} className="text-neutral-400 flex-shrink-0" />
-                                                    <span className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 whitespace-nowrap">
-                                                        {formatFecha(mov.fecha_hora)}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            {/* Tipo */}
-                                            <td className="px-4 py-3">
-                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${tipoInfo.bg} ${tipoInfo.color} ${tipoInfo.border}`}>
-                                                    <TipoIcon size={12} />
-                                                    {tipoNombre}
+                <DataTable 
+                    data={movimientos}
+                    totalItems={total}
+                    onPageChange={(p) => setPage(p - 1)}
+                    itemsPerPageDefault={ITEMS_PER_PAGE}
+                    columns={[
+                        { 
+                            header: 'Fecha', 
+                            render: (mov) => (
+                                <div className="flex items-center gap-1.5">
+                                    <Clock size={10} className="text-neutral-400 flex-shrink-0" />
+                                    <span className="text-[10px] font-bold whitespace-nowrap">
+                                        {formatFecha(mov.fecha_hora)}
+                                    </span>
+                                </div>
+                            )
+                        },
+                        { 
+                            header: 'Tipo', 
+                            render: (mov) => {
+                                const tipoNombre = mov.tipo_movimiento?.nombre_movimiento || 'Movimiento';
+                                const tipoInfo = getTipoInfo(tipoNombre);
+                                const TipoIcon = tipoInfo.icon;
+                                return (
+                                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider border ${tipoInfo.bg} ${tipoInfo.color} ${tipoInfo.border}`}>
+                                        <TipoIcon size={10} />
+                                        {tipoNombre}
+                                    </span>
+                                );
+                            }
+                        },
+                        { 
+                            header: 'Producto', 
+                            render: (mov) => {
+                                const variantesLabel = getVarianteLabel(mov.variantes);
+                                return (
+                                    <div>
+                                        <div className="flex items-center gap-1.5">
+                                            <Box size={10} className="text-neutral-400 flex-shrink-0" />
+                                            <span className="text-[10px] font-bold">
+                                                {mov.producto?.nombre || 'N/A'}
+                                            </span>
+                                        </div>
+                                        {mov.tiene_desglose_variantes && variantesLabel && (
+                                            <div className="flex items-center gap-1 mt-0.5 ml-4">
+                                                <Layers size={8} className="text-brand-cyan flex-shrink-0" />
+                                                <span className="text-[8px] text-brand-cyan font-black uppercase truncate max-w-[150px]">
+                                                    {variantesLabel}
                                                 </span>
-                                            </td>
-                                            {/* Producto */}
-                                            <td className="px-4 py-3">
-                                                <div>
-                                                    <div className="flex items-center gap-1.5">
-                                                        <Box size={12} className="text-neutral-400 flex-shrink-0" />
-                                                        <span className="text-xs font-bold text-neutral-800 dark:text-neutral-200">
-                                                            {mov.producto?.nombre || 'N/A'}
-                                                        </span>
-                                                    </div>
-                                                    {mov.tiene_desglose_variantes && variantesLabel && (
-                                                        <div className="flex items-center gap-1 mt-1 ml-5">
-                                                            <Layers size={10} className="text-brand-cyan flex-shrink-0" />
-                                                            <span className="text-[10px] text-brand-cyan font-medium truncate max-w-[180px]">
-                                                                {variantesLabel}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            {/* Sucursal */}
-                                            <td className="px-4 py-3">
-                                                <div className="flex items-center gap-1.5">
-                                                    <Store size={12} className="text-brand-cyan flex-shrink-0" />
-                                                    <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-                                                        {mov.comercio?.nombre || 'N/A'}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            {/* Cantidad */}
-                                            <td className="px-4 py-3 text-center">
-                                                <span className={`inline-block px-3 py-1 rounded-lg text-sm font-black border ${
-                                                    mov.cantidad_cambio > 0 
-                                                        ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800' 
-                                                        : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800'
-                                                }`}>
-                                                    {mov.cantidad_cambio > 0 ? '+' : ''}{mov.cantidad_cambio}
-                                                </span>
-                                            </td>
-                                            {/* Saldo */}
-                                            <td className="px-4 py-3 text-center">
-                                                <div className="flex items-center justify-center gap-1 text-xs text-neutral-500">
-                                                    <span>{mov.saldo_anterior}</span>
-                                                    <ArrowRight size={12} className="text-neutral-400" />
-                                                    <span className="font-bold text-neutral-800 dark:text-neutral-200">{mov.saldo_posterior}</span>
-                                                </div>
-                                            </td>
-                                            {/* Operador */}
-                                            <td className="px-4 py-3">
-                                                <div className="flex items-center gap-1.5">
-                                                    <User size={12} className="text-neutral-400 flex-shrink-0" />
-                                                    <span className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
-                                                        {mov.usuario ? `${mov.usuario.nombre} ${mov.usuario.apellido || ''}`.trim() : 'Sistema'}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            {/* Detalle */}
-                                            <td className="px-4 py-3 text-center">
-                                                <button 
-                                                    className="p-2 hover:bg-neutral-100 dark:hover:bg-gray-600 rounded-lg transition-colors mx-auto"
-                                                    onClick={(e) => { e.stopPropagation(); setSelectedMov(mov); }}
-                                                >
-                                                    <Eye size={16} className="text-neutral-400 hover:text-brand-cyan transition-colors" />
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Paginación */}
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 bg-neutral-50/50 dark:bg-gray-700/30 border-t border-neutral-200 dark:border-gray-600">
-                        <div className="flex items-center gap-2">
-                            <Activity size={14} className="text-brand-cyan" />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">
-                                {((page * ITEMS_PER_PAGE) + 1).toLocaleString('es-AR')}–{Math.min((page + 1) * ITEMS_PER_PAGE, total).toLocaleString('es-AR')} de {total.toLocaleString('es-AR')}
-                            </span>
-                        </div>
-                        {totalPages > 1 && (
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setPage(p => Math.max(p - 1, 0))}
-                                    disabled={page === 0}
-                                    className="w-9 h-9 flex items-center justify-center rounded-lg bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-600 text-neutral-500 hover:border-brand-cyan hover:text-brand-cyan disabled:opacity-30 transition-all"
-                                >
-                                    <ChevronLeft size={16} />
-                                </button>
-                                <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300 min-w-[60px] text-center">
-                                    {page + 1} / {totalPages}
-                                </span>
-                                <button
-                                    onClick={() => setPage(p => Math.min(p + 1, totalPages - 1))}
-                                    disabled={page >= totalPages - 1}
-                                    className="w-9 h-9 flex items-center justify-center rounded-lg bg-black text-white hover:bg-brand-cyan hover:text-black disabled:opacity-30 transition-all"
-                                >
-                                    <ChevronRight size={16} />
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            }
+                        },
+                        { 
+                            header: 'Sucursal', 
+                            render: (mov) => (
+                                <div className="flex items-center gap-1.5">
+                                    <Store size={10} className="text-brand-cyan flex-shrink-0" />
+                                    <span className="text-[10px] font-bold">
+                                        {mov.comercio?.nombre || 'N/A'}
+                                    </span>
+                                </div>
+                            )
+                        },
+                        { 
+                            header: 'Cantidad', 
+                            render: (mov) => (
+                                <div className="text-center">
+                                    <span className={`inline-block px-2 py-0.5 rounded text-[11px] font-black border ${
+                                        mov.cantidad_cambio > 0 
+                                            ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800' 
+                                            : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800'
+                                    }`}>
+                                        {mov.cantidad_cambio > 0 ? '+' : ''}{mov.cantidad_cambio}
+                                    </span>
+                                </div>
+                            )
+                        },
+                        { 
+                            header: 'Saldo', 
+                            render: (mov) => (
+                                <div className="flex items-center justify-center gap-1 text-[10px] text-neutral-400">
+                                    <span>{mov.saldo_anterior}</span>
+                                    <ArrowRight size={10} className="text-neutral-300" />
+                                    <span className="font-bold text-neutral-800 dark:text-neutral-200">{mov.saldo_posterior}</span>
+                                </div>
+                            )
+                        },
+                        { 
+                            header: 'Operador', 
+                            render: (mov) => (
+                                <div className="flex items-center gap-1.5">
+                                    <User size={10} className="text-neutral-400 flex-shrink-0" />
+                                    <span className="text-[10px] font-bold">
+                                        {mov.usuario ? `${mov.usuario.nombre} ${mov.usuario.apellido || ''}`.trim() : 'Sistema'}
+                                    </span>
+                                </div>
+                            )
+                        }
+                    ]}
+                    onView={(mov) => setSelectedMov(mov)}
+                />
             )}
 
             {/* Modal de Detalle de Movimiento */}
@@ -569,9 +516,9 @@ const Movimientos = () => {
                                         <table className="w-full text-left">
                                             <thead>
                                                 <tr className="bg-neutral-50 dark:bg-gray-700/50 border-b border-neutral-200 dark:border-gray-600">
-                                                    <th className="px-4 py-2.5 text-[10px] font-black uppercase tracking-wider text-neutral-500">Variante</th>
-                                                    <th className="px-4 py-2.5 text-[10px] font-black uppercase tracking-wider text-neutral-500 text-center">Cantidad</th>
-                                                    <th className="px-4 py-2.5 text-[10px] font-black uppercase tracking-wider text-neutral-500 text-center">Saldo</th>
+                                                    <th className="px-3 py-2 text-[9px] font-black uppercase tracking-wider text-neutral-500">Variante</th>
+                                                    <th className="px-3 py-2 text-[9px] font-black uppercase tracking-wider text-neutral-500 text-center">Cantidad</th>
+                                                    <th className="px-3 py-2 text-[9px] font-black uppercase tracking-wider text-neutral-500 text-center">Saldo</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-neutral-100 dark:divide-gray-700">
@@ -580,17 +527,19 @@ const Movimientos = () => {
                                                     const label = attrs ? Object.entries(attrs).map(([k, val]) => `${k}: ${val}`).join(' • ') : (v.variante?.sku_variante || `Variante ${i + 1}`);
                                                     
                                                     return (
-                                                        <tr key={v.id_movimiento_var || i}>
-                                                            <td className="px-4 py-2.5 text-xs font-medium text-neutral-700 dark:text-neutral-300">{label}</td>
-                                                            <td className="px-4 py-2.5 text-center">
-                                                                <span className={`text-xs font-bold ${v.cantidad_cambio > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                        <tr key={v.id_movimiento_var || i} className="hover:bg-neutral-50 dark:hover:bg-gray-800/50 transition-colors">
+                                                            <td className="px-3 py-2 text-[10px] font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-tight">{label}</td>
+                                                            <td className="px-3 py-2 text-center">
+                                                                <span className={`text-[10px] font-black ${v.cantidad_cambio > 0 ? 'text-green-600' : 'text-red-600'}`}>
                                                                     {v.cantidad_cambio > 0 ? '+' : ''}{v.cantidad_cambio}
                                                                 </span>
                                                             </td>
-                                                            <td className="px-4 py-2.5 text-center">
-                                                                <span className="text-xs text-neutral-500">{v.saldo_anterior}</span>
-                                                                <ArrowRight size={10} className="inline mx-1 text-neutral-400" />
-                                                                <span className="text-xs font-bold text-neutral-800 dark:text-neutral-200">{v.saldo_posterior}</span>
+                                                            <td className="px-3 py-2 text-center">
+                                                                <div className="flex items-center justify-center gap-1 text-[9px] text-neutral-400">
+                                                                    <span>{v.saldo_anterior}</span>
+                                                                    <ArrowRight size={8} className="text-neutral-300" />
+                                                                    <span className="font-bold text-neutral-800 dark:text-neutral-200">{v.saldo_posterior}</span>
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                     );

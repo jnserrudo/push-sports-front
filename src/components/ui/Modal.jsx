@@ -36,22 +36,22 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-md" }) => {
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className={`relative w-full ${maxWidth} bg-white dark:bg-gray-800 rounded-3xl md:rounded-[2.5rem] shadow-[0_0_50px_rgba(0,0,0,0.3)] flex flex-col max-h-[90vh] md:max-h-[95vh] overflow-hidden border border-neutral-100 dark:border-gray-700`}
           >
-            {/* Header - High End Design */}
-            <div className="flex justify-between items-center p-6 md:p-10 bg-neutral-50/50 dark:bg-gray-700/50 backdrop-blur-sm flex-shrink-0 border-b border-neutral-100 dark:border-gray-700">
+            {/* Header - Ultra Compact */}
+            <div className="flex justify-between items-center px-4 py-2 md:px-5 md:py-3 bg-neutral-50/50 dark:bg-gray-700/50 backdrop-blur-sm flex-shrink-0 border-b border-neutral-100 dark:border-gray-700">
               <div className="flex flex-col">
-                <span className="text-[9px] md:text-[11px] font-bold uppercase tracking-[0.4em] text-neutral-400 mb-1">Push Sport Salta</span>
-                <h3 className="font-bold text-lg md:text-3xl text-black dark:text-white tracking-tight uppercase font-sport leading-none">{title}</h3>
+                <span className="text-[7px] md:text-[8px] font-bold uppercase tracking-[0.2em] text-neutral-400 mb-0.5">Push Sport Salta</span>
+                <h3 className="font-bold text-sm md:text-base text-black dark:text-white tracking-tight uppercase font-sport leading-none">{title}</h3>
               </div>
               <button 
                 onClick={onClose}
-                className="p-2 md:p-3 text-neutral-400 dark:text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl md:rounded-2xl transition-all"
+                className="p-1 md:p-1.5 text-neutral-400 dark:text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
               >
-                <XCircle size={24} className="md:w-8 md:h-8" />
+                <XCircle size={16} className="md:w-5 md:h-5" />
               </button>
             </div>
 
-            {/* Scrollable Body */}
-            <div className="p-4 md:p-6 overflow-y-auto scrollbar-hide">
+            {/* Scrollable Body - Reduced Padding */}
+            <div className="p-3 md:p-4 overflow-y-auto scrollbar-hide">
               {children}
             </div>
           </motion.div>

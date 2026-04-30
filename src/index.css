@@ -29,6 +29,15 @@ html, body {
   letter-spacing: -0.01em;
 }
 
+button, [type='button'], [type='reset'], [type='submit'], [role='button'] {
+  cursor: pointer;
+}
+
+button:disabled, [disabled] {
+  cursor: not-allowed;
+}
+
+
   /* Typography System: High Impact & Bold */
   h1, h2, h3, h4 {
     @apply font-black tracking-tighter text-neutral-900;

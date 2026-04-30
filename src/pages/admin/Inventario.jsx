@@ -4,10 +4,12 @@ import { inventarioService } from '../../services/inventarioService';
 import { productosService } from '../../services/productosService';
 import { sucursalesService } from '../../services/sucursalesService';
 import { useAuthStore } from '../../store/authStore';
+import PremiumSelect from '../../components/ui/PremiumSelect';
 import { toast } from '../../store/toastStore';
 import DataTable from '../../components/ui/DataTable';
 import Modal from '../../components/ui/Modal';
 import { motion } from 'framer-motion';
+import { parseImagenes } from '../../lib/supabaseStorage';
 
 const Inventario = () => {
     const { user, sucursalId } = useAuthStore();
@@ -25,9 +27,8 @@ const Inventario = () => {
     const [formData, setFormData] = useState({
         id_producto: '',
         id_comercio: '',
-        cantidad_actual: 0,
-        stock_minimo_alerta: 5,
-        comision_pactada_porcentaje: 0,
+        cantidad_actual: '',
+        stock_minimo_alerta: '',
     });
 
     // ─── Load data ──────────────────────────────────────────────────────────
@@ -59,9 +60,8 @@ const Inventario = () => {
         setFormData({
             id_producto: productos[0]?.id_producto || '',
             id_comercio: isSuperAdmin ? (sucursales[0]?.id_comercio || '') : sucursalId,
-            cantidad_actual: 0,
-            stock_minimo_alerta: 5,
-            comision_pactada_porcentaje: 0,
+            cantidad_actual: '',
+            stock_minimo_alerta: '5',
         });
         setIsModalOpen(true);
     };
@@ -72,8 +72,7 @@ const Inventario = () => {
             id_producto: item.id_producto,
             id_comercio: item.id_comercio,
             cantidad_actual: item.cantidad_actual,
-            stock_minimo_alerta: item.stock_minimo_alerta ?? 5,
-            comision_pactada_porcentaje: item.comision_pactada_porcentaje ?? 0,
+            stock_minimo_alerta: item.stock_minimo_alerta ?? '5',
         });
         setIsModalOpen(true);
     };
@@ -99,11 +98,16 @@ const Inventario = () => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
+            const payload = {
+                ...formData,
+                cantidad_actual: Number(formData.cantidad_actual) || 0,
+                stock_minimo_alerta: Number(formData.stock_minimo_alerta) || 0
+            };
             if (editingItem) {
-                await inventarioService.update(editingItem.id_inventario, formData);
+                await inventarioService.update(editingItem.id_inventario, payload);
                 toast.success('Registro actualizado correctamente');
             } else {
-                await inventarioService.create(formData);
+                await inventarioService.create(payload);
                 toast.success('Stock registrado correctamente');
             }
             setIsModalOpen(false);
@@ -132,10 +136,12 @@ const Inventario = () => {
                 return (
                 <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center overflow-hidden flex-shrink-0">
-                        {p.imagen_url
-                            ? <img src={p.imagen_url} alt="" className="w-full h-full object-cover" />
-                            : <Box size={14} className="text-neutral-400" />
-                        }
+                        {(() => {
+                            const images = parseImagenes(p.imagen_url);
+                            return images.length > 0
+                                ? <img src={images[0]} alt="" className="w-full h-full object-cover" />
+                                : <Box size={14} className="text-neutral-400" />
+                        })()}
                     </div>
                     <div className="flex flex-col">
                         <span className="font-bold text-sm text-black uppercase tracking-widest leading-none">
@@ -190,14 +196,6 @@ const Inventario = () => {
                     </div>
                 );
             }
-        },
-        {
-            header: 'Comisión',
-            render: (row) => (
-                <div className="inline-flex px-2.5 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest bg-black text-white">
-                    {row.comision_pactada_porcentaje ?? 0}%
-                </div>
-            )
         },
     ];
 
@@ -292,20 +290,17 @@ const Inventario = () => {
                             <label className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 block">
                                 Producto a Distribuir
                             </label>
-                            <div className="relative">
-                                <Box size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
-                                <select
-                                    required
-                                    value={formData.id_producto}
-                                    onChange={e => setFormData({ ...formData, id_producto: e.target.value })}
-                                    className="w-full pl-10 pr-4 py-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-xl text-xs font-bold uppercase focus:outline-none focus:border-brand-cyan transition-colors appearance-none text-black dark:text-white"
-                                >
-                                    <option value="" className="bg-white dark:bg-gray-800 text-neutral-400">Seleccionar producto</option>
-                                    {productos.map(p => (
-                                        <option key={p.id_producto} value={p.id_producto} className="bg-white dark:bg-gray-800 text-black dark:text-white">{p.nombre}</option>
-                                    ))}
-                                </select>
-                            </div>
+                            <PremiumSelect
+                                icon={Box}
+                                placeholder="Seleccionar producto"
+                                options={productos.map(p => ({ 
+                                    value: p.id_producto, 
+                                    label: p.nombre,
+                                    subtitle: p.categoria?.nombre || p.marca?.nombre
+                                }))}
+                                value={formData.id_producto}
+                                onChange={val => setFormData({ ...formData, id_producto: val })}
+                            />
                         </div>
                     )}
 
@@ -315,20 +310,13 @@ const Inventario = () => {
                             <label className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 block">
                                 Sede / Comercio
                             </label>
-                            <div className="relative">
-                                <MapPin size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
-                                <select
-                                    required
-                                    value={formData.id_comercio}
-                                    onChange={e => setFormData({ ...formData, id_comercio: e.target.value })}
-                                    className="w-full pl-10 pr-4 py-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-xl text-xs font-bold uppercase focus:outline-none focus:border-brand-cyan transition-colors appearance-none text-black dark:text-white"
-                                >
-                                    <option value="" className="bg-white dark:bg-gray-800">— Seleccionar sede —</option>
-                                    {sucursales.map(s => (
-                                        <option key={s.id_comercio} value={s.id_comercio} className="bg-white dark:bg-gray-800">{s.nombre}</option>
-                                    ))}
-                                </select>
-                            </div>
+                            <PremiumSelect
+                                icon={MapPin}
+                                placeholder="Seleccionar sede"
+                                options={sucursales.map(s => ({ value: s.id_comercio, label: s.nombre }))}
+                                value={formData.id_comercio}
+                                onChange={val => setFormData({ ...formData, id_comercio: val })}
+                            />
                         </div>
                     )}
 
@@ -343,7 +331,7 @@ const Inventario = () => {
                                 min="0"
                                 required
                                 value={formData.cantidad_actual}
-                                onChange={e => setFormData({ ...formData, cantidad_actual: Number(e.target.value) })}
+                                onChange={e => setFormData({ ...formData, cantidad_actual: e.target.value })}
                                 className="w-full px-4 py-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-xl text-xs font-bold focus:outline-none focus:border-brand-cyan transition-colors text-black dark:text-white"
                                 placeholder="0"
                             />
@@ -357,32 +345,14 @@ const Inventario = () => {
                                 min="0"
                                 required
                                 value={formData.stock_minimo_alerta}
-                                onChange={e => setFormData({ ...formData, stock_minimo_alerta: Number(e.target.value) })}
+                                onChange={e => setFormData({ ...formData, stock_minimo_alerta: e.target.value })}
                                 className="w-full px-4 py-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-xl text-xs font-bold focus:outline-none focus:border-brand-cyan transition-colors text-black dark:text-white"
                                 placeholder="5"
                             />
                         </div>
                     </div>
 
-                    {/* Comisión */}
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 block">
-                            Comisión pactada (%)
-                        </label>
-                        <input
-                            type="number"
-                            min="0"
-                            max="100"
-                            step="0.01"
-                            required
-                            value={formData.comision_pactada_porcentaje}
-                            onChange={e => setFormData({ ...formData, comision_pactada_porcentaje: Number(e.target.value) })}
-                            className="w-full px-4 py-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-xl text-xs font-bold focus:outline-none focus:border-brand-cyan transition-colors text-black dark:text-white"
-                            placeholder="0.00"
-                        />
-                    </div>
-
-                    {/* Buttons */}
+                    {/* Botones */}
                     <div className="pt-4 border-t border-neutral-100 flex flex-col gap-3">
                         <button
                             type="submit"

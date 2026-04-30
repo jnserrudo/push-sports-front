@@ -324,55 +324,45 @@ const Rectificaciones = () => {
                 {(activeTab === 'solicitudes' || activeTab === 'historial') && (
                     <motion.div key="listado" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                         <div className="bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-2xl overflow-hidden shadow-sm p-4">
-                            {isLoadingSol ? <p>Cargando...</p> : (
-                                <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr className="border-b border-neutral-200 dark:border-gray-700">
-                                            <th className="p-3 text-[10px] font-black uppercase text-neutral-400">Fecha</th>
-                                            <th className="p-3 text-[10px] font-black uppercase text-neutral-400">Entidad</th>
-                                            <th className="p-3 text-[10px] font-black uppercase text-neutral-400">Motivo</th>
-                                            <th className="p-3 text-[10px] font-black uppercase text-neutral-400">Estado</th>
-                                            {activeTab === 'solicitudes' && <th className="p-3"></th>}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {solicitudes.map(sol => (
-                                            <tr key={sol.id_solicitud} className="border-b border-neutral-100 dark:border-gray-700 last:border-0">
-                                                <td className="p-3 text-xs font-bold text-black dark:text-white">
-                                                    {new Date(sol.fecha_solicitud).toLocaleDateString()}
-                                                </td>
-                                                <td className="p-3 text-xs font-bold text-black dark:text-white">
+                            {isLoadingSol ? <p className="text-center p-10 text-xs text-neutral-400">Cargando...</p> : (
+                                <DataTable 
+                                    data={solicitudes}
+                                    columns={[
+                                        { 
+                                            header: 'Fecha', 
+                                            accessor: 'fecha_solicitud',
+                                            render: (sol) => <span className="text-xs font-bold">{new Date(sol.fecha_solicitud).toLocaleDateString()}</span> 
+                                        },
+                                        { 
+                                            header: 'Entidad', 
+                                            accessor: 'tipo_entidad',
+                                            render: (sol) => (
+                                                <div className="text-xs font-bold">
                                                     {sol.tipo_entidad} <br/>
                                                     <span className="text-[10px] text-neutral-400">{sol.id_entidad.split('-')[0]}</span>
-                                                </td>
-                                                <td className="p-3 text-xs text-neutral-600 dark:text-gray-300 max-w-xs truncate">
-                                                    {sol.motivo}
-                                                </td>
-                                                <td className="p-3">
-                                                    <span className={`text-[10px] font-bold px-2 py-1 rounded ${
-                                                        sol.estado === 'PENDIENTE' ? 'bg-amber-100 text-amber-700' :
-                                                        sol.estado === 'APROBADA' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                                                    }`}>
-                                                        {sol.estado}
-                                                    </span>
-                                                </td>
-                                                {activeTab === 'solicitudes' && (
-                                                    <td className="p-3 text-right">
-                                                        <button 
-                                                            onClick={() => { setSelectedSolicitud(sol); setMotivo(''); setIsResolucionModalOpen(true); }}
-                                                            className="text-[10px] font-bold text-brand-cyan bg-black px-3 py-1.5 rounded-lg"
-                                                        >
-                                                            Resolver
-                                                        </button>
-                                                    </td>
-                                                )}
-                                            </tr>
-                                        ))}
-                                        {solicitudes.length === 0 && (
-                                            <tr><td colSpan="5" className="p-10 text-center text-xs text-neutral-400">No hay registros.</td></tr>
-                                        )}
-                                    </tbody>
-                                </table>
+                                                </div>
+                                            )
+                                        },
+                                        { 
+                                            header: 'Motivo', 
+                                            accessor: 'motivo',
+                                            render: (sol) => <div className="text-xs text-neutral-600 dark:text-gray-300 max-w-xs truncate">{sol.motivo}</div> 
+                                        },
+                                        { 
+                                            header: 'Estado', 
+                                            accessor: 'estado',
+                                            render: (sol) => (
+                                                <span className={`text-[10px] font-bold px-2 py-1 rounded ${
+                                                    sol.estado === 'PENDIENTE' ? 'bg-amber-100 text-amber-700' :
+                                                    sol.estado === 'APROBADA' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                                }`}>
+                                                    {sol.estado}
+                                                </span>
+                                            )
+                                        }
+                                    ]}
+                                    onView={activeTab === 'solicitudes' ? (sol) => { setSelectedSolicitud(sol); setMotivo(''); setIsResolucionModalOpen(true); } : null}
+                                />
                             )}
                         </div>
                     </motion.div>
