@@ -18,6 +18,7 @@ const GenericABM = ({
     fetchMethod = null,
     validate = null, // Custom validation function returns string/array or null
     onSaveSuccess = null, // Allows keeping modal open after create
+    customActions = null
 }) => {
     const [data, setData] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -279,6 +280,8 @@ const GenericABM = ({
                         emptyIcon={Icon}
                         emptyTitle={`Aún no hay ${title}`}
                         emptySubtitle="Comienza agregando el primer registro con el botón crear superior."
+                        customActions={customActions}
+                        refresh={loadData}
                     />
                 </motion.div>
             )}
@@ -293,7 +296,7 @@ const GenericABM = ({
                 <div className="py-1">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-3">
-                            {renderForm ? renderForm(formData, setFormData) : (
+                            {renderForm ? renderForm(formData, setFormData, loadData) : (
                                 formFields.map(field => (
                                     <div key={field.name} className="space-y-1.5">
                                         {field.type === 'checkbox' ? (

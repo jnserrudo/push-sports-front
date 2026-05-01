@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   Search, 
   Trash2, 
@@ -28,7 +28,7 @@ import { posService } from '../../services/posService';
 import { sucursalesService } from '../../services/sucursalesService';
 import { combosService } from '../../services/combosService';
 import { toast } from '../../store/toastStore';
-import { motion, AnimatePresence } from 'framer-motion';
+
 import { parseImagenes } from '../../lib/supabaseStorage';
 import PremiumSelect from '../../components/ui/PremiumSelect';
 import { CreditCard, DollarSign, Landmark } from 'lucide-react';
@@ -38,7 +38,7 @@ const POS = () => {
   const isSuperAdmin = user?.id_rol === 1;
   const [cart, setCart] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+
   const [currentSucursal, setCurrentSucursal] = useState(null);
   const [sucursalOptions, setSucursalOptions] = useState([]);
   const [selectedSucursalId, setSelectedSucursalId] = useState(null); // for SuperAdmin picker
@@ -229,7 +229,7 @@ const POS = () => {
     const precio = getProductPrecio(item);
     let atributos = variante.variante?.atributos_valores || {};
     if (typeof atributos === 'string') {
-      try { atributos = JSON.parse(atributos); } catch(e) {}
+      try { atributos = JSON.parse(atributos); } catch {}
     }
     const atributosString = Object.values(atributos).join(' ');
     const fallbackName = atributosString ? `Variante ${atributosString}` : `Variante ${variante.id_variante.slice(0, 8)}`;
@@ -580,7 +580,7 @@ const POS = () => {
                         </div>
                     ) : (item.producto?.usa_variantes || item.usa_desglose_variantes || (item.variantes && item.variantes.length > 0)) ? (
                         <div className="absolute top-1 right-1 bg-black/80 backdrop-blur-md text-white text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded shadow-sm border border-white/10 flex items-center gap-1">
-                            <span>Opciones</span>
+                            <span>Elegir Variante</span>
                         </div>
                     ) : null}
                 </div>

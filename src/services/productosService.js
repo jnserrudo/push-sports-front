@@ -21,6 +21,11 @@ export const productosService = {
         return res.data;
     },
 
+    getById: async (id) => {
+        const res = await api.get(`/productos/${id}`);
+        return res.data;
+    },
+
     create: async (data) => {
         const res = await api.post('/productos', data);
         return res.data;
@@ -33,6 +38,12 @@ export const productosService = {
 
     delete: async (id) => {
         const res = await api.delete(`/productos/${id}`);
+        return res.data;
+    },
+
+    reponerStock: async (id, data) => {
+        // data can be { cantidad: 10 } or { items: [{ id_variante, cantidad }] }
+        const res = await api.post(`/productos/${id}/reponer`, data);
         return res.data;
     }
 };

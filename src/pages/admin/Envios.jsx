@@ -95,8 +95,7 @@ const Envios = () => {
 
     // Actualizar cantidad de una variante
     const handleVariantQuantityChange = (varianteId, cantidad) => {
-        // Limpiar ceros a la izquierda y manejar vacío
-        const cleanVal = cantidad === '' ? '' : parseInt(cantidad).toString();
+        const cleanVal = cantidad === '' ? '' : String(parseInt(cantidad) || 0);
         setVariantQuantities(prev => ({
             ...prev,
             [varianteId]: cleanVal
@@ -111,7 +110,7 @@ const Envios = () => {
             if (hasVariants) {
                 // Verificar que hay al menos una variante con cantidad
                 const itemsVariantes = Object.entries(variantQuantities)
-                    .filter(([_, cantidad]) => Number(cantidad) > 0)
+                    .filter(([, cantidad]) => Number(cantidad) > 0)
                     .map(([id_variante, cantidad]) => ({ id_variante, cantidad: Number(cantidad) }));
                 
                 if (itemsVariantes.length === 0) {
@@ -338,6 +337,11 @@ const Envios = () => {
                                     <Package size={14} className="text-brand-cyan" />
                                     Variantes a Transferir
                                 </label>
+                                <div className="p-2 bg-blue-50 border border-blue-100 rounded-lg">
+                                    <p className="text-[9px] text-blue-700 leading-tight m-0">
+                                        Este producto se gestiona por variantes. Ingresá la cantidad de cada talle/color que deseas enviar. Solo se descontará del stock central de cada variante.
+                                    </p>
+                                </div>
                                 <div className="bg-white dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg overflow-hidden">
                                     <table className="w-full text-left">
                                         <thead className="bg-neutral-50 dark:bg-gray-600">

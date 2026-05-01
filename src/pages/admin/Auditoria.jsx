@@ -56,7 +56,8 @@ const ACCIONES_LEGIBLES = {
     'deleteMany': 'Eliminación Masiva',
     'CREATEMANY': 'Creación Masiva',
     'UPDATEMANY': 'Modificación Masiva',
-    'DELETEMANY': 'Eliminación Masiva'
+    'DELETEMANY': 'Eliminación Masiva',
+    'RESTOCK_CENTRAL': 'Reposición (Casa Central)'
 };
 
 const ACCIONES_VERBO = {
@@ -68,7 +69,8 @@ const ACCIONES_VERBO = {
     'deleteMany': 'Eliminó (Masivo)',
     'CREATEMANY': 'Creó (Masivo)',
     'UPDATEMANY': 'Modificó (Masivo)',
-    'DELETEMANY': 'Eliminó (Masivo)'
+    'DELETEMANY': 'Eliminó (Masivo)',
+    'RESTOCK_CENTRAL': 'Ingresó Stock'
 };
 
 const CAMPOS_LEGIBLES = {

@@ -18,9 +18,11 @@ import {
     AlertCircle,
     ImagePlus,
     Trash2,
-    Component
+    Component,
+    Save
 } from 'lucide-react';
 import GenericABM from '../../components/ui/GenericABM';
+import Modal from '../../components/ui/Modal';
 import { ExportButton } from '../../components/ui/ExportButton';
 import { useAuthStore } from '../../store/authStore';
 import { productosService } from '../../services/productosService';
@@ -495,7 +497,7 @@ const AttributesManager = ({ formData, setFormData }) => {
 // ═══════════════════════════════════════════════════════════
 // COMPONENTE: GESTIÓN DE VARIANTES
 // ═══════════════════════════════════════════════════════════
-const VariantesManager = ({ producto }) => {
+const VariantesManager = ({ producto, refresh }) => {
     const [variantes, setVariantes] = useState([]);
     const [loading, setLoading] = useState(false);
     const [generando, setGenerando] = useState(false);
@@ -564,46 +566,93 @@ const VariantesManager = ({ producto }) => {
         }
     };
 
+    const [confirmToggle, setConfirmToggle] = useState(null);
+    const [isToggling, setIsToggling] = useState(false);
+
     const handleToggleUsaVariantes = async () => {
         const nuevoValor = !producto.usa_variantes;
         
         if (nuevoValor && variantes.length === 0) {
-            toast.error('Primero debes generar variantes antes de activar el sistema');
+            toast.error('Primero debés generar variantes antes de activar la gestión');
             return;
         }
 
-        // Si hay stock central y estamos activando, mostrar wizard de migración
+        // Si hay stock central y estamos activando, verificar si las variantes ya tienen stock propio
         if (nuevoValor && producto.stock_central > 0) {
-            setShowMigracion(true);
-            // Inicializar distribución con 0 para cada variante
-            const initDistribucion = {};
-            variantes.forEach(v => {
-                initDistribucion[v.id_variante] = 0;
-            });
-            setDistribucion(initDistribucion);
+            const stockEnVariantes = variantes.reduce((sum, v) => sum + (v.stock_central || 0), 0);
+            
+            if (stockEnVariantes > 0) {
+                // Las variantes YA tienen stock propio: activar directamente sin migración
+                setConfirmToggle({
+                    action: 'activate',
+                    nuevoValor: true,
+                    title: '¿Activar Gestión por Variantes?',
+                    message: (
+                        <>
+                            Las variantes de este producto ya tienen stock registrado.<br /><br />
+                            Al activar, el stock central del producto se recalculará como la suma de todas las variantes.
+                        </>
+                    )
+                });
+                return;
+            }
+            
+            // Las variantes NO tienen stock: mostrar wizard de distribución
+            try {
+                const freshProduct = await productosService.getById(producto.id_producto);
+                setDistribucion({});
+                // Actualizar localmente el stock central por si cambió en DB
+                producto.stock_central = freshProduct.stock_central; 
+                
+                const initDistribucion = {};
+                variantes.forEach(v => {
+                    initDistribucion[v.id_variante] = '';
+                });
+                setDistribucion(initDistribucion);
+                setShowMigracion(true);
+            } catch (err) {
+                toast.error('Error al sincronizar stock antes de la migración');
+            }
             return;
         }
 
         // Confirmación antes de desactivar
         if (!nuevoValor && variantes.length > 0) {
-            const confirmar = window.confirm(
-                '¿Estás seguro de desactivar el sistema de variantes?\n\n' +
-                'Las variantes seguirán existiendo pero no se usarán en ventas.\n' +
-                'Podés reactivarlas en cualquier momento.'
-            );
-            if (!confirmar) return;
+            setConfirmToggle({
+                action: 'deactivate',
+                nuevoValor: false,
+                title: '¿Desactivar Gestión por Variantes?',
+                message: (
+                    <>
+                        Las variantes seguirán existiendo pero no se usarán en ventas.<br /><br />
+                        Podés reactivarlas en cualquier momento.
+                    </>
+                )
+            });
+            return;
         }
 
+        ejecutarToggleUsaVariantes(nuevoValor);
+    };
+
+    const ejecutarToggleUsaVariantes = async (nuevoValor, action = null) => {
+        setIsToggling(true);
         try {
             await variantesService.toggleUsaVariantes(producto.id_producto, nuevoValor);
             toast.success(nuevoValor 
-                ? '✅ Sistema de variantes activado. Ahora podés usar las variantes en ventas.' 
-                : '⚠️ Sistema de variantes desactivado. Se usará el producto base en ventas.'
+                ? 'Gestión por variantes activada correctamente' 
+                : 'Gestión por variantes desactivada correctamente'
             );
-            // Recargar variantes para actualizar estado
-            await cargarVariantes();
+            if (action === 'activate') {
+                if (refresh) refresh();
+            } else {
+                await loadVariantes();
+            }
+            setConfirmToggle(null);
         } catch (err) {
-            toast.error(err.response?.data?.error || 'Error al cambiar configuración');
+            toast.error(err.response?.data?.error || err.response?.data?.message || 'Error al cambiar configuración');
+        } finally {
+            setIsToggling(false);
         }
     };
 
@@ -683,7 +732,7 @@ const VariantesManager = ({ producto }) => {
             await variantesService.toggleUsaVariantes(producto.id_producto, true);
             toast.success('Stock migrado exitosamente y sistema de variantes activado');
             setShowMigracion(false);
-            window.location.reload();
+            if (refresh) refresh();
         } catch (err) {
             toast.error(err.response?.data?.error || 'Error al migrar stock');
         } finally {
@@ -692,9 +741,11 @@ const VariantesManager = ({ producto }) => {
     };
 
     const handleStockChange = (id_variante, valor) => {
+        // Evitar ceros a la izquierda: limpiar y parsear
+        const cleanVal = valor === '' ? '' : String(parseInt(valor) || 0);
         setDistribucion(prev => ({
             ...prev,
-            [id_variante]: parseInt(valor) || 0
+            [id_variante]: cleanVal
         }));
     };
 
@@ -728,31 +779,31 @@ const VariantesManager = ({ producto }) => {
                 </div>
             </div>
 
-            {/* Card explicativa - siempre visible */}
-            <div className="p-3 sm:p-4 bg-white border border-neutral-200 rounded-lg shadow-sm">
-                <h4 className="text-[9px] sm:text-[10px] font-bold text-neutral-600 uppercase tracking-wider mb-2 flex items-center gap-2">
-                    <Info size={12} className="text-brand-cyan" />
-                    ¿Cómo funciona?
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
-                    <div className="flex items-start gap-2">
-                        <div className="w-5 h-5 rounded-full bg-brand-cyan/10 text-brand-cyan flex items-center justify-center text-[9px] font-bold flex-shrink-0">1</div>
-                        <p className="text-[9px] text-neutral-600 leading-snug">
-                            <strong>Definí atributos</strong> arriba (ej: SABOR = Vainilla, Chocolate)
-                        </p>
+            {/* Cards de Información - Super Compactos */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
+                <div className="p-2 border border-neutral-100 rounded bg-white">
+                    <p className="text-[8px] font-black uppercase text-neutral-400 mb-1 tracking-widest">Procedimiento</p>
+                    <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                            <span className="w-3.5 h-3.5 rounded bg-black text-white flex items-center justify-center text-[7px] font-black">1</span>
+                            <span className="text-[8px] font-bold text-neutral-600 uppercase">Definir Atributos (Talle, Color, etc.)</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="w-3.5 h-3.5 rounded bg-black text-white flex items-center justify-center text-[7px] font-black">2</span>
+                            <span className="text-[8px] font-bold text-neutral-600 uppercase">Asignar valores en cada campo</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="w-3.5 h-3.5 rounded bg-black text-white flex items-center justify-center text-[7px] font-black">3</span>
+                            <span className="text-[8px] font-bold text-neutral-600 uppercase">Generar combinaciones automáticas</span>
+                        </div>
                     </div>
-                    <div className="flex items-start gap-2">
-                        <div className="w-5 h-5 rounded-full bg-brand-cyan/10 text-brand-cyan flex items-center justify-center text-[9px] font-bold flex-shrink-0">2</div>
-                        <p className="text-[9px] text-neutral-600 leading-snug">
-                            <strong>Clic en "Generar Variantes"</strong> para crear todas las combinaciones posibles
-                        </p>
-                    </div>
-                    <div className="flex items-start gap-2">
-                        <div className="w-5 h-5 rounded-full bg-brand-cyan/10 text-brand-cyan flex items-center justify-center text-[9px] font-bold flex-shrink-0">3</div>
-                        <p className="text-[9px] text-neutral-600 leading-snug">
-                            <strong>Clic en "Activar Sistema"</strong> para habilitar las variantes en ventas
-                        </p>
-                    </div>
+                </div>
+                <div className="p-2 border border-neutral-100 rounded bg-white">
+                    <p className="text-[8px] font-black uppercase text-neutral-400 mb-1 tracking-widest">Información Clave</p>
+                    <p className="text-[9px] text-neutral-500 leading-tight">
+                        La gestión por variantes permite un control exacto por talle/color. 
+                        Al activar, el stock central se desglosa permanentemente.
+                    </p>
                 </div>
             </div>
 
@@ -774,100 +825,47 @@ const VariantesManager = ({ producto }) => {
                         onClick={handleToggleUsaVariantes}
                         className={`flex items-center justify-center sm:justify-start gap-2 px-3 sm:px-4 py-2.5 sm:py-2 text-[9px] sm:text-[10px] font-black uppercase tracking-wider sm:tracking-widest rounded-lg transition-colors ${
                             producto.usa_variantes
-                                ? 'bg-red-100 text-red-600 hover:bg-red-200'
-                                : 'bg-green-100 text-green-600 hover:bg-green-200'
+                                ? 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                                : 'bg-black text-white hover:bg-neutral-800'
                         }`}
                     >
                         {producto.usa_variantes ? (
-                            <><AlertCircle size={14} /> Desactivar Sistema</>
+                            <><AlertCircle size={14} /> Desactivar Gestión por Variantes</>
                         ) : (
-                            <><CheckCircle2 size={14} /> Activar Sistema</>
+                            <><CheckCircle2 size={14} /> Activar Gestión por Variantes</>
                         )}
                     </button>
                 )}
             </div>
 
             {/* Explicación de botones */}
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-[9px] sm:text-[10px] text-blue-700 leading-relaxed">
-                    <strong>Generar Variantes:</strong> Crea automáticamente todas las combinaciones de variantes (ej: Chocolate 50g, Chocolate 100g, Vainilla 50g, etc.). Si ya existen todas las combinaciones, no creará duplicados.
-                    <br className="hidden sm:block" />
-                    <strong>Activar Sistema:</strong> Habilita el uso de variantes en el catálogo y POS. Sin activar, el producto se venderá sin opción de elegir variantes.
+            <div className="p-2 border border-neutral-100 rounded bg-neutral-50/30 my-4">
+                <p className="text-[8px] text-neutral-500 leading-relaxed uppercase font-bold">
+                    <span className="text-black">Generar Variantes:</span> Crea combinaciones posibles. | <span className="text-black">Desactivar Gestión:</span> Vuelve a stock unificado (solo si stock = 0).
                 </p>
             </div>
 
-            {/* Estados del sistema - Alertas progresivas */}
-            
-            {/* Estado 1: Sin atributos definidos */}
+            {/* Estados del sistema - Alertas neutrales */}
             {!tieneAtributos && (
-                <div className="p-3 sm:p-4 bg-amber-50 border-l-4 border-amber-400 rounded-r-lg">
-                    <div className="flex items-start gap-2 sm:gap-3">
-                        <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
-                            <AlertCircle size={16} className="text-amber-600" />
-                        </div>
-                        <div>
-                            <h5 className="text-[10px] sm:text-[11px] font-bold text-amber-800 uppercase tracking-wider">
-                                Paso 1 pendiente: Definir atributos
-                            </h5>
-                            <p className="text-[9px] sm:text-[10px] text-amber-700 mt-1 leading-relaxed">
-                                Para crear variantes, primero necesitás definir atributos en la sección de arriba.
-                                <br className="hidden sm:block" />
-                                <strong>Ejemplos:</strong> SABOR (Vainilla, Chocolate), TAMAÑO (1kg, 2kg), COLOR (Rojo, Azul)
-                            </p>
-                        </div>
-                    </div>
+                <div className="p-2 border border-neutral-200 rounded mb-4">
+                    <p className="text-[9px] font-black text-neutral-600 uppercase tracking-widest">
+                        Paso 1: Definir atributos (Ej: Color, Talle) en la sección superior.
+                    </p>
                 </div>
             )}
-
-            {/* Estado 2: Atributos sin valores */}
             {tieneAtributos && !tieneAtributosConValores && (
-                <div className="p-3 sm:p-4 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg">
-                    <div className="flex items-start gap-2 sm:gap-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                            <Tag size={16} className="text-blue-600" />
-                        </div>
-                        <div className="flex-1">
-                            <h5 className="text-[10px] sm:text-[11px] font-bold text-blue-800 uppercase tracking-wider">
-                                Paso 2 pendiente: Agregar valores a los atributos
-                            </h5>
-                            <p className="text-[9px] sm:text-[10px] text-blue-700 mt-1 leading-relaxed">
-                                Tenés atributos definidos pero <strong>sin valores</strong>. Agregalos en los campos de texto arriba.
-                            </p>
-                            <div className="mt-2 flex flex-wrap gap-1.5">
-                                {Object.entries(atributos || {})
-                                    .filter(([_, vals]) => !vals || vals.length === 0)
-                                    .map(([key]) => (
-                                        <span key={key} className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[8px] font-bold uppercase rounded">
-                                            {key}: vacío
-                                        </span>
-                                    ))
-                                }
-                            </div>
-                        </div>
-                    </div>
+                <div className="p-2 border border-neutral-200 rounded mb-4">
+                    <p className="text-[9px] font-black text-neutral-600 uppercase tracking-widest">
+                        Paso 2: Agregar valores a los atributos para generar combinaciones.
+                    </p>
                 </div>
             )}
-
-            {/* Estado 3: Listo para generar */}
             {tieneAtributosConValores && variantes.length === 0 && !generando && (
-                <div className="p-3 sm:p-4 bg-green-50 border-l-4 border-green-400 rounded-r-lg">
-                    <div className="flex items-start gap-2 sm:gap-3">
-                        <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                            <CheckCircle2 size={16} className="text-green-600" />
-                        </div>
-                        <div>
-                            <h5 className="text-[10px] sm:text-[11px] font-bold text-green-800 uppercase tracking-wider">
-                                ¡Listo para generar variantes!
-                            </h5>
-                            <p className="text-[9px] sm:text-[10px] text-green-700 mt-1 leading-relaxed">
-                                Hacé clic en <strong>"Generar Variantes"</strong> para crear automáticamente todas las combinaciones.
-                                <br className="hidden sm:block" />
-                                Se crearán: {Object.values(atributos)
-                                    .filter(vals => Array.isArray(vals) && vals.length > 0)
-                                    .reduce((acc, vals) => acc * vals.length, 1)} variantes posibles
-                            </p>
-                        </div>
-                    </div>
+                <div className="p-2 border border-black rounded mb-4 flex items-center justify-between">
+                    <p className="text-[9px] font-black text-black uppercase tracking-widest">
+                        Listo para generar {Object.values(atributos).reduce((acc, vals) => acc * (vals?.length || 1), 1)} variantes.
+                    </p>
+                    <button onClick={handleGenerar} className="px-3 py-1 bg-black text-white text-[8px] font-black uppercase rounded">Ejecutar Ahora</button>
                 </div>
             )}
 
@@ -892,17 +890,12 @@ const VariantesManager = ({ producto }) => {
                             </div>
                         </div>
 
-                        {/* Explicación */}
-                        <div className="p-4 bg-amber-50 border-l-4 border-amber-400 mx-4 mt-4 rounded-r-lg">
-                            <p className="text-[11px] text-amber-800 leading-relaxed">
-                                <strong>¿Qué está pasando?</strong><br />
-                                El producto tiene <strong className="text-amber-900">{producto.stock_central} unidades</strong> en stock central sin clasificar por variantes.
-                                <br /><br />
-                                <strong>Debes distribuir TODO el stock</strong> entre las variantes antes de activar el sistema.
-                                <br /><br />
-                                <span className="text-[10px]">
-                                    💡 Tip: Si no sabés la distribución exacta, poné todo en una variante (ej: "CF") y luego ajustá con movimientos de stock.
-                                </span>
+                        {/* Explicación Sólida */}
+                        <div className="p-4 border border-neutral-100 mx-4 mt-4 rounded bg-neutral-50/50">
+                            <p className="text-[10px] text-neutral-600 leading-relaxed font-bold uppercase">
+                                <span className="text-black">Stock por Distribuir:</span> {producto.stock_central} UNIDADES.
+                                <br />
+                                Debe asignar el stock total a las variantes para activar el sistema.
                             </p>
                         </div>
 
@@ -939,7 +932,7 @@ const VariantesManager = ({ producto }) => {
                                                         type="number"
                                                         min="0"
                                                         max={producto.stock_central}
-                                                        value={distribucion[variante.id_variante] || 0}
+                                                        value={distribucion[variante.id_variante] ?? ''}
                                                         onChange={e => handleStockChange(variante.id_variante, e.target.value)}
                                                         className="w-20 px-2 py-1.5 text-sm font-bold text-right border border-neutral-200 rounded focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan focus:outline-none"
                                                         placeholder="0"
@@ -951,40 +944,18 @@ const VariantesManager = ({ producto }) => {
                                 </table>
                             </div>
 
-                            {/* Indicador de progreso */}
-                            <div className="mt-4 p-3 rounded-lg border ${distribucionValida ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-[10px] font-bold text-neutral-700">
-                                        Progreso de distribución
-                                    </span>
-                                    <span className={`text-[11px] font-black ${distribucionValida ? 'text-green-700' : 'text-amber-700'}`}>
-                                        {totalDistribuido} / {producto.stock_central}
-                                    </span>
+                            {/* Indicador de progreso Sencillo */}
+                            <div className="mt-4 p-3 rounded border border-neutral-200">
+                                <div className="flex items-center justify-between mb-1">
+                                    <span className="text-[9px] font-black uppercase text-neutral-400">Distribución</span>
+                                    <span className="text-[10px] font-black text-black">{totalDistribuido} / {producto.stock_central}</span>
                                 </div>
-                                
-                                {/* Barra de progreso */}
-                                <div className="h-2 bg-neutral-200 rounded-full overflow-hidden">
+                                <div className="h-1 bg-neutral-100 rounded-full overflow-hidden">
                                     <div 
-                                        className={`h-full rounded-full transition-all duration-300 ${
-                                            distribucionValida ? 'bg-green-500' : 'bg-amber-500'
-                                        }`}
+                                        className={`h-full transition-all duration-300 ${distribucionValida ? 'bg-black' : 'bg-neutral-300'}`}
                                         style={{ width: `${Math.min((totalDistribuido / producto.stock_central) * 100, 100)}%` }}
                                     />
                                 </div>
-                                
-                                {!distribucionValida && (
-                                    <p className="text-[9px] mt-2 text-amber-700">
-                                        {totalDistribuido < producto.stock_central 
-                                            ? `⚠️ Faltan ${producto.stock_central - totalDistribuido} unidades por distribuir` 
-                                            : `⚠️ Sobran ${totalDistribuido - producto.stock_central} unidades (debe ser exacto)`
-                                        }
-                                    </p>
-                                )}
-                                {distribucionValida && (
-                                    <p className="text-[9px] mt-2 text-green-700">
-                                        ✅ ¡Distribución completa! Podés continuar.
-                                    </p>
-                                )}
                             </div>
                         </div>
 
@@ -1025,8 +996,8 @@ const VariantesManager = ({ producto }) => {
                             <p className="text-[9px] text-neutral-600 leading-relaxed">
                                 <strong>SKU único:</strong> Código de identificación que no se puede modificar.<br />
                                 <strong>Desactivar (Inactivo):</strong> Oculta la variante del catálogo pero conserva stock e historial. Podés reactivarla cuando quieras.<br />
-                                <strong>Eliminar (🗑️):</strong> Borra permanentemente SOLO si stock = 0. Si tiene stock o historial de ventas, no se puede eliminar.<br /><br />
-                                <strong className="text-amber-600 bg-amber-50 px-1 rounded">⚠️ IMPORTANTE SOBRE EL STOCK:</strong> El stock que modifiques en esta tabla corresponde <strong>ÚNICAMENTE al Depósito Central</strong>. Para que las sucursales puedan vender estas variantes en su Punto de Venta (POS), debés enviarles el stock utilizando la sección de <strong>Gestión de Ingresos</strong>.
+                                <strong>Eliminar:</strong> Borra permanentemente SOLO si stock = 0. Si tiene stock o historial de ventas, no se puede eliminar.<br /><br />
+                                <strong className="text-amber-600 bg-amber-50 px-1 rounded">IMPORTANTE SOBRE EL STOCK:</strong> El stock que modifiques en esta tabla corresponde <strong>UNICAMENTE al Depósito Central</strong>. Para que las sucursales puedan vender estas variantes en su Punto de Venta (POS), debés enviarles el stock utilizando la sección de <strong>Gestión de Ingresos</strong>.
                             </p>
                         </div>
                     </div>
@@ -1094,11 +1065,11 @@ const VariantesManager = ({ producto }) => {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-3 py-2.5 align-middle text-center" style={{ width: '12%' }}>
+                                    <td className="px-3 py-1.5 align-middle text-center" style={{ width: '12%' }}>
                                         <input
                                             type="number"
                                             min="0"
-                                            value={variante.stock_central === 0 ? '' : variante.stock_central}
+                                            value={variante.stock_central ?? ''}
                                             onChange={e => {
                                                 const val = e.target.value === '' ? 0 : parseInt(e.target.value);
                                                 setVariantes(prev => prev.map(v => v.id_variante === variante.id_variante ? { ...v, stock_central: val } : v));
@@ -1107,11 +1078,11 @@ const VariantesManager = ({ producto }) => {
                                                 const val = e.target.value === '' ? 0 : parseInt(e.target.value);
                                                 handleActualizarVariante(variante.id_variante, { stock_central: val }, true);
                                             }}
-                                            className="w-full px-2 py-1 text-[10px] text-center bg-white border border-neutral-200 rounded focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan/20 focus:outline-none transition-all"
+                                            className="w-full px-2 py-0.5 text-[10px] text-center bg-white border border-neutral-200 rounded focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan/20 focus:outline-none transition-all"
                                             placeholder="0"
                                         />
                                     </td>
-                                    <td className="px-3 py-2.5 align-middle" style={{ width: '18%' }}>
+                                    <td className="px-3 py-1.5 align-middle" style={{ width: '18%' }}>
                                         <div className="flex items-center justify-center gap-2">
                                             <div className="flex items-center gap-1">
                                                 <span className="text-[9px] text-neutral-400">$</span>
@@ -1119,7 +1090,7 @@ const VariantesManager = ({ producto }) => {
                                                     type="number"
                                                     min="0"
                                                     step="0.01"
-                                                    value={variante.precio_variante === 0 ? '' : (variante.precio_variante ?? '')}
+                                                    value={variante.precio_variante ?? ''}
                                                     onChange={e => {
                                                         const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
                                                         setVariantes(prev => prev.map(v => v.id_variante === variante.id_variante ? { ...v, precio_variante: val } : v));
@@ -1128,7 +1099,7 @@ const VariantesManager = ({ producto }) => {
                                                         const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
                                                         handleActualizarVariante(variante.id_variante, { precio_variante: val }, true);
                                                     }}
-                                                    className="w-20 px-2 py-1 text-[10px] text-right bg-white border border-neutral-200 rounded focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan/20 focus:outline-none transition-all"
+                                                    className="w-20 px-2 py-0.5 text-[10px] text-right bg-white border border-neutral-200 rounded focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan/20 focus:outline-none transition-all"
                                                     placeholder={producto.precio_venta_sugerido}
                                                 />
                                             </div>
@@ -1226,7 +1197,241 @@ const VariantesManager = ({ producto }) => {
                     </div>
                 </div>
             )}
-        </div>
+
+            {/* Modal de Confirmación para Activar/Desactivar */}
+            {confirmToggle && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full animate-in zoom-in-95 duration-200">
+                        <div className="p-5">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-3 ${confirmToggle.action === 'activate' ? 'bg-brand-cyan/20 text-brand-cyan' : 'bg-amber-100 text-amber-600'}`}>
+                                {confirmToggle.action === 'activate' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
+                            </div>
+                            <h3 className="text-base font-black text-center text-neutral-900 mb-2">
+                                {confirmToggle.title}
+                            </h3>
+                            <p className="text-xs text-neutral-600 text-center mb-4 leading-relaxed">
+                                {confirmToggle.message}
+                            </p>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setConfirmToggle(null)}
+                                    disabled={isToggling}
+                                    className="flex-1 px-3 py-2 bg-neutral-100 text-neutral-700 rounded-lg font-bold text-xs hover:bg-neutral-200 transition-colors disabled:opacity-50"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={() => ejecutarToggleUsaVariantes(confirmToggle.nuevoValor, confirmToggle.action)}
+                                    disabled={isToggling}
+                                    className={`flex-1 px-3 py-2 text-white rounded-lg font-bold text-xs transition-colors shadow-lg disabled:opacity-50 flex items-center justify-center gap-1.5 ${
+                                        confirmToggle.action === 'activate' 
+                                            ? 'bg-brand-cyan hover:bg-brand-cyan/80 text-black shadow-brand-cyan/20' 
+                                            : 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/20'
+                                    }`}
+                                >
+                                    {isToggling ? (
+                                        <>
+                                            <Loader2 size={14} className="animate-spin" />
+                                            Procesando...
+                                        </>
+                                    ) : (
+                                        'Confirmar'
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            </div>
+    );
+};
+
+// ═══════════════════════════════════════════════════════════
+// COMPONENTE: MODAL REPOSICIÓN
+// ═══════════════════════════════════════════════════════════
+const ModalReposicion = ({ isOpen, onClose, producto: initialProducto, onSave }) => {
+    const [producto, setProducto] = useState(null);
+    const [cantidadSimple, setCantidadSimple] = useState('');
+    const [cantidadesVariantes, setCantidadesVariantes] = useState({});
+    const [submitting, setSubmitting] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    // Reset when modal opens/closes or product changes
+    useEffect(() => {
+        if (isOpen && initialProducto?.id_producto) {
+            setCantidadSimple('');
+            setCantidadesVariantes({});
+            setSubmitting(false);
+            setLoading(true);
+            productosService.getById(initialProducto.id_producto)
+                .then(data => setProducto(data))
+                .catch(err => {
+                    console.error(err);
+                    toast.error('Error al obtener datos actualizados del producto');
+                    onClose();
+                })
+                .finally(() => setLoading(false));
+        } else {
+            setProducto(null);
+        }
+    }, [isOpen, initialProducto]);
+
+    const handleVarianteChange = (id_variante, value) => {
+        const cleanVal = value === '' ? '' : String(parseInt(value) || 0);
+        setCantidadesVariantes(prev => ({
+            ...prev,
+            [id_variante]: cleanVal
+        }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setSubmitting(true);
+        try {
+            let payload = {};
+            const hasVariantes = producto.variantes && producto.variantes.length > 0;
+
+            if (hasVariantes) {
+                const items = Object.entries(cantidadesVariantes)
+                    .map(([id_variante, cantidad]) => ({ id_variante, cantidad }))
+                    .filter(item => item.cantidad > 0);
+                
+                if (items.length === 0) {
+                    toast.error('Debes ingresar al menos una cantidad mayor a 0 en alguna variante');
+                    setSubmitting(false);
+                    return;
+                }
+                payload = { items };
+            } else {
+                if (!cantidadSimple || parseInt(cantidadSimple) <= 0) {
+                    toast.error('Debes ingresar una cantidad válida');
+                    setSubmitting(false);
+                    return;
+                }
+                payload = { cantidad: parseInt(cantidadSimple) };
+            }
+
+            await onSave(payload);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    if (!isOpen) return null;
+
+    if (loading || !producto) {
+        return (
+            <Modal isOpen={isOpen} onClose={onClose} title="Ingreso a Casa Central (Reposición)">
+                <div className="flex flex-col items-center justify-center py-10 gap-3">
+                    <Loader2 size={32} className="animate-spin text-brand-cyan" />
+                    <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest">Cargando producto...</span>
+                </div>
+            </Modal>
+        );
+    }
+
+    return (
+        <Modal isOpen={isOpen} onClose={onClose} title="Ingreso a Casa Central (Reposición)">
+            <form onSubmit={handleSubmit} className="space-y-4 py-1">
+                <div className="p-3 border border-neutral-100 rounded bg-neutral-50/50">
+                    <p className="text-neutral-400 text-[8px] font-black uppercase tracking-[0.3em] mb-0.5">Producto Seleccionado</p>
+                    <p className="text-black font-sport text-lg uppercase truncate leading-tight">{producto.nombre}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                        <p className="text-neutral-500 text-[9px] font-bold uppercase tracking-widest">Stock Central: {producto.stock_central} UN.</p>
+                        {producto.usa_variantes && (
+                            <span className="px-1.5 py-0.5 bg-black text-white text-[7px] font-black uppercase rounded">Variantes Activas</span>
+                        )}
+                    </div>
+                </div>
+
+                {producto.variantes && producto.variantes.length > 0 ? (
+                    <div className="space-y-3 mt-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                        <div className="flex flex-col gap-1">
+                            <div className="flex items-center justify-between">
+                                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Desglose de Stock por Variantes</label>
+                            </div>
+                            {!producto.usa_variantes && (
+                                <div className="p-2 border border-neutral-200 rounded">
+                                    <p className="text-[8px] text-neutral-500 leading-tight uppercase font-bold">
+                                        Gestión por variantes no activada. Se recomienda activar en pestaña "Variantes".
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                        <div className="border border-neutral-200 dark:border-gray-600 rounded-lg overflow-hidden">
+                            <table className="w-full text-left">
+                                <thead className="bg-neutral-50 dark:bg-gray-700">
+                                    <tr>
+                                        <th className="px-3 py-2 text-[9px] font-bold uppercase tracking-wider text-neutral-500">Atributos</th>
+                                        <th className="px-3 py-2 text-[9px] font-bold uppercase tracking-wider text-neutral-500 text-center">Actual</th>
+                                        <th className="px-3 py-2 text-[9px] font-bold uppercase tracking-wider text-neutral-500 text-center w-28">Ingreso</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-neutral-100 dark:divide-gray-600">
+                                    {producto.variantes?.filter(v => v.activo !== false).map(v => {
+                                        const attrs = typeof v.atributos_valores === 'string' ? JSON.parse(v.atributos_valores) : v.atributos_valores;
+                                        return (
+                                            <tr key={v.id_variante} className="bg-white dark:bg-gray-800">
+                                                <td className="px-3 py-2">
+                                                    <span className="text-[10px] font-bold uppercase text-black dark:text-white">
+                                                        {Object.values(attrs || {}).join(' / ')}
+                                                    </span>
+                                                </td>
+                                                <td className="px-3 py-2 text-center text-[10px] font-black text-neutral-400">
+                                                    {v.stock_central}
+                                                </td>
+                                                <td className="px-3 py-2">
+                                                    <input
+                                                        type="number" min="0" placeholder="0"
+                                                        value={cantidadesVariantes[v.id_variante] || ''}
+                                                        onChange={(e) => handleVarianteChange(v.id_variante, e.target.value)}
+                                                        className="w-full text-center px-2 py-1.5 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded text-xs font-bold focus:outline-none focus:border-brand-cyan transition-colors"
+                                                    />
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="space-y-2 mt-4">
+                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-neutral-400 block ml-1">Cantidad a Ingresar</label>
+                        <div className="relative">
+                            <Package size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
+                            <input
+                                type="number" min="1" required
+                                value={cantidadSimple}
+                                onChange={(e) => setCantidadSimple(e.target.value)}
+                                className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded text-lg font-black text-black focus:outline-none focus:border-black transition-all"
+                                placeholder="0"
+                            />
+                        </div>
+                    </div>
+                )}
+
+                <div className="pt-3 border-t border-neutral-100 flex flex-col gap-2 mt-4">
+                    <button
+                        type="submit" disabled={submitting}
+                        className="w-full bg-black text-white py-3 rounded text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-neutral-800 transition-colors disabled:opacity-50 h-11"
+                    >
+                        {submitting ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                        Confirmar Reposición
+                    </button>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="w-full text-[9px] font-black text-neutral-400 uppercase tracking-widest py-2 hover:text-red-500 transition-colors"
+                    >
+                        Cancelar Operación
+                    </button>
+                </div>
+            </form>
+        </Modal>
     );
 };
 
@@ -1238,6 +1443,10 @@ const Productos = () => {
     const [categorias,  setCategorias]  = useState([]);
     const [marcas,      setMarcas]      = useState([]);
     const [proveedores, setProveedores] = useState([]);
+
+    const [reposicionProducto, setReposicionProducto] = useState(null);
+    const [isReposicionModalOpen, setIsReposicionModalOpen] = useState(false);
+    const [refreshABM, setRefreshABM] = useState(null);
 
     useEffect(() => {
         Promise.all([
@@ -1253,47 +1462,84 @@ const Productos = () => {
 
     const columns = [
         {
-            header: 'Imagen',
-            accessor: 'imagen_url',
+            header: 'Producto / Especificación',
+            accessor: 'nombre',
+            width: 'min-w-[300px]',
             render: (row) => {
-                const imgs = parseImagenes(row.imagen_url);
-                return imgs[0] ? (
-                    <img src={imgs[0]} alt={row.nombre} className="w-40 h-40 object-cover rounded-lg border border-neutral-200 dark:border-gray-600" />
-                ) : (
-                    <div className="w-40 h-40 bg-neutral-100 dark:bg-gray-700 rounded-lg border border-neutral-200 dark:border-gray-600 flex items-center justify-center">
-                        <Box size={16} className="text-neutral-300" />
+                const atributos = typeof row.atributos === 'string' ? JSON.parse(row.atributos || '{}') : (row.atributos || {});
+                const imgs = parseImagenes(row.imagen_url).filter(Boolean);
+                return (
+                    <div className="flex items-center gap-3 py-1">
+                        {/* Mini Thumbnail */}
+                        <div className="flex-shrink-0 relative group">
+                            {imgs[0] ? (
+                                <img src={imgs[0]} alt="" className="w-10 h-10 object-cover rounded border border-neutral-100 dark:border-gray-700 shadow-sm transition-transform group-hover:scale-110" />
+                            ) : (
+                                <div className="w-10 h-10 bg-neutral-50 dark:bg-gray-800 rounded border border-neutral-100 dark:border-gray-700 flex items-center justify-center">
+                                    <Box size={12} className="text-neutral-200" />
+                                </div>
+                            )}
+                            {imgs.length > 1 && (
+                                <span className="absolute -bottom-1 -right-1 bg-black text-white text-[7px] font-black px-1 rounded-sm">+{imgs.length - 1}</span>
+                            )}
+                        </div>
+
+                        {/* Product Info */}
+                        <div className="flex flex-col min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="font-black text-[10px] text-black uppercase tracking-wider truncate">{row.nombre}</span>
+                                <span className="text-[7px] font-bold text-neutral-400 uppercase tracking-widest border-l border-neutral-200 pl-1.5">
+                                    {row.marca?.nombre_marca || 'GEN'} · {row.categoria?.nombre || 'S/C'}
+                                </span>
+                            </div>
+                            <span className="text-[8px] font-medium text-neutral-400 uppercase tracking-tighter truncate max-w-[200px]">
+                                {row.descripcion || 'Sin descripción'}
+                            </span>
+                            {Object.keys(atributos).length > 0 && (
+                                <div className="flex flex-wrap gap-x-2 gap-y-0 mt-0.5">
+                                    {Object.entries(atributos).slice(0, 3).map(([key, value]) => (
+                                        <span key={key} className="text-[7px] font-bold text-neutral-300 uppercase">
+                                            {key}: <span className="text-neutral-500">{Array.isArray(value) ? value.join('/') : String(value)}</span>
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 );
             }
         },
         {
-            header: 'Especificación',
-            accessor: 'nombre',
+            header: 'Gestión / Inventario',
+            width: 'w-[120px]',
             render: (row) => {
-                const atributos = typeof row.atributos === 'string' ? JSON.parse(row.atributos || '{}') : (row.atributos || {});
                 const variantesCount = row.variantes?.length || 0;
-                const variantesActivas = row.variantes?.filter(v => v.activo).length || 0;
                 const stockTotal = row.variantes?.reduce((sum, v) => sum + (v.stock_central || 0), 0) || 0;
+                const tieneVariantes = variantesCount > 0;
 
                 return (
-                    <div className="flex flex-col">
-                        <span className="font-bold text-sm text-black uppercase tracking-widest">{row.nombre}</span>
-                        <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest truncate max-w-[200px]">
-                            {row.descripcion || 'Sin descripción'}
-                        </span>
-                        <div className="flex items-center gap-2 mt-1">
-                            {Object.keys(atributos).length > 0 && (
-                                <div className="flex flex-wrap gap-1">
-                                    {Object.entries(atributos).slice(0, 2).map(([key, value]) => (
-                                        <span key={key} className="text-[8px] bg-neutral-100 text-neutral-500 px-1.5 py-0.5 rounded-sm font-black uppercase">
-                                            {key}: {Array.isArray(value) ? value.join(', ') : String(value)}
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
-                            {variantesCount > 0 && (
-                                <span className="text-[8px] bg-brand-cyan/10 text-brand-cyan px-1.5 py-0.5 rounded-sm font-black uppercase">
-                                    {variantesCount} variantes · {stockTotal} stock
+                    <div className="flex flex-col gap-0.5 py-1">
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-[9px] font-black text-black">
+                                {stockTotal} <span className="text-neutral-300 font-bold text-[7px]">STOCK</span>
+                            </span>
+                            <div className="w-px h-2 bg-neutral-200" />
+                            <span className="text-[9px] font-black text-neutral-400">
+                                {variantesCount} <span className="text-neutral-200 font-bold text-[7px]">VAR</span>
+                            </span>
+                        </div>
+                        <div className="flex items-center">
+                            {row.usa_variantes && tieneVariantes ? (
+                                <span className="text-[7px] font-black uppercase text-green-600 flex items-center gap-0.5">
+                                    <CheckCircle2 size={7} /> Variantes
+                                </span>
+                            ) : !row.usa_variantes && tieneVariantes ? (
+                                <span className="text-[7px] font-black uppercase text-amber-500 flex items-center gap-0.5">
+                                    <AlertCircle size={7} /> Pendiente
+                                </span>
+                            ) : (
+                                <span className="text-[7px] font-black uppercase text-neutral-300 flex items-center gap-0.5">
+                                    <Layout size={7} /> Simple
                                 </span>
                             )}
                         </div>
@@ -1302,67 +1548,47 @@ const Productos = () => {
             }
         },
         {
-            header: 'Clasificación',
-            render: (row) => (
-                <div className="flex flex-col">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-black">
-                        {row.marca?.nombre_marca || 'Genérico'}
-                    </span>
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-brand-cyan">
-                        {row.categoria?.nombre || 'Sin Cat.'}
-                    </span>
-                </div>
-            )
-        },
-        {
             header: 'Precios (AR$)',
+            width: 'w-[110px]',
             render: (row) => (
-                <div className="flex flex-col">
-                    <span className="font-sport text-xl text-black leading-none">
-                        ${Number(row.precio_venta_sugerido || 0).toLocaleString()} <span className="text-[10px] font-bold text-neutral-400">PÚBLICO</span>
-                    </span>
+                <div className="flex flex-col py-1">
+                    <div className="flex items-baseline gap-0.5">
+                        <span className="font-black text-[10px] text-black">
+                            ${Number(row.precio_venta_sugerido || 0).toLocaleString()}
+                        </span>
+                        <span className="text-[6px] text-neutral-300 font-black uppercase">PÚB</span>
+                    </div>
                     {isPrivileged && (
-                        <>
-                            <span className="font-sport text-base text-brand-cyan leading-none mt-1">
-                                ${Number(row.precio_pushsport || 0).toLocaleString()} <span className="text-[9px] font-bold text-brand-cyan">PUSH SPORT</span>
+                        <div className="flex flex-col border-t border-neutral-50 mt-0.5 pt-0.5">
+                            <span className="font-black text-[8px] text-brand-cyan leading-none">
+                                ${Number(row.precio_pushsport || 0).toLocaleString()} <span className="text-[6px] opacity-40">PUSH</span>
                             </span>
-                            <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest mt-1">
-                                Costo: ${Number(row.costo_compra || 0).toLocaleString()}
+                            <span className="text-[6px] font-bold text-neutral-300 uppercase mt-0.5">
+                                COST: ${Number(row.costo_compra || 0).toLocaleString()}
                             </span>
-                        </>
+                        </div>
                     )}
                 </div>
             )
         },
         {
-            header: 'Imágenes',
-            render: (row) => {
-                const imgs = parseImagenes(row.imagen_url).filter(Boolean);
-                return (
-                    <div className="flex gap-1">
-                        {imgs.map((url, i) => (
-                            <img key={i} src={url} alt="" className="w-15 h-15 object-cover rounded-md border border-neutral-200" />
-                        ))}
-                        {imgs.length === 0 && <span className="text-[9px] text-neutral-400 uppercase font-bold">—</span>}
-                    </div>
-                );
-            }
-        },
-        {
             header: 'Estado',
+            width: 'w-[70px]',
             render: (row) => (
-                <div className={`inline-flex px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border ${
-                    row.activo !== false
-                        ? 'bg-black text-white border-black'
-                        : 'bg-neutral-100 text-neutral-400 border-neutral-200 line-through'
-                }`}>
-                    {row.activo !== false ? 'Activo' : 'Inactivo'}
+                <div className="flex items-center justify-center">
+                    <div className={`px-1.5 py-0.5 rounded-sm text-[7px] font-black uppercase tracking-tighter border ${
+                        row.activo !== false
+                            ? 'bg-black text-white border-black'
+                            : 'bg-neutral-50 text-neutral-300 border-neutral-100'
+                    }`}>
+                        {row.activo !== false ? 'ACT' : 'OFF'}
+                    </div>
                 </div>
             )
         },
     ];
 
-    const renderForm = (formData, setFormData) => {
+    const renderForm = (formData, setFormData, refresh) => {
         // Initialize temp image state from existing imagen_url on edit
         if (!formData._imagenesTemp) {
             const existing = parseImagenes(formData.imagen_url);
@@ -1457,7 +1683,7 @@ const Productos = () => {
                     {/* ═══════════════════════════════════════════════════════════
                         GESTIÓN DE VARIANTES
                     ═══════════════════════════════════════════════════════════ */}
-                    {formData.id_producto && <VariantesManager producto={formData} />}
+                    {formData.id_producto && <VariantesManager producto={formData} refresh={refresh} />}
 
                     {/* Precios + Stock Mínimo */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -1633,8 +1859,54 @@ const Productos = () => {
         return null;
     };
 
+    const handleReponerClick = (row) => {
+        setReposicionProducto(row);
+        setIsReposicionModalOpen(true);
+    };
+
+    const handleSaveReposicion = async (payload, refresh) => {
+        try {
+            await productosService.reponerStock(reposicionProducto.id_producto, payload);
+            toast.success('Stock central actualizado exitosamente');
+            setIsReposicionModalOpen(false);
+            setReposicionProducto(null);
+            // Refresh data in GenericABM without full reload
+            if (refresh) refresh();
+        } catch (err) {
+            toast.error(err.response?.data?.error || 'Error al reponer stock');
+        }
+    };
+
+    const customActions = isPrivileged ? (row, isDropdown = false, refresh) => {
+        if (isDropdown) {
+            return (
+                <button
+                    onClick={() => {
+                        setReposicionProducto(row);
+                        setIsReposicionModalOpen(true);
+                        setRefreshABM(() => refresh);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-2.5 py-2 text-[10px] font-bold uppercase tracking-widest text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-all"
+                >
+                    <Package size={14} className="opacity-70" />
+                    <span>Reponer Stock</span>
+                </button>
+            );
+        }
+        return (
+            <button
+                onClick={() => handleReponerClick(row)}
+                title="Reponer Stock"
+                className="w-6 h-6 flex items-center justify-center rounded border border-green-100 bg-green-50 text-green-600 hover:bg-green-500 hover:text-white transition-all"
+            >
+                <Package size={12} />
+            </button>
+        );
+    } : null;
+
     return (
-        <GenericABM
+        <>
+            <GenericABM
             title="Catálogo de Productos"
             description="Administra el catálogo global de artículos. Establece el Precio Público para venta directa y el Precio Push Sport (Base) para calcular la ganancia que retendrá cada franquicia o sede."
             icon={Package}
@@ -1648,7 +1920,19 @@ const Productos = () => {
             }}
             idField="id_producto"
             modalMaxWidth="max-w-4xl"
+            customActions={customActions}
         />
+        
+        <ModalReposicion 
+            isOpen={isReposicionModalOpen} 
+            onClose={() => {
+                setIsReposicionModalOpen(false);
+                setReposicionProducto(null);
+            }}
+            producto={reposicionProducto}
+            onSave={(payload) => handleSaveReposicion(payload, refreshABM)}
+        />
+        </>
     );
 };
 

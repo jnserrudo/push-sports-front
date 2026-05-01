@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 // ── OTP STEP ──────────────────────────────────────────────────────────────
-const OTPStep = ({ email, eventoNombre, recompensaTexto, onVerify, isVerifying, onResend }) => {
+const OTPStep = ({ email, onVerify, isVerifying, onResend }) => {
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const refs = Array.from({ length: 6 }, () => React.createRef());
 
@@ -116,7 +116,7 @@ const TicketStep = ({ nombre, eventoNombre, recompensaTexto }) => (
             </div>
             <div className="h-px bg-white/10" />
             <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 leading-relaxed">
-                📸 Capturá una screenshot de esta pantalla para asegurarte.
+                Captura una screenshot de esta pantalla para asegurarte.
             </p>
         </div>
 
@@ -332,8 +332,6 @@ const EventLanding = () => {
                 {step === 'otp' && (
                     <OTPStep
                         email={formData.email}
-                        eventoNombre={evento.nombre}
-                        recompensaTexto={evento.recompensa_texto}
                         onVerify={handleVerifyOTP}
                         isVerifying={isVerifying}
                         onResend={handleResend}

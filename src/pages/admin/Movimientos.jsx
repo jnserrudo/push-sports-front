@@ -322,8 +322,7 @@ const Movimientos = () => {
             )}
 
             {/* Tabla de Movimientos */}
-            ) : (
-                <DataTable 
+            <DataTable 
                     data={movimientos}
                     totalItems={total}
                     onPageChange={(p) => setPage(p - 1)}
@@ -427,8 +426,6 @@ const Movimientos = () => {
                     ]}
                     onView={(mov) => setSelectedMov(mov)}
                 />
-            )}
-
             {/* Modal de Detalle de Movimiento */}
             {selectedMov && (
                 <div 
