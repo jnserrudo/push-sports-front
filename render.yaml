@@ -1,0 +1,12 @@
+services:
+  - type: static
+    name: push-sport-frontend
+    env: static
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    # Configuración de rutas para Single Page Application (SPA)
+    # Esto evita el error "Not Found" de Render al recargar o entrar a links directos
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
