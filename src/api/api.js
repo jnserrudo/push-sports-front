@@ -29,7 +29,12 @@ api.interceptors.response.use(
       const isPublicRoute = currentHash.startsWith('#/shop') ||
                             currentHash.startsWith('#/unsubscribe') ||
                             currentHash.startsWith('#/e/');
-      if (!isPublicRoute) {
+
+      // No redirigir si es un error de validación en login o cambio de password
+      const isValidationEndpoint = error.config.url.includes('/auth/login') || 
+                                   error.config.url.includes('/usuarios/cambiar-password');
+
+      if (!isPublicRoute && !isValidationEndpoint) {
         useAuthStore.getState().logout();
         window.location.replace('/#/login?expired=true');
       }
