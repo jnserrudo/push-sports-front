@@ -82,6 +82,7 @@ const RowsPerPageSelect = ({ value, onChange }) => {
    ────────────────────────────────────────────── */
 const RowActions = ({ row, onEdit, onDelete, onView, customActions, refresh }) => {
     const [open, setOpen] = useState(false);
+    const [openUp, setOpenUp] = useState(false);
     const ref = useRef(null);
 
     useEffect(() => {
@@ -89,6 +90,15 @@ const RowActions = ({ row, onEdit, onDelete, onView, customActions, refresh }) =
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
     }, []);
+
+    useEffect(() => {
+        if (open && ref.current) {
+            const rect = ref.current.getBoundingClientRect();
+            const spaceBelow = window.innerHeight - rect.bottom;
+            // Si hay menos de 250px abajo, abrimos hacia arriba
+            setOpenUp(spaceBelow < 250);
+        }
+    }, [open]);
 
     return (
         <div ref={ref} className="relative flex justify-end">
@@ -106,7 +116,9 @@ const RowActions = ({ row, onEdit, onDelete, onView, customActions, refresh }) =
             </button>
 
             {open && (
-                <div className="absolute right-0 top-full mt-1.5 z-[90] bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden min-w-[160px] animate-in fade-in zoom-in-95 duration-200">
+                <div className={`absolute right-0 z-[90] bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden min-w-[160px] animate-in fade-in zoom-in-95 duration-200 ${
+                    openUp ? 'bottom-full mb-1.5 origin-bottom' : 'top-full mt-1.5 origin-top'
+                }`}>
                     <div className="px-3 py-2 border-b border-neutral-100 dark:border-gray-700">
                         <span className="text-[8px] font-black uppercase tracking-[0.2em] text-neutral-400">Acciones disponibles</span>
                     </div>
@@ -287,7 +299,7 @@ const DataTable = ({
             </div>
 
             {/* Table Area */}
-            <div className="rounded border border-neutral-200 dark:border-gray-600 overflow-hidden bg-white dark:bg-gray-800 shadow-sm relative z-10 w-full mb-2">
+            <div className="rounded border border-neutral-200 dark:border-gray-600 overflow-hidden bg-white dark:bg-gray-800 shadow-sm relative z-10 w-full mb-2 min-h-[180px]">
                 <div className="overflow-x-auto custom-scrollbar">
                     <table className="w-full text-left border-collapse min-w-full md:min-w-[700px]">
                         <thead>
