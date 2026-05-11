@@ -183,7 +183,8 @@ const DataTable = ({
     emptyTitle = "No hay datos disponibles",
     emptySubtitle = "Todavía no existen registros en esta sección. Puedes comenzar agregando nueva información.",
     customActions,
-    refresh
+    refresh,
+    hideSearch = false
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -258,31 +259,33 @@ const DataTable = ({
 
             {/* Toolbar Principal - Compacto */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 md:gap-3 mb-3 md:mb-4 relative z-10 flex-wrap">
-                <div className="relative flex-1 group w-full min-w-0 sm:min-w-[200px]">
-                    <div className="relative flex items-center">
-                        <div className="absolute left-3 md:left-4 flex items-center pointer-events-none text-neutral-400 group-focus-within:text-brand-cyan transition-colors">
-                            <Search size={16} className="md:w-5 md:h-5" />
+                {!hideSearch && (
+                    <div className="relative flex-1 group w-full min-w-0 sm:min-w-[200px]">
+                        <div className="relative flex items-center">
+                            <div className="absolute left-3 md:left-4 flex items-center pointer-events-none text-neutral-400 group-focus-within:text-brand-cyan transition-colors">
+                                <Search size={16} className="md:w-5 md:h-5" />
+                            </div>
+                            <input 
+                                type="text" 
+                                placeholder={searchPlaceholder}
+                                value={searchTerm}
+                                onChange={(e) => {
+                                    setSearchTerm(e.target.value);
+                                    setCurrentPage(1);
+                                }}
+                                className="w-full pl-9 md:pl-10 pr-7 md:pr-8 h-9 md:h-10 bg-neutral-50/50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 focus:border-brand-cyan dark:focus:border-cyan-400 focus:bg-white dark:focus:bg-gray-600 text-neutral-900 dark:text-white text-[11px] md:text-xs font-bold tracking-wider uppercase rounded-md transition-all outline-none placeholder:text-neutral-400 dark:placeholder:text-gray-500 shadow-inner text-ellipsis"
+                            />
+                            {searchTerm && (
+                                <button 
+                                    onClick={() => { setSearchTerm(''); setCurrentPage(1); }}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-gray-500 hover:text-red-500 transition-all bg-white dark:bg-gray-700 rounded-full p-1"
+                                >
+                                    <XCircle size={14} className="md:w-4 md:h-4" />
+                                </button>
+                            )}
                         </div>
-                        <input 
-                            type="text" 
-                            placeholder={searchPlaceholder}
-                            value={searchTerm}
-                            onChange={(e) => {
-                                setSearchTerm(e.target.value);
-                                setCurrentPage(1);
-                            }}
-                            className="w-full pl-9 md:pl-10 pr-7 md:pr-8 h-9 md:h-10 bg-neutral-50/50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 focus:border-brand-cyan dark:focus:border-cyan-400 focus:bg-white dark:focus:bg-gray-600 text-neutral-900 dark:text-white text-[11px] md:text-xs font-bold tracking-wider uppercase rounded-md transition-all outline-none placeholder:text-neutral-400 dark:placeholder:text-gray-500 shadow-inner text-ellipsis"
-                        />
-                        {searchTerm && (
-                            <button 
-                                onClick={() => { setSearchTerm(''); setCurrentPage(1); }}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-gray-500 hover:text-red-500 transition-all bg-white dark:bg-gray-700 rounded-full p-1"
-                            >
-                                <XCircle size={14} className="md:w-4 md:h-4" />
-                            </button>
-                        )}
                     </div>
-                </div>
+                )}
 
                 {onAdd && (
                     <div className="flex items-end h-full sm:mt-auto w-full sm:w-auto mt-1 sm:mt-0">

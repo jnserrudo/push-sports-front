@@ -14,7 +14,8 @@ import {
   ChevronRight,
   AlertCircle,
   X,
-  Mail
+  Mail,
+  DollarSign
 } from 'lucide-react';
 import api from '../../api/api';
 import { PDFDownloadLink } from '@react-pdf/renderer';
@@ -30,6 +31,7 @@ import {
 } from '../../lib/supabaseStorage';
 import Toaster from '../../components/ui/Toaster';
 import DataTable from '../../components/ui/DataTable';
+import BulkPriceUpdateModal from '../../components/modals/BulkPriceUpdateModal';
 
 const Reporteria = () => {
   const [activeTab, setActiveTab] = useState('global');
@@ -37,6 +39,7 @@ const Reporteria = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [shopSearchTerm, setShopSearchTerm] = useState('');
+  const [isBulkPriceModalOpen, setIsBulkPriceModalOpen] = useState(false);
 
   // Image prefetch map: { id_producto: base64string | null }
   const [imageMap, setImageMap] = useState({});
@@ -100,11 +103,7 @@ const Reporteria = () => {
     s.nombre?.toLowerCase().includes(sucursalSearch.toLowerCase())
   );
 
-  const handlePriceChange = (id, field, value) => {
-    setProducts(prev => prev.map(p =>
-      p.id_producto === id ? { ...p, [field]: Number(value) } : p
-    ));
-  };
+  // Los precios son de solo lectura - se modifican desde la sección de Productos
 
   const handleSelectSucursal = (s) => {
     setSucursal(s);
@@ -145,6 +144,19 @@ const Reporteria = () => {
 
   const removeItemFromReport = (index) => {
     setSelectedItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleBulkPriceUpdate = async (data) => {
+    try {
+      const result = await productosService.bulkUpdatePrices(data);
+      setToaster({ type: 'success', message: `${result.count} producto${result.count !== 1 ? 's' : ''} actualizado${result.count !== 1 ? 's' : ''} exitosamente` });
+      setIsBulkPriceModalOpen(false);
+      // Recargar productos
+      const updatedProducts = await productosService.getAll(true);
+      setProducts(updatedProducts);
+    } catch (err) {
+      setToaster({ type: 'error', message: err.response?.data?.error || 'Error al actualizar precios' });
+    }
   };
 
   return (
@@ -263,6 +275,13 @@ const Reporteria = () => {
                 >
                   <Mail size={13} /> Enviar Reporte Semanal
                 </button>
+
+                <button
+                  onClick={() => setIsBulkPriceModalOpen(true)}
+                  className="h-9 px-5 bg-brand-cyan text-white rounded-xl flex items-center gap-2 hover:bg-brand-cyan/90 transition-all shadow-lg text-[10px] font-black uppercase tracking-widest"
+                >
+                  <DollarSign size={13} /> Actualizar Precios
+                </button>
               </div>
             </div>
 
@@ -285,6 +304,7 @@ const Reporteria = () => {
 
               <DataTable 
                 data={filteredProducts}
+                hideSearch={true}
                 columns={[
                   { 
                     header: 'Producto', 
@@ -309,30 +329,24 @@ const Reporteria = () => {
                   ...(showPushPriceGlobal ? [{
                     header: 'P. Push',
                     render: (p) => (
-                      <div className="flex items-center justify-center gap-1">
-                        <span className="text-neutral-400 text-[8px] font-black">$</span>
-                        <input
-                          type="number"
-                          min="0"
-                          value={p.precio_pushsport}
-                          onChange={(e) => handlePriceChange(p.id_producto, 'precio_pushsport', e.target.value)}
-                          className="w-20 h-7 bg-brand-cyan/5 dark:bg-cyan-900/10 border border-brand-cyan/20 rounded text-center font-black text-[10px] text-neutral-900 dark:text-gray-100 outline-none focus:border-brand-cyan transition-all"
-                        />
+                      <div className="flex items-center justify-center">
+                        <div className="px-3 py-1.5 bg-brand-cyan/5 dark:bg-cyan-900/10 border border-brand-cyan/20 rounded-lg">
+                          <span className="text-brand-cyan dark:text-cyan-400 text-[10px] font-black">
+                            ${(p.precio_pushsport || 0).toLocaleString()}
+                          </span>
+                        </div>
                       </div>
                     )
                   }] : []),
                   {
                     header: 'P. Público',
                     render: (p) => (
-                      <div className="flex items-center justify-center gap-1">
-                        <span className="text-neutral-400 text-[8px] font-black">$</span>
-                        <input
-                          type="number"
-                          min="0"
-                          value={p.precio_venta_sugerido}
-                          onChange={(e) => handlePriceChange(p.id_producto, 'precio_venta_sugerido', e.target.value)}
-                          className="w-20 h-7 bg-neutral-50 dark:bg-gray-700 border border-neutral-100 dark:border-gray-600 rounded text-center font-black text-[10px] text-neutral-900 dark:text-gray-100 outline-none focus:border-brand-cyan transition-all"
-                        />
+                      <div className="flex items-center justify-center">
+                        <div className="px-3 py-1.5 bg-neutral-50 dark:bg-gray-700 border border-neutral-100 dark:border-gray-600 rounded-lg">
+                          <span className="text-neutral-900 dark:text-gray-100 text-[10px] font-black">
+                            ${(p.precio_venta_sugerido || 0).toLocaleString()}
+                          </span>
+                        </div>
                       </div>
                     )
                   }
@@ -642,36 +656,36 @@ const Reporteria = () => {
                               </div>
 
                               {/* Stock row */}
-                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 md:gap-3">
+                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 md:gap-3 items-start">
                                 {/* Col 1: Stock en comercio */}
-                                <div className="space-y-1.5">
-                                  <label className="text-[9px] font-black uppercase tracking-widest text-neutral-400">Stock comercio</label>
-                                  <div className="h-11 bg-white border-2 border-neutral-100 rounded-xl flex items-center justify-center font-black text-sm text-neutral-500">
+                                <div className="flex flex-col">
+                                  <label className="text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 min-h-[20px] flex items-center">Stock comercio</label>
+                                  <div className="h-11 bg-white dark:bg-gray-700 border-2 border-neutral-100 dark:border-gray-600 rounded-xl flex items-center justify-center font-black text-sm text-neutral-500 dark:text-gray-300">
                                     {item.stockAnterior}
-                                    <span className="text-[8px] ml-1 text-neutral-300 font-bold">uds</span>
+                                    <span className="text-[8px] ml-1 text-neutral-300 dark:text-gray-500 font-bold">uds</span>
                                   </div>
                                 </div>
 
                                 {/* Col 2: Disponible central */}
-                                <div className="space-y-1.5">
+                                <div className="flex flex-col">
                                   {(() => {
                                     const sc = item.stockCentral ?? 0;
                                     const excede = item.cantidadDejada > sc;
                                     return (
                                       <>
-                                        <label className={`text-[9px] font-black uppercase tracking-widest ${excede ? 'text-amber-500' : 'text-neutral-400'}`}>Central disponible</label>
+                                        <label className={`text-[9px] font-black uppercase tracking-widest mb-1.5 min-h-[20px] flex items-center ${excede ? 'text-amber-500' : 'text-neutral-400'}`}>Central disponible</label>
                                         <div className={`h-11 rounded-xl flex items-center justify-center font-black text-sm border-2 transition-all ${
                                           excede
                                             ? 'bg-amber-50 border-amber-300 text-amber-600'
                                             : sc === 0
-                                              ? 'bg-neutral-50 border-neutral-200 text-neutral-300'
-                                              : 'bg-white border-neutral-100 text-neutral-700'
+                                              ? 'bg-neutral-50 dark:bg-gray-700 border-neutral-200 dark:border-gray-600 text-neutral-300 dark:text-gray-500'
+                                              : 'bg-white dark:bg-gray-700 border-neutral-100 dark:border-gray-600 text-neutral-700 dark:text-gray-300'
                                         }`}>
                                           {sc}
                                           <span className="text-[8px] ml-1 opacity-60 font-bold">uds</span>
                                         </div>
                                         {excede && (
-                                          <p className="text-[8px] font-black text-amber-500 uppercase tracking-widest">Superás el stock</p>
+                                          <p className="text-[8px] font-black text-amber-500 uppercase tracking-widest mt-1">Superás el stock</p>
                                         )}
                                       </>
                                     );
@@ -679,8 +693,8 @@ const Reporteria = () => {
                                 </div>
 
                                 {/* Col 3: A dejar */}
-                                <div className="space-y-1.5">
-                                  <label className="text-[9px] font-black uppercase tracking-widest text-brand-cyan">A dejar</label>
+                                <div className="flex flex-col">
+                                  <label className="text-[9px] font-black uppercase tracking-widest text-brand-cyan mb-1.5 min-h-[20px] flex items-center">A dejar</label>
                                   <input
                                     type="number"
                                     min="0"
@@ -690,19 +704,19 @@ const Reporteria = () => {
                                       const v = Math.max(0, Number(e.target.value));
                                       setSelectedItems(prev => prev.map((it, i) => i === idx ? { ...it, cantidadDejada: v } : it));
                                     }}
-                                    className={`w-full h-11 rounded-xl px-2 text-center font-black text-sm outline-none transition-all placeholder:text-neutral-200 border-2 ${
+                                    className={`w-full h-11 rounded-xl px-3 text-center font-black text-sm outline-none transition-all placeholder:text-neutral-200 dark:placeholder:text-gray-600 border-2 ${
                                       item.cantidadDejada > (item.stockCentral ?? 0)
                                         ? 'bg-red-50 border-red-400 text-red-600 focus:border-red-500'
-                                        : 'bg-white border-brand-cyan/50 focus:border-brand-cyan'
+                                        : 'bg-white dark:bg-gray-700 border-brand-cyan/50 dark:border-brand-cyan/30 text-neutral-900 dark:text-white focus:border-brand-cyan'
                                     }`}
                                   />
                                 </div>
 
                                 {/* Col 4: Stock nuevo en comercio */}
-                                <div className="space-y-1.5">
-                                  <label className="text-[9px] font-black uppercase tracking-widest text-neutral-400">Stock nuevo</label>
+                                <div className="flex flex-col">
+                                  <label className="text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 min-h-[20px] flex items-center">Stock nuevo</label>
                                   <div className={`h-11 rounded-xl flex items-center justify-center font-black text-sm ${
-                                    item.cantidadDejada > 0 ? 'bg-neutral-900 text-brand-cyan' : 'bg-neutral-50 text-neutral-400 border-2 border-neutral-100'
+                                    item.cantidadDejada > 0 ? 'bg-neutral-900 dark:bg-gray-900 text-brand-cyan' : 'bg-neutral-50 dark:bg-gray-700 text-neutral-400 dark:text-gray-500 border-2 border-neutral-100 dark:border-gray-600'
                                   }`}>
                                     {item.stockAnterior + item.cantidadDejada}
                                     <span className="text-[8px] ml-1 opacity-60 font-bold">uds</span>
@@ -710,20 +724,13 @@ const Reporteria = () => {
                                 </div>
 
                                 {/* Col 5: P. Público */}
-                                <div className="space-y-1.5">
-                                  <label className="text-[9px] font-black uppercase tracking-widest text-neutral-400">P. Público (PDF)</label>
-                                  <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-300 font-bold text-xs">$</span>
-                                    <input
-                                      type="number"
-                                      min="0"
-                                      value={item.precio_venta_sugerido}
-                                      onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setSelectedItems(prev => prev.map((it, i) => i === idx ? { ...it, precio_venta_sugerido: v } : it));
-                                      }}
-                                      className="w-full h-11 bg-white border-2 border-neutral-100 rounded-xl pl-7 pr-2 font-black text-sm outline-none focus:border-brand-cyan transition-all"
-                                    />
+                                <div className="flex flex-col">
+                                  <label className="text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 min-h-[20px] flex items-center">P. Público (PDF)</label>
+                                  <div className="relative h-11">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-300 dark:text-gray-500 font-bold text-xs">$</span>
+                                    <div className="w-full h-11 bg-neutral-50 dark:bg-gray-700 border-2 border-neutral-100 dark:border-gray-600 rounded-xl pl-7 pr-3 font-black text-sm flex items-center text-neutral-700 dark:text-gray-300">
+                                      {item.precio_venta_sugerido?.toLocaleString() || 0}
+                                    </div>
                                   </div>
                                 </div>
                               </div>
@@ -752,6 +759,14 @@ const Reporteria = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Modal de Actualización Masiva de Precios */}
+      <BulkPriceUpdateModal
+        isOpen={isBulkPriceModalOpen}
+        onClose={() => setIsBulkPriceModalOpen(false)}
+        products={products}
+        onSubmit={handleBulkPriceUpdate}
+      />
     </div>
   );
 };

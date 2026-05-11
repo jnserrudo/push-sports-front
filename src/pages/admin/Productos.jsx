@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import {
     Box,
     Package,
@@ -19,10 +19,12 @@ import {
     ImagePlus,
     Trash2,
     Component,
-    Save
+    Save,
+    TrendingUp
 } from 'lucide-react';
 import GenericABM from '../../components/ui/GenericABM';
 import Modal from '../../components/ui/Modal';
+import BulkPriceUpdateModal from '../../components/modals/BulkPriceUpdateModal';
 import { ExportButton } from '../../components/ui/ExportButton';
 import { useAuthStore } from '../../store/authStore';
 import { productosService } from '../../services/productosService';
@@ -1434,19 +1436,20 @@ const ModalReposicion = ({ isOpen, onClose, producto: initialProducto, onSave })
         </Modal>
     );
 };
-
-// ─── Main Productos Component ─────────────────────────────────────────────────
 const Productos = () => {
     const { user } = useAuthStore();
     const isPrivileged = user?.id_rol === 1 || user?.id_rol === 2; // Admin or Supervisor
+    const isSuperAdmin = user?.id_rol === 1;
     
-    const [categorias,  setCategorias]  = useState([]);
-    const [marcas,      setMarcas]      = useState([]);
+    const [categorias, setCategorias] = useState([]);
+    const [marcas, setMarcas] = useState([]);
     const [proveedores, setProveedores] = useState([]);
-
     const [reposicionProducto, setReposicionProducto] = useState(null);
     const [isReposicionModalOpen, setIsReposicionModalOpen] = useState(false);
-    const [refreshABM, setRefreshABM] = useState(null);
+    const refreshABM = useRef(null);
+    const [isBulkPriceModalOpen, setIsBulkPriceModalOpen] = useState(false);
+    const [selectedProducts, setSelectedProducts] = useState([]);
+    const [allProducts, setAllProducts] = useState([]);
 
     useEffect(() => {
         Promise.all([
@@ -1877,32 +1880,47 @@ const Productos = () => {
         }
     };
 
-    const customActions = isPrivileged ? (row, isDropdown = false, refresh) => {
-        if (isDropdown) {
-            return (
-                <button
-                    onClick={() => {
-                        setReposicionProducto(row);
-                        setIsReposicionModalOpen(true);
-                        setRefreshABM(() => refresh);
-                    }}
-                    className="w-full flex items-center gap-2.5 px-2.5 py-2 text-[10px] font-bold uppercase tracking-widest text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-all"
-                >
-                    <Package size={14} className="opacity-70" />
-                    <span>Reponer Stock</span>
-                </button>
-            );
+    const handleBulkPriceUpdate = async (data) => {
+        console.log('========== FRONTEND: Enviando bulk update ==========');
+        console.log('Data a enviar:', data);
+        
+        try {
+            const result = await productosService.bulkUpdatePrices(data);
+            console.log('Resultado:', result);
+            toast.success(`${result.count} producto${result.count !== 1 ? 's' : ''} actualizado${result.count !== 1 ? 's' : ''} exitosamente`);
+            setIsBulkPriceModalOpen(false);
+            setSelectedProducts([]);
+            if (refreshABM.current) refreshABM.current();
+        } catch (err) {
+            console.error('Error en bulk update:', err);
+            toast.error(err.response?.data?.error || 'Error al actualizar precios');
         }
+    };
+
+    const customActions = isPrivileged ? (row) => {
         return (
             <button
-                onClick={() => handleReponerClick(row)}
-                title="Reponer Stock"
+                onClick={() => {
+                    setReposicionProducto(row);
+                    setIsReposicionModalOpen(true);
+                }}
+                title="Reponer Stock Central"
                 className="w-6 h-6 flex items-center justify-center rounded border border-green-100 bg-green-50 text-green-600 hover:bg-green-500 hover:text-white transition-all"
             >
                 <Package size={12} />
             </button>
         );
     } : null;
+
+    const headerActions = isSuperAdmin ? (
+        <button
+            onClick={() => setIsBulkPriceModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-brand-cyan text-black rounded-xl font-black uppercase tracking-widest text-xs hover:bg-cyan-400 transition-all shadow-md"
+        >
+            <TrendingUp size={16} />
+            Actualizar Precios
+        </button>
+    ) : null;
 
     return (
         <>
@@ -1921,6 +1939,9 @@ const Productos = () => {
             idField="id_producto"
             modalMaxWidth="max-w-4xl"
             customActions={customActions}
+            headerActions={headerActions}
+            onDataLoaded={(data) => setAllProducts(data)}
+            onRefreshReady={(refreshFn) => { refreshABM.current = refreshFn; }}
         />
         
         <ModalReposicion 
@@ -1930,7 +1951,18 @@ const Productos = () => {
                 setReposicionProducto(null);
             }}
             producto={reposicionProducto}
-            onSave={(payload) => handleSaveReposicion(payload, refreshABM)}
+            onSave={(payload) => handleSaveReposicion(payload, refreshABM.current)}
+        />
+        
+        <BulkPriceUpdateModal
+            isOpen={isBulkPriceModalOpen}
+            onClose={() => {
+                setIsBulkPriceModalOpen(false);
+                setSelectedProducts([]);
+            }}
+            onConfirm={handleBulkPriceUpdate}
+            products={allProducts}
+            selectedProductIds={selectedProducts}
         />
         </>
     );

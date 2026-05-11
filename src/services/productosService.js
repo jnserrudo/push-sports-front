@@ -45,5 +45,11 @@ export const productosService = {
         // data can be { cantidad: 10 } or { items: [{ id_variante, cantidad }] }
         const res = await api.post(`/productos/${id}/reponer`, data);
         return res.data;
+    },
+
+    bulkUpdatePrices: async (data) => {
+        // data: { productIds: string[], percentage: number, applyTo: 'precio_venta_sugerido' | 'precio_pushsport' | 'both' }
+        const res = await api.put('/productos/bulk-update-prices', data);
+        return res.data;
     }
 };

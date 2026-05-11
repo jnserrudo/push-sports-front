@@ -3,8 +3,9 @@ import {
     FileText, Clock, ShieldAlert, RefreshCw, Download, 
     Plus, Edit3, Trash2, Search, Filter, Eye, ChevronLeft, ChevronRight,
     User, MapPin, X, ArrowRight, Server, Activity, Database, ChevronDown,
-    Calendar, Building2, AlertTriangle
+    Calendar, Building2, AlertTriangle, TrendingUp
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { auditoriaService } from '../../services/auditoriaService';
 import { sucursalesService } from '../../services/sucursalesService';
 import { productosService } from '../../services/productosService';
@@ -57,7 +58,8 @@ const ACCIONES_LEGIBLES = {
     'CREATEMANY': 'Creación Masiva',
     'UPDATEMANY': 'Modificación Masiva',
     'DELETEMANY': 'Eliminación Masiva',
-    'RESTOCK_CENTRAL': 'Reposición (Casa Central)'
+    'RESTOCK_CENTRAL': 'Reposición (Casa Central)',
+    'BULK_PRICE_UPDATE': 'Actualización Masiva de Precios'
 };
 
 const ACCIONES_VERBO = {
@@ -70,7 +72,8 @@ const ACCIONES_VERBO = {
     'CREATEMANY': 'Creó (Masivo)',
     'UPDATEMANY': 'Modificó (Masivo)',
     'DELETEMANY': 'Eliminó (Masivo)',
-    'RESTOCK_CENTRAL': 'Ingresó Stock'
+    'RESTOCK_CENTRAL': 'Ingresó Stock',
+    'BULK_PRICE_UPDATE': 'Actualizó Precios Masivamente'
 };
 
 const CAMPOS_LEGIBLES = {
@@ -814,6 +817,16 @@ const Auditoria = () => {
                 </div>
 
                 <div className="flex gap-2 w-full md:w-auto mt-2 md:mt-0 flex-shrink-0">
+                    {isSuperAdmin && (
+                        <button
+                            onClick={() => window.location.href = '/admin/productos'}
+                            className="flex items-center gap-2 px-4 py-2.5 bg-brand-cyan text-black rounded-lg font-black uppercase tracking-widest text-[10px] hover:bg-cyan-400 transition-all shadow-md"
+                            title="Ir a Productos para actualizar precios masivamente"
+                        >
+                            <TrendingUp size={14} />
+                            <span className="hidden md:inline">Actualizar Precios</span>
+                        </button>
+                    )}
                     <button
                         onClick={() => setShowFilters(!showFilters)}
                         className={`w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-[10px] font-black uppercase tracking-[0.15em] transition-all shadow-sm active:scale-95 ${

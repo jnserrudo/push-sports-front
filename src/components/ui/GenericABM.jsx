@@ -18,7 +18,10 @@ const GenericABM = ({
     fetchMethod = null,
     validate = null, // Custom validation function returns string/array or null
     onSaveSuccess = null, // Allows keeping modal open after create
-    customActions = null
+    customActions = null,
+    headerActions = null, // Custom actions to show in the header
+    onDataLoaded = null, // Callback when data is loaded
+    onRefreshReady = null // Callback to provide refresh function to parent
 }) => {
     const [data, setData] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -33,6 +36,7 @@ const GenericABM = ({
         try {
             const result = fetchMethod ? await fetchMethod() : await service.getAll();
             setData(result); // Show ALL records including inactive — admin needs to see them
+            if (onDataLoaded) onDataLoaded(result);
         } catch (error) {
             console.error(error);
         } finally {
@@ -42,6 +46,11 @@ const GenericABM = ({
 
     useEffect(() => {
         loadData();
+        // Proveer función de refresh al padre solo una vez
+        if (onRefreshReady) {
+            onRefreshReady(loadData);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleAdd = () => {
@@ -215,6 +224,8 @@ const GenericABM = ({
                 </div>
                 
                 <div className="flex gap-2 w-full md:w-auto mt-2 md:mt-0 flex-shrink-0 items-center">
+                    {headerActions}
+                    {headerActions && <div className="hidden md:block h-6 w-px bg-neutral-200 dark:bg-gray-600 mx-0.5"></div>}
                     <button 
                         onClick={loadData}
                         className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-neutral-100 dark:bg-gray-800 border border-neutral-200 dark:border-gray-600 text-neutral-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-neutral-200 dark:hover:bg-gray-700 hover:shadow-sm rounded-lg transition-all"
@@ -223,7 +234,7 @@ const GenericABM = ({
                         <RefreshCw size={14} className={`md:w-4 md:h-4 ${isLoading ? 'animate-spin text-brand-cyan' : ''}`} strokeWidth={3} />
                         <span className="text-[10px] font-black uppercase tracking-[0.1em] md:hidden">Actualizar</span>
                     </button>
-                    <div className="hidden md:block h-6 w-px bg-neutral-200 mx-0.5"></div>
+                    <div className="hidden md:block h-6 w-px bg-neutral-200 dark:bg-gray-600 mx-0.5"></div>
                     <div className="w-1.5 h-1.5 rounded-full bg-brand-cyan shadow-[0_0_8px_rgba(0,194,255,0.4)] animate-pulse hidden md:block"></div>
                 </div>
             </div>
