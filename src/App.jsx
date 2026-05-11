@@ -36,13 +36,15 @@ import PublicLayout from './components/layout/PublicLayout';
 import Catalog from './pages/public/Catalog';
 import Unsubscribe from './pages/public/Unsubscribe';
 import PublicSucursales from './pages/public/Sucursales';
+import { CartProvider } from './context/CartContext';
 
 const App = () => {
   return (
-    <Router>
-      <GlobalLoader />
-      <Toaster />
-      <Routes>
+    <CartProvider>
+      <Router>
+        <GlobalLoader />
+        <Toaster />
+        <Routes>
         {/* PUBLIC ROUTES */}
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
@@ -103,7 +105,8 @@ const App = () => {
         {/* FALLBACK */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </Router>
+      </Router>
+    </CartProvider>
   );
 };
 

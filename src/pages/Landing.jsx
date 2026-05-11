@@ -15,6 +15,14 @@ import {
 import { Link } from 'react-router-dom';
 import StoreMap from '../components/StoreMap'; 
 import { sucursalesService } from '../services/sucursalesService';
+import ProductGrid from '../components/catalog/ProductGrid';
+import ProductQuickView from '../components/catalog/ProductQuickView';
+import CartButton from '../components/cart/CartButton';
+import CartDrawer from '../components/cart/CartDrawer';
+import BottomNav from '../components/ui/BottomNav';
+import ScrollToTop from '../components/ui/ScrollToTop';
+import PromoBanner from '../components/ui/PromoBanner';
+import WhatsAppButton from '../components/shared/WhatsAppButton';
 
 const PreviewModal = ({ category, isOpen, onClose }) => {
   if (!isOpen) return null;
@@ -116,6 +124,7 @@ const Landing = () => {
   const [preview, setPreview] = useState({ isOpen: false, category: '' });
   const [activeLocation, setActiveLocation] = useState(0);
   const [activeAthlete, setActiveAthlete] = useState(0);
+  const [quickViewProduct, setQuickViewProduct] = useState(null);
 
   const [locations, setLocations] = useState([
     { nombre: 'Cargando Sedes...', dir: 'Aguarde un momento', h: '-' }
@@ -149,6 +158,14 @@ const Landing = () => {
 
   const openPreview = (category) => setPreview({ isOpen: true, category });
   const closePreview = () => setPreview({ isOpen: false, category: '' });
+  
+  const handleQuickView = (product) => {
+    setQuickViewProduct(product);
+  };
+
+  const closeQuickView = () => {
+    setQuickViewProduct(null);
+  };
 
   return (
     <div className="bg-white text-neutral-900 font-sans antialiased overflow-x-hidden selection:bg-brand-cyan selection:text-white">
@@ -266,8 +283,11 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* BANNER PROMOCIONAL */}
+      <PromoBanner />
+
       {/* CATEGORÍAS — FIX: header alineado correctamente, párrafo bien posicionado */}
-      <section id="productos" className="py-24 container mx-auto px-6 max-w-7xl">
+      <section id="categorias" className="py-24 container mx-auto px-6 max-w-7xl">
         
         {/* FIX: Se separaron título y subtítulo en un bloque propio arriba, sin items-end que causaba descuadre */}
         <div className="mb-12">
@@ -342,6 +362,9 @@ const Landing = () => {
             </div>
         </div>
       </section>
+
+      {/* CATÁLOGO DE PRODUCTOS */}
+      <ProductGrid onQuickView={handleQuickView} />
 
       {/* SEDES — FIX: altura flexible, sin mix-blend-multiply en el mapa, z-index del overlay corregido */}
       <section id="sedes" className="py-24 bg-neutral-50 border-y border-neutral-200">
@@ -700,6 +723,29 @@ const Landing = () => {
             </div>
         </div>
       </footer>
+
+      {/* Bottom Navigation (Mobile) */}
+      <BottomNav />
+
+      {/* Botón flotante del carrito */}
+      <CartButton />
+
+      {/* Botón flotante de WhatsApp */}
+      <WhatsAppButton />
+
+      {/* Scroll to Top */}
+      <ScrollToTop />
+
+      {/* Drawer del carrito */}
+      <CartDrawer />
+
+      {/* Quick View Modal */}
+      <ProductQuickView
+        producto={quickViewProduct}
+        isOpen={!!quickViewProduct}
+        onClose={closeQuickView}
+        onQuickView={handleQuickView}
+      />
     </div>
   );
 };
