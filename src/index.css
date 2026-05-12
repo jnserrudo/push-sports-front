@@ -258,3 +258,106 @@ button:disabled, [disabled] {
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 }
+
+/* Estilos para efecto Flip 3D en tarjetas de equipo */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-style-preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+.group:hover .group-hover\:rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+/* Animación para borde de neón tipo serpiente */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+
+/* Animación para borde brillante y colorido que circula en sentido horario */
+@keyframes border-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-border-flow {
+  background-size: 200% 200%;
+  animation: border-flow 3s ease-in-out infinite;
+}
+
+/* Animación inversa para efecto de doble capa */
+@keyframes border-flow-reverse {
+  0% {
+    background-position: 100% 50%;
+  }
+  50% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-border-flow-reverse {
+  background-size: 200% 200%;
+  animation: border-flow-reverse 2s ease-in-out infinite;
+}
+
+/* Efecto Borde Serpiente Brillante - Conic Gradient Giratorio Recortado */
+.premium-border-container {
+  position: relative;
+}
+
+.premium-gradient-border {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 45deg,
+    #00A3CC 45deg,
+    #06B6D4 90deg,
+    #8B5CF6 135deg,
+    #A855F7 180deg,
+    #EC4899 225deg,
+    #F472B6 270deg,
+    #00A3CC 315deg,
+    transparent 315deg,
+    transparent 360deg
+  );
+  animation: rotate-gradient 3s linear infinite;
+}
+
+@keyframes rotate-gradient {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}

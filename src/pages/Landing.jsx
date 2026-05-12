@@ -18,6 +18,7 @@ import { sucursalesService } from '../services/sucursalesService';
 import ProductGrid from '../components/catalog/ProductGrid';
 import ProductQuickView from '../components/catalog/ProductQuickView';
 import CartButton from '../components/cart/CartButton';
+import TeamMemberCard from '../components/ui/TeamMemberCard';
 import CartDrawer from '../components/cart/CartDrawer';
 import BottomNav from '../components/ui/BottomNav';
 import ScrollToTop from '../components/ui/ScrollToTop';
@@ -580,35 +581,45 @@ const Landing = () => {
               {/* Grid de Miembros del Equipo */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                   {[
-                      { name: 'Milagros Burgos', role: 'Fundadora & CEO, Mama, intento de atleta, repartidora, preventista, cajera, administradora', img: '/fondo.jpeg' },
-                      /* { name: 'Nahuel Serrudo', role: 'Atleta / Coordinador Técnico', img: '/primera.jpeg' },
-                      { name: 'Tomás Ruiz', role: 'Asesor Técnico', img: '/segunda.jpeg' },
-                      { name: 'Sofía Díaz', role: 'Nutrición Deportiva', img: '/eventos/lh1.jpeg' }, */
+                      { 
+                        name: 'Milagros Burgos', 
+                        role: 'Fundadora & CEO, Mama, intento de atleta, repartidora, preventista, cajera, administradora', 
+                        frontImage: '/fondo.jpeg',
+                        backImage: '/fondo.jpeg',
+                        isPremiumMode: false 
+                      },
+                      { 
+                        name: 'Nahuel Serrudo', 
+                        role: 'Atleta / Coordinador Técnico', 
+                        frontImage: '/nahuel_push.jpeg',
+                        backImage: '/nahuel_tria.jpg',
+                        sportDescription: '',
+                        isPremiumMode: true 
+                      },
+                      /*{ 
+                        name: 'Tomás Ruiz', 
+                        role: 'Asesor Técnico', 
+                        frontImage: '/segunda.jpeg',
+                        backImage: '/segunda.jpeg',
+                        isPremiumMode: false 
+                      },
+                      { 
+                        name: 'Sofía Díaz', 
+                        role: 'Nutrición Deportiva', 
+                        frontImage: '/eventos/lh1.jpeg',
+                        backImage: '/eventos/lh1.jpeg',
+                        isPremiumMode: false 
+                      }, */
                   ].map((miembro, i) => (
-                      <div 
+                      <TeamMemberCard
                           key={i}
-                          className="group relative overflow-hidden rounded-3xl aspect-[3/4] bg-gray-800"
-                      >
-                          {/* Imagen con efecto hover */}
-                          <img 
-                              src={miembro.img} 
-                              alt={miembro.name} 
-                              className="w-full h-full object-cover opacity-80 mix-blend-luminosity group-hover:opacity-100 group-hover:mix-blend-normal group-hover:scale-110 transition-all duration-500"
-                          />
-                          
-                          {/* Degradado para legibilidad del texto */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
-                          
-                          {/* Información del miembro */}
-                          <div className="absolute bottom-0 left-0 p-6">
-                              <h4 className="text-white text-2xl font-black uppercase leading-tight mb-1">
-                                  {miembro.name}
-                              </h4>
-                              <span className="text-brand-cyan text-xs font-bold uppercase tracking-widest">
-                                  {miembro.role}
-                              </span>
-                          </div>
-                      </div>
+                          name={miembro.name}
+                          role={miembro.role}
+                          frontImage={miembro.frontImage}
+                          backImage={miembro.backImage}
+                          sportDescription={miembro.sportDescription}
+                          isPremiumMode={miembro.isPremiumMode}
+                      />
                   ))}
               </div>
           </div>
