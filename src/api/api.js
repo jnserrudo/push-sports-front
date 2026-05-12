@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:3000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'https://push-sports-back.onrender.com/api',
 });
 
 // Interceptor to add the token to every request
