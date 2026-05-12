@@ -32,6 +32,15 @@ const publicService = {
     const { data } = await publicApi.post('/public/unsubscribe', { token });
     return data;
   },
+
+  /**
+   * Obtiene una consulta por su token de seguimiento.
+   * @param {string} token - Token de seguimiento de la consulta.
+   */
+  getConsultaByToken: async (token) => {
+    const { data } = await publicApi.get(`/public/consulta/${token}`);
+    return data;
+  },
 };
 
 export default publicService;

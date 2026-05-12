@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Package, MapPin, Truck, Calendar, CheckCircle, Clock, XCircle, AlertCircle, Home } from 'lucide-react';
-import axios from 'axios';
+import publicService from '../../services/publicService';
 
 const ConsultaPublica = () => {
   const { token } = useParams();
@@ -44,8 +44,8 @@ const ConsultaPublica = () => {
   const cargarConsulta = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`/api/public/consulta/${token}`);
-      setConsulta(response.data.data);
+      const response = await publicService.getConsultaByToken(token);
+      setConsulta(response.data);
     } catch (err) {
       console.error('Error al cargar consulta:', err);
       setError(err.response?.data?.message || 'No se pudo cargar la consulta');
