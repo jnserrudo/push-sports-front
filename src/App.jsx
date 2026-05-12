@@ -37,6 +37,9 @@ import Catalog from './pages/public/Catalog';
 import Unsubscribe from './pages/public/Unsubscribe';
 import PublicSucursales from './pages/public/Sucursales';
 import { CartProvider } from './context/CartContext';
+import Consultas from './pages/admin/Consultas';
+import ConsultaDetalle from './pages/admin/ConsultaDetalle';
+import ConsultaPublica from './pages/public/ConsultaPublica';
 
 const App = () => {
   return (
@@ -57,6 +60,9 @@ const App = () => {
         <Route path="/hub" element={<Hub />} />
         {/* Desuscripción de marketing (sin auth) */}
         <Route path="/unsubscribe" element={<Unsubscribe />} />
+        
+        {/* Seguimiento público de consultas */}
+        <Route path="/consulta/:token" element={<ConsultaPublica />} />
 
         {/* PORTAL PÚBLICO B2C — bajo /shop */}
         <Route path="/shop" element={<PublicLayout />}>
@@ -93,6 +99,8 @@ const App = () => {
           <Route path="inventario" element={<Inventario />} />
           <Route path="devoluciones" element={<Devoluciones />} />
           <Route path="rectificaciones" element={<Rectificaciones />} />
+          <Route path="consultas" element={<Consultas />} />
+          <Route path="consultas/:id" element={<ConsultaDetalle />} />
           <Route path="perfil" element={<Perfil />} />
           {/* POS also accessible under /dashboard for Vendedores */}
           <Route path="pos" element={<POS />} />

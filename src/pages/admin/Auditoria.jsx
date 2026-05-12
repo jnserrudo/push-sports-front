@@ -19,6 +19,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import PremiumSelect from '../../components/ui/PremiumSelect';
 import DataTable from '../../components/ui/DataTable';
+import api from '../../api/api';
 
 // ═══════════════════════════════════════════════════════════
 // DICCIONARIOS DE TRADUCCIÓN
@@ -264,8 +265,24 @@ const Auditoria = () => {
     const [tiposMovimientoMap, setTiposMovimientoMap] = useState({});
     const [variantesMap, setVariantesMap] = useState({});
     const [eventosMap, setEventosMap] = useState({});
+    const [notifications, setNotifications] = useState([]);
+    const [loadingNotifications, setLoadingNotifications] = useState(false);
     
     
+    // Cargar notificaciones
+    const loadNotifications = async () => {
+        if (!user?.id_usuario) return;
+        setLoadingNotifications(true);
+        try {
+            const res = await api.get(`/notificaciones/usuario/${user.id_usuario}`);
+            setNotifications(res.data || []);
+        } catch {
+            setNotifications([]);
+        } finally {
+            setLoadingNotifications(false);
+        }
+    };
+
     // Cargar catálogos para mapear IDs
     const cargarCatalogos = async () => {
         try {
@@ -384,6 +401,7 @@ const Auditoria = () => {
 
     useEffect(() => {
         cargarCatalogos();
+        loadNotifications();
     }, []);
     
     // Master Map unificado para todas las funciones
@@ -931,6 +949,97 @@ const Auditoria = () => {
                     </div>
                 </div>
             )}
+
+            {/* Sección de Notificaciones */}
+            <div className="bg-white dark:bg-gray-800 border-2 border-neutral-100 dark:border-gray-700 rounded-2xl p-4 md:p-6 mb-6">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-brand-cyan/10 rounded-lg flex items-center justify-center">
+                            <FileText size={16} className="text-brand-cyan" />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-bold text-neutral-900 dark:text-white">Notificaciones Recientes</h3>
+                            <p className="text-xs text-neutral-500 dark:text-gray-400">Actividad del sistema y alertas</p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={loadNotifications}
+                        disabled={loadingNotifications}
+                        className="p-2 hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    >
+                        <RefreshCw size={14} className={`text-neutral-600 dark:text-gray-400 ${loadingNotifications ? 'animate-spin' : ''}`} />
+                    </button>
+                </div>
+
+                {loadingNotifications ? (
+                    <div className="flex items-center justify-center py-8">
+                        <div className="w-6 h-6 border-2 border-neutral-200 border-t-brand-cyan rounded-full animate-spin" />
+                    </div>
+                ) : notifications.length === 0 ? (
+                    <div className="text-center py-8">
+                        <FileText size={32} className="text-neutral-300 mx-auto mb-2" />
+                        <p className="text-xs text-neutral-500 dark:text-gray-400">No hay notificaciones recientes</p>
+                    </div>
+                ) : (
+                    <div className="space-y-3">
+                        {notifications.slice(0, 5).map((notif) => (
+                            <div 
+                                key={notif.id_notificacion}
+                                className={`flex gap-3 p-3 rounded-lg border transition-all ${
+                                    !notif.leido 
+                                        ? 'bg-brand-cyan/5 dark:bg-cyan-900/20 border-brand-cyan/20 dark:border-cyan-700/30' 
+                                        : 'bg-neutral-50 dark:bg-gray-700 border-neutral-200 dark:border-gray-600'
+                                }`}
+                            >
+                                <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
+                                    notif.tipo === 'VENTA' ? 'bg-emerald-500' : 
+                                    notif.tipo === 'STOCK' ? 'bg-amber-500' : 
+                                    'bg-brand-cyan'
+                                }`} />
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between mb-1">
+                                        <p className="text-xs font-bold text-neutral-900 dark:text-white truncate">
+                                            {notif.titulo}
+                                        </p>
+                                        <span className="text-[9px] text-gray-400 whitespace-nowrap ml-2">
+                                            {new Date(notif.fecha_envio || notif.fecha_creacion || notif.created_at).toLocaleString('es-AR', {
+                                                day: '2-digit',
+                                                month: '2-digit',
+                                                hour: '2-digit',
+                                                minute: '2-digit',
+                                                hour12: false
+                                            })}
+                                        </span>
+                                    </div>
+                                    <p className="text-[10px] text-neutral-600 dark:text-gray-300 truncate">
+                                        {notif.mensaje}
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    <span className={`px-2 py-0.5 rounded-full text-[8px] font-medium ${
+                                        notif.leido 
+                                            ? 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300' 
+                                            : 'bg-brand-cyan/10 text-brand-cyan dark:bg-brand-cyan/20 dark:text-cyan-400'
+                                    }`}>
+                                        {notif.leido ? 'Leída' : 'Nueva'}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                        
+                        {notifications.length > 5 && (
+                            <div className="text-center pt-2">
+                                <button
+                                    onClick={() => setShowFilters(!showFilters)}
+                                    className="text-xs text-brand-cyan hover:text-brand-cyan/80 font-medium"
+                                >
+                                    Ver todas las notificaciones ({notifications.length})
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
 
             {/* Tabla de Auditoría */}
             {loading ? (

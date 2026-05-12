@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, ShoppingCart } from 'lucide-react';
+import { X, ShoppingCart, Check, XCircle } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { formatPrice, hasDiscount, getFinalPrice } from '../../utils/priceFormatter';
 import LazyImage from '../ui/LazyImage';
@@ -14,173 +14,206 @@ const ProductComparator = ({ products, isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[200] flex items-end justify-center md:items-center animate-in fade-in duration-300">
       {/* Overlay */}
       <div 
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Modal */}
-      <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col">
+      {/* Modal - Mobile: Bottom sheet, Desktop: Center modal */}
+      <div className="relative bg-white dark:bg-gray-900 w-full md:max-w-4xl md:max-h-[85vh] md:rounded-2xl shadow-2xl animate-in slide-in-from-bottom md:zoom-in-95 duration-300 flex flex-col md:mx-4">
         
         {/* Header */}
-        <div className="bg-white dark:bg-gray-900 border-b border-neutral-200 dark:border-gray-700 p-4 md:p-6 flex items-center justify-between">
-          <h2 className="text-xl md:text-2xl font-sport uppercase">
-            Comparar Productos ({products.length})
+        <div className="bg-white dark:bg-gray-900 border-b border-neutral-200 dark:border-gray-700 px-4 py-3 md:px-6 md:py-4 flex items-center justify-between">
+          <h2 className="text-lg md:text-xl font-sport uppercase">
+            Comparar ({products.length})
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-neutral-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-1.5 hover:bg-neutral-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
           >
-            <X size={24} />
+            <X size={20} />
           </button>
         </div>
 
-        {/* Tabla comparativa */}
-        <div className="flex-1 overflow-auto p-4 md:p-6">
-          <div className="min-w-max">
-            {/* Desktop: Tabla lado a lado */}
-            <div className="hidden md:grid gap-4" style={{ gridTemplateColumns: `repeat(${products.length}, minmax(250px, 1fr))` }}>
-              {products.map((producto) => {
-                const finalPrice = getFinalPrice(producto);
-                const discount = hasDiscount(producto);
-                const hasStock = producto.disponibilidad && producto.disponibilidad.length > 0;
+        {/* Content */}
+        <div className="flex-1 overflow-auto">
+          {/* Mobile: Horizontal scroll cards */}
+          <div className="md:hidden flex gap-2 p-3 overflow-x-auto snap-x snap-mandatory">
+            {products.map((producto) => {
+              const finalPrice = getFinalPrice(producto);
+              const discount = hasDiscount(producto);
+              const hasStock = producto.disponibilidad && producto.disponibilidad.length > 0;
 
-                return (
-                  <div key={producto.id} className="bg-neutral-50 dark:bg-gray-800 rounded-2xl overflow-hidden border border-neutral-200 dark:border-gray-700">
-                    {/* Imagen */}
-                    <div className="aspect-square bg-white dark:bg-gray-700">
+              return (
+                <div key={producto.id} className="flex-shrink-0 w-64 snap-center">
+                  <div className="bg-neutral-50 dark:bg-gray-800 rounded-lg overflow-hidden border border-neutral-200 dark:border-gray-700">
+                    {/* Imagen ultra compacta */}
+                    <div className="aspect-[3/2] bg-white dark:bg-gray-700 relative h-32">
                       <LazyImage
                         src={producto.imagen || '/placeholder-product.jpg'}
                         alt={producto.nombre}
-                        className="w-full h-full"
+                        className="w-full h-full object-cover"
                       />
+                      
+                      {/* Badge de descuento */}
+                      {discount && (
+                        <div className="absolute top-1 right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                          -{Math.round((1 - finalPrice / producto.precio_base) * 100)}%
+                        </div>
+                      )}
                     </div>
 
-                    {/* Info */}
-                    <div className="p-4 space-y-4">
-                      {/* Categoría */}
-                      <div className="text-xs font-bold uppercase tracking-widest text-brand-cyan">
-                        {producto.categoria}
+                    {/* Info ultra compacta */}
+                    <div className="p-2 space-y-1.5">
+                      {/* Categoría y marca */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-[8px] font-bold uppercase tracking-widest text-brand-cyan">
+                          {producto.categoria}
+                        </span>
+                        <span className="text-[8px] text-neutral-500">
+                          {producto.marca}
+                        </span>
                       </div>
 
                       {/* Nombre */}
-                      <h3 className="font-sport text-lg uppercase leading-tight min-h-[3rem]">
+                      <h3 className="font-sport text-xs uppercase leading-tight line-clamp-2 min-h-[2rem]">
                         {producto.nombre}
                       </h3>
 
-                      {/* Marca */}
-                      <div className="text-sm text-neutral-500 dark:text-gray-400">
-                        <span className="font-bold">Marca:</span> {producto.marca}
-                      </div>
-
-                      {/* Precio */}
-                      <div className="border-t border-neutral-200 dark:border-gray-700 pt-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-2xl font-sport text-brand-cyan">
-                            {formatPrice(finalPrice)}
-                          </span>
-                          {discount && (
-                            <span className="text-sm text-neutral-400 line-through">
-                              {formatPrice(producto.precio_base)}
+                      {/* Precio y stock */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm font-sport text-brand-cyan">
+                              {formatPrice(finalPrice)}
                             </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Descripción */}
-                      {producto.descripcion && (
-                        <div className="border-t border-neutral-200 dark:border-gray-700 pt-4">
-                          <p className="text-xs text-neutral-600 dark:text-gray-400 line-clamp-3">
-                            {producto.descripcion}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Disponibilidad */}
-                      <div className="border-t border-neutral-200 dark:border-gray-700 pt-4">
-                        <div className="text-xs font-bold uppercase tracking-widest text-neutral-500 dark:text-gray-400 mb-2">
-                          Disponibilidad
-                        </div>
-                        {hasStock ? (
-                          <div className="text-xs text-green-600 dark:text-green-400 font-bold">
-                            ✓ Disponible en {producto.disponibilidad.length} sucursal{producto.disponibilidad.length > 1 ? 'es' : ''}
+                            {discount && (
+                              <span className="text-[9px] text-neutral-400 line-through">
+                                {formatPrice(producto.precio_base)}
+                              </span>
+                            )}
                           </div>
-                        ) : (
-                          <div className="text-xs text-red-500 font-bold">
-                            ✗ Sin stock
+                          <div className="flex items-center gap-0.5 mt-0.5">
+                            {hasStock ? (
+                              <>
+                                <Check size={10} className="text-green-500" />
+                                <span className="text-[8px] text-green-600">
+                                  {producto.disponibilidad.length} sucursal{producto.disponibilidad.length > 1 ? 'es' : ''}
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <XCircle size={10} className="text-red-500" />
+                                <span className="text-[8px] text-red-500">Sin stock</span>
+                              </>
+                            )}
                           </div>
-                        )}
+                        </div>
+                        
+                        <button
+                          onClick={() => handleAddToCart(producto)}
+                          disabled={!hasStock}
+                          className={`p-1.5 rounded-lg transition-all ${
+                            !hasStock
+                              ? 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
+                              : 'bg-brand-cyan text-white hover:bg-black active:scale-95'
+                          }`}
+                        >
+                          <ShoppingCart size={14} />
+                        </button>
                       </div>
-
-                      {/* Botón */}
-                      <button
-                        onClick={() => handleAddToCart(producto)}
-                        disabled={!hasStock}
-                        className={`w-full py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
-                          !hasStock
-                            ? 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
-                            : 'bg-brand-cyan text-white hover:bg-black'
-                        }`}
-                      >
-                        <ShoppingCart size={16} />
-                        {hasStock ? 'Agregar' : 'Sin Stock'}
-                      </button>
                     </div>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
+          </div>
 
-            {/* Mobile: Cards apiladas */}
-            <div className="md:hidden space-y-4">
+          {/* Desktop: Ultra compact grid */}
+          <div className="hidden md:block p-4">
+            <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${Math.min(products.length, 4)}, 1fr))` }}>
               {products.map((producto) => {
                 const finalPrice = getFinalPrice(producto);
                 const discount = hasDiscount(producto);
                 const hasStock = producto.disponibilidad && producto.disponibilidad.length > 0;
 
                 return (
-                  <div key={producto.id} className="bg-neutral-50 dark:bg-gray-800 rounded-2xl overflow-hidden border border-neutral-200 dark:border-gray-700">
-                    <div className="flex gap-4 p-4">
-                      {/* Imagen */}
-                      <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-white dark:bg-gray-700">
-                        <LazyImage
-                          src={producto.imagen || '/placeholder-product.jpg'}
-                          alt={producto.nombre}
-                          className="w-full h-full"
-                        />
+                  <div key={producto.id} className="bg-neutral-50 dark:bg-gray-800 rounded-lg overflow-hidden border border-neutral-200 dark:border-gray-700">
+                    {/* Imagen ultra compacta */}
+                    <div className="aspect-[3/2] bg-white dark:bg-gray-700 relative h-28">
+                      <LazyImage
+                        src={producto.imagen || '/placeholder-product.jpg'}
+                        alt={producto.nombre}
+                        className="w-full h-full object-cover"
+                      />
+                      
+                      {/* Badge de descuento */}
+                      {discount && (
+                        <div className="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
+                          -{Math.round((1 - finalPrice / producto.precio_base) * 100)}%
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Info ultra compacta */}
+                    <div className="p-2.5 space-y-2">
+                      {/* Categoría y marca */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-[8px] font-bold uppercase tracking-widest text-brand-cyan">
+                          {producto.categoria}
+                        </span>
+                        <span className="text-[8px] text-neutral-500">
+                          {producto.marca}
+                        </span>
                       </div>
 
-                      {/* Info */}
-                      <div className="flex-1 min-w-0 space-y-2">
-                        <div className="text-[9px] font-bold uppercase tracking-widest text-brand-cyan">
-                          {producto.categoria}
-                        </div>
-                        <h3 className="font-sport text-base uppercase leading-tight">
-                          {producto.nombre}
-                        </h3>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xl font-sport text-brand-cyan">
-                            {formatPrice(finalPrice)}
+                      {/* Nombre */}
+                      <h3 className="font-sport text-xs uppercase leading-tight line-clamp-2 min-h-[1.8rem]">
+                        {producto.nombre}
+                      </h3>
+
+                      {/* Precio */}
+                      <div className="flex items-center gap-1">
+                        <span className="text-sm font-sport text-brand-cyan">
+                          {formatPrice(finalPrice)}
+                        </span>
+                        {discount && (
+                          <span className="text-[9px] text-neutral-400 line-through">
+                            {formatPrice(producto.precio_base)}
                           </span>
-                          {discount && (
-                            <span className="text-xs text-neutral-400 line-through">
-                              {formatPrice(producto.precio_base)}
-                            </span>
+                        )}
+                      </div>
+
+                      {/* Stock y botón */}
+                      <div className="flex items-center justify-between pt-1 border-t border-neutral-200 dark:border-gray-700">
+                        <div className="flex items-center gap-0.5">
+                          {hasStock ? (
+                            <>
+                              <Check size={10} className="text-green-500" />
+                              <span className="text-[8px] text-green-600">
+                                {producto.disponibilidad.length} sucursal{producto.disponibilidad.length > 1 ? 'es' : ''}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <XCircle size={10} className="text-red-500" />
+                              <span className="text-[8px] text-red-500">Sin stock</span>
+                            </>
                           )}
                         </div>
+                        
                         <button
                           onClick={() => handleAddToCart(producto)}
                           disabled={!hasStock}
-                          className={`w-full py-2 rounded-lg font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+                          className={`p-1.5 rounded-lg transition-all ${
                             !hasStock
                               ? 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
-                              : 'bg-brand-cyan text-white hover:bg-black'
+                              : 'bg-brand-cyan text-white hover:bg-black active:scale-95'
                           }`}
                         >
-                          <ShoppingCart size={14} />
-                          {hasStock ? 'Agregar' : 'Sin Stock'}
+                          <ShoppingCart size={12} />
                         </button>
                       </div>
                     </div>
@@ -188,6 +221,14 @@ const ProductComparator = ({ products, isOpen, onClose }) => {
                 );
               })}
             </div>
+          </div>
+        </div>
+
+        {/* Mobile: Bottom action bar */}
+        <div className="md:hidden bg-white dark:bg-gray-900 border-t border-neutral-200 dark:border-gray-700 px-4 py-3">
+          <div className="flex items-center justify-between text-xs text-neutral-500">
+            <span>Desliza para comparar</span>
+            <span>{products.length} producto{products.length > 1 ? 's' : ''}</span>
           </div>
         </div>
       </div>

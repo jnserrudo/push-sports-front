@@ -21,15 +21,21 @@ import {
   Component,
   Tag,
   CalendarDays,
-  AlertTriangle
+  AlertTriangle,
+  Eye,
+  Clock,
+  MessageSquare,
+  X
 } from 'lucide-react';
-import { X } from 'lucide-react'; // Explicit import to bypass HMR cache issues
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { useNavigate, useLocation, Link, Outlet, Navigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { ThemeToggle } from '../ui/ThemeToggle';
+import NotificationBadge from '../admin/NotificationBadge';
 import api from '../../api/api';
+import toast from 'react-hot-toast';
+import { formatearTipoNotificacion, getColorTipoNotificacion } from '../../utils/notificationFormatter';
 
 const DashboardLayout = () => {
   const { user, logout } = useAuthStore();
@@ -39,6 +45,8 @@ const DashboardLayout = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [selectedNotificacion, setSelectedNotificacion] = useState(null);
+  const [isModalNotificacionOpen, setIsModalNotificacionOpen] = useState(false);
   
   const profileRef = useRef(null);
   const notificationsRef = useRef(null);
@@ -81,6 +89,7 @@ const DashboardLayout = () => {
     setLoadingNotifs(true);
     try {
       const res = await api.get(`/notificaciones/usuario/${user.id_usuario}`);
+      console.log('Notificaciones recibidas:', res.data);
       setNotifications(res.data || []);
     } catch {
       setNotifications([]);
@@ -125,6 +134,7 @@ const DashboardLayout = () => {
     { label: 'Historial de Movimientos', icon: Activity,        path: '/dashboard/movimientos',    roles: [1, 2] },
     { label: 'Reportería',        icon: ClipboardList,   path: '/dashboard/reporteria',     roles: [1] },
     { label: 'Gestión de Devoluciones', icon: RotateCcw,       path: '/dashboard/devoluciones',   roles: [1, 2, 3] },
+    { label: 'Consultas Web',    icon: MessageSquare,    path: '/dashboard/consultas',      roles: [1, 2, 3] },
     { label: 'Rectificaciones',   icon: AlertTriangle,   path: '/dashboard/rectificaciones',roles: [1, 2, 3] },
     { label: 'Cierres de Caja',   icon: CreditCard,      path: '/dashboard/liquidaciones',  roles: [1, 2] },
     { label: 'Gestión de Descuentos', icon: Ticket,          path: '/dashboard/descuentos',     roles: [1] },
@@ -317,7 +327,9 @@ const DashboardLayout = () => {
                   >
                       <Bell size={16} md:size={18} className="text-neutral-900 dark:text-gray-100" />
                       {unreadCount > 0 && (
-                        <div className="absolute top-1.5 right-1.5 md:top-3 md:right-3 w-2 h-2 md:w-2.5 md:h-2.5 bg-brand-cyan dark:bg-cyan-400 rounded-full border-2 border-white dark:border-gray-700" />
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 md:w-5 md:h-5 rounded-full flex items-center justify-center animate-pulse shadow-lg">
+                          {unreadCount > 99 ? '99+' : unreadCount}
+                        </span>
                       )}
                   </button>
 
@@ -332,15 +344,147 @@ const DashboardLayout = () => {
                           <p className="text-[11px] md:text-xs font-black uppercase tracking-widest text-neutral-400 dark:text-gray-400 text-center py-8">Cargando...</p>
                         ) : notifications.length === 0 ? (
                           <p className="text-[11px] md:text-xs font-black uppercase tracking-widest text-neutral-400 dark:text-gray-400 text-center py-8">Sin notificaciones de sistema</p>
-                        ) : notifications.slice(0, 5).map((n, i) => (
-                          <div key={n.id_notificacion || i} className={`flex gap-3 md:gap-4 p-3 md:p-4 group cursor-pointer rounded-xl transition-all ${!n.leido ? 'bg-brand-cyan/5 dark:bg-cyan-900/20 border border-brand-cyan/20 dark:border-cyan-700/30' : 'hover:bg-neutral-50 dark:hover:bg-gray-700 border border-transparent'}`}>
-                            <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 shadow-sm ${n.tipo === 'VENTA' ? 'bg-emerald-500' : n.tipo === 'STOCK' ? 'bg-amber-500' : 'bg-brand-cyan'}`} />
-                            <div className="flex-1">
-                                <p className="text-xs md:text-sm font-bold text-neutral-900 dark:text-gray-100 leading-snug group-hover:text-brand-cyan dark:group-hover:text-cyan-400 transition-colors">{n.titulo}</p>
+                        ) : notifications.slice(0, 5).map((n, i) => {
+                          
+                          const formatearFechaNotificacion = (fecha) => {
+                            // Validar fecha
+                            if (!fecha) return 'Fecha desconocida';
+                            
+                            const ahora = new Date();
+                            const fechaNotif = new Date(fecha);
+                            
+                            // Verificar si la fecha es válida
+                            if (isNaN(fechaNotif.getTime())) return 'Fecha inválida';
+                            
+                            const diffMs = ahora - fechaNotif;
+                            const diffMins = Math.floor(Math.abs(diffMs) / 60000);
+                            const diffHours = Math.floor(diffMins / 60);
+                            const diffDays = Math.floor(diffHours / 24);
+
+                            // Si la diferencia es negativa, la fecha es futura
+                            if (diffMs < 0) return fechaNotif.toLocaleDateString('es-AR');
+
+                            if (diffMins < 1) return 'Ahora';
+                            if (diffMins < 60) return `Hace ${diffMins} min`;
+                            if (diffHours < 24) return `Hace ${diffHours} h`;
+                            if (diffDays < 7) return `Hace ${diffDays} d`;
+                            
+                            return fechaNotif.toLocaleDateString('es-AR');
+                          };
+
+                          const formatearHoraNotificacion = (fecha) => {
+                            // Validar fecha
+                            if (!fecha) return '--:--';
+                            
+                            const fechaNotif = new Date(fecha);
+                            
+                            // Verificar si la fecha es válida
+                            if (isNaN(fechaNotif.getTime())) {
+                              return '--:--';
+                            }
+                            
+                            const ahora = new Date();
+                            const diffMs = ahora - fechaNotif;
+                            const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+
+                            // Si es hoy, mostrar hora
+                            if (diffDays < 1) {
+                              return fechaNotif.toLocaleTimeString('es-AR', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: false
+                              });
+                            }
+                            
+                            // Si es esta semana, mostrar día y hora
+                            if (diffDays < 7) {
+                              const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+                              return `${dias[fechaNotif.getDay()]} ${fechaNotif.toLocaleTimeString('es-AR', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: false
+                              })}`;
+                            }
+                            
+                            // Si es más antiguo, mostrar fecha completa
+                            return fechaNotif.toLocaleDateString('es-AR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: '2-digit',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: false
+                            });
+                          };
+
+                          // Encontrar el campo de fecha correcto - usar fecha_envio que es el campo real de la BD
+                          const fechaNotificacion = n.fecha_envio || n.fecha_creacion || n.created_at || n.fecha || n.createdAt || new Date().toISOString();
+
+                          const handleMarcarComoLeida = async (idNotificacion) => {
+                            try {
+                              await api.put(`/notificaciones/${idNotificacion}/leido`);
+                              
+                              // Actualizar estado local inmediatamente
+                              setNotifications(prev => prev.map(n => 
+                                n.id_notificacion === idNotificacion ? { ...n, leido: true } : n
+                              ));
+                              
+                              toast.success('Notificación marcada como leída');
+                            } catch (error) {
+                              console.error('Error al marcar como leída:', error);
+                              toast.error('Error al marcar como leída');
+                            }
+                          };
+
+                          const handleVerDetalle = (notificacion) => {
+                            // Cerrar el dropdown de notificaciones
+                            setIsNotificationsOpen(false);
+                            
+                            // Abrir modal con detalles
+                            setSelectedNotificacion(notificacion);
+                            setIsModalNotificacionOpen(true);
+                            
+                            // Marcar como leída si no lo está
+                            if (!notificacion.leido) {
+                              handleMarcarComoLeida(notificacion.id_notificacion);
+                            }
+                          };
+
+                          return (
+                            <div 
+                              key={n.id_notificacion || i} 
+                              className={`flex gap-3 md:gap-4 p-3 md:p-4 group rounded-xl transition-all cursor-pointer ${!n.leido ? 'bg-brand-cyan/5 dark:bg-cyan-900/20 border border-brand-cyan/20 dark:border-cyan-700/30' : 'hover:bg-neutral-50 dark:hover:bg-gray-700 border border-transparent'}`}
+                              onClick={() => handleVerDetalle(n)}
+                            >
+                              <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 shadow-sm ${n.tipo === 'VENTA' ? 'bg-emerald-500' : n.tipo === 'STOCK' ? 'bg-amber-500' : 'bg-brand-cyan'}`} />
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between mb-1">
+                                  <p className="text-xs md:text-sm font-bold text-neutral-900 dark:text-gray-100 leading-snug group-hover:text-brand-cyan dark:group-hover:text-cyan-400 transition-colors">{n.titulo}</p>
+                                  <div className="flex items-center gap-1 text-[9px] text-gray-400">
+                                    <span>{formatearFechaNotificacion(fechaNotificacion)}</span>
+                                    <span>•</span>
+                                    <span>{formatearHoraNotificacion(fechaNotificacion)}</span>
+                                  </div>
+                                </div>
                                 <p className="text-[10px] md:text-xs font-medium text-neutral-500 dark:text-gray-400 leading-relaxed mt-1">{n.mensaje}</p>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                {!n.leida && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation(); // Evitar que se dispare el click del padre
+                                      handleMarcarComoLeida(n.id_notificacion);
+                                    }}
+                                    className="p-1 text-gray-400 hover:text-brand-cyan hover:bg-brand-cyan/10 rounded transition-colors"
+                                    title="Marcar como leída"
+                                  >
+                                    <Eye size={14} />
+                                  </button>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                       <button 
                         onClick={() => { setIsNotificationsOpen(false); navigate('/dashboard/auditoria'); }}
@@ -351,6 +495,9 @@ const DashboardLayout = () => {
                     </div>
                   )}
                 </div>
+                
+                {/* NotificationBadge para consultas web - Temporalmente deshabilitado */}
+                {/* <NotificationBadge /> */}
                 
                 <div className="relative" ref={profileRef} onMouseEnter={handleProfileEnter} onMouseLeave={handleProfileLeave}>
                   <button 
@@ -423,6 +570,128 @@ const DashboardLayout = () => {
             </div>
         </main>
       </div>
+
+      {/* Modal de Detalles de Notificación */}
+      {isModalNotificacionOpen && selectedNotificacion && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-neutral-200 dark:border-gray-700 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="p-6 border-b border-neutral-200 dark:border-gray-700">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-3 h-3 rounded-full ${selectedNotificacion.tipo === 'VENTA' ? 'bg-emerald-500' : selectedNotificacion.tipo === 'STOCK' ? 'bg-amber-500' : 'bg-brand-cyan'}`} />
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
+                    {selectedNotificacion.titulo}
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setIsModalNotificacionOpen(false)}
+                  className="p-2 hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                >
+                  <X size={20} className="text-neutral-600 dark:text-gray-400" />
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-4">
+              {/* Fecha y Hora */}
+              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                <Clock size={16} />
+                <span>
+                  {new Date(selectedNotificacion.fecha_envio || selectedNotificacion.fecha_creacion || selectedNotificacion.created_at).toLocaleString('es-AR', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: false
+                })}
+                </span>
+              </div>
+
+              {/* Mensaje */}
+              <div className="bg-neutral-50 dark:bg-gray-700 rounded-lg p-4">
+                <p className="text-neutral-900 dark:text-gray-100">
+                  {selectedNotificacion.mensaje}
+                </p>
+              </div>
+
+              {/* Tipo de Notificación */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Tipo:</span>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getColorTipoNotificacion(selectedNotificacion.tipo)}`}>
+                  {formatearTipoNotificacion(selectedNotificacion.tipo)}
+                </span>
+              </div>
+
+              {/* Estado */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Estado:</span>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  selectedNotificacion.leido 
+                    ? 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300' 
+                    : 'bg-brand-cyan/10 text-brand-cyan dark:bg-brand-cyan/20 dark:text-cyan-400'
+                }`}>
+                  {selectedNotificacion.leido ? 'Leída' : 'No leída'}
+                </span>
+              </div>
+
+              {/* Información Adicional según tipo */}
+              {selectedNotificacion.tipo === 'CONSULTA_WEB' && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-center gap-2 mb-2">
+                    <MessageSquare size={16} className="text-blue-600 dark:text-blue-400" />
+                    <span className="text-sm font-medium text-blue-900 dark:text-blue-100">Información de la Consulta</span>
+                  </div>
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                    Esta notificación corresponde a una consulta web recibida. Puedes gestionarla desde la sección de consultas.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 border-t border-neutral-200 dark:border-gray-700 flex flex-col gap-3">
+              {/* Botón Ver Consulta para notificaciones de consulta web */}
+              {selectedNotificacion.tipo === 'CONSULTA_WEB' && (
+                <button
+                  onClick={() => {
+                    // Extraer ID de consulta del mensaje o usar un campo específico
+                    // Por ahora, redirigir a la lista de consultas
+                    navigate('/dashboard/consultas');
+                    setIsModalNotificacionOpen(false);
+                  }}
+                  className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2"
+                >
+                  <Eye size={18} />
+                  Ver Consulta
+                </button>
+              )}
+              
+              <div className="flex gap-3">
+                {!selectedNotificacion.leido && (
+                  <button
+                    onClick={() => {
+                      handleMarcarComoLeida(selectedNotificacion.id_notificacion);
+                      setSelectedNotificacion(prev => ({ ...prev, leido: true }));
+                    }}
+                    className="flex-1 px-4 py-2 bg-brand-cyan text-white rounded-lg hover:bg-brand-cyan/90 transition-colors font-medium"
+                  >
+                    Marcar como leída
+                  </button>
+                )}
+                <button
+                  onClick={() => setIsModalNotificacionOpen(false)}
+                  className="flex-1 px-4 py-2 bg-neutral-200 dark:bg-gray-700 text-neutral-700 dark:text-gray-300 rounded-lg hover:bg-neutral-300 dark:hover:bg-gray-600 transition-colors font-medium"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MOBILE OVERLAY */}
       {isSidebarOpen && (

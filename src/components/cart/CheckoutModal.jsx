@@ -3,34 +3,136 @@ import { X, Send } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { generateWhatsAppMessage, openWhatsApp } from '../../utils/whatsappHelper';
 import publicService from '../../services/publicService';
+import consultaService from '../../services/consultaService';
+import toast from 'react-hot-toast';
 
 const CheckoutModal = ({ isOpen, onClose }) => {
   const { cart, getTotal, clearCart, setIsCartOpen } = useCart();
   const [sucursales, setSucursales] = useState([]);
+  const [loadingSucursales, setLoadingSucursales] = useState(true);
   const [formData, setFormData] = useState({
     customerName: '',
     customerPhone: '',
+    customerEmail: '',
     sucursal: '',
     deliveryMethod: 'retiro',
     comments: ''
   });
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Cargar sucursales
+  // Cargar sucursales y filtrar por stock disponible
   useEffect(() => {
     const fetchSucursales = async () => {
       try {
-        const data = await publicService.getSucursales();
-        setSucursales(data);
-        if (data.length > 0) {
-          setFormData(prev => ({ ...prev, sucursal: data[0].nombre }));
+        const allSucursales = await publicService.getSucursales();
+        
+        // Verificar si algún item no tiene disponibilidad
+        const itemsSinDisponibilidad = cart.filter(item => !item.disponibilidad || !Array.isArray(item.disponibilidad));
+        
+        // Si hay items sin disponibilidad, recargar desde el catálogo
+        let cartActualizado = [...cart];
+        if (itemsSinDisponibilidad.length > 0) {
+          console.warn('⚠️ ADVERTENCIA: Algunos items no tienen disponibilidad guardada');
+          console.warn('Items sin disponibilidad:', itemsSinDisponibilidad.map(i => i.nombre));
+          console.warn('🔄 Recargando disponibilidad desde el catálogo...');
+          
+          try {
+            const catalogo = await publicService.getCatalog();
+            
+            cartActualizado = cart.map(item => {
+              if (!item.disponibilidad || !Array.isArray(item.disponibilidad)) {
+                const productoEnCatalogo = catalogo.find(p => p.id === item.id);
+                if (productoEnCatalogo) {
+                  console.log(`✅ Disponibilidad recargada para: ${item.nombre}`);
+                  return {
+                    ...item,
+                    disponibilidad: productoEnCatalogo.disponibilidad
+                  };
+                }
+              }
+              return item;
+            });
+            
+            console.log('✅ Disponibilidad actualizada');
+          } catch (error) {
+            console.error('❌ Error al recargar disponibilidad:', error);
+          }
+        }
+        
+        // Verificar disponibilidad de cada item
+        cartActualizado.forEach((item, index) => {
+          console.log(`\n📦 Item ${index + 1}: ${item.nombre}`);
+          console.log('   - Cantidad solicitada:', item.cantidad);
+          console.log('   - Disponibilidad:', item.disponibilidad);
+          console.log('   - Tiene disponibilidad?:', !!item.disponibilidad);
+          console.log('   - Es array?:', Array.isArray(item.disponibilidad));
+          console.log('   - Longitud:', item.disponibilidad?.length);
+          
+          // Mostrar cada sucursal en disponibilidad
+          if (item.disponibilidad && Array.isArray(item.disponibilidad)) {
+            item.disponibilidad.forEach((disp, idx) => {
+              console.log(`     ${idx + 1}. Sucursal: "${disp.sucursal}" | Cantidad: ${disp.cantidad}`);
+            });
+          }
+        });
+        
+        // Filtrar sucursales que tengan stock de todos los productos del carrito
+        const sucursalesConStock = allSucursales.filter(sucursal => {
+          console.log(`\n🔍 Evaluando sucursal: ${sucursal.nombre}`);
+          
+          const tieneStock = cartActualizado.every(item => {
+            // Buscar el stock de este producto en esta sucursal
+            // Normalizar nombres para comparación (trim y case-insensitive)
+            const nombreSucursalNormalizado = sucursal.nombre.trim().toLowerCase();
+            
+            console.log(`   🔎 Buscando "${nombreSucursalNormalizado}" en disponibilidad de ${item.nombre}`);
+            
+            const stockEnSucursal = item.disponibilidad?.find(
+              disp => {
+                const nombreDisp = disp.sucursal.trim().toLowerCase();
+                console.log(`      Comparando: "${nombreDisp}" === "${nombreSucursalNormalizado}" → ${nombreDisp === nombreSucursalNormalizado}`);
+                return nombreDisp === nombreSucursalNormalizado;
+              }
+            );
+            
+            const resultado = stockEnSucursal && stockEnSucursal.cantidad >= item.cantidad;
+            
+            console.log(`   📦 ${item.nombre}:`, {
+              disponibilidad: item.disponibilidad,
+              stockEnSucursal: stockEnSucursal,
+              stockDisponible: stockEnSucursal?.cantidad || 0,
+              cantidadSolicitada: item.cantidad,
+              cumpleRequisito: resultado
+            });
+            
+            // Verificar que exista stock y que sea suficiente para la cantidad solicitada
+            return resultado;
+          });
+          
+          console.log(`   ✓ Resultado para ${sucursal.nombre}:`, tieneStock);
+          return tieneStock;
+        });
+        
+        console.log('\n✅ Sucursales con stock completo:', sucursalesConStock.map(s => s.nombre));
+        console.log('=== FIN DEBUG CHECKOUT ===\n');
+        
+        setSucursales(sucursalesConStock);
+        if (sucursalesConStock.length > 0) {
+          setFormData(prev => ({ ...prev, sucursal: sucursalesConStock[0].nombre }));
         }
       } catch (error) {
-        console.error('Error cargando sucursales:', error);
+        console.error('Error al cargar sucursales:', error);
+      } finally {
+        setLoadingSucursales(false);
       }
     };
-    fetchSucursales();
-  }, []);
+    
+    if (isOpen && cart.length > 0) {
+      setLoadingSucursales(true);
+      fetchSucursales();
+    }
+  }, [isOpen, cart]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -54,7 +156,13 @@ const CheckoutModal = ({ isOpen, onClose }) => {
       newErrors.customerPhone = 'Teléfono inválido';
     }
 
-    if (!formData.sucursal) {
+    if (formData.customerEmail && !/^[^\s@]+@[^\s@]+\.[^\s]+$/.test(formData.customerEmail)) {
+      newErrors.customerEmail = 'Email inválido';
+    }
+
+    if (sucursales.length === 0) {
+      newErrors.sucursal = 'No hay sucursales con stock disponible';
+    } else if (!formData.sucursal) {
       newErrors.sucursal = 'Selecciona una sucursal';
     }
 
@@ -62,33 +170,97 @@ const CheckoutModal = ({ isOpen, onClose }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!validate()) return;
 
-    // Generar mensaje de WhatsApp
-    const message = generateWhatsAppMessage({
-      items: cart,
-      total: getTotal(),
-      ...formData,
-      deliveryMethod: formData.deliveryMethod === 'retiro' 
-        ? 'Retiro en sucursal' 
-        : 'Envío a domicilio'
-    });
+    setIsSubmitting(true);
 
-    // Número de WhatsApp del negocio (configurar en .env)
-    const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || '+5493875792395';
+    try {
+      // Obtener ID de la sucursal seleccionada
+      const sucursalSeleccionada = sucursales.find(s => s.nombre === formData.sucursal);
+      if (!sucursalSeleccionada) {
+        setErrors({ sucursal: 'Sucursal no válida' });
+        setIsSubmitting(false);
+        return;
+      }
 
-    // Abrir WhatsApp
-    openWhatsApp(whatsappNumber, message);
+      // Preparar datos para la consulta
+      const consultaData = {
+        nombre_cliente: formData.customerName,
+        telefono_cliente: formData.customerPhone,
+        email_cliente: formData.customerEmail || null,
+        id_sucursal: sucursalSeleccionada.id_comercio,
+        metodo_entrega: formData.deliveryMethod,
+        comentarios: formData.comments,
+        items: cart.map(item => ({
+          id_producto: item.id,
+          nombre_producto: item.nombre,
+          cantidad: item.cantidad,
+          precio_unitario: item.precio,
+          subtotal: item.precio * item.cantidad,
+          id_variante: item.variante?.id || null,
+          variante_info: item.variante || null
+        })),
+        total: getTotal(),
+        cantidad_items: cart.length
+      };
 
-    // Limpiar carrito y cerrar
-    setTimeout(() => {
-      clearCart();
-      setIsCartOpen(false);
-      onClose();
-    }, 500);
+      // Guardar consulta en el backend
+      console.log('📤 Enviando consulta al backend...', consultaData);
+      const response = await consultaService.crearConsulta(consultaData);
+      console.log('✅ Consulta guardada:', response);
+
+      // Mostrar toast de éxito
+      toast.success('¡Pedido registrado! Abriendo WhatsApp...', {
+        duration: 3000,
+        icon: '✅'
+      });
+
+      // Generar mensaje de WhatsApp con token de seguimiento
+      const tokenSeguimiento = response.data?.token_seguimiento || response.token_seguimiento;
+      console.log('🔑 Token de seguimiento:', tokenSeguimiento);
+      console.log('📦 Respuesta completa:', response);
+      
+      const message = generateWhatsAppMessage({
+        items: cart,
+        total: getTotal(),
+        ...formData,
+        deliveryMethod: formData.deliveryMethod === 'retiro' 
+          ? 'Retiro en sucursal' 
+          : 'Envío a domicilio',
+        tokenSeguimiento
+      });
+
+      // Número de WhatsApp del negocio (configurar en .env)
+      const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || '+5493875792395';
+
+      // Abrir WhatsApp
+      console.log('📱 Abriendo WhatsApp...');
+      openWhatsApp(whatsappNumber, message);
+
+      // Limpiar carrito y cerrar
+      setTimeout(() => {
+        clearCart();
+        setIsCartOpen(false);
+        onClose();
+        setIsSubmitting(false);
+      }, 1000);
+
+    } catch (error) {
+      console.error('❌ Error al procesar el pedido:', error);
+      
+      // Mostrar error al usuario con toast
+      toast.error(error.message || 'Error al procesar el pedido', {
+        duration: 4000
+      });
+      
+      setErrors({ general: error.message || 'Error al procesar el pedido' });
+      
+      // Resetear estado de submitting
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -158,25 +330,66 @@ const CheckoutModal = ({ isOpen, onClose }) => {
             )}
           </div>
 
-          {/* Sucursal */}
+          {/* Email */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-widest text-neutral-600 dark:text-gray-400 mb-2">
-              Sucursal Preferida *
+              Email (Opcional)
             </label>
-            <select
-              name="sucursal"
-              value={formData.sucursal}
+            <input
+              type="email"
+              name="customerEmail"
+              value={formData.customerEmail}
               onChange={handleChange}
+              placeholder="correo@ejemplo.com"
               className={`w-full px-4 py-3 bg-neutral-50 dark:bg-gray-800 border ${
-                errors.sucursal ? 'border-red-500' : 'border-neutral-200 dark:border-gray-700'
-              } rounded-xl text-sm font-medium focus:outline-none focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/20 transition-all cursor-pointer`}
-            >
-              {sucursales.map(suc => (
-                <option key={suc.id_comercio} value={suc.nombre}>
-                  {suc.nombre}
-                </option>
-              ))}
-            </select>
+                errors.customerEmail ? 'border-red-500' : 'border-neutral-200 dark:border-gray-700'
+              } rounded-xl text-sm font-medium focus:outline-none focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/20 transition-all`}
+            />
+            {errors.customerEmail && (
+              <p className="text-xs text-red-500 mt-1">{errors.customerEmail}</p>
+            )}
+          </div>
+
+          {/* Sucursal */}
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-widest text-neutral-600 dark:text-gray-400 mb-1">
+              Sucursal para Retiro/Envío *
+            </label>
+            <p className="text-xs text-neutral-500 dark:text-gray-500 mb-2">
+              Solo sucursales con stock disponible de tus productos
+            </p>
+            {loadingSucursales ? (
+              <div className="w-full px-4 py-3 bg-neutral-50 dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-xl flex items-center justify-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-brand-cyan border-t-transparent"></div>
+                <p className="text-sm text-neutral-600 dark:text-gray-400">
+                  Verificando disponibilidad...
+                </p>
+              </div>
+            ) : sucursales.length === 0 ? (
+              <div className="w-full px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl">
+                <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                  No hay sucursales con stock suficiente para todos los productos
+                </p>
+                <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                  Reduce las cantidades o contacta por WhatsApp para consultar disponibilidad
+                </p>
+              </div>
+            ) : (
+              <select
+                name="sucursal"
+                value={formData.sucursal}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 bg-neutral-50 dark:bg-gray-800 border ${
+                  errors.sucursal ? 'border-red-500' : 'border-neutral-200 dark:border-gray-700'
+                } rounded-xl text-sm font-medium focus:outline-none focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/20 transition-all cursor-pointer`}
+              >
+                {sucursales.map(suc => (
+                  <option key={suc.id_comercio} value={suc.nombre}>
+                    {suc.nombre}
+                  </option>
+                ))}
+              </select>
+            )}
             {errors.sucursal && (
               <p className="text-xs text-red-500 mt-1">{errors.sucursal}</p>
             )}
@@ -243,13 +456,34 @@ const CheckoutModal = ({ isOpen, onClose }) => {
             />
           </div>
 
+          {/* Error general */}
+          {errors.general && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+              <p className="text-xs text-red-600 dark:text-red-400">{errors.general}</p>
+            </div>
+          )}
+
           {/* Botón de envío */}
           <button
             type="submit"
-            className="w-full py-4 bg-green-500 text-white rounded-xl font-bold text-sm uppercase tracking-widest hover:bg-green-600 hover:shadow-lg transition-all flex items-center justify-center gap-3"
+            disabled={isSubmitting}
+            className={`w-full py-4 rounded-xl font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all duration-300 ${
+              isSubmitting
+                ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                : 'bg-black text-white hover:bg-brand-cyan'
+            }`}
           >
-            <Send size={20} />
-            Enviar Pedido por WhatsApp
+            {isSubmitting ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Procesando...
+              </>
+            ) : (
+              <>
+                <Send size={18} />
+                Finalizar Pedido por WhatsApp
+              </>
+            )}
           </button>
 
           <p className="text-xs text-neutral-400 dark:text-gray-500 text-center">

@@ -8,6 +8,7 @@
  * @param {string} orderData.sucursal - Sucursal preferida
  * @param {string} orderData.deliveryMethod - Método de entrega
  * @param {string} orderData.comments - Comentarios adicionales
+ * @param {string} orderData.tokenSeguimiento - Token para seguimiento público
  * @returns {string} Mensaje formateado
  */
 export const generateWhatsAppMessage = (orderData) => {
@@ -18,17 +19,18 @@ export const generateWhatsAppMessage = (orderData) => {
     customerPhone,
     sucursal,
     deliveryMethod,
-    comments
+    comments,
+    tokenSeguimiento
   } = orderData;
 
-  let message = '🏋️ *PEDIDO PUSHSPORT*\n\n';
+  let message = '*PEDIDO PUSHSPORT*\n\n';
   
   // Datos del cliente
-  message += `👤 *Cliente:* ${customerName}\n`;
-  message += `📱 *Teléfono:* ${customerPhone}\n\n`;
+  message += `*Cliente:* ${customerName}\n`;
+  message += `*Teléfono:* ${customerPhone}\n\n`;
   
   // Productos
-  message += '📦 *PRODUCTOS:*\n';
+  message += '*PRODUCTOS:*\n';
   items.forEach(item => {
     const varianteInfo = item.variante 
       ? ` (${Object.values(item.variante.atributos_valores || {}).join(', ')})`
@@ -37,19 +39,27 @@ export const generateWhatsAppMessage = (orderData) => {
   });
   
   // Total
-  message += `\n💰 *TOTAL:* ${formatPrice(total)}\n\n`;
+  message += `\n*TOTAL:* ${formatPrice(total)}\n\n`;
   
   // Sucursal y entrega
-  message += `📍 *Sucursal:* ${sucursal}\n`;
-  message += `🚚 *Entrega:* ${deliveryMethod}\n`;
+  message += `*Sucursal:* ${sucursal}\n`;
+  message += `*Entrega:* ${deliveryMethod}\n`;
   
   // Comentarios
   if (comments) {
-    message += `\n💬 *Comentarios:* ${comments}\n`;
+    message += `\n*Comentarios:* ${comments}\n`;
   }
   
-  message += '\n━━━━━━━━━━━━━━━━━━━━━━\n';
-  message += 'Pedido generado desde pushsport.com.ar';
+  message += '\n________________________________\n';
+  
+  // URL de seguimiento si existe token
+  if (tokenSeguimiento) {
+    message += `\n🔗 *Seguí tu pedido aquí:*\n`;
+    message += `https://push-sports-front.onrender.com/consulta/${tokenSeguimiento}\n`;
+    message += '\n';
+  }
+  
+  message += 'Pedido generado desde https://push-sports-front.onrender.com';
   
   return encodeURIComponent(message);
 };
@@ -62,7 +72,17 @@ export const generateWhatsAppMessage = (orderData) => {
 export const openWhatsApp = (phoneNumber, message) => {
   const cleanPhone = phoneNumber.replace(/\D/g, '');
   const url = `https://wa.me/${cleanPhone}?text=${message}`;
-  window.open(url, '_blank');
+  console.log('📱 Abriendo WhatsApp con:', { phoneNumber, cleanPhone, url: url.substring(0, 100) + '...' });
+  
+  const opened = window.open(url, '_blank');
+  
+  if (!opened || opened.closed || typeof opened.closed === 'undefined') {
+    console.warn('⚠️ El navegador bloqueó la ventana emergente de WhatsApp');
+    // Fallback: intentar con location.href
+    window.location.href = url;
+  } else {
+    console.log('✅ WhatsApp abierto correctamente');
+  }
 };
 
 /**
