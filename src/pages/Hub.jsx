@@ -91,7 +91,7 @@ const Hub = () => {
                     <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center p-2 shadow-[0_0_40px_rgba(0,229,255,0.25)]">
                         <img src="/icono.jpeg" alt="PushSport" className="w-full h-full object-contain" />
                     </div>
-                    <h1 className="text-4xl sm:text-5xl font-sport uppercase text-white leading-[0.95] m-0">
+                    <h1 className="text-4xl sm:text-5xl font-sport uppercase text-white leading-[0.95] m-0 break-words hyphens-auto">
                         Conectá con <br /><span className="text-brand-cyan italic">Push Sport</span>
                     </h1>
                     <span className="text-[10px] font-black uppercase tracking-[0.4em] text-neutral-500 mt-1">

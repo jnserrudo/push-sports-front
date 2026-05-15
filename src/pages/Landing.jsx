@@ -67,7 +67,7 @@ const PreviewModal = ({ category, isOpen, onClose }) => {
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div>
       
-      <div className="bg-white w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl relative z-10 flex flex-col md:flex-row min-h-[500px] animate-in zoom-in-95 duration-300">
+      <div className="bg-white w-full max-w-4xl max-h-[95vh] overflow-y-auto custom-scrollbar rounded-2xl shadow-2xl relative z-10 flex flex-col md:flex-row min-h-[500px] animate-in zoom-in-95 duration-300">
         
         {/* Imagen Modal */}
         <div className="md:w-1/2 relative bg-black hidden md:block group overflow-hidden">
@@ -80,14 +80,14 @@ const PreviewModal = ({ category, isOpen, onClose }) => {
         </div>
         
         {/* Contenido Modal */}
-        <div className="w-full md:w-1/2 p-8 md:p-10 bg-white flex flex-col justify-between relative">
-          <button onClick={onClose} className="absolute top-6 right-6 text-neutral-400 hover:text-black transition-colors p-2 bg-neutral-100 rounded-full hover:bg-neutral-200">
-            <CloseCircle size={28} variant="Broken" />
+        <div className="w-full md:w-1/2 p-6 sm:p-8 md:p-10 bg-white flex flex-col justify-between relative">
+          <button onClick={onClose} className="absolute top-4 right-4 sm:top-6 sm:right-6 text-neutral-400 hover:text-black transition-colors p-2 bg-neutral-100 rounded-full hover:bg-neutral-200">
+            <CloseCircle size={24} className="sm:w-7 sm:h-7" variant="Broken" />
           </button>
           
-          <div className="md:hidden mb-6 mt-2">
-            <span className="text-xs font-bold text-brand-cyan tracking-widest uppercase mb-2 block">{data.subtitle}</span>
-            <h2 className="text-3xl uppercase leading-none m-0 font-sport text-black">{data.title}</h2>
+          <div className="md:hidden mb-6 mt-6 sm:mt-2 pr-10">
+            <span className="text-[10px] sm:text-xs font-bold text-brand-cyan tracking-widest uppercase mb-1 sm:mb-2 block">{data.subtitle}</span>
+            <h2 className="text-2xl sm:text-3xl uppercase leading-tight m-0 font-sport text-black break-words hyphens-auto">{data.title}</h2>
           </div>
           
           <div className="mt-4 md:mt-0 flex-1">
@@ -317,9 +317,9 @@ const Landing = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
                 
                 <div className="absolute bottom-10 left-10 right-10">
-                    <span className="inline-block bg-brand-cyan text-black px-3 py-1.5 rounded-md text-xs font-bold tracking-widest uppercase mb-4 shadow-lg">Rendimiento Máximo</span>
-                    <h3 className="text-white uppercase text-5xl m-0 mb-3 font-sport tracking-tight">Suplementación</h3>
-                    <p className="text-neutral-300 text-base font-medium max-w-md m-0">Proteínas, creatinas y pre-entrenos de grado profesional. Diseñados para resultados reales.</p>
+                    <span className="inline-block bg-brand-cyan text-black px-2 py-1 md:px-3 md:py-1.5 rounded-md text-[10px] md:text-xs font-bold tracking-widest uppercase mb-3 md:mb-4 shadow-lg">Rendimiento Máximo</span>
+                    <h3 className="text-white uppercase text-4xl md:text-5xl m-0 mb-2 md:mb-3 font-sport tracking-tight break-words hyphens-auto">Suplementación</h3>
+                    <p className="text-neutral-300 text-sm md:text-base font-medium max-w-md m-0">Proteínas, creatinas y pre-entrenos de grado profesional. Diseñados para resultados reales.</p>
                 </div>
             </div>
             
@@ -333,11 +333,11 @@ const Landing = () => {
                     <div className="absolute -right-10 -top-10 w-40 h-40 bg-brand-cyan/10 rounded-full blur-3xl group-hover:bg-brand-cyan/20 transition-colors"></div>
                     
                     <div className="relative z-10">
-                        <h3 className="uppercase text-4xl m-0 text-white mb-3 font-sport group-hover:text-brand-cyan transition-colors tracking-tight">Indumentaria Team</h3>
-                        <p className="text-neutral-400 font-medium text-sm m-0 mb-6 max-w-sm">
+                        <h3 className="uppercase text-3xl md:text-4xl m-0 text-white mb-2 md:mb-3 font-sport group-hover:text-brand-cyan transition-colors tracking-tight break-words hyphens-auto">Indumentaria Team</h3>
+                        <p className="text-neutral-400 font-medium text-xs md:text-sm m-0 mb-4 md:mb-6 max-w-sm">
                           Equipamiento técnico diseñado para resistir las rutinas más intensas y regular la temperatura.
                         </p>
-                        <button className="flex items-center gap-3 text-sm font-bold uppercase tracking-widest text-white group-hover:text-brand-cyan transition-colors w-fit bg-white/5 px-4 py-2 rounded-lg">
+                        <button className="flex items-center gap-2 md:gap-3 text-[10px] md:text-sm font-bold uppercase tracking-widest text-white group-hover:text-brand-cyan transition-colors w-fit bg-white/5 px-3 py-2 md:px-4 md:py-2 rounded-lg">
                             VER COLECCIÓN <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform"/>
                         </button>
                     </div>
@@ -350,11 +350,11 @@ const Landing = () => {
                     <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-brand-cyan/10 rounded-full blur-3xl group-hover:bg-brand-cyan/20 transition-colors"></div>
 
                     <div className="relative z-10">
-                        <h3 className="uppercase text-4xl m-0 text-white mb-3 font-sport group-hover:text-brand-cyan transition-colors tracking-tight">Accesorios Pro</h3>
-                        <p className="text-neutral-400 font-medium text-sm m-0 mb-6 max-w-sm">
+                        <h3 className="uppercase text-3xl md:text-4xl m-0 text-white mb-2 md:mb-3 font-sport group-hover:text-brand-cyan transition-colors tracking-tight break-words hyphens-auto">Accesorios Pro</h3>
+                        <p className="text-neutral-400 font-medium text-xs md:text-sm m-0 mb-4 md:mb-6 max-w-sm">
                           Shakers premium, cinturones de levantamiento y straps para optimizar cada movimiento.
                         </p>
-                        <button className="flex items-center gap-3 text-sm font-bold uppercase tracking-widest text-white group-hover:text-brand-cyan transition-colors w-fit bg-white/5 px-4 py-2 rounded-lg">
+                        <button className="flex items-center gap-2 md:gap-3 text-[10px] md:text-sm font-bold uppercase tracking-widest text-white group-hover:text-brand-cyan transition-colors w-fit bg-white/5 px-3 py-2 md:px-4 md:py-2 rounded-lg">
                             VER MÁS <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform"/>
                         </button>
                     </div>
@@ -668,7 +668,7 @@ const Landing = () => {
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-white pt-20 pb-10 border-t border-neutral-100">
+      <footer className="bg-white pt-20 pb-28 md:pb-10 border-t border-neutral-100">
         <div className="container mx-auto px-6 max-w-7xl">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
                 

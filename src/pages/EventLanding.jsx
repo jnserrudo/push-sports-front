@@ -97,7 +97,7 @@ const TicketStep = ({ nombre, eventoNombre, recompensaTexto }) => (
         </div>
 
         <span className="text-[10px] font-black uppercase tracking-[0.35em] text-emerald-400 block mb-3">¡Cuenta verificada!</span>
-        <h2 className="text-4xl sm:text-5xl font-sport uppercase text-white m-0 leading-tight">
+        <h2 className="text-4xl sm:text-5xl font-sport uppercase text-white m-0 leading-tight break-words hyphens-auto">
             Bienvenido,<br /><span className="text-brand-cyan">{nombre}.</span>
         </h2>
 
@@ -265,7 +265,7 @@ const EventLanding = () => {
                             <span className="text-[10px] font-black uppercase tracking-widest text-brand-cyan">{evento.nombre}</span>
                         </div>
 
-                        <h1 className="text-4xl sm:text-5xl font-sport uppercase text-white leading-[0.95] m-0">
+                        <h1 className="text-4xl sm:text-5xl font-sport uppercase text-white leading-[0.95] m-0 break-words hyphens-auto">
                             Unite al equipo <br /><span className="text-brand-cyan italic">push.</span>
                         </h1>
                         <p className="text-neutral-400 text-sm font-medium mt-4 mb-8 max-w-sm mx-auto leading-relaxed">

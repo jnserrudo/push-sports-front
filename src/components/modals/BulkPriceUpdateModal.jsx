@@ -101,8 +101,8 @@ const BulkPriceUpdateModal = ({ isOpen, onClose, onConfirm, products = [], selec
                     </button>
                 </div>
 
-                {/* Grid principal: 3 columnas */}
-                <div className="grid grid-cols-3 gap-3 mb-3">
+                {/* Grid principal: 1 columna en móvil, 3 en desktop */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
                     {/* Columna 1: Configuración */}
                     <div className="space-y-2">
                         <label className="text-[9px] font-black uppercase tracking-wider text-neutral-500 dark:text-gray-400">Tipo de Precio</label>

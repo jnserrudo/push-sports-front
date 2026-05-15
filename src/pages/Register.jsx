@@ -132,7 +132,7 @@ const Register = () => {
                 </div>
 
                 <div className="relative z-20">
-                    <h2 className="text-5xl font-sport text-white leading-[0.9] uppercase m-0">
+                    <h2 className="text-4xl md:text-5xl font-sport text-white leading-[0.9] uppercase m-0 break-words hyphens-auto">
                         Nuevo <br />
                         <span className="text-brand-cyan">Ingreso.</span>
                     </h2>

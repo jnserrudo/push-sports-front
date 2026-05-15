@@ -79,7 +79,7 @@ const Login = () => {
 
                     <div className="relative z-10">
                         <span className="text-[10px] font-black text-brand-cyan uppercase tracking-[0.3em] mb-2 block">SISTEMA CENTRAL</span>
-                        <h2 className="text-white text-5xl uppercase leading-[0.9] font-sport m-0">
+                        <h2 className="text-white text-4xl sm:text-5xl uppercase leading-[0.9] font-sport m-0 break-words hyphens-auto">
                             Acceso <br/> <span className="text-brand-cyan">Operativo.</span>
                         </h2>
                     </div>
