@@ -25,7 +25,9 @@ import {
   Eye,
   Clock,
   MessageSquare,
-  X
+  X,
+  Shield,
+  UserCircle2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -33,12 +35,14 @@ import { useNavigate, useLocation, Link, Outlet, Navigate } from 'react-router-d
 import { useAuthStore } from '../../store/authStore';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import NotificationBadge from '../admin/NotificationBadge';
+import ImpersonationSelector from '../admin/ImpersonationSelector';
 import api from '../../api/api';
 import toast from 'react-hot-toast';
 import { formatearTipoNotificacion, getColorTipoNotificacion } from '../../utils/notificationFormatter';
+import { impersonationService } from '../../services/impersonationService';
 
 const DashboardLayout = () => {
-  const { user, logout } = useAuthStore();
+  const { user, logout, isImpersonating, impersonatedUser, realUser, stopImpersonation } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 768);
@@ -47,6 +51,7 @@ const DashboardLayout = () => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [selectedNotificacion, setSelectedNotificacion] = useState(null);
   const [isModalNotificacionOpen, setIsModalNotificacionOpen] = useState(false);
+  const [notificationView, setNotificationView] = useState('current'); // 'current' o 'real'
   
   const profileRef = useRef(null);
   const notificationsRef = useRef(null);
@@ -84,11 +89,13 @@ const DashboardLayout = () => {
     notificationsTimeout.current = setTimeout(() => setIsNotificationsOpen(false), 300);
   };
 
-  const loadNotifications = async () => {
+  const loadNotifications = async (viewAs = notificationView) => {
     if (!user?.id_usuario) return;
     setLoadingNotifs(true);
     try {
-      const res = await api.get(`/notificaciones/usuario/${user.id_usuario}`);
+      // Si hay impersonación, agregar parámetro view_as
+      const params = isImpersonating && viewAs ? `?view_as=${viewAs}` : '';
+      const res = await api.get(`/notificaciones/usuario/${user.id_usuario}${params}`);
       console.log('Notificaciones recibidas:', res.data);
       setNotifications(res.data || []);
     } catch {
@@ -113,11 +120,22 @@ const DashboardLayout = () => {
     loadNotifications();
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
-  }, [user?.id_usuario]);
+  }, [user?.id_usuario, notificationView]);
 
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  const handleStopImpersonation = async () => {
+    try {
+      const response = await impersonationService.stopImpersonation();
+      stopImpersonation(response.user, response.token);
+      toast.success('Impersonación detenida');
+    } catch (error) {
+      console.error('Error al detener impersonación:', error);
+      toast.error('Error al detener impersonación');
+    }
   };
 
   const menuItems = [
@@ -310,6 +328,13 @@ const DashboardLayout = () => {
           </div>
 
           <div className="flex items-center gap-3 md:gap-6">
+            {/* Selector de impersonación - solo visible para admin cuando no está impersonando */}
+            {user?.id_rol === 1 && !isImpersonating && (
+              <div className="block lg:hidden">
+                <ImpersonationSelector />
+              </div>
+            )}
+
             <div className="hidden sm:flex flex-col items-end">
                 <span className="text-lg md:text-xl font-black tracking-tighter text-neutral-900 dark:text-white leading-none">
                     {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -317,15 +342,22 @@ const DashboardLayout = () => {
 {/*                 <span className="text-[7px] md:text-[8px] font-black text-brand-cyan dark:text-cyan-400 uppercase tracking-[0.3em]">EN VIVO</span>
  */}            </div>
             
+            {/* Selector de impersonación - versión desktop */}
+            {user?.id_rol === 1 && !isImpersonating && (
+              <div className="hidden lg:block">
+                <ImpersonationSelector />
+              </div>
+            )}
+            
             <div className="flex items-center gap-2">
                 <ThemeToggle />
                 
                 <div className="relative" ref={notificationsRef} onMouseEnter={handleNotificationsEnter} onMouseLeave={handleNotificationsLeave}>
                   <button 
                     onClick={() => { setIsNotificationsOpen(!isNotificationsOpen); if (!isNotificationsOpen) loadNotifications(); }}
-                    className={`w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center border transition-all shadow-sm hover:scale-105 active:scale-95 ${isNotificationsOpen ? 'border-brand-cyan dark:border-cyan-400 bg-white dark:bg-gray-700' : 'border-neutral-100 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-neutral-900 dark:hover:border-gray-500'}`}
+                    className={`w-9 h-9 md:w-10 md:h-10 rounded-lg flex items-center justify-center border transition-all shadow-sm hover:scale-105 active:scale-95 ${isNotificationsOpen ? 'border-brand-cyan dark:border-cyan-400 bg-white dark:bg-gray-700' : 'border-neutral-100 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-neutral-900 dark:hover:border-gray-500'}`}
                   >
-                      <Bell size={16} md:size={18} className="text-neutral-900 dark:text-gray-100" />
+                      <Bell size={16} className="text-neutral-900 dark:text-gray-100" />
                       {unreadCount > 0 && (
                         <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 md:w-5 md:h-5 rounded-full flex items-center justify-center animate-pulse shadow-lg">
                           {unreadCount > 99 ? '99+' : unreadCount}
@@ -334,16 +366,46 @@ const DashboardLayout = () => {
                   </button>
 
                   {isNotificationsOpen && (
-                    <div className="absolute right-[-60px] sm:right-0 mt-4 w-[90vw] sm:w-80 md:w-96 lg:w-[28rem] max-w-lg bg-white dark:bg-gray-800 border-2 md:border-4 border-neutral-100 dark:border-gray-700 rounded-3xl md:rounded-[2.5rem] shadow-2xl p-5 md:p-8 animate-in slide-in-from-top-2 duration-300 z-[100]" onMouseEnter={handleNotificationsEnter} onMouseLeave={handleNotificationsLeave}>
-                      <div className="flex justify-between items-center mb-4 md:mb-6 border-b border-neutral-100 dark:border-gray-700 pb-4">
-                        <span className="text-[11px] md:text-xs font-black uppercase tracking-[0.3em] text-neutral-400 dark:text-gray-400">Notificaciones</span>
-                        <span onClick={handleClearNotifications} className="text-[10px] md:text-[11px] font-black text-brand-cyan dark:text-cyan-400 uppercase tracking-widest cursor-pointer hover:underline">Limpiar Todas</span>
+                    <div className="absolute right-[-60px] sm:right-0 mt-3 w-[90vw] sm:w-80 md:w-96 max-w-md bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden animate-in slide-in-from-top-2 duration-300 z-[70]" onMouseEnter={handleNotificationsEnter} onMouseLeave={handleNotificationsLeave}>
+                      <div className="bg-neutral-50 dark:bg-gray-900 px-4 py-3 border-b border-neutral-200 dark:border-gray-700">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-xs font-black uppercase tracking-wide text-neutral-700 dark:text-neutral-200">Notificaciones</span>
+                          <button onClick={handleClearNotifications} className="text-[10px] font-bold text-brand-cyan dark:text-cyan-400 uppercase tracking-wide hover:underline">
+                            Limpiar
+                          </button>
+                        </div>
+                        {isImpersonating && (
+                          <div className="flex gap-1.5">
+                            <button
+                              onClick={() => { setNotificationView('current'); loadNotifications('current'); }}
+                              className={`flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded text-[9px] font-black uppercase tracking-wide transition-all ${
+                                notificationView === 'current'
+                                  ? 'bg-neutral-900 dark:bg-cyan-600 text-brand-cyan dark:text-white'
+                                  : 'bg-white dark:bg-gray-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-gray-700 border border-neutral-200 dark:border-gray-600'
+                              }`}
+                            >
+                              <UserCircle2 size={11} />
+                              <span className="truncate">{impersonatedUser?.nombre}</span>
+                            </button>
+                            <button
+                              onClick={() => { setNotificationView('real'); loadNotifications('real'); }}
+                              className={`flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded text-[9px] font-black uppercase tracking-wide transition-all ${
+                                notificationView === 'real'
+                                  ? 'bg-neutral-900 dark:bg-cyan-600 text-brand-cyan dark:text-white'
+                                  : 'bg-white dark:bg-gray-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-gray-700 border border-neutral-200 dark:border-gray-600'
+                              }`}
+                            >
+                              <Shield size={11} />
+                              <span>Admin</span>
+                            </button>
+                          </div>
+                        )}
                       </div>
-                      <div className="space-y-2 md:space-y-4 max-h-[50vh] overflow-y-auto custom-scrollbar pr-2">
+                      <div className="px-4 py-3 space-y-2 max-h-[60vh] overflow-y-auto">
                         {loadingNotifs ? (
-                          <p className="text-[11px] md:text-xs font-black uppercase tracking-widest text-neutral-400 dark:text-gray-400 text-center py-8">Cargando...</p>
+                          <p className="text-xs font-bold text-neutral-400 dark:text-gray-400 text-center py-8">Cargando...</p>
                         ) : notifications.length === 0 ? (
-                          <p className="text-[11px] md:text-xs font-black uppercase tracking-widest text-neutral-400 dark:text-gray-400 text-center py-8">Sin notificaciones de sistema</p>
+                          <p className="text-xs font-bold text-neutral-400 dark:text-gray-400 text-center py-8">Sin notificaciones</p>
                         ) : notifications.slice(0, 5).map((n, i) => {
                           
                           const formatearFechaNotificacion = (fecha) => {
@@ -547,6 +609,60 @@ const DashboardLayout = () => {
             </div>
           </div>
         </header>
+
+        {/* BANNER DE IMPERSONACIÓN - COMPACTO Y SIEMPRE VISIBLE */}
+        {isImpersonating && impersonatedUser && realUser && (
+          <div className="sticky top-0 z-[65] bg-gradient-to-r from-neutral-900 via-neutral-800 to-black dark:from-cyan-600 dark:via-cyan-500 dark:to-cyan-600 border-b-2 border-neutral-700 dark:border-cyan-400 shadow-lg">
+            <div className="px-3 md:px-4 py-1.5 md:py-2">
+              <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-2">
+                {/* Indicador de impersonación */}
+                <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 bg-brand-cyan/20 dark:bg-white/20 backdrop-blur-sm px-2 py-1 rounded border border-brand-cyan/40 dark:border-white/30 flex-shrink-0">
+                    <AlertTriangle className="text-brand-cyan dark:text-white" size={14} strokeWidth={2.5} />
+                    <span className="text-[10px] md:text-xs font-black uppercase tracking-wide text-brand-cyan dark:text-white">
+                      MODO IMPERSONACIÓN
+                    </span>
+                  </div>
+                  
+                  {/* Información del usuario */}
+                  <div className="flex items-center gap-1.5 md:gap-2 text-brand-cyan dark:text-white min-w-0">
+                    <UserCircle2 size={14} strokeWidth={2.5} className="flex-shrink-0" />
+                    <span className="text-[10px] md:text-xs font-black uppercase tracking-wide truncate">
+                      {impersonatedUser.nombre} {impersonatedUser.apellido}
+                    </span>
+                    
+                    <div className="hidden sm:block h-3 w-px bg-brand-cyan/30 dark:bg-white/30"></div>
+                    
+                    <span className="hidden sm:inline text-[10px] md:text-xs font-bold uppercase tracking-wide">
+                      {impersonatedUser.id_rol === 2 ? 'SUPERVISOR' : impersonatedUser.id_rol === 3 ? 'VENDEDOR' : 'USUARIO'}
+                    </span>
+
+                    {impersonatedUser.comercio_asignado && (
+                      <>
+                        <div className="hidden md:block h-3 w-px bg-brand-cyan/30 dark:bg-white/30"></div>
+                        <div className="hidden md:flex items-center gap-1">
+                          <MapPin size={12} strokeWidth={2.5} />
+                          <span className="text-[10px] font-bold uppercase tracking-wide truncate">
+                            {impersonatedUser.comercio_asignado.nombre}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Botón para salir */}
+                <button
+                  onClick={handleStopImpersonation}
+                  className="flex items-center gap-1.5 px-2.5 md:px-3 py-1 md:py-1.5 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-black text-[10px] md:text-xs uppercase tracking-wide rounded shadow-md hover:shadow-lg transition-all border border-red-700 flex-shrink-0"
+                >
+                  <X size={14} strokeWidth={2.5} />
+                  <span className="hidden sm:inline">SALIR</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* PAGE CONTENT */}
         <main 

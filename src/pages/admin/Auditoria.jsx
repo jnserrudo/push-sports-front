@@ -3,7 +3,7 @@ import {
     FileText, Clock, ShieldAlert, RefreshCw, Download, 
     Plus, Edit3, Trash2, Search, Filter, Eye, ChevronLeft, ChevronRight,
     User, MapPin, X, ArrowRight, Server, Activity, Database, ChevronDown,
-    Calendar, Building2, AlertTriangle, TrendingUp
+    Calendar, Building2, AlertTriangle, TrendingUp, Shield, UserCircle2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { auditoriaService } from '../../services/auditoriaService';
@@ -1096,8 +1096,17 @@ const Auditoria = () => {
                             header: 'Descripción', 
                             render: (item) => {
                                 const cambios = getCambiosFiltrados(item, masterMaps);
+                                const isImpersonated = item.id_usuario_real && item.id_usuario_impersonado;
                                 return (
                                     <div className="max-w-[250px]">
+                                        {isImpersonated && (
+                                            <div className="flex items-center gap-1 mb-1">
+                                                <Shield size={10} className="text-amber-500" />
+                                                <span className="text-[8px] font-black text-amber-600 dark:text-amber-400 uppercase">
+                                                    IMPERSONACIÓN
+                                                </span>
+                                            </div>
+                                        )}
                                         <p className="text-[10px] text-neutral-600 dark:text-neutral-300 truncate">
                                             {item.descripcion_accion || getDescripcionLegible(item, masterMaps)}
                                         </p>
@@ -1117,14 +1126,27 @@ const Auditoria = () => {
                         },
                         { 
                             header: 'Usuario', 
-                            render: (item) => (
-                                <div className="flex items-center gap-1.5">
-                                    <User size={10} className="text-neutral-400 flex-shrink-0" />
-                                    <span className="text-[10px] font-bold">
-                                        {item.usuario ? `${item.usuario.nombre} ${item.usuario.apellido || ''}`.trim() : 'Sistema'}
-                                    </span>
-                                </div>
-                            )
+                            render: (item) => {
+                                const isImpersonated = item.id_usuario_real && item.id_usuario_impersonado;
+                                return (
+                                    <div className="flex flex-col gap-0.5">
+                                        <div className="flex items-center gap-1.5">
+                                            <User size={10} className="text-neutral-400 flex-shrink-0" />
+                                            <span className="text-[10px] font-bold">
+                                                {item.usuario ? `${item.usuario.nombre} ${item.usuario.apellido || ''}`.trim() : 'Sistema'}
+                                            </span>
+                                        </div>
+                                        {isImpersonated && (
+                                            <div className="flex items-center gap-1 ml-3.5">
+                                                <Shield size={8} className="text-amber-500" />
+                                                <span className="text-[8px] text-amber-600 dark:text-amber-400 italic">
+                                                    (Admin actuando)
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            }
                         }
                     ]}
                     onView={(item) => setSelectedItem(item)}

@@ -14,14 +14,14 @@ export const ThemeToggle = () => {
     return (
         <button
             onClick={handleToggle}
-            className="w-10 h-10 md:w-14 md:h-14 rounded-lg md:rounded-2xl flex items-center justify-center border-2 transition-all shadow-sm hover:scale-105 active:scale-95 border-neutral-100 bg-white hover:border-neutral-900"
+            className="w-9 h-9 md:w-10 md:h-10 rounded-lg flex items-center justify-center border transition-all shadow-sm hover:scale-105 active:scale-95 border-neutral-100 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-neutral-900 dark:hover:border-gray-500"
             title={isDark ? 'Modo claro' : 'Modo oscuro'}
             aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
         >
             {isDark ? (
-                <Sun size={18} className="text-amber-500 md:w-6 md:h-6" />
+                <Sun size={16} className="text-amber-500 dark:text-amber-400" />
             ) : (
-                <Moon size={18} className="text-neutral-900 md:w-6 md:h-6" />
+                <Moon size={16} className="text-neutral-900 dark:text-gray-100" />
             )}
         </button>
     );

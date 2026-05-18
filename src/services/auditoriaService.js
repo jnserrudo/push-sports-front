@@ -8,6 +8,8 @@ export const auditoriaService = {
         if (params.entidad) queryParams.append('entidad', params.entidad);
         if (params.accion) queryParams.append('accion', params.accion);
         if (params.usuario) queryParams.append('usuario', params.usuario);
+        if (params.usuario_real) queryParams.append('usuario_real', params.usuario_real);
+        if (params.usuario_impersonado) queryParams.append('usuario_impersonado', params.usuario_impersonado);
         if (params.comercio) queryParams.append('comercio', params.comercio);
         if (params.producto) queryParams.append('producto', params.producto);
         if (params.venta) queryParams.append('venta', params.venta);
