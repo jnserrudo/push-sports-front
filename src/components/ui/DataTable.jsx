@@ -82,29 +82,44 @@ const RowsPerPageSelect = ({ value, onChange }) => {
    ────────────────────────────────────────────── */
 const RowActions = ({ row, onEdit, onDelete, onView, customActions, refresh }) => {
     const [open, setOpen] = useState(false);
-    const [openUp, setOpenUp] = useState(false);
+    const [position, setPosition] = useState({ top: 0, right: 0, openUp: false });
     const ref = useRef(null);
+    const buttonRef = useRef(null);
 
     useEffect(() => {
-        const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+        const handler = (e) => { 
+            // No cerrar si el click fue en el botón principal (toggle)
+            if (buttonRef.current && buttonRef.current.contains(e.target)) return;
+            // Cerrar si el click fue fuera del componente
+            if (ref.current && !ref.current.contains(e.target)) setOpen(false); 
+        };
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
     }, []);
 
     useEffect(() => {
-        if (open && ref.current) {
-            const rect = ref.current.getBoundingClientRect();
+        if (open && buttonRef.current) {
+            const rect = buttonRef.current.getBoundingClientRect();
             const spaceBelow = window.innerHeight - rect.bottom;
-            // Si hay menos de 250px abajo, abrimos hacia arriba
-            setOpenUp(spaceBelow < 250);
+            const openUp = spaceBelow < 250;
+            
+            setPosition({
+                top: openUp ? rect.top - 6 : rect.bottom + 6,
+                right: window.innerWidth - rect.right,
+                openUp
+            });
         }
     }, [open]);
 
     return (
         <div ref={ref} className="relative flex justify-end">
             <button
+                ref={buttonRef}
                 type="button"
-                onClick={() => setOpen(!open)}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setOpen(!open);
+                }}
                 className={`w-8 h-8 flex items-center justify-center rounded-lg border transition-all ${
                     open
                         ? 'border-brand-cyan bg-brand-cyan/5 text-brand-cyan shadow-sm'
@@ -116,9 +131,16 @@ const RowActions = ({ row, onEdit, onDelete, onView, customActions, refresh }) =
             </button>
 
             {open && (
-                <div className={`absolute right-0 z-[90] bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden min-w-[160px] animate-in fade-in zoom-in-95 duration-200 ${
-                    openUp ? 'bottom-full mb-1.5 origin-bottom' : 'top-full mt-1.5 origin-top'
-                }`}>
+                <div 
+                    className={`fixed z-[9999] bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden min-w-[160px] animate-in fade-in zoom-in-95 duration-200 ${
+                        position.openUp ? 'origin-bottom' : 'origin-top'
+                    }`}
+                    style={{
+                        top: position.openUp ? 'auto' : `${position.top}px`,
+                        bottom: position.openUp ? `${window.innerHeight - position.top}px` : 'auto',
+                        right: `${position.right}px`
+                    }}
+                >
                     <div className="px-3 py-2 border-b border-neutral-100 dark:border-gray-700">
                         <span className="text-[8px] font-black uppercase tracking-[0.2em] text-neutral-400">Acciones disponibles</span>
                     </div>
@@ -136,7 +158,10 @@ const RowActions = ({ row, onEdit, onDelete, onView, customActions, refresh }) =
                         
                         {onEdit && (
                             <button
-                                onClick={() => { onEdit(row); setOpen(false); }}
+                                onClick={() => { 
+                                    onEdit(row); 
+                                    setOpen(false); 
+                                }}
                                 className="w-full flex items-center gap-2.5 px-2.5 py-2 text-[10px] font-bold uppercase tracking-widest text-neutral-600 dark:text-gray-300 hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-lg transition-all"
                             >
                                 <Pencil size={14} className="opacity-70" />
@@ -302,8 +327,8 @@ const DataTable = ({
             </div>
 
             {/* Table Area */}
-            <div className="rounded border border-neutral-200 dark:border-gray-600 overflow-hidden bg-white dark:bg-gray-800 shadow-sm relative z-10 w-full mb-2 min-h-[180px]">
-                <div className="overflow-x-auto custom-scrollbar">
+            <div className="rounded border border-neutral-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-sm relative z-10 w-full mb-2 min-h-[180px] overflow-visible">
+                <div className="overflow-x-auto custom-scrollbar rounded">
                     <table className="w-full text-left border-collapse min-w-full md:min-w-[700px]">
                         <thead>
                             <tr className="bg-neutral-50/50 dark:bg-gray-700/50 text-neutral-500 dark:text-gray-400 border-b border-neutral-200 dark:border-gray-600">
