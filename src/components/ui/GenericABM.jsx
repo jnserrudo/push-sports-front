@@ -330,7 +330,7 @@ const GenericABM = ({
                                                 <input
                                                     required={field.required}
                                                     type={field.type || 'text'}
-                                                    className="w-full px-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-lg focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/20 focus:outline-none transition-all text-sm font-bold text-neutral-900 placeholder:text-neutral-400"
+                                                    className="w-full px-4 py-2.5 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg focus:border-brand-cyan dark:focus:border-cyan-400 focus:ring-2 focus:ring-brand-cyan/20 dark:focus:ring-cyan-400/20 focus:outline-none transition-all text-sm font-bold text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-gray-500"
                                                     placeholder={field.label.toUpperCase()}
                                                     value={formData[field.name] ?? ''}
                                                     onChange={e => setFormData({ ...formData, [field.name]: e.target.value })}

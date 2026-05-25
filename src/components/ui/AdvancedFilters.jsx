@@ -69,14 +69,14 @@ export const AdvancedFilters = ({ filters, onApply, onClear }) => {
                                                 placeholder="Mín"
                                                 value={values[`${filter.key}_min`] || ''}
                                                 onChange={e => setValues({...values, [`${filter.key}_min`]: e.target.value})}
-                                                className="w-1/2 px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:border-black"
+                                                className="w-1/2 px-3 py-2 border border-neutral-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-cyan-400"
                                             />
                                             <input
                                                 type="number"
                                                 placeholder="Máx"
                                                 value={values[`${filter.key}_max`] || ''}
                                                 onChange={e => setValues({...values, [`${filter.key}_max`]: e.target.value})}
-                                                className="w-1/2 px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:border-black"
+                                                className="w-1/2 px-3 py-2 border border-neutral-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-cyan-400"
                                             />
                                         </div>
                                     ) : filter.type === 'text' ? (
@@ -85,7 +85,7 @@ export const AdvancedFilters = ({ filters, onApply, onClear }) => {
                                             placeholder={filter.placeholder || ''}
                                             value={values[filter.key] || ''}
                                             onChange={e => setValues({...values, [filter.key]: e.target.value})}
-                                            className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:border-black"
+                                            className="w-full px-3 py-2 border border-neutral-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-black dark:text-white placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-black dark:focus:border-cyan-400"
                                         />
                                     ) : null}
                                 </div>

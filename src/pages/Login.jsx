@@ -121,7 +121,7 @@ const Login = () => {
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors" size={18} />
                                 <input 
                                     required name="email" type="text"
-                                    className="w-full pl-11 pr-4 py-3.5 bg-white border-2 border-neutral-200 rounded-lg text-sm font-bold text-black placeholder:text-neutral-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                                    className="w-full pl-11 pr-4 py-3.5 bg-white dark:bg-gray-700 border-2 border-neutral-200 dark:border-gray-600 rounded-lg text-sm font-bold text-black dark:text-white placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-black dark:focus:border-cyan-400 focus:ring-1 focus:ring-black dark:focus:ring-cyan-400 transition-all"
                                     placeholder="usuario@pushsport.com"
                                     value={credentials.email} onChange={handleChange}
                                 />
@@ -134,7 +134,7 @@ const Login = () => {
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors" size={18} />
                                 <input 
                                     required name="password" type="password"
-                                    className="w-full pl-11 pr-4 py-3.5 bg-white border-2 border-neutral-200 rounded-lg text-sm font-bold text-black placeholder:text-neutral-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                                    className="w-full pl-11 pr-4 py-3.5 bg-white dark:bg-gray-700 border-2 border-neutral-200 dark:border-gray-600 rounded-lg text-sm font-bold text-black dark:text-white placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-black dark:focus:border-cyan-400 focus:ring-1 focus:ring-black dark:focus:ring-cyan-400 transition-all"
                                     placeholder="••••••••"
                                     value={credentials.password} onChange={handleChange}
                                 />

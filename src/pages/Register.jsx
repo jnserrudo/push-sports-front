@@ -167,7 +167,7 @@ const Register = () => {
                                 <User className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-black transition-colors" size={16} />
                                 <input 
                                     required type="text" name="nombre"
-                                    className="w-full pl-9 pr-4 py-3 bg-white border-2 border-neutral-200 rounded-lg text-sm font-bold text-black uppercase placeholder:text-neutral-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                                    className="w-full pl-9 pr-4 py-3 bg-white dark:bg-gray-700 border-2 border-neutral-200 dark:border-gray-600 rounded-lg text-sm font-bold text-black dark:text-white uppercase placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-black dark:focus:border-cyan-400 focus:ring-1 focus:ring-black dark:focus:ring-cyan-400 transition-all"
                                     value={formData.nombre} onChange={handleChange}
                                     placeholder="NOMBRE"
                                 />
@@ -179,7 +179,7 @@ const Register = () => {
                                 <User className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-black transition-colors" size={16} />
                                 <input 
                                     required type="text" name="apellido"
-                                    className="w-full pl-9 pr-4 py-3 bg-white border-2 border-neutral-200 rounded-lg text-sm font-bold text-black uppercase placeholder:text-neutral-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                                    className="w-full pl-9 pr-4 py-3 bg-white dark:bg-gray-700 border-2 border-neutral-200 dark:border-gray-600 rounded-lg text-sm font-bold text-black dark:text-white uppercase placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-black dark:focus:border-cyan-400 focus:ring-1 focus:ring-black dark:focus:ring-cyan-400 transition-all"
                                     value={formData.apellido} onChange={handleChange}
                                     placeholder="APELLIDO"
                                 />
@@ -193,7 +193,7 @@ const Register = () => {
                             <User className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-black transition-colors" size={16} />
                             <input 
                                 required type="text" name="username"
-                                className="w-full pl-9 pr-4 py-3 bg-white border-2 border-neutral-200 rounded-lg text-sm font-bold text-black lowercase placeholder:text-neutral-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                                className="w-full pl-9 pr-4 py-3 bg-white dark:bg-gray-700 border-2 border-neutral-200 dark:border-gray-600 rounded-lg text-sm font-bold text-black dark:text-white lowercase placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-black dark:focus:border-cyan-400 focus:ring-1 focus:ring-black dark:focus:ring-cyan-400 transition-all"
                                 value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value.toLowerCase().replace(/\s/g, '') })}
                                 placeholder="USUARIO"
                             />
@@ -206,7 +206,7 @@ const Register = () => {
                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-black transition-colors" size={16} />
                             <input 
                                 required type="email" name="email"
-                                className="w-full pl-9 pr-4 py-3 bg-white border-2 border-neutral-200 rounded-lg text-sm font-bold text-black placeholder:text-neutral-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                                className="w-full pl-9 pr-4 py-3 bg-white dark:bg-gray-700 border-2 border-neutral-200 dark:border-gray-600 rounded-lg text-sm font-bold text-black dark:text-white placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-black dark:focus:border-cyan-400 focus:ring-1 focus:ring-black dark:focus:ring-cyan-400 transition-all"
                                 value={formData.email} onChange={handleChange}
                                 placeholder="usuario@pushsport.com"
                             />
@@ -221,7 +221,7 @@ const Register = () => {
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-black transition-colors" size={16} />
                                 <input 
                                     required type="password" name="password"
-                                    className="w-full pl-9 pr-4 py-3 bg-white border-2 border-neutral-200 rounded-lg text-sm font-bold text-black placeholder:text-neutral-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                                    className="w-full pl-9 pr-4 py-3 bg-white dark:bg-gray-700 border-2 border-neutral-200 dark:border-gray-600 rounded-lg text-sm font-bold text-black dark:text-white placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-black dark:focus:border-cyan-400 focus:ring-1 focus:ring-black dark:focus:ring-cyan-400 transition-all"
                                     value={formData.password} onChange={handleChange}
                                     placeholder="••••••••"
                                 />
@@ -233,7 +233,7 @@ const Register = () => {
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-black transition-colors" size={16} />
                                 <input 
                                     required type="password" name="confirmPassword"
-                                    className="w-full pl-9 pr-4 py-3 bg-white border-2 border-neutral-200 rounded-lg text-sm font-bold text-black placeholder:text-neutral-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                                    className="w-full pl-9 pr-4 py-3 bg-white dark:bg-gray-700 border-2 border-neutral-200 dark:border-gray-600 rounded-lg text-sm font-bold text-black dark:text-white placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-black dark:focus:border-cyan-400 focus:ring-1 focus:ring-black dark:focus:ring-cyan-400 transition-all"
                                     value={formData.confirmPassword} onChange={handleChange}
                                     placeholder="••••••••"
                                 />

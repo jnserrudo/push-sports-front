@@ -439,7 +439,7 @@ const Reporteria = () => {
                         placeholder={`Buscar entre ${sucursales.length} comercio${sucursales.length !== 1 ? 's' : ''}...`}
                         value={sucursalSearch}
                         onChange={(e) => setSucursalSearch(e.target.value)}
-                        className="w-full pl-14 pr-5 h-14 bg-neutral-50 border-2 border-neutral-100 rounded-2xl focus:border-brand-cyan outline-none transition-all font-bold text-sm"
+                        className="w-full pl-14 pr-5 h-14 bg-neutral-50 dark:bg-gray-700 border-2 border-neutral-100 dark:border-gray-600 rounded-2xl focus:border-brand-cyan dark:focus:border-cyan-400 outline-none transition-all font-bold text-sm text-black dark:text-white placeholder:text-neutral-400 dark:placeholder:text-gray-500"
                       />
                     </div>
 
@@ -496,7 +496,7 @@ const Reporteria = () => {
                             placeholder="Buscar producto..."
                             value={shopSearchTerm}
                             onChange={(e) => setShopSearchTerm(e.target.value)}
-                            className="w-full pl-11 pr-4 h-11 bg-neutral-50 border-2 border-neutral-100 rounded-xl focus:border-brand-cyan outline-none transition-all font-bold text-xs"
+                            className="w-full pl-11 pr-4 h-11 bg-neutral-50 dark:bg-gray-700 border-2 border-neutral-100 dark:border-gray-600 rounded-xl focus:border-brand-cyan dark:focus:border-cyan-400 outline-none transition-all font-bold text-xs text-black dark:text-white placeholder:text-neutral-400 dark:placeholder:text-gray-500"
                           />
                         </div>
                       </div>
@@ -706,8 +706,8 @@ const Reporteria = () => {
                                     }}
                                     className={`w-full h-11 rounded-xl px-3 text-center font-black text-sm outline-none transition-all placeholder:text-neutral-200 dark:placeholder:text-gray-600 border-2 ${
                                       item.cantidadDejada > (item.stockCentral ?? 0)
-                                        ? 'bg-red-50 border-red-400 text-red-600 focus:border-red-500'
-                                        : 'bg-white dark:bg-gray-700 border-brand-cyan/50 dark:border-brand-cyan/30 text-neutral-900 dark:text-white focus:border-brand-cyan'
+                                        ? 'bg-red-50 dark:bg-red-900/20 border-red-400 dark:border-red-600 text-red-600 dark:text-red-400 focus:border-red-500 dark:focus:border-red-400'
+                                        : 'bg-white dark:bg-gray-700 border-brand-cyan/50 dark:border-brand-cyan/30 text-neutral-900 dark:text-white focus:border-brand-cyan dark:focus:border-cyan-400'
                                     }`}
                                   />
                                 </div>

@@ -242,7 +242,7 @@ const Sucursales = () => {
                         <Store size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
                         <input
                             required type="text"
-                            className="w-full pl-10 pr-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-bold text-black dark:text-white uppercase placeholder:text-neutral-400 focus:outline-none focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/20 transition-all"
+                            className="w-full pl-10 pr-4 py-2.5 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-sm font-bold text-black dark:text-white uppercase placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-brand-cyan dark:focus:border-cyan-400 focus:ring-2 focus:ring-brand-cyan/20 dark:focus:ring-cyan-400/20 transition-all"
                             placeholder="EJ: SUCURSAL CENTRO"
                             value={formData.nombre || ''}
                             onChange={e => setFormData({ ...formData, nombre: e.target.value.toUpperCase() })}

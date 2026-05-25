@@ -8,10 +8,12 @@ export const variantesService = {
     },
 
     // Generar variantes automáticamente desde atributos
-    generarDesdeAtributos: async (id_producto, atributos = null) => {
-        const response = await api.post(`/variantes/productos/${id_producto}/variantes/generar`, 
-            atributos ? { atributos } : {}
-        );
+    generarDesdeAtributos: async (id_producto, atributos = null, combinacionesEspecificas = null) => {
+        const payload = {};
+        if (atributos) payload.atributos = atributos;
+        if (combinacionesEspecificas) payload.combinaciones = combinacionesEspecificas;
+        
+        const response = await api.post(`/variantes/productos/${id_producto}/variantes/generar`, payload);
         return response.data;
     },
 

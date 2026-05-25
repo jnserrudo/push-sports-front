@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { 
-  Search, 
-  Trash2, 
-  Plus, 
-  Minus, 
-  Ticket, 
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Search,
+  Trash2,
+  Plus,
+  Minus,
+  Ticket,
   ChevronRight,
   Store,
   Box,

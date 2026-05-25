@@ -11,9 +11,11 @@ const VariantesTabSystem = ({
     variantes,
     onGenerar,
     onRefresh,
-    generando
+    generando,
+    modoInicial = 'crear', // 'crear' | 'gestion'
+    onVolverAGestion
 }) => {
-    const [activeTab, setActiveTab] = useState('atributos');
+    const [activeTab, setActiveTab] = useState(modoInicial === 'gestion' ? 'gestion' : 'atributos');
     const containerRef = useRef(null);
     const [hasChangedTab, setHasChangedTab] = useState(false);
     
@@ -40,56 +42,62 @@ const VariantesTabSystem = ({
         ? Object.values(atributos).reduce((acc, vals) => acc * (vals?.length || 1), 1)
         : 0;
     
-    const tabs = [
-        { 
-            id: 'atributos', 
-            label: '1. Atributos',
-            enabled: true,
-            badge: tieneAtributosConValores ? numVariantesAGenerar : null
-        },
-        { 
-            id: 'preview', 
-            label: '2. Preview',
-            enabled: tieneAtributosConValores,
-            badge: null
-        },
-        { 
-            id: 'gestion', 
-            label: '3. Variantes',
-            enabled: variantes.length > 0,
-            badge: variantes.length > 0 ? variantes.length : null
-        }
-    ];
+    // Tabs según el modo
+    const tabs = modoInicial === 'gestion' 
+        ? [
+            { 
+                id: 'gestion', 
+                label: 'Gestión de Variantes',
+                enabled: true,
+                badge: variantes.length > 0 ? variantes.length : null
+            }
+        ]
+        : [
+            { 
+                id: 'atributos', 
+                label: '1. Atributos',
+                enabled: true,
+                badge: tieneAtributosConValores ? numVariantesAGenerar : null
+            },
+            { 
+                id: 'preview', 
+                label: '2. Preview',
+                enabled: tieneAtributosConValores,
+                badge: null
+            }
+        ];
     
     return (
-        <div ref={containerRef} className="space-y-3 sm:space-y-4 pt-4 sm:pt-6 border-t-2 border-brand-cyan mt-4 sm:mt-6 bg-gradient-to-br from-neutral-50/80 to-cyan-50/30 rounded-xl w-full p-3 sm:p-4">
-            {/* Header */}
-            <div className="flex flex-col gap-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
-                    <div className="flex-1 min-w-0">
-                        <h3 className="text-[11px] sm:text-[12px] font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-black flex items-center gap-2 flex-wrap">
-                            <Settings size={14} className="text-brand-cyan flex-shrink-0" />
-                            <span className="truncate">Variantes de Venta</span>
-                            {producto.usa_variantes && (
-                                <span className="px-2 py-0.5 bg-green-500 text-white text-[8px] font-black uppercase rounded-full flex items-center gap-1">
-                                    <CheckCircle2 size={10} />
-                                    Sistema Activo
-                                </span>
-                            )}
-                        </h3>
-                        <p className="text-[8px] sm:text-[9px] font-bold text-neutral-400 uppercase tracking-wider sm:tracking-widest mt-1">
-                            Gestiona stock y precios por Talle, Color u otras opciones
+        <div ref={containerRef} className="space-y-3 sm:space-y-4">
+            {/* Solo mostrar header e info en modo standalone (sin modoInicial definido externamente) */}
+            {!modoInicial && (
+                <div className="flex flex-col gap-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+                        <div className="flex-1 min-w-0">
+                            <h3 className="text-[11px] sm:text-[12px] font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-black flex items-center gap-2 flex-wrap">
+                                <Settings size={14} className="text-brand-cyan flex-shrink-0" />
+                                <span className="truncate">Variantes de Venta</span>
+                                {producto.usa_variantes && (
+                                    <span className="px-2 py-0.5 bg-green-500 text-white text-[8px] font-black uppercase rounded-full flex items-center gap-1">
+                                        <CheckCircle2 size={10} />
+                                        Sistema Activo
+                                    </span>
+                                )}
+                            </h3>
+                            <p className="text-[8px] sm:text-[9px] font-bold text-neutral-400 uppercase tracking-wider sm:tracking-widest mt-1">
+                                Gestiona stock y precios por Talle, Color u otras opciones
+                            </p>
+                        </div>
+                    </div>
+                    
+                    {/* Info Card */}
+                    <div className="bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded-lg p-3">
+                        <p className="text-[9px] font-bold text-cyan-900 dark:text-cyan-200 leading-relaxed">
+                            <strong className="text-black dark:text-white">¿Qué son las variantes?</strong> Son las diferentes opciones de un mismo producto que tus clientes pueden elegir (ej: Remera Roja Talle M, Remera Azul Talle L). Cada variante tiene su propio stock y precio.
                         </p>
                     </div>
                 </div>
-                
-                {/* Info Card */}
-                <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-3">
-                    <p className="text-[9px] font-bold text-cyan-900 leading-relaxed">
-                        <strong className="text-black">¿Qué son las variantes?</strong> Son las diferentes opciones de un mismo producto que tus clientes pueden elegir (ej: Remera Roja Talle M, Remera Azul Talle L). Cada variante tiene su propio stock y precio.
-                    </p>
-                </div>
-            </div>
+            )}
             
             {/* Tabs Navigation */}
             <div className="flex gap-1 sm:gap-2 border-b border-neutral-200 overflow-x-auto pb-0">
@@ -161,8 +169,13 @@ const VariantesTabSystem = ({
                         }}
                         onSuccess={() => {
                             onRefresh();
-                            setActiveTab('gestion');
-                            setHasChangedTab(true);
+                            // Si estamos en modo crear, volver a gestión
+                            if (modoInicial === 'crear' && onVolverAGestion) {
+                                onVolverAGestion();
+                            } else {
+                                setActiveTab('gestion');
+                                setHasChangedTab(true);
+                            }
                         }}
                         generando={generando}
                     />

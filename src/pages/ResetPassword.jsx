@@ -79,7 +79,7 @@ const ResetPassword = () => {
                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-300 group-focus-within:text-brand-cyan transition-colors" size={18} />
                             <input 
                                 required type="password"
-                                className="w-full pl-12 pr-4 py-4 bg-neutral-50 border-2 border-neutral-100 rounded-xl text-black focus:outline-none focus:border-black transition-all"
+                                className="w-full pl-12 pr-4 py-4 bg-neutral-50 dark:bg-gray-700 border-2 border-neutral-100 dark:border-gray-600 rounded-xl text-black dark:text-white placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-black dark:focus:border-cyan-400 transition-all"
                                 placeholder="••••••••"
                                 value={formData.password}
                                 onChange={(e) => setFormData({...formData, password: e.target.value})}
@@ -93,7 +93,7 @@ const ResetPassword = () => {
                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-300 group-focus-within:text-brand-cyan transition-colors" size={18} />
                             <input 
                                 required type="password"
-                                className="w-full pl-12 pr-4 py-4 bg-neutral-50 border-2 border-neutral-100 rounded-xl text-black focus:outline-none focus:border-black transition-all"
+                                className="w-full pl-12 pr-4 py-4 bg-neutral-50 dark:bg-gray-700 border-2 border-neutral-100 dark:border-gray-600 rounded-xl text-black dark:text-white placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-black dark:focus:border-cyan-400 transition-all"
                                 placeholder="••••••••"
                                 value={formData.confirmPassword}
                                 onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}

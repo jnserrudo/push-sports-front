@@ -24,7 +24,8 @@ import {
     FileText,
     ShoppingCart,
     ChevronDown,
-    ChevronRight
+    ChevronRight,
+    ChevronLeft
 } from 'lucide-react';
 import GenericABM from '../../components/ui/GenericABM';
 import Modal from '../../components/ui/Modal';
@@ -183,7 +184,7 @@ const ProductCardPreview = ({ formData, categorias, marcas, isPrivileged, varian
                                                     {Object.entries(variante.atributos_valores || {}).map(([k, v]) => v).join(' / ')}
                                                 </span>
                                                 <span className={`text-[7px] px-1 py-0.5 rounded ${variante.activo ? 'bg-green-500 text-white' : 'bg-neutral-300 text-neutral-600'}`}>
-                                                    {variante.activo ? 'ACTIVA' : 'INACTIVA'}
+                                                    {variante.activo ? 'ACTIVO' : 'INACTIVO'}
                                                 </span>
                                             </div>
                                             <div className="flex items-center justify-between text-[7px] text-neutral-600">
@@ -330,7 +331,7 @@ const MultiImagePicker = ({ formData, setFormData }) => {
 
     return (
         <div className="space-y-2">
-            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">
+            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">
                 Imágenes del Producto <span className="text-neutral-400">(hasta 3 · máx. 5MB c/u)</span>
             </label>
             <div className="grid grid-cols-3 gap-2 md:gap-3">
@@ -402,7 +403,7 @@ const TagInput = ({ tags = [], onChange, placeholder }) => {
             ))}
             <input
                 type="text"
-                className="flex-1 bg-transparent border-none outline-none text-[10px] font-bold text-black uppercase placeholder:text-neutral-300 min-w-[120px] p-0.5"
+                className="flex-1 bg-transparent border-none outline-none text-[10px] font-bold text-black dark:text-white uppercase placeholder:text-neutral-300 dark:placeholder:text-gray-500 min-w-[120px] p-0.5"
                 placeholder={tags.length === 0 ? placeholder : "MÁS..."}
                 value={inputValue}
                 onChange={e => setInputValue(e.target.value)}
@@ -415,6 +416,7 @@ const TagInput = ({ tags = [], onChange, placeholder }) => {
 
 // ─── Attribute Manager ────────────────────────────────────────────────────────
 const AttributesManager = ({ formData, setFormData }) => {
+    const [customAttrName, setCustomAttrName] = useState('');
     const rawAtributos = formData.atributos || {};
     const suggestions = CATEGORY_SUGGESTIONS[formData.id_categoria] || [];
     
@@ -470,20 +472,42 @@ const AttributesManager = ({ formData, setFormData }) => {
         return 'ESCRIBE Y PRESIONA ENTER...';
     };
 
+    const handleAddCustomAttribute = () => {
+        if (!customAttrName.trim()) return;
+        addAttribute(customAttrName.trim());
+        setCustomAttrName('');
+    };
+
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <p className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">
-                    Características informativas (no afectan stock ni precio)
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <p className="text-[9px] font-bold text-black dark:text-white uppercase tracking-widest">
+                    Características del producto
                 </p>
-                <button
-                    type="button"
-                    onClick={() => addAttribute()}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-all"
-                >
-                    <Plus size={12} className="stroke-[3]" />
-                    <span className="text-[9px] font-black uppercase tracking-widest">Añadir</span>
-                </button>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <input
+                        type="text"
+                        value={customAttrName}
+                        onChange={(e) => setCustomAttrName(e.target.value.toUpperCase())}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleAddCustomAttribute();
+                            }
+                        }}
+                        placeholder="NUEVA CARACTERÍSTICA..."
+                        className="flex-1 sm:w-48 px-3 py-1.5 text-[9px] font-bold uppercase bg-white dark:bg-gray-700 border border-blue-200 dark:border-gray-600 rounded-lg text-black dark:text-white placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-blue-500 dark:focus:border-cyan-400 focus:ring-1 focus:ring-blue-500 dark:focus:ring-cyan-400"
+                    />
+                    <button
+                        type="button"
+                        onClick={handleAddCustomAttribute}
+                        disabled={!customAttrName.trim()}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <Plus size={12} className="stroke-[3]" />
+                        <span className="text-[9px] font-black uppercase tracking-widest">Añadir</span>
+                    </button>
+                </div>
             </div>
 
             <div className="space-y-4">
@@ -570,6 +594,7 @@ const AttributesManager = ({ formData, setFormData }) => {
 // COMPONENTE: GESTIÓN DE VARIANTES
 // ═══════════════════════════════════════════════════════════
 const VariantesManager = ({ producto, refresh, onVariantesChange }) => {
+    const [modo, setModo] = useState('gestion'); // 'gestion' | 'crear'
     const [variantes, setVariantes] = useState([]);
     const [generando, setGenerando] = useState(false);
     const [atributos, setAtributos] = useState({});
@@ -604,12 +629,13 @@ const VariantesManager = ({ producto, refresh, onVariantesChange }) => {
         }
     };
 
-    const handleGenerar = async () => {
+    const handleGenerar = async (combinacionesEspecificas = null) => {
         setGenerando(true);
         try {
             const result = await variantesService.generarDesdeAtributos(
                 producto.id_producto, 
-                atributos
+                atributos,
+                combinacionesEspecificas
             );
             return result;
         } catch (err) {
@@ -811,15 +837,77 @@ const VariantesManager = ({ producto, refresh, onVariantesChange }) => {
     };
 
     return (
-        <VariantesTabSystem
-            producto={producto}
-            atributos={atributos}
-            setAtributos={setAtributos}
-            variantes={variantes}
-            onGenerar={handleGenerar}
-            onRefresh={loadVariantes}
-            generando={generando}
-        />
+        <div className="space-y-4">
+            {modo === 'gestion' ? (
+                // MODO GESTIÓN: Vista principal con tabla de variantes
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h4 className="text-[11px] font-black uppercase tracking-wider text-cyan-900">
+                                Variantes Existentes
+                            </h4>
+                            <p className="text-[9px] text-cyan-600 mt-1">
+                                {variantes.length} variante{variantes.length !== 1 ? 's' : ''} registrada{variantes.length !== 1 ? 's' : ''}
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setModo('crear')}
+                            className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-all font-black text-[10px] uppercase tracking-wider"
+                        >
+                            <Plus size={14} />
+                            Crear Nuevas Variantes
+                        </button>
+                    </div>
+                    
+                    {/* Renderizar GestionTab directamente */}
+                    <VariantesTabSystem
+                        producto={producto}
+                        atributos={atributos}
+                        setAtributos={setAtributos}
+                        variantes={variantes}
+                        onGenerar={handleGenerar}
+                        onRefresh={loadVariantes}
+                        generando={generando}
+                        modoInicial="gestion"
+                    />
+                </div>
+            ) : (
+                // MODO CREAR: Flujo de creación con tabs
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h4 className="text-[11px] font-black uppercase tracking-wider text-cyan-900">
+                                Crear Nuevas Variantes
+                            </h4>
+                            <p className="text-[9px] text-cyan-600 mt-1">
+                                Define atributos y selecciona las combinaciones a crear
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setModo('gestion')}
+                            className="flex items-center gap-2 px-4 py-2 bg-neutral-600 text-white rounded-lg hover:bg-neutral-700 transition-all font-black text-[10px] uppercase tracking-wider"
+                        >
+                            <ChevronLeft size={14} />
+                            Volver a Gestión
+                        </button>
+                    </div>
+                    
+                    <VariantesTabSystem
+                        producto={producto}
+                        atributos={atributos}
+                        setAtributos={setAtributos}
+                        variantes={variantes}
+                        onGenerar={handleGenerar}
+                        onRefresh={loadVariantes}
+                        generando={generando}
+                        modoInicial="crear"
+                        onVolverAGestion={() => setModo('gestion')}
+                    />
+                </div>
+            )}
+        </div>
     );
 };
 
@@ -927,7 +1015,7 @@ const ModalReposicion = ({ isOpen, onClose, producto: initialProducto, onSave })
                     <div className="space-y-3 mt-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                         <div className="flex flex-col gap-1">
                             <div className="flex items-center justify-between">
-                                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Desglose de Stock por Variantes</label>
+                                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">Desglose de Stock por Variantes</label>
                             </div>
                             {!producto.usa_variantes && (
                                 <div className="p-2 border border-neutral-200 rounded">
@@ -983,7 +1071,7 @@ const ModalReposicion = ({ isOpen, onClose, producto: initialProducto, onSave })
                                 type="number" min="1" required
                                 value={cantidadSimple}
                                 onChange={(e) => setCantidadSimple(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded text-lg font-black text-black focus:outline-none focus:border-black transition-all"
+                                className="w-full pl-10 pr-4 py-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded text-lg font-black text-black dark:text-white placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-black dark:focus:border-cyan-400 transition-all"
                                 placeholder="0"
                             />
                         </div>
@@ -1064,12 +1152,12 @@ const Productos = () => {
                         {/* Product Info */}
                         <div className="flex flex-col min-w-0">
                             <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="font-black text-[10px] text-black uppercase tracking-wider truncate">{row.nombre}</span>
-                                <span className="text-[7px] font-bold text-neutral-400 uppercase tracking-widest border-l border-neutral-200 pl-1.5">
+                                <span className="font-black text-[10px] text-black dark:text-white uppercase tracking-wider truncate">{row.nombre}</span>
+                                <span className="text-[7px] font-bold text-neutral-400 dark:text-gray-300 uppercase tracking-widest border-l border-neutral-200 dark:border-gray-600 pl-1.5">
                                     {row.marca?.nombre_marca || 'GEN'} · {row.categoria?.nombre || 'S/C'}
                                 </span>
                             </div>
-                            <span className="text-[8px] font-medium text-neutral-400 uppercase tracking-tighter truncate max-w-[200px]">
+                            <span className="text-[8px] font-medium text-neutral-400 dark:text-gray-300 uppercase tracking-tighter truncate max-w-[200px]">
                                 {row.descripcion || 'Sin descripción'}
                             </span>
                             {Object.keys(atributos).length > 0 && (
@@ -1097,7 +1185,7 @@ const Productos = () => {
                 return (
                     <div className="flex flex-col gap-0.5 py-1">
                         <div className="flex items-center gap-1.5">
-                            <span className="text-[9px] font-black text-black">
+                            <span className="text-[9px] font-black text-black dark:text-white">
                                 {stockTotal} <span className="text-neutral-300 font-bold text-[7px]">STOCK</span>
                             </span>
                             <div className="w-px h-2 bg-neutral-200" />
@@ -1130,14 +1218,14 @@ const Productos = () => {
             render: (row) => (
                 <div className="flex flex-col py-1">
                     <div className="flex items-baseline gap-0.5">
-                        <span className="font-black text-[10px] text-black">
+                        <span className="font-black text-[10px] text-black dark:text-white">
                             ${Number(row.precio_venta_sugerido || 0).toLocaleString()}
                         </span>
-                        <span className="text-[6px] text-neutral-300 font-black uppercase">PÚB</span>
+                        <span className="text-[6px] text-neutral-300 dark:text-gray-400 font-black uppercase">PÚB</span>
                     </div>
                     {isPrivileged && (
                         <div className="flex flex-col border-t border-neutral-50 mt-0.5 pt-0.5">
-                            <span className="font-black text-[8px] text-brand-cyan leading-none">
+                            <span className="font-black text-[8px] text-brand-cyan dark:text-cyan-400 leading-none">
                                 ${Number(row.precio_pushsport || 0).toLocaleString()} <span className="text-[6px] opacity-40">PUSH</span>
                             </span>
                             <span className="text-[6px] font-bold text-neutral-300 uppercase mt-0.5">
@@ -1155,10 +1243,10 @@ const Productos = () => {
                 <div className="flex items-center justify-center">
                     <div className={`px-1.5 py-0.5 rounded-sm text-[7px] font-black uppercase tracking-tighter border ${
                         row.activo !== false
-                            ? 'bg-black text-white border-black'
-                            : 'bg-neutral-50 text-neutral-300 border-neutral-100'
+                            ? 'bg-green-500 text-white border-green-500 dark:bg-green-600 dark:border-green-600'
+                            : 'bg-neutral-100 text-neutral-400 border-neutral-200 dark:bg-gray-700 dark:text-gray-400 dark:border-gray-600'
                     }`}>
-                        {row.activo !== false ? 'ACT' : 'OFF'}
+                        {row.activo !== false ? 'ACTIVO' : 'INACTIVO'}
                     </div>
                 </div>
             )
@@ -1190,7 +1278,7 @@ const Productos = () => {
 
                     {/* Nombre */}
                     <div className="space-y-2">
-                        <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Nombre del Producto *</label>
+                        <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">Nombre del Producto *</label>
                         <div className="relative group">
                             <Box size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
                             <input
@@ -1205,7 +1293,7 @@ const Productos = () => {
 
                     {/* Descripcion */}
                     <div className="space-y-2">
-                        <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Descripción</label>
+                        <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">Descripción</label>
                         <div className="relative group">
                             <AlignLeft size={16} className="absolute left-4 top-4 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
                             <textarea
@@ -1221,7 +1309,7 @@ const Productos = () => {
                     {/* Categoría + Marca */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Categoría *</label>
+                            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">Categoría *</label>
                             <PremiumSelect
                                 icon={Component}
                                 placeholder="SELECCIONAR..."
@@ -1238,7 +1326,7 @@ const Productos = () => {
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Marca *</label>
+                            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">Marca *</label>
                             <PremiumSelect
                                 icon={Tag}
                                 placeholder="SELECCIONAR..."
@@ -1251,7 +1339,7 @@ const Productos = () => {
 
                     {/* Proveedor */}
                     <div className="space-y-2">
-                        <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Proveedor</label>
+                        <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">Proveedor</label>
                         <PremiumSelect
                             icon={Truck}
                             placeholder="SIN PROVEEDOR"
@@ -1278,11 +1366,11 @@ const Productos = () => {
                     {/* Separador visual */}
                     <div className="relative py-6">
                         <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t-2 border-neutral-300"></div>
+                            <div className="w-full border-t-2 border-neutral-300 dark:border-gray-600"></div>
                         </div>
                         <div className="relative flex justify-center">
-                            <span className="bg-white px-4 text-xs font-black text-neutral-400 uppercase tracking-widest">
-                                Secciones Independientes
+                            <span className="bg-white dark:bg-gray-800 px-4 text-xs font-black text-neutral-400 dark:text-gray-500 uppercase tracking-widest">
+                                Configuración de Variantes
                             </span>
                         </div>
                     </div>
@@ -1316,12 +1404,12 @@ const Productos = () => {
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                         {/* Costo */}
                         <div className="space-y-1.5 sm:space-y-2">
-                            <label className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] text-black truncate block">Costo *</label>
+                            <label className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] text-black dark:text-white truncate block">Costo *</label>
                             <div className="relative group">
                                 <CircleDollarSign size={14} className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
                                 <input
                                     required type="number" step="0.01" min="0"
-                                    className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-xs sm:text-sm font-bold text-black focus:outline-none focus:border-brand-cyan transition-all"
+                                    className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-xs sm:text-sm font-bold text-black dark:text-white focus:outline-none focus:border-brand-cyan dark:focus:border-cyan-400 transition-all"
                                     placeholder="0.00"
                                     value={formData.costo_compra ?? ''}
                                     onChange={e => setFormData({ ...formData, costo_compra: e.target.value })}
@@ -1345,8 +1433,8 @@ const Productos = () => {
                                     required type="number" step="0.01" min="0"
                                     className={`w-full pl-8 sm:pl-10 pr-7 sm:pr-10 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-bold transition-all focus:outline-none focus:ring-1 ${
                                         Number(formData.precio_pushsport) > 0 && Number(formData.precio_pushsport) < Number(formData.costo_compra) 
-                                        ? 'bg-red-50 border border-red-300 text-red-600 focus:ring-red-500' 
-                                        : 'bg-brand-cyan/5 border border-brand-cyan text-brand-cyan focus:ring-brand-cyan'
+                                        ? 'bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 focus:ring-red-500 dark:focus:ring-red-400' 
+                                        : 'bg-brand-cyan/5 dark:bg-cyan-900/20 border border-brand-cyan dark:border-cyan-700 text-brand-cyan dark:text-cyan-400 focus:ring-brand-cyan dark:focus:ring-cyan-400'
                                     }`}
                                     placeholder="0.00"
                                     value={formData.precio_pushsport ?? ''}
@@ -1377,8 +1465,8 @@ const Productos = () => {
                                     required type="number" step="0.01" min="0"
                                     className={`w-full pl-8 sm:pl-10 pr-7 sm:pr-10 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-bold transition-all focus:outline-none focus:ring-1 ${
                                         Number(formData.precio_venta_sugerido) > 0 && Number(formData.precio_venta_sugerido) < Number(formData.precio_pushsport) 
-                                        ? 'bg-red-50 border border-red-300 text-red-600 focus:ring-red-500' 
-                                        : 'bg-white dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 text-black dark:text-white focus:ring-black dark:focus:ring-cyan-400'
+                                        ? 'bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 focus:ring-red-500 dark:focus:ring-red-400' 
+                                        : 'bg-white dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 text-black dark:text-white placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:ring-black dark:focus:ring-cyan-400'
                                     }`}
                                     placeholder="0.00"
                                     value={formData.precio_venta_sugerido ?? ''}
@@ -1394,12 +1482,12 @@ const Productos = () => {
                         </div>
                         {/* Stock Mínimo */}
                         <div className="space-y-1.5 sm:space-y-2">
-                            <label className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] text-black truncate block">Stock Mín.</label>
+                            <label className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] text-black dark:text-white truncate block">Stock Mín.</label>
                             <div className="relative group">
                                 <Settings size={14} className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
                                 <input
                                     type="number" min="0"
-                                    className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-xs sm:text-sm font-bold text-black focus:outline-none focus:border-brand-cyan transition-all"
+                                    className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-xs sm:text-sm font-bold text-black dark:text-white focus:outline-none focus:border-brand-cyan dark:focus:border-cyan-400 transition-all"
                                     placeholder="5"
                                     value={formData.stock_minimo ?? ''}
                                     onChange={e => setFormData({ ...formData, stock_minimo: e.target.value })}
@@ -1410,13 +1498,13 @@ const Productos = () => {
 
                     {/* Stock Central */}
                     <div className="space-y-2">
-                        <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black">Stock Casa Central</label>
+                        <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">Stock Casa Central</label>
                         <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">Unidades disponibles en depósito PushSport para distribuir a comercios</p>
                         <div className="relative">
                             <Package size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-cyan pointer-events-none" />
                             <input
                                 type="number" min="0"
-                                className="w-full pl-10 pr-4 py-3 bg-cyan-50 border-2 border-brand-cyan/30 rounded-lg text-sm font-bold text-black focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan transition-all"
+                                className="w-full pl-10 pr-4 py-3 bg-cyan-50 dark:bg-cyan-900/20 border-2 border-brand-cyan/30 dark:border-cyan-700 rounded-lg text-sm font-bold text-black dark:text-white focus:outline-none focus:border-brand-cyan dark:focus:border-cyan-400 focus:ring-1 focus:ring-brand-cyan dark:focus:ring-cyan-400 transition-all"
                                 placeholder="0"
                                 value={formData.stock_central ?? ''}
                                 onChange={e => setFormData({ ...formData, stock_central: e.target.value })}
@@ -1425,20 +1513,29 @@ const Productos = () => {
                     </div>
 
                     {/* Activo toggle */}
-                    <div className="flex items-center justify-between p-4 bg-neutral-50 border border-neutral-200 rounded-lg">
+                    <div className="flex items-center justify-between p-4 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg">
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black">Estado del Producto</p>
-                            <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5">Desactivar oculta el producto del catálogo y del POS</p>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black dark:text-white">Estado del Producto</p>
+                            <p className="text-[9px] font-bold text-neutral-400 dark:text-gray-500 uppercase tracking-widest mt-0.5">
+                                {formData.activo === false ? 'Inactivo - No visible en catálogo ni POS' : 'Activo - Visible en catálogo y POS'}
+                            </p>
                         </div>
-                        <div
-                            onClick={() => setFormData({ ...formData, activo: formData.activo === false ? true : false })}
-                            className={`w-12 h-7 rounded-full transition-all relative flex-shrink-0 cursor-pointer ${
-                                formData.activo === false ? 'bg-neutral-200' : 'bg-brand-cyan'
-                            }`}
-                        >
-                            <div className={`w-5 h-5 bg-white dark:bg-gray-300 rounded-full shadow absolute top-1 transition-all ${
-                                formData.activo === false ? 'left-1' : 'left-6'
-                            }`} />
+                        <div className="flex items-center gap-3">
+                            <span className={`text-[8px] font-black uppercase tracking-widest transition-colors ${
+                                formData.activo === false ? 'text-neutral-400 dark:text-gray-500' : 'text-brand-cyan dark:text-cyan-400'
+                            }`}>
+                                {formData.activo === false ? 'Inactivo' : 'Activo'}
+                            </span>
+                            <div
+                                onClick={() => setFormData({ ...formData, activo: formData.activo === false ? true : false })}
+                                className={`w-12 h-7 rounded-full transition-all relative flex-shrink-0 cursor-pointer ${
+                                    formData.activo === false ? 'bg-neutral-200 dark:bg-gray-600' : 'bg-brand-cyan dark:bg-cyan-600'
+                                }`}
+                            >
+                                <div className={`w-5 h-5 bg-white dark:bg-gray-300 rounded-full shadow absolute top-1 transition-all ${
+                                    formData.activo === false ? 'left-1' : 'left-6'
+                                }`} />
+                            </div>
                         </div>
                     </div>
 
