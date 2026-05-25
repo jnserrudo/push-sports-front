@@ -20,15 +20,21 @@ import {
     Trash2,
     Component,
     Save,
-    TrendingUp
+    TrendingUp,
+    FileText,
+    ShoppingCart,
+    ChevronDown,
+    ChevronRight
 } from 'lucide-react';
 import GenericABM from '../../components/ui/GenericABM';
 import Modal from '../../components/ui/Modal';
+import Accordion from '../../components/ui/Accordion';
 import BulkPriceUpdateModal from '../../components/modals/BulkPriceUpdateModal';
 import { ExportButton } from '../../components/ui/ExportButton';
 import { useAuthStore } from '../../store/authStore';
 import { productosService } from '../../services/productosService';
 import { variantesService } from '../../services/variantesService';
+import VariantesTabSystem from '../../components/variantes/VariantesTabSystem';
 import PremiumSelect from '../../components/ui/PremiumSelect';
 import {
     uploadProductImage,
@@ -42,6 +48,8 @@ import { toast } from '../../store/toastStore';
 const ProductCardPreview = ({ formData, categorias, marcas, isPrivileged, variantes = [] }) => {
     const imagenes = (formData._imagenesTemp || []).filter(Boolean);
     const [activeImg, setActiveImg] = useState(0);
+    const [showVariantes, setShowVariantes] = useState(false);
+    const [showCaracteristicas, setShowCaracteristicas] = useState(false);
     const cat  = categorias.find(c => c.id_categoria === Number(formData.id_categoria));
     const marc = marcas.find(m => m.id_marca === Number(formData.id_marca));
 
@@ -49,6 +57,12 @@ const ProductCardPreview = ({ formData, categorias, marcas, isPrivileged, varian
     const totalVariantes = variantes.length;
     const variantesActivas = variantes.filter(v => v.activo).length;
     const stockTotal = variantes.reduce((sum, v) => sum + (v.stock_central || 0), 0);
+    
+    // Parsear atributos técnicos
+    const atributosTecnicos = formData.atributos 
+        ? (typeof formData.atributos === 'string' ? JSON.parse(formData.atributos) : formData.atributos)
+        : {};
+    const tieneCaracteristicas = Object.keys(atributosTecnicos).length > 0;
 
     return (
         <div className="sticky top-4">
@@ -108,17 +122,78 @@ const ProductCardPreview = ({ formData, categorias, marcas, isPrivileged, varian
                         </p>
                     )}
 
+                    {/* Características Técnicas */}
+                    {tieneCaracteristicas && (
+                        <div className="mb-2">
+                            <button
+                                type="button"
+                                onClick={() => setShowCaracteristicas(!showCaracteristicas)}
+                                className="w-full p-2 bg-blue-50 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors"
+                            >
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[8px] font-black uppercase tracking-wider text-blue-700">CARACTERÍSTICAS</span>
+                                    {showCaracteristicas 
+                                        ? <ChevronDown size={14} className="text-blue-700" />
+                                        : <ChevronRight size={14} className="text-blue-700" />
+                                    }
+                                </div>
+                            </button>
+                            {showCaracteristicas && (
+                                <div className="mt-1 p-2 bg-blue-50/50 rounded-lg border border-blue-100 space-y-1">
+                                    {Object.entries(atributosTecnicos).map(([key, valores]) => (
+                                        <div key={key} className="text-[8px]">
+                                            <span className="font-black uppercase text-blue-700">{key}:</span>
+                                            <span className="ml-1 text-neutral-600">{Array.isArray(valores) ? valores.join(', ') : valores}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {/* Variant Summary Badge */}
                     {totalVariantes > 0 && (
-                        <div className="mb-2 p-2 bg-brand-cyan/10 rounded-lg border border-brand-cyan/20">
-                            <div className="flex items-center justify-between mb-1">
-                                <span className="text-[8px] font-black uppercase tracking-wider text-brand-cyan">VARIANTES</span>
-                                <span className="text-[10px] font-sport text-brand-cyan">{totalVariantes}</span>
-                            </div>
-                            <div className="flex items-center justify-between text-[8px]">
-                                <span className="text-neutral-500">Activas: {variantesActivas}</span>
-                                <span className="text-neutral-500">Stock: {stockTotal}</span>
-                            </div>
+                        <div className="mb-2">
+                            <button
+                                type="button"
+                                onClick={() => setShowVariantes(!showVariantes)}
+                                className="w-full p-2 bg-brand-cyan/10 rounded-lg border border-brand-cyan/20 hover:bg-brand-cyan/20 transition-colors"
+                            >
+                                <div className="flex items-center justify-between mb-1">
+                                    <span className="text-[8px] font-black uppercase tracking-wider text-brand-cyan">VARIANTES</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] font-sport text-brand-cyan">{totalVariantes}</span>
+                                        {showVariantes 
+                                            ? <ChevronDown size={14} className="text-brand-cyan" />
+                                            : <ChevronRight size={14} className="text-brand-cyan" />
+                                        }
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between text-[8px]">
+                                    <span className="text-neutral-500">Activas: {variantesActivas}</span>
+                                    <span className="text-neutral-500">Stock: {stockTotal}</span>
+                                </div>
+                            </button>
+                            {showVariantes && (
+                                <div className="mt-1 max-h-[200px] overflow-y-auto space-y-1">
+                                    {variantes.map((variante, idx) => (
+                                        <div key={idx} className="p-2 bg-cyan-50/50 rounded border border-cyan-100">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <span className="text-[8px] font-black uppercase text-cyan-700">
+                                                    {Object.entries(variante.atributos_valores || {}).map(([k, v]) => v).join(' / ')}
+                                                </span>
+                                                <span className={`text-[7px] px-1 py-0.5 rounded ${variante.activo ? 'bg-green-500 text-white' : 'bg-neutral-300 text-neutral-600'}`}>
+                                                    {variante.activo ? 'ACTIVA' : 'INACTIVA'}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between text-[7px] text-neutral-600">
+                                                <span>Stock: {variante.stock_central || 0}</span>
+                                                <span className="font-mono">{variante.sku_variante}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -279,10 +354,10 @@ const MultiImagePicker = ({ formData, setFormData }) => {
 
 // ─── Constants & Helpers ──────────────────────────────────────────────────
 const CATEGORY_SUGGESTIONS = {
-    1: ['SABORES', 'TAMAÑO', 'FORMATO'], // Suplementos
-    2: ['TALLES', 'COLOR', 'MATERIAL', 'GÉNERO'], // Indumentaria
-    3: ['MATERIAL', 'COLOR', 'USO'], // Accesorios
-    4: ['SABORES', 'PESO', 'TIPO'], // Alimentos
+    1: ['PESO', 'SABOR', 'FORMATO'], // Suplementos (SIN Tamaño - usar Variantes)
+    2: ['MATERIAL', 'GÉNERO', 'USO'], // Indumentaria (SIN Talle/Color - usar Variantes)
+    3: ['MATERIAL', 'USO', 'ORIGEN'], // Accesorios (SIN Color - usar Variantes)
+    4: ['PESO', 'TIPO', 'ORIGEN'], // Alimentos (SIN Sabor - usar Variantes)
 };
 
 // ─── Tag Input Component ───────────────────────────────────────────────────
@@ -396,20 +471,15 @@ const AttributesManager = ({ formData, setFormData }) => {
     };
 
     return (
-        <div className="space-y-4 pt-4 border-t border-neutral-100 dark:border-gray-700">
+        <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <div className="flex flex-col">
-                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-black dark:text-white">
-                        Especificaciones / Atributos
-                    </label>
-                    <p className="text-[8px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5">
-                        Define variantes para el catálogo
-                    </p>
-                </div>
+                <p className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">
+                    Características informativas (no afectan stock ni precio)
+                </p>
                 <button
                     type="button"
                     onClick={() => addAttribute()}
-                    className="flex items-center gap-1.5 px-3 py-1 bg-brand-cyan/10 text-brand-cyan rounded-lg hover:bg-brand-cyan/20 transition-all"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-all"
                 >
                     <Plus size={12} className="stroke-[3]" />
                     <span className="text-[9px] font-black uppercase tracking-widest">Añadir</span>
@@ -499,15 +569,9 @@ const AttributesManager = ({ formData, setFormData }) => {
 // ═══════════════════════════════════════════════════════════
 // COMPONENTE: GESTIÓN DE VARIANTES
 // ═══════════════════════════════════════════════════════════
-const VariantesManager = ({ producto, refresh }) => {
+const VariantesManager = ({ producto, refresh, onVariantesChange }) => {
     const [variantes, setVariantes] = useState([]);
-    const [loading, setLoading] = useState(false);
     const [generando, setGenerando] = useState(false);
-    const [error, setError] = useState(null);
-    const [migrando, setMigrando] = useState(false);
-    const [distribucion, setDistribucion] = useState({});
-    const [showMigracion, setShowMigracion] = useState(false);
-    // Estado local de atributos para sincronización en tiempo real
     const [atributos, setAtributos] = useState({});
 
     // Sincronizar atributos cuando cambie el producto
@@ -518,51 +582,39 @@ const VariantesManager = ({ producto, refresh }) => {
         setAtributos(parsedAtributos);
     }, [producto.atributos]);
     
-    const tieneAtributos = Object.keys(atributos).length > 0;
-    const tieneAtributosConValores = Object.values(atributos).some(arr => Array.isArray(arr) && arr.length > 0);
-
     useEffect(() => {
         if (producto.id_producto) {
             loadVariantes();
         }
     }, [producto.id_producto]);
+    
+    // Notificar cambios de variantes al componente padre
+    useEffect(() => {
+        if (onVariantesChange) {
+            onVariantesChange(variantes);
+        }
+    }, [variantes, onVariantesChange]);
 
     const loadVariantes = async () => {
-        setLoading(true);
         try {
             const data = await variantesService.getByProducto(producto.id_producto);
             setVariantes(data.variantes || []);
-            setError(null);
         } catch (err) {
-            setError('Error al cargar variantes');
-            console.error(err);
-        } finally {
-            setLoading(false);
+            console.error('Error al cargar variantes:', err);
         }
     };
 
     const handleGenerar = async () => {
-        if (!tieneAtributosConValores) {
-            toast.error('Los atributos no tienen valores definidos');
-            return;
-        }
-
         setGenerando(true);
         try {
-            // Enviar atributos directamente al backend para generar variantes
-            // El backend guardará los atributos y generará las variantes en una sola operación
             const result = await variantesService.generarDesdeAtributos(
                 producto.id_producto, 
                 atributos
             );
-            if (result.variantes_creadas === 0) {
-                toast.info('Todas las combinaciones de variantes ya existen. No se generaron variantes nuevas.');
-            } else {
-                toast.success(`Se generaron ${result.variantes_creadas} variantes nuevas`);
-            }
-            loadVariantes();
+            return result;
         } catch (err) {
             toast.error(err.response?.data?.error || 'Error al generar variantes');
+            throw err;
         } finally {
             setGenerando(false);
         }
@@ -758,494 +810,16 @@ const VariantesManager = ({ producto, refresh }) => {
             .join(' / ');
     };
 
-    const totalDistribuido = Object.values(distribucion).reduce((a, b) => a + (parseInt(b) || 0), 0);
-    const distribucionValida = totalDistribuido === producto.stock_central;
-
     return (
-        <div className="space-y-3 sm:space-y-4 pt-4 sm:pt-6 border-t-2 border-brand-cyan mt-4 sm:mt-6 bg-gradient-to-br from-neutral-50/80 to-cyan-50/30 rounded-xl w-full">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
-                <div className="flex-1 min-w-0">
-                    <h3 className="text-[11px] sm:text-[12px] font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-black flex items-center gap-2 flex-wrap">
-                        <Settings size={14} className="text-brand-cyan flex-shrink-0" />
-                        <span className="truncate">Gestión de Variantes</span>
-                        {producto.usa_variantes && (
-                            <span className="px-2 py-0.5 bg-green-500 text-white text-[8px] font-black uppercase rounded-full">
-                                Activo
-                            </span>
-                        )}
-                    </h3>
-                    <p className="text-[8px] sm:text-[9px] font-bold text-neutral-400 uppercase tracking-wider sm:tracking-widest mt-1">
-                        Control de stock por combinación de atributos
-                    </p>
-                </div>
-            </div>
-
-            {/* Cards de Información - Super Compactos */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
-                <div className="p-2 border border-neutral-100 rounded bg-white">
-                    <p className="text-[8px] font-black uppercase text-neutral-400 mb-1 tracking-widest">Procedimiento</p>
-                    <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2">
-                            <span className="w-3.5 h-3.5 rounded bg-black text-white flex items-center justify-center text-[7px] font-black">1</span>
-                            <span className="text-[8px] font-bold text-neutral-600 uppercase">Definir Atributos (Talle, Color, etc.)</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span className="w-3.5 h-3.5 rounded bg-black text-white flex items-center justify-center text-[7px] font-black">2</span>
-                            <span className="text-[8px] font-bold text-neutral-600 uppercase">Asignar valores en cada campo</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span className="w-3.5 h-3.5 rounded bg-black text-white flex items-center justify-center text-[7px] font-black">3</span>
-                            <span className="text-[8px] font-bold text-neutral-600 uppercase">Generar combinaciones automáticas</span>
-                        </div>
-                    </div>
-                </div>
-                <div className="p-2 border border-neutral-100 rounded bg-white">
-                    <p className="text-[8px] font-black uppercase text-neutral-400 mb-1 tracking-widest">Información Clave</p>
-                    <p className="text-[9px] text-neutral-500 leading-tight">
-                        La gestión por variantes permite un control exacto por talle/color. 
-                        Al activar, el stock central se desglosa permanentemente.
-                    </p>
-                </div>
-            </div>
-
-            {/* Botones de acción */}
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                <button
-                    type="button"
-                    onClick={handleGenerar}
-                    disabled={generando || !tieneAtributosConValores}
-                    className="flex items-center justify-center sm:justify-start gap-2 px-3 sm:px-4 py-2.5 sm:py-2 bg-brand-cyan text-black text-[9px] sm:text-[10px] font-black uppercase tracking-wider sm:tracking-widest rounded-lg hover:bg-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    {generando ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
-                    Generar Variantes
-                </button>
-
-                {variantes.length > 0 && (
-                    <button
-                        type="button"
-                        onClick={handleToggleUsaVariantes}
-                        className={`flex items-center justify-center sm:justify-start gap-2 px-3 sm:px-4 py-2.5 sm:py-2 text-[9px] sm:text-[10px] font-black uppercase tracking-wider sm:tracking-widest rounded-lg transition-colors ${
-                            producto.usa_variantes
-                                ? 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-                                : 'bg-black text-white hover:bg-neutral-800'
-                        }`}
-                    >
-                        {producto.usa_variantes ? (
-                            <><AlertCircle size={14} /> Desactivar Gestión por Variantes</>
-                        ) : (
-                            <><CheckCircle2 size={14} /> Activar Gestión por Variantes</>
-                        )}
-                    </button>
-                )}
-            </div>
-
-            {/* Explicación de botones */}
-            <div className="p-2 border border-neutral-100 rounded bg-neutral-50/30 my-4">
-                <p className="text-[8px] text-neutral-500 leading-relaxed uppercase font-bold">
-                    <span className="text-black">Generar Variantes:</span> Crea combinaciones posibles. | <span className="text-black">Desactivar Gestión:</span> Vuelve a stock unificado (solo si stock = 0).
-                </p>
-            </div>
-
-            {/* Estados del sistema - Alertas neutrales */}
-            {!tieneAtributos && (
-                <div className="p-2 border border-neutral-200 rounded mb-4">
-                    <p className="text-[9px] font-black text-neutral-600 uppercase tracking-widest">
-                        Paso 1: Definir atributos (Ej: Color, Talle) en la sección superior.
-                    </p>
-                </div>
-            )}
-            {tieneAtributos && !tieneAtributosConValores && (
-                <div className="p-2 border border-neutral-200 rounded mb-4">
-                    <p className="text-[9px] font-black text-neutral-600 uppercase tracking-widest">
-                        Paso 2: Agregar valores a los atributos para generar combinaciones.
-                    </p>
-                </div>
-            )}
-            {tieneAtributosConValores && variantes.length === 0 && !generando && (
-                <div className="p-2 border border-black rounded mb-4 flex items-center justify-between">
-                    <p className="text-[9px] font-black text-black uppercase tracking-widest">
-                        Listo para generar {Object.values(atributos).reduce((acc, vals) => acc * (vals?.length || 1), 1)} variantes.
-                    </p>
-                    <button onClick={handleGenerar} className="px-3 py-1 bg-black text-white text-[8px] font-black uppercase rounded">Ejecutar Ahora</button>
-                </div>
-            )}
-
-            {/* Wizard de migración - Modal Mejorado */}
-            {showMigracion && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-                        {/* Header */}
-                        <div className="p-4 border-b border-neutral-200 bg-gradient-to-r from-cyan-50 to-white">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-brand-cyan/20 flex items-center justify-center">
-                                    <Settings size={20} className="text-brand-cyan" />
-                                </div>
-                                <div>
-                                    <h4 className="text-sm font-black uppercase tracking-widest text-black">
-                                        Activar Sistema de Variantes
-                                    </h4>
-                                    <p className="text-[10px] text-neutral-500">
-                                        Paso 1 de 2: Distribuir stock existente
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Explicación Sólida */}
-                        <div className="p-4 border border-neutral-100 mx-4 mt-4 rounded bg-neutral-50/50">
-                            <p className="text-[10px] text-neutral-600 leading-relaxed font-bold uppercase">
-                                <span className="text-black">Stock por Distribuir:</span> {producto.stock_central} UNIDADES.
-                                <br />
-                                Debe asignar el stock total a las variantes para activar el sistema.
-                            </p>
-                        </div>
-
-                        {/* Tabla de distribución */}
-                        <div className="p-4">
-                            <h5 className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 mb-3 flex items-center gap-2">
-                                <Box size={12} />
-                                Distribución de Stock
-                            </h5>
-                            
-                            <div className="border border-neutral-200 rounded-lg overflow-hidden">
-                                <table className="w-full text-left">
-                                    <thead className="bg-neutral-50">
-                                        <tr>
-                                            <th className="px-3 py-2 text-[9px] font-bold uppercase text-neutral-500">Variante</th>
-                                            <th className="px-3 py-2 text-[9px] font-bold uppercase text-neutral-500 text-right">Cantidad</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-neutral-100">
-                                        {variantes.map(variante => (
-                                            <tr key={variante.id_variante} className="hover:bg-neutral-50">
-                                                <td className="px-3 py-2">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[10px] font-bold text-black">
-                                                            {variante.sku_variante || 'Sin SKU'}
-                                                        </span>
-                                                        <span className="text-[9px] text-neutral-500">
-                                                            {renderAtributos(variante.atributos_valores)}
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-3 py-2 text-right">
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        max={producto.stock_central}
-                                                        value={distribucion[variante.id_variante] ?? ''}
-                                                        onChange={e => handleStockChange(variante.id_variante, e.target.value)}
-                                                        className="w-20 px-2 py-1.5 text-sm font-bold text-right border border-neutral-200 rounded focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan focus:outline-none"
-                                                        placeholder="0"
-                                                    />
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            {/* Indicador de progreso Sencillo */}
-                            <div className="mt-4 p-3 rounded border border-neutral-200">
-                                <div className="flex items-center justify-between mb-1">
-                                    <span className="text-[9px] font-black uppercase text-neutral-400">Distribución</span>
-                                    <span className="text-[10px] font-black text-black">{totalDistribuido} / {producto.stock_central}</span>
-                                </div>
-                                <div className="h-1 bg-neutral-100 rounded-full overflow-hidden">
-                                    <div 
-                                        className={`h-full transition-all duration-300 ${distribucionValida ? 'bg-black' : 'bg-neutral-300'}`}
-                                        style={{ width: `${Math.min((totalDistribuido / producto.stock_central) * 100, 100)}%` }}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Botones */}
-                        <div className="p-4 border-t border-neutral-200 bg-neutral-50 flex gap-3">
-                            <button
-                                onClick={handleMigrarStock}
-                                disabled={!distribucionValida || migrando}
-                                className="flex-1 py-3 bg-brand-cyan text-black text-[11px] font-black uppercase rounded-lg hover:bg-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                            >
-                                {migrando ? (
-                                    <><Loader2 size={16} className="animate-spin" /> Procesando...</>
-                                ) : (
-                                    <><CheckCircle2 size={16} /> Confirmar y Activar</>
-                                )}
-                            </button>
-                            <button
-                                onClick={() => setShowMigracion(false)}
-                                disabled={migrando}
-                                className="px-6 py-3 bg-white border border-neutral-300 text-neutral-600 text-[11px] font-bold uppercase rounded-lg hover:bg-neutral-100 transition-colors"
-                            >
-                                Cancelar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Sección informativa sobre variantes */}
-            {variantes.length > 0 && (
-                <div className="bg-brand-cyan/10 border border-brand-cyan/20 rounded-lg p-3">
-                    <div className="flex items-start gap-3">
-                        <Info size={16} className="text-brand-cyan shrink-0 mt-0.5" />
-                        <div>
-                            <p className="text-[10px] font-black uppercase tracking-wider text-brand-cyan mb-1">
-                                Gestión de Variantes
-                            </p>
-                            <p className="text-[9px] text-neutral-600 leading-relaxed">
-                                <strong>SKU único:</strong> Código de identificación que no se puede modificar.<br />
-                                <strong>Desactivar (Inactivo):</strong> Oculta la variante del catálogo pero conserva stock e historial. Podés reactivarla cuando quieras.<br />
-                                <strong>Eliminar:</strong> Borra permanentemente SOLO si stock = 0. Si tiene stock o historial de ventas, no se puede eliminar.<br /><br />
-                                <strong className="text-amber-600 bg-amber-50 px-1 rounded">IMPORTANTE SOBRE EL STOCK:</strong> El stock que modifiques en esta tabla corresponde <strong>UNICAMENTE al Depósito Central</strong>. Para que las sucursales puedan vender estas variantes en su Punto de Venta (POS), debés enviarles el stock utilizando la sección de <strong>Gestión de Ingresos</strong>.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Tabla de variantes - Con scroll horizontal en móvil */}
-            {variantes.length > 0 && (
-                <div className="border border-neutral-200 rounded-xl w-full overflow-x-auto">
-                    <table className="w-full min-w-[700px] text-left" style={{ tableLayout: 'fixed' }}>
-                        <thead className="bg-neutral-100 border-b border-neutral-200">
-                            <tr>
-                                <th className="px-3 py-3 text-[10px] font-black uppercase tracking-wider" style={{ width: '28%' }}>Combinación</th>
-                                <th className="px-3 py-3 text-[10px] font-black uppercase tracking-wider" style={{ width: '18%' }}>SKU <span className="text-[8px] text-neutral-400 font-normal">(Código único)</span></th>
-                                <th className="px-3 py-3 text-[10px] font-black uppercase tracking-wider text-center" style={{ width: '12%' }}>Stock</th>
-                                <th className="px-3 py-3 text-[10px] font-black uppercase tracking-wider text-right" style={{ width: '18%' }}>
-                                    <div className="flex flex-col items-end">
-                                        <span>Precio</span>
-                                        <span className="text-[8px] text-neutral-400 font-normal">Base: ${producto?.precio_venta_sugerido || 0}</span>
-                                    </div>
-                                </th>
-                                <th className="px-3 py-3 text-[10px] font-black uppercase tracking-wider text-center" style={{ width: '14%' }}>
-                                    <div className="flex flex-col items-center">
-                                        <span>Estado</span>
-                                        <span className="text-[8px] text-neutral-400 font-normal">Activo = Visible en ventas</span>
-                                    </div>
-                                </th>
-                                <th className="px-3 py-3 text-[10px] font-black uppercase tracking-wider text-center" style={{ width: '10%' }}>
-                                    <div className="flex flex-col items-center">
-                                        <span>Acciones</span>
-                                        <span className="text-[8px] text-neutral-400 font-normal">Eliminar (solo stock 0)</span>
-                                    </div>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-neutral-100">
-                            {variantes.map(variante => (
-                                <tr 
-                                    key={variante.id_variante} 
-                                    className={`hover:bg-neutral-50/50 transition-colors ${
-                                        !variante.activo ? 'bg-neutral-100/50 opacity-75' : ''
-                                    }`}
-                                >
-                                    <td className="px-3 py-2.5 align-middle" style={{ width: '28%' }}>
-                                        <span className="text-[10px] font-bold text-neutral-900 leading-tight block break-words">
-                                            {renderAtributos(variante.atributos_valores)}
-                                        </span>
-                                    </td>
-                                    <td className="px-3 py-2.5 align-middle" style={{ width: '18%' }}>
-                                        <div className="group relative">
-                                            <input
-                                                type="text"
-                                                value={variante.sku_variante || ''}
-                                                readOnly
-                                                className="w-full px-2 py-1 text-[10px] font-mono bg-neutral-100 border border-neutral-200 rounded text-neutral-600 cursor-not-allowed"
-                                                placeholder="SKU"
-                                                title="Código único de identificación - No editable"
-                                            />
-                                            {/* Tooltip SKU */}
-                                            <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block z-10">
-                                                <div className="bg-black text-white text-[9px] px-2 py-1 rounded whitespace-nowrap">
-                                                    Código único (SKU) - No editable
-                                                    <div className="absolute top-full left-4 border-4 border-transparent border-t-black"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-3 py-1.5 align-middle text-center" style={{ width: '12%' }}>
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            value={variante.stock_central ?? ''}
-                                            onChange={e => {
-                                                const val = e.target.value === '' ? 0 : parseInt(e.target.value);
-                                                setVariantes(prev => prev.map(v => v.id_variante === variante.id_variante ? { ...v, stock_central: val } : v));
-                                            }}
-                                            onBlur={e => {
-                                                const val = e.target.value === '' ? 0 : parseInt(e.target.value);
-                                                handleActualizarVariante(variante.id_variante, { stock_central: val }, true);
-                                            }}
-                                            className="w-full px-2 py-0.5 text-[10px] text-center bg-white border border-neutral-200 rounded focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan/20 focus:outline-none transition-all"
-                                            placeholder="0"
-                                        />
-                                    </td>
-                                    <td className="px-3 py-1.5 align-middle" style={{ width: '18%' }}>
-                                        <div className="flex items-center justify-center gap-2">
-                                            <div className="flex items-center gap-1">
-                                                <span className="text-[9px] text-neutral-400">$</span>
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    step="0.01"
-                                                    value={variante.precio_variante ?? ''}
-                                                    onChange={e => {
-                                                        const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
-                                                        setVariantes(prev => prev.map(v => v.id_variante === variante.id_variante ? { ...v, precio_variante: val } : v));
-                                                    }}
-                                                    onBlur={e => {
-                                                        const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
-                                                        handleActualizarVariante(variante.id_variante, { precio_variante: val }, true);
-                                                    }}
-                                                    className="w-20 px-2 py-0.5 text-[10px] text-right bg-white border border-neutral-200 rounded focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan/20 focus:outline-none transition-all"
-                                                    placeholder={producto.precio_venta_sugerido}
-                                                />
-                                            </div>
-                                            {/* Indicador de precio propio */}
-                                            {variante.precio_variante > 0 && (
-                                                <span className="px-1.5 py-0.5 bg-brand-cyan/10 text-brand-cyan text-[8px] font-bold uppercase rounded">Propio</span>
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td className="px-3 py-2.5 align-middle text-center" style={{ width: '14%' }}>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleActualizarVariante(variante.id_variante, { activo: !variante.activo })}
-                                            title={variante.activo ? 'Clic para ocultar esta variante del catálogo (desactivar)' : 'Clic para mostrar esta variante en el catálogo (activar)'}
-                                            className={`inline-flex items-center gap-1 px-2 py-1 rounded text-[9px] font-bold uppercase transition-all ${
-                                                variante.activo 
-                                                    ? 'bg-green-100 text-green-700 hover:bg-green-200' 
-                                                    : 'bg-red-100 text-red-700 hover:bg-red-200'
-                                            }`}
-                                        >
-                                            <span className={`w-1.5 h-1.5 rounded-full ${variante.activo ? 'bg-green-500' : 'bg-red-500'}`} />
-                                            {variante.activo ? 'Activo' : 'Inactivo'}
-                                        </button>
-                                    </td>
-                                    <td className="px-3 py-2.5 align-middle text-center" style={{ width: '10%' }}>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleEliminarVariante(variante.id_variante)}
-                                            disabled={variante.stock_central > 0 || !variante.activo}
-                                            className="p-1.5 rounded text-neutral-400 hover:text-red-500 hover:bg-red-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                                            title={
-                                                variante.stock_central > 0 
-                                                    ? 'No se puede eliminar: tiene stock en depósito' 
-                                                    : !variante.activo 
-                                                        ? 'Primero activá la variante para poder eliminarla' 
-                                                        : 'Eliminar permanentemente (no se puede deshacer)'
-                                            }
-                                        >
-                                            <Trash2 size={14} />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
-
-            {loading && (
-                <div className="flex items-center justify-center py-4">
-                    <Loader2 size={20} className="animate-spin text-brand-cyan" />
-                </div>
-            )}
-
-            {/* Modal de Confirmación de Eliminación */}
-            {confirmDelete && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full animate-in zoom-in-95 duration-200">
-                        <div className="p-5">
-                            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-3">
-                                <Trash2 size={20} className="text-red-600" />
-                            </div>
-                            <h3 className="text-base font-black text-center text-neutral-900 mb-2">
-                                ¿Eliminar variante?
-                            </h3>
-                            <p className="text-xs text-neutral-600 text-center mb-4">
-                                ¿Eliminar <strong className="text-neutral-900">"{confirmDelete.sku_variante || 'Sin SKU'}"</strong>?
-                                <br />
-                                <span className="text-red-600 font-medium text-[10px]">No se puede deshacer.</span>
-                            </p>
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => setConfirmDelete(null)}
-                                    disabled={isDeleting}
-                                    className="flex-1 px-3 py-2 bg-neutral-100 text-neutral-700 rounded-lg font-bold text-xs hover:bg-neutral-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    onClick={confirmarEliminacion}
-                                    disabled={isDeleting}
-                                    className="flex-1 px-3 py-2 bg-red-600 text-white rounded-lg font-bold text-xs hover:bg-red-700 transition-colors shadow-lg shadow-red-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
-                                >
-                                    {isDeleting ? (
-                                        <>
-                                            <Loader2 size={14} className="animate-spin" />
-                                            Eliminando...
-                                        </>
-                                    ) : (
-                                        'Eliminar'
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Modal de Confirmación para Activar/Desactivar */}
-            {confirmToggle && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full animate-in zoom-in-95 duration-200">
-                        <div className="p-5">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-3 ${confirmToggle.action === 'activate' ? 'bg-brand-cyan/20 text-brand-cyan' : 'bg-amber-100 text-amber-600'}`}>
-                                {confirmToggle.action === 'activate' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
-                            </div>
-                            <h3 className="text-base font-black text-center text-neutral-900 mb-2">
-                                {confirmToggle.title}
-                            </h3>
-                            <p className="text-xs text-neutral-600 text-center mb-4 leading-relaxed">
-                                {confirmToggle.message}
-                            </p>
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => setConfirmToggle(null)}
-                                    disabled={isToggling}
-                                    className="flex-1 px-3 py-2 bg-neutral-100 text-neutral-700 rounded-lg font-bold text-xs hover:bg-neutral-200 transition-colors disabled:opacity-50"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    onClick={() => ejecutarToggleUsaVariantes(confirmToggle.nuevoValor, confirmToggle.action)}
-                                    disabled={isToggling}
-                                    className={`flex-1 px-3 py-2 text-white rounded-lg font-bold text-xs transition-colors shadow-lg disabled:opacity-50 flex items-center justify-center gap-1.5 ${
-                                        confirmToggle.action === 'activate' 
-                                            ? 'bg-brand-cyan hover:bg-brand-cyan/80 text-black shadow-brand-cyan/20' 
-                                            : 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/20'
-                                    }`}
-                                >
-                                    {isToggling ? (
-                                        <>
-                                            <Loader2 size={14} className="animate-spin" />
-                                            Procesando...
-                                        </>
-                                    ) : (
-                                        'Confirmar'
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-            </div>
+        <VariantesTabSystem
+            producto={producto}
+            atributos={atributos}
+            setAtributos={setAtributos}
+            variantes={variantes}
+            onGenerar={handleGenerar}
+            onRefresh={loadVariantes}
+            generando={generando}
+        />
     );
 };
 
@@ -1599,6 +1173,13 @@ const Productos = () => {
             setFormData(prev => ({ ...prev, _imagenesTemp: padded, _uploading: [false, false, false] }));
         }
 
+        // Estados para acordeones
+        const [isFichaTecnicaOpen, setIsFichaTecnicaOpen] = useState(true);
+        const [isVariantesOpen, setIsVariantesOpen] = useState(true);
+        
+        // Estado para variantes (compartido con VariantesManager)
+        const [variantesPreview, setVariantesPreview] = useState([]);
+
         return (
             <div className="flex flex-col lg:flex-row gap-6 w-full">
                 {/* ── LEFT: Form fields (75%) ── */}
@@ -1680,13 +1261,56 @@ const Productos = () => {
                         />
                     </div>
 
-                    {/* Atributos Variables (Dinámico) - MOVED TO BOTTOM */}
-                    <AttributesManager formData={formData} setFormData={setFormData} />
+                    {/* ═══════════════════════════════════════════════════════════
+                        ACORDEÓN: FICHA TÉCNICA
+                    ═══════════════════════════════════════════════════════════ */}
+                    <Accordion
+                        isOpen={isFichaTecnicaOpen}
+                        onToggle={() => setIsFichaTecnicaOpen(!isFichaTecnicaOpen)}
+                        title="FICHA TÉCNICA"
+                        subtitle="Información descriptiva del producto"
+                        icon={FileText}
+                        color="blue"
+                    >
+                        <AttributesManager formData={formData} setFormData={setFormData} />
+                    </Accordion>
+
+                    {/* Separador visual */}
+                    <div className="relative py-6">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t-2 border-neutral-300"></div>
+                        </div>
+                        <div className="relative flex justify-center">
+                            <span className="bg-white px-4 text-xs font-black text-neutral-400 uppercase tracking-widest">
+                                Secciones Independientes
+                            </span>
+                        </div>
+                    </div>
 
                     {/* ═══════════════════════════════════════════════════════════
-                        GESTIÓN DE VARIANTES
+                        ACORDEÓN: VARIANTES DE VENTA
                     ═══════════════════════════════════════════════════════════ */}
-                    {formData.id_producto && <VariantesManager producto={formData} refresh={refresh} />}
+                    {formData.id_producto && (
+                        <Accordion
+                            isOpen={isVariantesOpen}
+                            onToggle={() => setIsVariantesOpen(!isVariantesOpen)}
+                            title="VARIANTES DE VENTA"
+                            subtitle="Opciones con stock y precio propio"
+                            icon={ShoppingCart}
+                            color="cyan"
+                            badge={formData.usa_variantes && (
+                                <span className="px-2 py-1 bg-green-500 text-white text-[8px] font-black uppercase rounded-full">
+                                    Sistema Activo
+                                </span>
+                            )}
+                        >
+                            <VariantesManager 
+                                producto={formData} 
+                                refresh={refresh}
+                                onVariantesChange={setVariantesPreview}
+                            />
+                        </Accordion>
+                    )}
 
                     {/* Precios + Stock Mínimo */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -1707,20 +1331,20 @@ const Productos = () => {
                         {/* Push Sport */}
                         <div className="space-y-1.5 sm:space-y-2">
                             <label className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] transition-colors truncate block ${
-                                formData.precio_pushsport > 0 && formData.precio_pushsport < formData.costo_compra 
+                                Number(formData.precio_pushsport) > 0 && Number(formData.precio_pushsport) < Number(formData.costo_compra) 
                                 ? 'text-red-500' 
                                 : 'text-brand-cyan'
                             }`}>Precio Base *</label>
                             <div className="relative group">
                                 <CircleDollarSign size={14} className={`absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${
-                                    formData.precio_pushsport > 0 && formData.precio_pushsport < formData.costo_compra 
+                                    Number(formData.precio_pushsport) > 0 && Number(formData.precio_pushsport) < Number(formData.costo_compra) 
                                     ? 'text-red-500' 
                                     : 'text-brand-cyan'
                                 }`} />
                                 <input
                                     required type="number" step="0.01" min="0"
                                     className={`w-full pl-8 sm:pl-10 pr-7 sm:pr-10 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-bold transition-all focus:outline-none focus:ring-1 ${
-                                        formData.precio_pushsport > 0 && formData.precio_pushsport < formData.costo_compra 
+                                        Number(formData.precio_pushsport) > 0 && Number(formData.precio_pushsport) < Number(formData.costo_compra) 
                                         ? 'bg-red-50 border border-red-300 text-red-600 focus:ring-red-500' 
                                         : 'bg-brand-cyan/5 border border-brand-cyan text-brand-cyan focus:ring-brand-cyan'
                                     }`}
@@ -1728,31 +1352,31 @@ const Productos = () => {
                                     value={formData.precio_pushsport ?? ''}
                                     onChange={e => setFormData({ ...formData, precio_pushsport: e.target.value })}
                                 />
-                                {formData.precio_pushsport > 0 && formData.precio_pushsport < formData.costo_compra && (
+                                {Number(formData.precio_pushsport) > 0 && Number(formData.precio_pushsport) < Number(formData.costo_compra) && (
                                     <AlertCircle size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none" />
                                 )}
                             </div>
-                            {formData.precio_pushsport > 0 && formData.precio_pushsport < formData.costo_compra && (
+                            {Number(formData.precio_pushsport) > 0 && Number(formData.precio_pushsport) < Number(formData.costo_compra) && (
                                 <p className="text-[8px] font-bold text-red-500 uppercase tracking-wider">Menor al costo</p>
                             )}
                         </div>
                         {/* Público */}
                         <div className="space-y-1.5 sm:space-y-2">
                             <label className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] transition-colors truncate block ${
-                                formData.precio_venta_sugerido > 0 && formData.precio_venta_sugerido < formData.precio_pushsport 
+                                Number(formData.precio_venta_sugerido) > 0 && Number(formData.precio_venta_sugerido) < Number(formData.precio_pushsport) 
                                 ? 'text-red-500' 
                                 : 'text-black'
                             }`}>Público *</label>
                             <div className="relative group">
                                 <CircleDollarSign size={14} className={`absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${
-                                    formData.precio_venta_sugerido > 0 && formData.precio_venta_sugerido < formData.precio_pushsport 
+                                    Number(formData.precio_venta_sugerido) > 0 && Number(formData.precio_venta_sugerido) < Number(formData.precio_pushsport) 
                                     ? 'text-red-500' 
                                     : 'text-neutral-400'
                                 }`} />
                                 <input
                                     required type="number" step="0.01" min="0"
                                     className={`w-full pl-8 sm:pl-10 pr-7 sm:pr-10 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-bold transition-all focus:outline-none focus:ring-1 ${
-                                        formData.precio_venta_sugerido > 0 && formData.precio_venta_sugerido < formData.precio_pushsport 
+                                        Number(formData.precio_venta_sugerido) > 0 && Number(formData.precio_venta_sugerido) < Number(formData.precio_pushsport) 
                                         ? 'bg-red-50 border border-red-300 text-red-600 focus:ring-red-500' 
                                         : 'bg-white dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 text-black dark:text-white focus:ring-black dark:focus:ring-cyan-400'
                                     }`}
@@ -1760,11 +1384,11 @@ const Productos = () => {
                                     value={formData.precio_venta_sugerido ?? ''}
                                     onChange={e => setFormData({ ...formData, precio_venta_sugerido: e.target.value })}
                                 />
-                                {formData.precio_venta_sugerido > 0 && formData.precio_venta_sugerido < formData.precio_pushsport && (
+                                {Number(formData.precio_venta_sugerido) > 0 && Number(formData.precio_venta_sugerido) < Number(formData.precio_pushsport) && (
                                     <AlertCircle size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none animate-pulse" />
                                 )}
                             </div>
-                            {formData.precio_venta_sugerido > 0 && formData.precio_venta_sugerido < formData.precio_pushsport && (
+                            {Number(formData.precio_venta_sugerido) > 0 && Number(formData.precio_venta_sugerido) < Number(formData.precio_pushsport) && (
                                 <p className="text-[8px] font-bold text-red-500 uppercase tracking-wider">Pérdida</p>
                             )}
                         </div>
@@ -1836,6 +1460,7 @@ const Productos = () => {
                             categorias={categorias}
                             marcas={marcas}
                             isPrivileged={isPrivileged}
+                            variantes={variantesPreview}
                         />
                     </div>
                 </div>
@@ -1851,11 +1476,15 @@ const Productos = () => {
         if (!form.precio_pushsport && form.precio_pushsport !== 0) return "El precio Push Sport es obligatorio.";
         if (!form.precio_venta_sugerido && form.precio_venta_sugerido !== 0) return "El precio público es obligatorio.";
         
-        // Logical validations
-        if (form.precio_pushsport < form.costo_compra) {
+        // Logical validations - Convertir a números para comparación correcta
+        const costo = Number(form.costo_compra);
+        const precioPush = Number(form.precio_pushsport);
+        const precioPublico = Number(form.precio_venta_sugerido);
+        
+        if (precioPush < costo) {
             return "Advertencia: El precio Push Sport no puede ser menor al costo de compra.";
         }
-        if (form.precio_venta_sugerido < form.precio_pushsport) {
+        if (precioPublico < precioPush) {
             return "Advertencia: El precio público no puede ser menor al precio Push Sport.";
         }
 
