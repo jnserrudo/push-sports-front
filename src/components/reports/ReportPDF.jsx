@@ -8,7 +8,7 @@ const GRAY_MID = '#6B7280';
 const GRAY_DARK = '#1F2937';
 
 const styles = StyleSheet.create({
-  page: { padding: 0, backgroundColor: '#FFFFFF', fontFamily: 'Helvetica' },
+  page: { paddingTop: 0, paddingHorizontal: 0, paddingBottom: 55, backgroundColor: '#FFFFFF', fontFamily: 'Helvetica' },
 
   // Cover/Header band
   headerBand: {
@@ -47,14 +47,16 @@ const styles = StyleSheet.create({
   tableRowAlt: { backgroundColor: '#F9FAFB' },
 
   // Image
-  imageWrapper: { width: 120, height: 120, borderRadius: 6, overflow: 'hidden', backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E5E7EB' },
-  productImage: { width: '125%', height: '125%', objectFit: 'cover' },
-  imagePlaceholder: { width: 120, height: 120, borderRadius: 6, backgroundColor: GRAY_LIGHT, justifyContent: 'center', alignItems: 'center' },
-  placeholderLetter: { fontSize: 48, fontFamily: 'Helvetica-Bold', color: '#D1D5DB', textTransform: 'uppercase' },
+  imagesContainer: { flexDirection: 'column', gap: 8, width: '100%', alignItems: 'center' },
+  imageWrapper: { width: 160, height: 160, borderRadius: 6, overflow: 'hidden', backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E5E7EB' },
+  productImage: { width: '100%', height: '100%', objectFit: 'contain' },
+  imagePlaceholder: { width: 100, height: 100, borderRadius: 6, backgroundColor: GRAY_LIGHT, justifyContent: 'center', alignItems: 'center' },
+  placeholderLetter: { fontSize: 44, fontFamily: 'Helvetica-Bold', color: '#D1D5DB', textTransform: 'uppercase' },
 
   // Row text
   rowMarca: { fontSize: 6, color: CYAN, textTransform: 'uppercase', fontFamily: 'Helvetica-Bold', letterSpacing: 0.8, marginBottom: 3 },
   rowNombre: { fontSize: 9, fontFamily: 'Helvetica-Bold', color: BLACK, marginBottom: 2 },
+  rowDescription: { fontSize: 6.5, color: GRAY_MID, marginBottom: 4, lineHeight: 1.3 },
   rowSabor: { fontSize: 6, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 0.5 },
   pricePush: { fontSize: 9, fontFamily: 'Helvetica-Bold', color: '#005F7A' },
   pricePublic: { fontSize: 11, fontFamily: 'Helvetica-Bold', color: BLACK },
@@ -152,16 +154,23 @@ const ReportPDF = ({ products, imageMap = {}, currentDate, showPushPrice = true 
             <View style={colPublic}><Text style={styles.headerText}>P. Público ★</Text></View>
           </View>
 
-          {activeProducts.map((prod, idx) => (
+          {activeProducts.map((prod, idx) => {
+            const images = Array.isArray(imageMap[prod.id_producto]) ? imageMap[prod.id_producto] : (imageMap[prod.id_producto] ? [imageMap[prod.id_producto]] : []);
+            
+            return (
             <View
               key={prod.id_producto}
               style={[styles.tableRow, idx % 2 !== 0 && styles.tableRowAlt]}
               wrap={false}
             >
               <View style={colImg}>
-                {imageMap[prod.id_producto] ? (
-                  <View style={styles.imageWrapper}>
-                    <Image src={imageMap[prod.id_producto]} style={styles.productImage} />
+                {images.length > 0 ? (
+                  <View style={styles.imagesContainer}>
+                    {images.map((img, i) => (
+                      <View key={i} style={styles.imageWrapper}>
+                        <Image src={img} style={styles.productImage} />
+                      </View>
+                    ))}
                   </View>
                 ) : (
                   <View style={styles.imagePlaceholder}>
@@ -175,6 +184,9 @@ const ReportPDF = ({ products, imageMap = {}, currentDate, showPushPrice = true 
                 <View style={{ flex: 1 }}>
                   <Text style={styles.rowMarca}>{prod.marca?.nombre_marca || 'GENERAL'}</Text>
                   <Text style={styles.rowNombre}>{prod.nombre}</Text>
+                  {prod.descripcion && (
+                    <Text style={styles.rowDescription}>{prod.descripcion}</Text>
+                  )}
                   {/* Mostrar todos los atributos del producto */}
                   {prod.atributos && Object.entries(prod.atributos).map(([key, values]) => {
                     if (!values || values.length === 0) return null;
@@ -205,7 +217,7 @@ const ReportPDF = ({ products, imageMap = {}, currentDate, showPushPrice = true 
                 </Text>
               </View>
             </View>
-          ))}
+          )})}
         </View>
 
         {/* ── Footer ── */}

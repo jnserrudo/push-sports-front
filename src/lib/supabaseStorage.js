@@ -93,11 +93,30 @@ export const fetchImageAsBase64 = async (url) => {
         const res = await fetch(url);
         if (!res.ok) return null;
         const blob = await res.blob();
+        
         return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
-            reader.onerror = () => resolve(null);
-            reader.readAsDataURL(blob);
+            const img = new Image();
+            img.crossOrigin = "Anonymous";
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                // Fill with white background (in case of transparent PNG/WebP)
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0);
+                // Export as JPEG to guarantee @react-pdf/renderer compatibility
+                resolve(canvas.toDataURL('image/jpeg', 0.9));
+            };
+            img.onerror = () => {
+                // Fallback to FileReader if Image load fails
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = () => resolve(null);
+                reader.readAsDataURL(blob);
+            };
+            img.src = URL.createObjectURL(blob);
         });
     } catch {
         return null;
@@ -111,9 +130,9 @@ export const fetchImageAsBase64 = async (url) => {
 export const prefetchProductImages = async (products) => {
     const entries = await Promise.all(
         products.map(async (p) => {
-            const urls = parseImagenes(p.imagen_url);
-            const base64 = urls[0] ? await fetchImageAsBase64(urls[0]) : null;
-            return [p.id_producto, base64];
+            const urls = parseImagenes(p.imagen_url).slice(0, 3);
+            const base64Array = await Promise.all(urls.map(url => fetchImageAsBase64(url)));
+            return [p.id_producto, base64Array.filter(Boolean)];
         })
     );
     return Object.fromEntries(entries);

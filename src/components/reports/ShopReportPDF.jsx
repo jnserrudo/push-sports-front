@@ -8,7 +8,7 @@ const GRAY_MID = '#6B7280';
 const GRAY_DARK = '#1F2937';
 
 const styles = StyleSheet.create({
-  page: { padding: 0, backgroundColor: '#FFFFFF', fontFamily: 'Helvetica' },
+  page: { paddingTop: 0, paddingHorizontal: 0, paddingBottom: 55, backgroundColor: '#FFFFFF', fontFamily: 'Helvetica' },
 
   // ── Top band: PUSHSPORT brand + Shop name ──
   headerBand: {
@@ -53,15 +53,17 @@ const styles = StyleSheet.create({
   tableRowAlt: { backgroundColor: '#F9FAFB' },
 
   // ── Image ──
-  imageWrapper: { width: 110, height: 110, borderRadius: 6, overflow: 'hidden', backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E5E7EB' },
-  productImage: { width: '125%', height: '125%', objectFit: 'cover' },
-  imagePlaceholder: { width: 110, height: 110, borderRadius: 6, backgroundColor: GRAY_LIGHT, justifyContent: 'center', alignItems: 'center' },
-  placeholderLetter: { fontSize: 44, fontFamily: 'Helvetica-Bold', color: '#D1D5DB', textTransform: 'uppercase' },
+  imagesContainer: { flexDirection: 'column', gap: 8, width: '100%', alignItems: 'center' },
+  imageWrapper: { width: 150, height: 150, borderRadius: 6, overflow: 'hidden', backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E5E7EB' },
+  productImage: { width: '100%', height: '100%', objectFit: 'contain' },
+  imagePlaceholder: { width: 90, height: 90, borderRadius: 6, backgroundColor: GRAY_LIGHT, justifyContent: 'center', alignItems: 'center' },
+  placeholderLetter: { fontSize: 40, fontFamily: 'Helvetica-Bold', color: '#D1D5DB', textTransform: 'uppercase' },
 
   // ── Row content ──
   accentBar: { width: 3, backgroundColor: CYAN, borderRadius: 2, marginRight: 8, alignSelf: 'stretch' },
   rowMarca: { fontSize: 6, color: CYAN, textTransform: 'uppercase', fontFamily: 'Helvetica-Bold', letterSpacing: 0.8, marginBottom: 3 },
   rowNombre: { fontSize: 9, fontFamily: 'Helvetica-Bold', color: BLACK, marginBottom: 2 },
+  rowDescription: { fontSize: 6.5, color: GRAY_MID, marginBottom: 4, lineHeight: 1.3 },
   rowSabor: { fontSize: 6, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 0.5 },
 
   // ── Stock detail cell ──
@@ -171,6 +173,7 @@ const ShopReportPDF = ({ shopName, items, imageMap = {}, currentDate, showPushPr
 
           {items.map((item, index) => {
             const prod = item.producto;
+            const images = Array.isArray(imageMap[prod.id_producto]) ? imageMap[prod.id_producto] : (imageMap[prod.id_producto] ? [imageMap[prod.id_producto]] : []);
             const stockAnterior = Number(item.stockAnterior) || 0;
             const cantidadDejada = Number(item.cantidadDejada) || 0;
             const totalStock = stockAnterior + cantidadDejada;
@@ -183,9 +186,13 @@ const ShopReportPDF = ({ shopName, items, imageMap = {}, currentDate, showPushPr
               >
                 {/* Image */}
                 <View style={colImg}>
-                  {imageMap[prod.id_producto] ? (
-                    <View style={styles.imageWrapper}>
-                      <Image src={imageMap[prod.id_producto]} style={styles.productImage} />
+                  {images.length > 0 ? (
+                    <View style={styles.imagesContainer}>
+                      {images.map((img, i) => (
+                        <View key={i} style={styles.imageWrapper}>
+                          <Image src={img} style={styles.productImage} />
+                        </View>
+                      ))}
                     </View>
                   ) : (
                     <View style={styles.imagePlaceholder}>
@@ -200,6 +207,9 @@ const ShopReportPDF = ({ shopName, items, imageMap = {}, currentDate, showPushPr
                   <View style={{ flex: 1 }}>
                     <Text style={styles.rowMarca}>{prod.marca?.nombre_marca || 'GENERAL'}</Text>
                     <Text style={styles.rowNombre}>{prod.nombre}</Text>
+                    {prod.descripcion && (
+                      <Text style={styles.rowDescription}>{prod.descripcion}</Text>
+                    )}
                     {/* Mostrar todos los atributos del producto */}
                     {prod.atributos && Object.entries(prod.atributos).map(([key, values]) => {
                       if (!values || values.length === 0) return null;

@@ -311,8 +311,8 @@ const Reporteria = () => {
                     render: (p) => (
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-white dark:bg-gray-700 flex items-center justify-center border border-neutral-100 dark:border-gray-600 overflow-hidden shrink-0">
-                          {imageMap[p.id_producto] ? (
-                            <img src={imageMap[p.id_producto]} className="w-full h-full object-cover" />
+                          {imageMap[p.id_producto] && imageMap[p.id_producto].length > 0 ? (
+                            <img src={imageMap[p.id_producto][0]} className="w-full h-full object-cover" />
                           ) : parseImagenes(p.imagen_url)[0] ? (
                             <img src={parseImagenes(p.imagen_url)[0]} className="w-full h-full object-cover" />
                           ) : <Package className="text-neutral-200" size={16} />}
@@ -510,13 +510,13 @@ const Reporteria = () => {
                               key={p.id_producto}
                               className={`group flex items-center gap-3 p-2.5 rounded-xl border-2 transition-all ${
                                 alreadyAdded
-                                  ? 'bg-brand-cyan/5 border-brand-cyan/30 opacity-60'
+                                  ? 'bg-brand-cyan/5 dark:bg-cyan-900/20 border-brand-cyan/30 dark:border-cyan-700/50 opacity-60'
                                   : 'bg-neutral-50 dark:bg-gray-700 border-neutral-100 dark:border-gray-600 hover:border-brand-cyan/40 hover:bg-white dark:hover:bg-gray-600'
                               }`}
                             >
                               <div className="w-11 h-11 rounded-lg bg-white dark:bg-gray-700 border border-neutral-100 dark:border-gray-600 overflow-hidden shrink-0 flex items-center justify-center">
-                                {imageMap[p.id_producto] ? (
-                                  <img src={imageMap[p.id_producto]} className="w-full h-full object-cover" />
+                                {imageMap[p.id_producto] && imageMap[p.id_producto].length > 0 ? (
+                                  <img src={imageMap[p.id_producto][0]} className="w-full h-full object-cover" />
                                 ) : parseImagenes(p.imagen_url)[0] ? (
                                   <img src={parseImagenes(p.imagen_url)[0]} className="w-full h-full object-cover" />
                                 ) : <Package className="text-neutral-200" size={18} />}
@@ -634,11 +634,11 @@ const Reporteria = () => {
                       ) : (
                         <div className="space-y-4">
                           {selectedItems.map((item, idx) => (
-                            <div key={idx} className="p-5 bg-neutral-50 rounded-2xl border-2 border-neutral-100 hover:border-brand-cyan/20 transition-all">
+                            <div key={idx} className="p-5 bg-neutral-50 dark:bg-gray-800/50 rounded-2xl border-2 border-neutral-100 dark:border-gray-700 hover:border-brand-cyan/20 dark:hover:border-brand-cyan/40 transition-all">
                               <div className="flex items-center gap-4 mb-4">
-                                <div className="w-14 h-14 rounded-xl bg-white border-2 border-neutral-100 overflow-hidden shrink-0 flex items-center justify-center">
-                                  {imageMap[item.producto.id_producto] ? (
-                                    <img src={imageMap[item.producto.id_producto]} className="w-full h-full object-cover" />
+                                <div className="w-14 h-14 rounded-xl bg-white dark:bg-gray-700 border-2 border-neutral-100 dark:border-gray-600 overflow-hidden shrink-0 flex items-center justify-center">
+                                  {imageMap[item.producto.id_producto] && imageMap[item.producto.id_producto].length > 0 ? (
+                                    <img src={imageMap[item.producto.id_producto][0]} className="w-full h-full object-cover" />
                                   ) : parseImagenes(item.producto.imagen_url)[0] ? (
                                     <img src={parseImagenes(item.producto.imagen_url)[0]} className="w-full h-full object-cover" />
                                   ) : <Package className="text-neutral-200" size={24} />}
@@ -649,7 +649,7 @@ const Reporteria = () => {
                                 </div>
                                 <button
                                   onClick={() => removeItemFromReport(idx)}
-                                  className="w-9 h-9 rounded-xl flex items-center justify-center bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all"
+                                  className="w-9 h-9 rounded-xl flex items-center justify-center bg-red-50 dark:bg-red-900/20 text-red-400 dark:text-red-400 hover:bg-red-500 hover:text-white transition-all"
                                 >
                                   <X size={16} />
                                 </button>
@@ -740,14 +740,14 @@ const Reporteria = () => {
                       )}
 
                       {selectedItems.length > 0 && (
-                        <div className="mt-6 pt-5 border-t border-neutral-100 flex flex-wrap justify-between items-center gap-4">
+                        <div className="mt-6 pt-5 border-t border-neutral-100 dark:border-gray-700 flex flex-wrap justify-between items-center gap-4">
                           <div className="text-xs font-black uppercase tracking-widest">
-                            <p className="text-neutral-400">Total unidades a dejar</p>
-                            <p className="text-3xl text-neutral-900 tracking-tighter mt-1">{selectedItems.reduce((a, c) => a + c.cantidadDejada, 0)}</p>
+                            <p className="text-neutral-400 dark:text-gray-400">Total unidades a dejar</p>
+                            <p className="text-3xl text-neutral-900 dark:text-white tracking-tighter mt-1">{selectedItems.reduce((a, c) => a + c.cantidadDejada, 0)}</p>
                           </div>
                           <div className="text-right text-xs font-black uppercase tracking-widest">
-                            <p className="text-neutral-400">Productos en reporte</p>
-                            <p className="text-3xl text-neutral-900 tracking-tighter mt-1">{selectedItems.length}</p>
+                            <p className="text-neutral-400 dark:text-gray-400">Productos en reporte</p>
+                            <p className="text-3xl text-neutral-900 dark:text-white tracking-tighter mt-1">{selectedItems.length}</p>
                           </div>
                         </div>
                       )}
