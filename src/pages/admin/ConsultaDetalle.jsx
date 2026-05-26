@@ -192,7 +192,7 @@ const ConsultaDetalle = () => {
                 <EstadoIcon size={16} />
                 {estadoConfig[consulta.estado].label}
               </span>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
                 {formatearFecha(consulta.fecha_consulta)}
               </span>
             </div>
@@ -263,8 +263,8 @@ const ConsultaDetalle = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Información del Cliente */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <User size={20} />
               Datos del Cliente
             </h2>
@@ -273,7 +273,7 @@ const ConsultaDetalle = () => {
               <div className="flex items-center gap-3">
                 <User size={18} className="text-gray-400" />
                 <div>
-                  <p className="text-sm text-gray-500">Nombre</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Nombre</p>
                   <p className="font-medium">{consulta.nombre_cliente}</p>
                 </div>
               </div>
@@ -281,7 +281,7 @@ const ConsultaDetalle = () => {
               <div className="flex items-center gap-3">
                 <Phone size={18} className="text-gray-400" />
                 <div>
-                  <p className="text-sm text-gray-500">Teléfono</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Teléfono</p>
                   <p className="font-medium">{consulta.telefono_cliente}</p>
                 </div>
               </div>
@@ -290,7 +290,7 @@ const ConsultaDetalle = () => {
                 <div className="flex items-center gap-3">
                   <Mail size={18} className="text-gray-400" />
                   <div>
-                    <p className="text-sm text-gray-500">Email</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
                     <p className="font-medium">{consulta.email_cliente}</p>
                   </div>
                 </div>
@@ -299,8 +299,8 @@ const ConsultaDetalle = () => {
           </div>
 
           {/* Información de Entrega */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <MapPin size={20} />
               Entrega
             </h2>
@@ -309,7 +309,7 @@ const ConsultaDetalle = () => {
               <div className="flex items-center gap-3">
                 <MapPin size={18} className="text-gray-400" />
                 <div>
-                  <p className="text-sm text-gray-500">Sucursal</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Sucursal</p>
                   <p className="font-medium">{consulta.sucursal?.nombre || 'N/A'}</p>
                 </div>
               </div>
@@ -317,7 +317,7 @@ const ConsultaDetalle = () => {
               <div className="flex items-center gap-3">
                 <Package size={18} className="text-gray-400" />
                 <div>
-                  <p className="text-sm text-gray-500">Método</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Método</p>
                   <p className="font-medium">
                     {consulta.metodo_entrega === 'retiro' ? 'Retiro en sucursal' : 'Envío a domicilio'}
                   </p>
@@ -329,7 +329,7 @@ const ConsultaDetalle = () => {
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <div className="flex items-center gap-2 mb-2">
                   <MessageSquare size={18} className="text-gray-400" />
-                  <p className="text-sm text-gray-500">Comentarios</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Comentarios</p>
                 </div>
                 <p className="text-gray-700 bg-gray-50 p-3 rounded-lg">
                   {consulta.comentarios}
@@ -363,15 +363,15 @@ const ConsultaDetalle = () => {
 
         {/* Productos */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <Package size={20} />
               Productos Solicitados
             </h2>
             
             <div className="space-y-4">
               {consulta.items.map((item, index) => (
-                <div key={item.id_item} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                <div key={item.id_item} className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                   {item.producto?.imagen_url && (
                     <img
                       src={item.producto.imagen_url}
@@ -381,7 +381,7 @@ const ConsultaDetalle = () => {
                   )}
                   
                   <div className="flex-1">
-                    <h3 className="font-medium text-gray-900">{item.nombre_producto}</h3>
+                    <h3 className="font-medium text-gray-900 dark:text-white">{item.nombre_producto}</h3>
                     {item.variante_info && (
                       <p className="text-sm text-gray-500 mt-1">
                         {Object.values(item.variante_info).join(', ')}
@@ -433,23 +433,23 @@ const ConsultaDetalle = () => {
             <div className="p-6 space-y-6">
               {/* Resumen de Productos */}
               <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <h4 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
                   <Package size={18} className="text-brand-cyan" />
                   Resumen del Pedido
                 </h4>
                 <div className="space-y-2">
                   {consulta.items.map((item, index) => (
                     <div key={index} className="flex justify-between text-sm">
-                      <span className="text-gray-700">
+                      <span className="text-gray-700 dark:text-gray-300">
                         {item.cantidad}x {item.nombre_producto}
                       </span>
-                      <span className="font-medium text-gray-900">
+                      <span className="font-medium text-gray-900 dark:text-white">
                         {formatearPrecio(item.subtotal)}
                       </span>
                     </div>
                   ))}
                   <div className="pt-2 border-t border-gray-300 flex justify-between font-bold">
-                    <span className="text-gray-900">Total</span>
+                    <span className="text-gray-900 dark:text-white">Total</span>
                     <span className="text-green-600 text-lg">
                       {formatearPrecio(consulta.total)}
                     </span>

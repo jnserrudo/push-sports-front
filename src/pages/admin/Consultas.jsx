@@ -155,12 +155,12 @@ const Consultas = () => {
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Consultas Web</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Consultas Web</h1>
         <p className="text-gray-600">Gestiona las consultas y pedidos recibidos desde la landing page</p>
       </div>
 
       {/* Filtros */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
         <div className="p-4 border-b border-gray-200 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
@@ -191,7 +191,7 @@ const Consultas = () => {
                 <select
                   value={filtros.estado}
                   onChange={(e) => handleFiltroChange('estado', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-cyan focus:border-brand-cyan"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-brand-cyan focus:border-brand-cyan"
                 >
                   <option value="">Todos los estados</option>
                   {Object.entries(estadoConfig).map(([key, config]) => (
@@ -206,7 +206,7 @@ const Consultas = () => {
                 <select
                   value={filtros.id_sucursal}
                   onChange={(e) => handleFiltroChange('id_sucursal', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-cyan focus:border-brand-cyan"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-brand-cyan focus:border-brand-cyan"
                 >
                   <option value="">Todas las sucursales</option>
                   {sucursales.map(sucursal => (
@@ -224,7 +224,7 @@ const Consultas = () => {
                   type="date"
                   value={filtros.fecha_inicio}
                   onChange={(e) => handleFiltroChange('fecha_inicio', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-cyan focus:border-brand-cyan"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-brand-cyan focus:border-brand-cyan"
                 />
               </div>
 
@@ -235,7 +235,7 @@ const Consultas = () => {
                   type="date"
                   value={filtros.fecha_fin}
                   onChange={(e) => handleFiltroChange('fecha_fin', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-cyan focus:border-brand-cyan"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-brand-cyan focus:border-brand-cyan"
                 />
               </div>
             </div>
@@ -251,14 +251,14 @@ const Consultas = () => {
               placeholder="Buscar por nombre, teléfono o email..."
               value={filtros.busqueda}
               onChange={handleBusqueda}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-cyan focus:border-brand-cyan"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-brand-cyan focus:border-brand-cyan"
             />
           </div>
         </div>
       </div>
 
       {/* Lista de consultas */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         {loading ? (
           <div className="p-8 text-center">
             <div className="inline-block w-8 h-8 border-2 border-brand-cyan border-t-transparent rounded-full animate-spin"></div>
@@ -290,35 +290,35 @@ const Consultas = () => {
                     <tr key={consulta.id_consulta} className="hover:bg-gray-50">
                       <td className="px-4 py-4">
                         <div className="text-sm">
-                          <div className="font-medium text-gray-900 flex items-center gap-1">
+                          <div className="font-medium text-gray-900 dark:text-white flex items-center gap-1">
                             <User size={14} />
                             {consulta.nombre_cliente}
                           </div>
-                          <div className="text-gray-500 flex items-center gap-1">
+                          <div className="text-gray-500 dark:text-gray-400 flex items-center gap-1">
                             <Phone size={14} />
                             {consulta.telefono_cliente}
                           </div>
                           {consulta.email_cliente && (
-                            <div className="text-gray-500 flex items-center gap-1">
+                            <div className="text-gray-500 dark:text-gray-400 flex items-center gap-1">
                               <Mail size={14} />
                               {consulta.email_cliente}
                             </div>
                           )}
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-sm text-gray-900">
+                      <td className="px-4 py-4 text-sm text-gray-900 dark:text-white">
                         <div className="flex items-center gap-1">
                           <Package size={14} />
                           {consulta.cantidad_items} items
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-sm font-medium text-gray-900">
+                      <td className="px-4 py-4 text-sm font-medium text-gray-900 dark:text-white">
                         <div className="flex items-center gap-1">
                           <DollarSign size={14} />
                           {formatearPrecio(consulta.total)}
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-sm text-gray-900">
+                      <td className="px-4 py-4 text-sm text-gray-900 dark:text-white">
                         <div className="flex items-center gap-1">
                           <MapPin size={14} />
                           {consulta.sucursal?.nombre || 'N/A'}
@@ -330,7 +330,7 @@ const Consultas = () => {
                           {estadoConfig[consulta.estado].label}
                         </span>
                       </td>
-                      <td className="px-4 py-4 text-sm text-gray-900">
+                      <td className="px-4 py-4 text-sm text-gray-900 dark:text-white">
                         <div className="flex items-center gap-1">
                           <Calendar size={14} />
                           {formatearFecha(consulta.fecha_consulta)}

@@ -47,7 +47,7 @@ const StoreMap = ({ activeLocation = 0 }) => {
     <div className="w-full h-full flex flex-col lg:flex-row overflow-hidden">
 
       {/* ── Panel izquierdo: info de la sede activa ── */}
-      <div className="w-full lg:w-[280px] xl:w-[320px] flex-shrink-0 bg-white flex flex-col justify-between p-6 lg:p-8 border-b lg:border-r border-neutral-100 order-2 lg:order-1">
+      <div className="w-full lg:w-[280px] xl:w-[320px] flex-shrink-0 bg-white dark:bg-gray-900 flex flex-col justify-between p-6 lg:p-8 border-b lg:border-r border-neutral-100 dark:border-gray-800 order-2 lg:order-1">
 
         {/* Encabezado */}
         <div className="space-y-8">
@@ -55,7 +55,7 @@ const StoreMap = ({ activeLocation = 0 }) => {
             <span className="text-[10px] font-bold text-brand-cyan uppercase tracking-[0.3em] block mb-2">
               SELECCIONADO
             </span>
-            <h2 className="font-sport text-3xl xl:text-4xl text-black uppercase leading-tight tracking-tight m-0">
+            <h2 className="font-sport text-3xl xl:text-4xl text-black dark:text-white uppercase leading-tight tracking-tight m-0">
               {activeStore.name}
             </h2>
           </div>
@@ -68,36 +68,36 @@ const StoreMap = ({ activeLocation = 0 }) => {
 
             {/* Dirección */}
             <div className="flex items-start gap-4 group">
-              <div className="w-10 h-10 rounded-xl bg-neutral-50 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-cyan transition-colors duration-300">
+              <div className="w-10 h-10 rounded-xl bg-neutral-50 dark:bg-gray-800 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-cyan transition-colors duration-300">
                 <MapPin size={18} className="text-brand-cyan group-hover:text-white transition-colors duration-300" />
               </div>
               <div>
-                <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block mb-1">Ubicación</span>
-                <p className="text-base font-bold text-black leading-tight m-0">{activeStore.address}</p>
-                <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider mt-0.5 m-0">{activeStore.city}</p>
+                <span className="text-[10px] font-bold text-neutral-400 dark:text-gray-500 uppercase tracking-widest block mb-1">Ubicación</span>
+                <p className="text-base font-bold text-black dark:text-white leading-tight m-0">{activeStore.address}</p>
+                <p className="text-xs font-semibold text-neutral-400 dark:text-gray-400 uppercase tracking-wider mt-0.5 m-0">{activeStore.city}</p>
               </div>
             </div>
 
             {/* Horario */}
             <div className="flex items-start gap-4 group">
-              <div className="w-10 h-10 rounded-xl bg-neutral-50 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-cyan transition-colors duration-300">
+              <div className="w-10 h-10 rounded-xl bg-neutral-50 dark:bg-gray-800 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-cyan transition-colors duration-300">
                 <Clock size={18} className="text-brand-cyan group-hover:text-white transition-colors duration-300" />
               </div>
               <div>
-                <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block mb-1">Horario</span>
-                <p className="text-base font-bold text-black leading-tight m-0">{activeStore.hours}</p>
-                <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider mt-0.5 m-0">{activeStore.days}</p>
+                <span className="text-[10px] font-bold text-neutral-400 dark:text-gray-500 uppercase tracking-widest block mb-1">Horario</span>
+                <p className="text-base font-bold text-black dark:text-white leading-tight m-0">{activeStore.hours}</p>
+                <p className="text-xs font-semibold text-neutral-400 dark:text-gray-400 uppercase tracking-wider mt-0.5 m-0">{activeStore.days}</p>
               </div>
             </div>
 
             {/* Teléfono */}
             <div className="flex items-start gap-4 group">
-              <div className="w-10 h-10 rounded-xl bg-neutral-50 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-cyan transition-colors duration-300">
+              <div className="w-10 h-10 rounded-xl bg-neutral-50 dark:bg-gray-800 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-cyan transition-colors duration-300">
                 <Phone size={18} className="text-brand-cyan group-hover:text-white transition-colors duration-300" />
               </div>
               <div>
-                <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block mb-1">Teléfono</span>
-                <p className="text-base font-bold text-black leading-tight m-0">{activeStore.phone}</p>
+                <span className="text-[10px] font-bold text-neutral-400 dark:text-gray-500 uppercase tracking-widest block mb-1">Teléfono</span>
+                <p className="text-base font-bold text-black dark:text-white leading-tight m-0">{activeStore.phone}</p>
               </div>
             </div>
 
@@ -149,17 +149,17 @@ const StoreMap = ({ activeLocation = 0 }) => {
                       <span className="text-[9px] font-bold text-brand-cyan uppercase tracking-[0.2em] block mb-1">TIENDA OFICIAL</span>
                       <span className="text-white font-sport text-lg uppercase leading-tight block">{store.name}</span>
                     </div>
-                    <div className="bg-white px-4 py-3 space-y-2">
+                    <div className="bg-white dark:bg-gray-800 px-4 py-3 space-y-2">
                       <div className="flex items-start gap-2">
                         <MapPin size={13} className="text-brand-cyan mt-0.5 flex-shrink-0" />
                         <div>
-                          <p className="text-sm font-semibold text-neutral-800 leading-tight m-0">{store.address}</p>
-                          <p className="text-[11px] text-neutral-400 uppercase tracking-wider m-0">{store.city}</p>
+                          <p className="text-sm font-semibold text-neutral-800 dark:text-white leading-tight m-0">{store.address}</p>
+                          <p className="text-[11px] text-neutral-400 dark:text-gray-400 uppercase tracking-wider m-0">{store.city}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock size={13} className="text-brand-cyan flex-shrink-0" />
-                        <p className="text-sm font-semibold text-neutral-700 m-0">{store.hours}</p>
+                        <p className="text-sm font-semibold text-neutral-700 dark:text-gray-300 m-0">{store.hours}</p>
                       </div>
                     </div>
                   </div>

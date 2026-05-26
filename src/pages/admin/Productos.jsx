@@ -1051,7 +1051,7 @@ const ModalReposicion = ({ isOpen, onClose, producto: initialProducto, onSave })
                                 </div>
                             )}
                         </div>
-                        <div className="border border-neutral-200 dark:border-gray-600 rounded-lg overflow-hidden">
+                        <div className="border border-neutral-200 dark:border-gray-600 rounded-lg overflow-x-auto">
                             <table className="w-full text-left">
                                 <thead className="bg-neutral-50 dark:bg-gray-700">
                                     <tr>
@@ -1479,7 +1479,7 @@ const Productos = () => {
                             <label className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] transition-colors truncate block ${
                                 Number(formData.precio_venta_sugerido) > 0 && Number(formData.precio_venta_sugerido) < Number(formData.precio_pushsport) 
                                 ? 'text-red-500' 
-                                : 'text-black'
+                                : 'text-black dark:text-white'
                             }`}>Público *</label>
                             <div className="relative group">
                                 <CircleDollarSign size={14} className={`absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${

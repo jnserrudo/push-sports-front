@@ -20,7 +20,7 @@ const Toaster = () => {
           <div className={`
              w-10 h-10 rounded-xl flex items-center justify-center shrink-0
              ${t.type === 'success' ? 'bg-brand-cyan/10 text-brand-cyan' : ''}
-             ${t.type === 'error' ? 'bg-red-50 text-red-500' : ''}
+             ${t.type === 'error' ? 'bg-red-50 dark:bg-red-900/30 text-red-500 dark:text-red-400' : ''}
              ${t.type === 'info' ? 'bg-white/10 text-white' : ''}
           `}>
              {t.type === 'success' && <CheckCircle2 size={20} />}

@@ -9,7 +9,7 @@ const Marcas = () => {
             header: 'ID',
             accessor: 'id_marca',
             render: (row) => (
-                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">#{row.id_marca}</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400 dark:text-neutral-500">#{row.id_marca}</span>
             )
         },
         {

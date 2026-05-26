@@ -15,8 +15,8 @@ const Usuarios = () => {
     const ROLES = {
         1: { label: 'ADMIN. CORE',   color: 'bg-black text-white border-black',             icon: ShieldCheck },
         2: { label: 'SUPERVISOR / GESTOR',   color: 'bg-brand-cyan text-black border-brand-cyan',   icon: Store       },
-        3: { label: 'VENDEDOR POS',  color: 'bg-transparent text-black border-black',       icon: UserCircle  },
-        4: { label: 'VISOR',         color: 'bg-neutral-100 text-neutral-400 border-neutral-200', icon: UserCircle },
+        3: { label: 'VENDEDOR POS',  color: 'bg-transparent text-black dark:text-white border-black dark:border-white',       icon: UserCircle  },
+        4: { label: 'VISOR',         color: 'bg-neutral-100 dark:bg-gray-800 text-neutral-400 dark:text-neutral-300 border-neutral-200 dark:border-gray-700', icon: UserCircle },
     };
 
     const columns = [
@@ -189,10 +189,10 @@ const Usuarios = () => {
                         <div
                             onClick={() => setFormData({ ...formData, activo: !formData.activo })}
                             className={`w-10 h-6 rounded-full transition-all relative flex-shrink-0 ${
-                                formData.activo ? 'bg-brand-cyan shadow-[0_0_10px_rgba(0,194,255,0.3)]' : 'bg-neutral-200'
+                                formData.activo ? 'bg-brand-cyan shadow-[0_0_10px_rgba(0,194,255,0.3)]' : 'bg-neutral-200 dark:bg-gray-600'
                             }`}
                         >
-                            <div className={`w-4 h-4 bg-white rounded-full shadow absolute top-1 transition-all ${
+                            <div className={`w-4 h-4 bg-white dark:bg-gray-300 rounded-full shadow absolute top-1 transition-all ${
                                 formData.activo ? 'left-5' : 'left-1'
                             }`} />
                         </div>

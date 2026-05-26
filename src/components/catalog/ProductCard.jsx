@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ShoppingCart, Eye, MapPin } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { formatPrice, hasDiscount, getFinalPrice, calculateDiscountPercentage } from '../../utils/priceFormatter';
+import { parseImagenes } from '../../lib/supabaseStorage';
 import LazyImage from '../ui/LazyImage';
 
 const ProductCard = ({ producto, onQuickView, onCompareToggle, isComparing = false }) => {
@@ -13,6 +14,8 @@ const ProductCard = ({ producto, onQuickView, onCompareToggle, isComparing = fal
   const discountPercentage = discount ? calculateDiscountPercentage(producto.precio_base, producto.precio_promocion) : 0;
   const inCart = isInCart(producto.id);
   const hasStock = producto.disponibilidad && producto.disponibilidad.length > 0;
+  const parsedImages = parseImagenes(producto.imagen_url || producto.imagen);
+  const mainImage = parsedImages.length > 0 ? parsedImages[0] : '/placeholder-product.jpg';
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
@@ -35,12 +38,12 @@ const ProductCard = ({ producto, onQuickView, onCompareToggle, isComparing = fal
   };
 
   return (
-    <div className="group bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-neutral-100 dark:border-gray-700 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col">
+    <div className="group bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-neutral-100 dark:border-gray-700 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col h-full">
       
       {/* Imagen */}
       <div className="relative aspect-square overflow-hidden bg-neutral-50 dark:bg-gray-700">
         <LazyImage
-          src={producto.imagen || '/placeholder-product.jpg'}
+          src={mainImage}
           alt={producto.nombre}
           className="w-full h-full"
         />
@@ -63,7 +66,7 @@ const ProductCard = ({ producto, onQuickView, onCompareToggle, isComparing = fal
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
           <button
             onClick={handleQuickView}
-            className="bg-white text-black p-3 rounded-full hover:bg-brand-cyan hover:text-white transition-all duration-300 hover:scale-110"
+            className="bg-white text-black p-3 rounded-full hover:bg-brand-cyan hover:text-white transition-all duration-300 hover:scale-110 shadow-lg"
             title="Vista rápida"
           >
             <Eye size={20} />
@@ -71,15 +74,15 @@ const ProductCard = ({ producto, onQuickView, onCompareToggle, isComparing = fal
         </div>
 
         {/* Checkbox de comparación (siempre visible en móvil) */}
-        <div className="absolute bottom-3 left-3">
-          <label className="flex items-center gap-2 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg cursor-pointer hover:bg-white transition-colors">
+        <div className="absolute bottom-2 left-2 md:bottom-3 md:left-3">
+          <label className="flex items-center gap-1.5 md:gap-2 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm px-2 py-1 md:px-3 md:py-1.5 rounded-lg cursor-pointer hover:bg-white dark:hover:bg-gray-800 transition-colors shadow-sm border border-neutral-100 dark:border-gray-700">
             <input
               type="checkbox"
               checked={isComparing}
               onChange={handleCompareToggle}
-              className="w-4 h-4 accent-brand-cyan"
+              className="w-3.5 h-3.5 md:w-4 md:h-4 accent-brand-cyan"
             />
-            <span className="text-xs font-bold text-black">Comparar</span>
+            <span className="text-[10px] md:text-xs font-bold text-black dark:text-white">Comparar</span>
           </label>
         </div>
       </div>
@@ -147,25 +150,25 @@ const ProductCard = ({ producto, onQuickView, onCompareToggle, isComparing = fal
         </div>
 
         {/* Botones */}
-        <div className="flex gap-2">
+        <div className="flex gap-1.5 md:gap-2">
           <button
             onClick={handleAddToCart}
             disabled={!hasStock || isAdding}
-            className={`flex-1 py-3 rounded-xl font-bold text-sm uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 ${
+            className={`flex-1 py-2 md:py-3 px-1 md:px-3 rounded-xl font-bold text-[9px] md:text-sm uppercase tracking-wider md:tracking-widest transition-all duration-300 flex items-center justify-center gap-1.5 md:gap-2 ${
               !hasStock
-                ? 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
+                ? 'bg-neutral-200 dark:bg-gray-700 text-neutral-400 dark:text-gray-400 cursor-not-allowed'
                 : inCart
                 ? 'bg-green-500 text-white'
                 : 'bg-brand-cyan text-white hover:bg-black hover:shadow-lg hover:-translate-y-0.5'
             } ${isAdding ? 'scale-95' : ''}`}
           >
-            <ShoppingCart size={18} className={isAdding ? 'animate-bounce' : ''} />
-            {!hasStock ? 'Sin Stock' : inCart ? 'En Carrito' : 'Agregar'}
+            <ShoppingCart size={16} className={`md:w-[18px] md:h-[18px] flex-shrink-0 ${isAdding ? 'animate-bounce' : ''}`} />
+            <span className="truncate">{!hasStock ? 'Sin Stock' : inCart ? 'En Carrito' : 'Agregar'}</span>
           </button>
 
           <button
             onClick={handleQuickView}
-            className="md:hidden bg-neutral-100 dark:bg-gray-700 text-black dark:text-white p-3 rounded-xl hover:bg-brand-cyan hover:text-white transition-all duration-300"
+            className="md:hidden bg-neutral-100 dark:bg-gray-700 text-black dark:text-white p-2 rounded-xl hover:bg-brand-cyan hover:text-white transition-all duration-300 flex-shrink-0 flex items-center justify-center"
             title="Vista rápida"
           >
             <Eye size={18} />

@@ -9,7 +9,7 @@ const Proveedores = () => {
             header: 'ID',
             accessor: 'id_proveedor',
             render: (row) => (
-                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">
+                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400 dark:text-neutral-500">
                     #{String(row.id_proveedor).split('-')[0]}
                 </span>
             )
@@ -20,7 +20,7 @@ const Proveedores = () => {
             render: (row) => (
                 <div className="flex flex-col">
                     <span className="font-bold text-sm text-black dark:text-white uppercase tracking-widest">{row.nombre_proveedor}</span>
-                    <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">
+                    <span className="text-[9px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest">
                         {row.razon_social || row.cuit || 'SIN DATOS FISCALES'}
                     </span>
                 </div>
@@ -30,7 +30,7 @@ const Proveedores = () => {
             header: 'Contacto',
             accessor: 'telefono',
             render: (row) => (
-                <span className="text-xs font-bold text-neutral-600 uppercase tracking-widest">
+                <span className="text-xs font-bold text-neutral-600 dark:text-neutral-300 uppercase tracking-widest">
                     {row.telefono || 'Sin teléfono'}
                 </span>
             )
@@ -41,8 +41,8 @@ const Proveedores = () => {
             render: (row) => (
                 <div className={`inline-flex px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border ${
                     row.activo
-                        ? 'bg-black text-white border-black'
-                        : 'bg-neutral-100 text-neutral-400 border-neutral-200'
+                        ? 'bg-black text-white border-black dark:border-white'
+                        : 'bg-neutral-100 dark:bg-gray-800 text-neutral-400 dark:text-neutral-500 border-neutral-200 dark:border-gray-700'
                 }`}>
                     {row.activo ? 'Activo' : 'Suspendido'}
                 </div>

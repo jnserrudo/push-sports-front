@@ -52,7 +52,7 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen bg-neutral-100 flex items-center justify-center p-4 relative font-sans overflow-hidden selection:bg-black selection:text-brand-cyan">
+        <div className="min-h-screen bg-neutral-100 dark:bg-gray-800 flex items-center justify-center p-4 relative font-sans overflow-hidden selection:bg-black selection:text-brand-cyan">
             
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap');
@@ -64,7 +64,7 @@ const Login = () => {
                 <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/90"></div>
             </div>
             
-            <div className="w-full max-w-[900px] flex flex-col md:flex-row bg-white rounded-xl shadow-2xl relative z-10 overflow-hidden animate-in zoom-in-95 duration-500 h-auto">
+            <div className="w-full max-w-[900px] flex flex-col md:flex-row bg-white dark:bg-gray-900 rounded-xl shadow-2xl relative z-10 overflow-hidden animate-in zoom-in-95 duration-500 h-auto">
                 
                 {/* Visual (Desktop) */}
                 <div className="hidden md:flex md:w-5/12 bg-black relative p-10 flex-col justify-between group overflow-hidden">
@@ -72,7 +72,7 @@ const Login = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
                     
                     <div className="relative z-10">
-                        <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center p-2 shadow-sm mb-6">
+                        <div className="w-12 h-12 bg-white dark:bg-gray-900 rounded-lg flex items-center justify-center p-2 shadow-sm mb-6">
                             <img src="/icono.jpeg" alt="Logo" className="w-full h-full object-contain" />
                         </div>
                     </div>
@@ -86,17 +86,17 @@ const Login = () => {
                 </div>
 
                 {/* Formulario */}
-                <div className="w-full md:w-7/12 p-8 md:p-12 bg-white flex flex-col justify-center">
+                <div className="w-full md:w-7/12 p-8 md:p-12 bg-white dark:bg-gray-900 flex flex-col justify-center">
                     
                     <div className="md:hidden flex items-center gap-3 mb-8">
                         <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center p-1.5">
                             <img src="/icono.jpeg" alt="Logo" className="w-full h-full object-contain invert" />
                         </div>
-                        <h2 className="text-3xl uppercase leading-none font-sport m-0 text-black">PushSport</h2>
+                        <h2 className="text-3xl uppercase leading-none font-sport m-0 text-black dark:text-white">PushSport</h2>
                     </div>
 
                     <div className="mb-8">
-                        <h1 className="text-black text-4xl font-sport uppercase m-0 mb-1 leading-none">
+                        <h1 className="text-black dark:text-white text-4xl font-sport uppercase m-0 mb-1 leading-none">
                             Iniciar Sesión
                         </h1>
                         <p className="text-neutral-500 font-medium text-sm m-0">
@@ -116,7 +116,7 @@ const Login = () => {
 
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-[0.1em] text-black">Email o Usuario</label>
+                            <label className="text-xs font-bold uppercase tracking-[0.1em] text-black dark:text-white">Email o Usuario</label>
                             <div className="relative group">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors" size={18} />
                                 <input 
@@ -129,7 +129,7 @@ const Login = () => {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-[0.1em] text-black">Contraseña</label>
+                            <label className="text-xs font-bold uppercase tracking-[0.1em] text-black dark:text-white">Contraseña</label>
                             <div className="relative group">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors" size={18} />
                                 <input 
@@ -165,7 +165,7 @@ const Login = () => {
                                 className={`w-full py-4 flex items-center justify-center gap-2 rounded-lg text-[13px] font-sport uppercase tracking-[0.1em] transition-all ${
                                     loading 
                                     ? 'bg-neutral-200 text-neutral-500 cursor-not-allowed' 
-                                    : 'bg-black text-white hover:bg-brand-cyan hover:text-black shadow-lg group'
+                                    : 'bg-black text-white hover:bg-brand-cyan hover:text-black dark:hover:text-white shadow-lg group'
                                 }`}
                             >
                                 {loading ? (
@@ -178,10 +178,10 @@ const Login = () => {
                             
                             {/* BOTONES SECUNDARIOS CLAROS Y VISIBLES (Grid) */}
                             <div className="grid grid-cols-2 gap-3 mt-2">
-                                <Link to="/" className="flex items-center justify-center gap-2 py-3 border-2 border-neutral-200 rounded-lg text-[10px] font-black uppercase tracking-widest text-neutral-600 hover:border-black hover:text-black transition-colors bg-neutral-50 hover:bg-white">
+                                <Link to="/" className="flex items-center justify-center gap-2 py-3 border-2 border-neutral-200 rounded-lg text-[10px] font-black uppercase tracking-widest text-neutral-600 hover:border-black hover:text-black dark:hover:text-white transition-colors bg-neutral-50 hover:bg-white dark:hover:bg-gray-800">
                                     <Home size={14} /> Inicio
                                 </Link>
-                                <Link to="/register" className="flex items-center justify-center gap-2 py-3 border-2 border-neutral-200 rounded-lg text-[10px] font-black uppercase tracking-widest text-neutral-600 hover:border-brand-cyan hover:text-brand-cyan transition-colors bg-neutral-50 hover:bg-white">
+                                <Link to="/register" className="flex items-center justify-center gap-2 py-3 border-2 border-neutral-200 rounded-lg text-[10px] font-black uppercase tracking-widest text-neutral-600 hover:border-brand-cyan hover:text-brand-cyan transition-colors bg-neutral-50 hover:bg-white dark:hover:bg-gray-800">
                                     Crear Cuenta
                                 </Link>
                             </div>

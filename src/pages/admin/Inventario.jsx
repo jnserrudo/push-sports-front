@@ -380,15 +380,15 @@ const Inventario = () => {
             {/* Modal de Confirmación de Eliminación */}
             {deleteConfirm && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full animate-in zoom-in-95 duration-200">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-sm w-full mx-4 animate-in zoom-in-95 duration-200">
                         <div className="p-5">
-                            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-3">
-                                <Trash2 size={20} className="text-red-600" />
+                            <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-3">
+                                <Trash2 size={20} className="text-red-600 dark:text-red-400" />
                             </div>
-                            <h3 className="text-base font-black text-center text-neutral-900 mb-2">
+                            <h3 className="text-base font-black text-center text-neutral-900 dark:text-white mb-2">
                                 ¿Desvincular?
                             </h3>
-                            <p className="text-xs text-neutral-600 text-center mb-4">
+                            <p className="text-xs text-neutral-600 dark:text-neutral-300 text-center mb-4">
                                 ¿Desvincular <strong className="text-neutral-900">"{deleteConfirm.producto?.nombre}"</strong> de <strong>"{deleteConfirm.comercio?.nombre || deleteConfirm.sucursal_nombre}"</strong>?
                                 <br />
                                 <span className="text-red-600 font-medium text-[10px]">Esta acción es irreversible.</span>
@@ -396,7 +396,7 @@ const Inventario = () => {
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => setDeleteConfirm(null)}
-                                    className="flex-1 px-3 py-2 bg-neutral-100 text-neutral-700 rounded-lg font-bold text-xs hover:bg-neutral-200 transition-colors"
+                                    className="flex-1 px-3 py-2 bg-neutral-100 dark:bg-gray-700 text-neutral-700 dark:text-neutral-200 rounded-lg font-bold text-xs hover:bg-neutral-200 dark:hover:bg-gray-600 transition-colors"
                                 >
                                     Cancelar
                                 </button>

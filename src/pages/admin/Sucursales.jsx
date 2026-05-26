@@ -30,7 +30,7 @@ const MapPicker = ({ lat, lng, onLocationSelect }) => {
     return (
         <div className="space-y-2">
             <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-black dark:text-white">Ubicación Geográfica</label>
-            <div className="w-full h-48 md:h-64 rounded-xl border-2 border-neutral-100 overflow-hidden shadow-inner bg-neutral-50 relative pointer-events-auto">
+            <div className="w-full h-48 md:h-64 rounded-xl border-2 border-neutral-100 dark:border-gray-700 overflow-hidden shadow-inner bg-neutral-50 dark:bg-gray-800 relative pointer-events-auto">
                 <Map
                     center={initialCoords}
                     zoom={13}
@@ -106,7 +106,7 @@ const ImagePicker = ({ value, onChange, label = "Imagen de la Sede" }) => {
             <div
                 onClick={() => !uploading && inputRef.current?.click()}
                 className={`relative w-full h-40 md:h-48 rounded-xl border-2 border-dashed cursor-pointer transition-all group overflow-hidden
-                    ${value ? 'border-brand-cyan bg-brand-cyan/5' : 'border-neutral-200 bg-neutral-50 hover:border-brand-cyan hover:bg-brand-cyan/5'}`}
+                    ${value ? 'border-brand-cyan bg-brand-cyan/5' : 'border-neutral-200 dark:border-gray-600 bg-neutral-50 dark:bg-gray-700 hover:border-brand-cyan hover:bg-brand-cyan/5'}`}
             >
                 {uploading ? (
                     <>
@@ -166,7 +166,7 @@ const Sucursales = () => {
             header: 'Visual',
             accessor: 'imagen_url',
             render: (row) => (
-                <div className="w-12 h-12 rounded-lg border border-neutral-200 bg-neutral-50 overflow-hidden flex items-center justify-center">
+                <div className="w-12 h-12 rounded-lg border border-neutral-200 dark:border-gray-700 bg-neutral-50 dark:bg-gray-800 overflow-hidden flex items-center justify-center">
                     {row.imagen_url ? (
                         <img src={row.imagen_url} alt={row.nombre} className="w-full h-full object-cover" />
                     ) : (
@@ -227,7 +227,7 @@ const Sucursales = () => {
                             <span className="text-[10px] font-black uppercase tracking-widest hidden md:block">Abrir Mapa</span>
                         </a>
                     ) : (
-                        <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest bg-neutral-100 px-2 py-1 rounded-md">Sin Mapear</span>
+                        <span className="text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest bg-neutral-100 dark:bg-gray-800 px-2 py-1 rounded-md">Sin Mapear</span>
                     )}
                 </div>
             )
@@ -238,8 +238,8 @@ const Sucursales = () => {
             render: (row) => (
                 <div className={`inline-flex px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border ${
                     row.activo
-                        ? 'bg-transparent text-black dark:text-white border-black'
-                        : 'bg-neutral-100 text-neutral-400 border-neutral-200'
+                        ? 'bg-transparent text-black dark:text-white border-black dark:border-white'
+                        : 'bg-neutral-100 dark:bg-gray-800 text-neutral-400 dark:text-neutral-500 border-neutral-200 dark:border-gray-700'
                 }`}>
                     {row.activo ? 'Operativa' : 'Cesada'}
                 </div>
@@ -292,7 +292,7 @@ const Sucursales = () => {
                     <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
                     <input
                         required type="text"
-                        className="w-full pl-10 pr-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-bold text-black dark:text-white uppercase placeholder:text-neutral-400 focus:outline-none focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/20 transition-all"
+                        className="w-full pl-10 pr-4 py-2.5 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-sm font-bold text-black dark:text-white uppercase placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-brand-cyan dark:focus:border-cyan-400 focus:ring-2 focus:ring-brand-cyan/20 dark:focus:ring-cyan-400/20 transition-all"
                         placeholder="EJ: AV. BELGRANO 1234, SALTA CAPITAL"
                         value={formData.direccion || ''}
                         onChange={e => setFormData({ ...formData, direccion: e.target.value.toUpperCase() })}
@@ -305,7 +305,7 @@ const Sucursales = () => {
                     <div className="w-8 h-8 bg-white dark:bg-gray-700 rounded-lg shadow-sm flex items-center justify-center flex-shrink-0">
                         <Info size={16} className="text-brand-cyan" />
                     </div>
-                    <p className="text-[10px] md:text-xs font-bold text-neutral-700 leading-relaxed m-0">
+                    <p className="text-[10px] md:text-xs font-bold text-neutral-700 dark:text-neutral-300 leading-relaxed m-0">
                         Click en el mapa o arrastre el marcador para definir la <span className="text-brand-cyan">ubicación</span>.
                     </p>
                 </div>
@@ -329,7 +329,7 @@ const Sucursales = () => {
                             setFormData(prev => ({ ...prev, activo: prev.activo === false ? true : false }));
                         }}
                         className={`w-10 h-6 rounded-full transition-all relative shadow-inner flex-shrink-0 ${
-                            formData.activo !== false ? 'bg-brand-cyan' : 'bg-neutral-200'
+                            formData.activo !== false ? 'bg-brand-cyan' : 'bg-neutral-200 dark:bg-gray-600'
                         }`}
                     >
                         <div className={`w-4 h-4 bg-white dark:bg-gray-300 rounded-full shadow-md absolute top-1 transition-all ${

@@ -59,7 +59,7 @@ const QRModal = ({ evento, onClose }) => {
 
                 <div className="p-8 flex flex-col items-center gap-6">
                     {/* QR Code con logo */}
-                    <div className="p-4 bg-white rounded-2xl shadow-lg border-4 border-neutral-100">
+                    <div className="p-4 bg-white rounded-2xl shadow-lg border-4 border-neutral-100 dark:border-gray-700">
                         <QRCodeCanvas
                             id="evento-qr-canvas"
                             value={url}
@@ -172,7 +172,7 @@ const FormModal = ({ evento, onClose, onSave }) => {
                         <p className="text-[9px] text-neutral-400 dark:text-gray-500 font-bold uppercase tracking-widest">Este texto verán los usuarios al validar su cuenta.</p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                             <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">Fecha Inicio</label>
                             <input type="date" className={inputClass} value={formData.fecha_inicio} onChange={e => setFormData({ ...formData, fecha_inicio: e.target.value })} />
@@ -249,7 +249,7 @@ const HubQRModal = ({ onClose }) => {
 
                 <div className="p-8 flex flex-col items-center gap-6">
                     {/* QR Code con logo */}
-                    <div className="p-4 bg-white rounded-2xl shadow-lg border-4 border-neutral-100">
+                    <div className="p-4 bg-white rounded-2xl shadow-lg border-4 border-neutral-100 dark:border-gray-700">
                         <QRCodeCanvas
                             id="hub-qr-canvas"
                             value={url}

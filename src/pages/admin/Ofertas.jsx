@@ -9,7 +9,7 @@ const Ofertas = () => {
             header: 'ID',
             accessor: 'id_oferta',
             render: (row) => (
-                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">
+                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400 dark:text-neutral-500">
                     #{String(row.id_oferta).split('-')[0]}
                 </span>
             )
@@ -51,8 +51,8 @@ const Ofertas = () => {
             render: (row) => (
                 <div className={`inline-flex px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border ${
                     row.activo
-                        ? 'bg-black text-white border-black'
-                        : 'bg-neutral-100 text-neutral-400 border-neutral-200'
+                        ? 'bg-black text-white border-black dark:border-white'
+                        : 'bg-neutral-100 dark:bg-gray-800 text-neutral-400 dark:text-neutral-500 border-neutral-200 dark:border-gray-700'
                 }`}>
                     {row.activo ? 'Vigente' : 'Finalizada'}
                 </div>

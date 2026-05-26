@@ -396,8 +396,8 @@ const Reporteria = () => {
               <div
                 className={`flex items-center gap-2.5 px-5 py-2.5 rounded-r-xl border-2 transition-all text-[11px] font-black uppercase tracking-widest ${
                   shopStep === 2
-                    ? 'bg-neutral-900 border-neutral-900 text-white'
-                    : 'bg-neutral-50 border-neutral-200 text-neutral-300 cursor-not-allowed'
+                    ? 'bg-neutral-900 dark:bg-gray-700 border-neutral-900 dark:border-gray-700 text-white dark:text-gray-100'
+                    : 'bg-neutral-50 dark:bg-gray-800 border-neutral-200 dark:border-gray-600 text-neutral-300 dark:text-gray-500 cursor-not-allowed'
                 }`}
               >
                 <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black shrink-0 ${

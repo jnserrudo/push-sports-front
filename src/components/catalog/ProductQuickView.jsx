@@ -3,6 +3,7 @@ import { X, ShoppingCart, Share2, MapPin, ChevronLeft, ChevronRight } from 'luci
 import { useCart } from '../../context/CartContext';
 import { formatPrice, hasDiscount, getFinalPrice, calculateDiscountPercentage } from '../../utils/priceFormatter';
 import { useProducts } from '../../hooks/useProducts';
+import { parseImagenes } from '../../lib/supabaseStorage';
 import LazyImage from '../ui/LazyImage';
 import ProductCard from './ProductCard';
 
@@ -22,7 +23,7 @@ const ProductQuickView = ({ producto, isOpen, onClose, onQuickView }) => {
   const relatedProducts = getRelatedProducts(producto.id, 4);
 
   // Simular galería de imágenes (en producción vendrían del backend)
-  const images = producto.imagen ? [producto.imagen] : [];
+  const images = parseImagenes(producto.imagen_url || producto.imagen);
 
   const handleAddToCart = () => {
     if (!hasStock) return;

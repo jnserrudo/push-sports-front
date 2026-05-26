@@ -23,36 +23,36 @@ import { motion } from 'framer-motion';
 
 // ─── Metric Card ──────────────────────────────────────────────────────────────
 const MetricCard = ({ title, value, icon: Icon, trend, sub, link, loading }) => (
-  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="h-full">
       <Link
         to={link}
-        className="group bg-black md:bg-white p-2 md:p-3.5 rounded-lg md:rounded-xl border border-black md:border-neutral-200 shadow-sm relative overflow-hidden transition-all duration-300 flex flex-col justify-between h-full"
+        className="group bg-white dark:bg-gray-800 p-3 md:p-4 rounded-xl border border-neutral-200 dark:border-gray-700 shadow-sm hover:shadow-md hover:border-brand-cyan dark:hover:border-brand-cyan relative overflow-hidden transition-all duration-300 flex flex-col justify-between h-full"
       >
-        <div className="absolute -right-3 -top-3 w-14 h-14 bg-neutral-900 md:bg-neutral-50 rounded-full group-hover:bg-brand-cyan/10 transition-colors duration-500" />
-        <div className="flex justify-between items-start mb-1 md:mb-2 relative z-10">
-          <div className="w-6 h-6 md:w-7 md:h-7 rounded-md bg-neutral-900 md:bg-neutral-100 flex items-center justify-center text-brand-cyan md:text-black group-hover:bg-brand-cyan group-hover:text-black transition-all duration-300 border border-neutral-800 md:border-neutral-200">
-            <Icon size={12} strokeWidth={3} />
+        <div className="absolute -right-3 -top-3 w-16 h-16 bg-neutral-50 dark:bg-gray-900 rounded-full group-hover:bg-brand-cyan/10 transition-colors duration-500" />
+        <div className="flex justify-between items-start mb-2 relative z-10">
+          <div className="w-8 h-8 rounded-md bg-neutral-100 dark:bg-gray-900 flex items-center justify-center text-black dark:text-white group-hover:bg-brand-cyan group-hover:text-black transition-all duration-300 border border-neutral-200 dark:border-gray-700">
+            <Icon size={14} strokeWidth={2.5} />
           </div>
           {trend != null ? (
-            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-green-50 text-green-700 rounded text-[7px] font-black uppercase tracking-widest border border-green-200">
-              <TrendingUp size={8} strokeWidth={3} />+{trend}%
+            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-green-50 text-green-700 rounded text-[8px] font-black uppercase tracking-widest border border-green-200">
+              <TrendingUp size={10} strokeWidth={3} />+{trend}%
             </div>
           ) : null}
         </div>
         <div className="relative z-10 flex-1 flex flex-col justify-center">
-          <span className="text-[7px] md:text-[9px] font-black text-neutral-400 md:text-neutral-900 md:dark:text-gray-400 uppercase tracking-widest block mb-0.5">{title}</span>
+          <span className="text-[9px] md:text-[10px] font-black text-neutral-500 dark:text-gray-400 uppercase tracking-widest block mb-0.5">{title}</span>
           {loading ? (
               <div className="flex items-center gap-2 mt-1">
-                  <div className="w-3 h-3 border-2 border-neutral-800 border-t-brand-cyan rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-neutral-200 dark:border-gray-600 border-t-brand-cyan rounded-full animate-spin" />
               </div>
           ) : (
-              <h3 className="text-base md:text-xl font-sport m-0 text-white md:text-black md:dark:text-white uppercase leading-none tracking-tight">{value ?? '—'}</h3>
+              <h3 className="text-xl md:text-2xl font-sport m-0 text-black dark:text-white uppercase leading-none tracking-tight">{value ?? '—'}</h3>
           )}
-          {!loading && sub && <p className="text-[6px] md:text-[8px] font-black text-neutral-500 md:text-neutral-600 md:dark:text-gray-500 uppercase tracking-widest mt-0.5 m-0">{sub}</p>}
+          {!loading && sub && <p className="text-[7px] md:text-[8px] font-black text-neutral-400 dark:text-gray-500 uppercase tracking-widest mt-1 m-0">{sub}</p>}
         </div>
-        <div className="mt-1 md:mt-2.5 flex items-center justify-between text-[6px] md:text-[7px] font-black uppercase tracking-[0.15em] text-neutral-500 md:text-neutral-800 group-hover:text-brand-cyan transition-colors pt-1 md:pt-1.5 border-t border-neutral-800 md:border-neutral-200 relative z-10">
+        <div className="mt-3 flex items-center justify-between text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] text-neutral-400 dark:text-gray-500 group-hover:text-brand-cyan transition-colors pt-2 border-t border-neutral-100 dark:border-gray-700 relative z-10">
           <span>Detalles</span>
-          <ArrowRight size={10} className="group-hover:translate-x-1 transition-transform text-neutral-400 group-hover:text-brand-cyan md:text-black" strokeWidth={3} />
+          <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform text-neutral-300 dark:text-gray-600 group-hover:text-brand-cyan" strokeWidth={2.5} />
         </div>
       </Link>
   </motion.div>
@@ -156,8 +156,10 @@ const Dashboard = () => {
         className="space-y-2 md:space-y-4 max-w-[1400px] mx-auto pb-2 md:pb-4"
     >
       {/* ── HEADER ── */}
-      <header className="relative bg-black rounded-lg overflow-hidden border border-neutral-800 shadow-lg">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(0,229,255,0.08),transparent_60%)]" />
+      <header className="relative bg-black rounded-lg border border-neutral-800 shadow-lg">
+        <div className="absolute inset-0 rounded-lg overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(0,229,255,0.08),transparent_60%)]" />
+        </div>
         <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-2 md:gap-3 p-3 md:p-4">
           <div className="w-full lg:w-auto">
             <h1 className="text-white text-lg md:text-xl mb-0.5 font-sport uppercase leading-none">
@@ -290,38 +292,51 @@ const Dashboard = () => {
       </div>
 
       {/* ── MÉTRICAS ── */}
-      <section className="grid grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
         <MetricCard title="Caja Fuerte" value={stats.ventas} icon={CreditCard} sub="Saldo acumulado" link="/dashboard/liquidaciones" loading={loading} />
         {isSuperAdmin && (
             <MetricCard title="Staff" value={stats.usuarios} icon={Users} sub="Operadores" link="/dashboard/usuarios" loading={loading} />
         )}
-         <div className="space-y-2 md:space-y-3">
+      </section>
+
+      {/* ── MOVIMIENTOS RECIENTES ── */}
+      <section className="bg-white dark:bg-gray-800 rounded-xl border border-neutral-200 dark:border-gray-700 shadow-sm p-3 md:p-4 mt-3 md:mt-4">
+         <div className="flex items-center gap-2 mb-3">
+             <div className="w-6 h-6 bg-brand-cyan/10 rounded flex items-center justify-center border border-brand-cyan/20">
+                 <Package size={14} className="text-brand-cyan" />
+             </div>
+             <h3 className="font-sport text-sm md:text-base uppercase leading-none text-black dark:text-white m-0">
+                 Movimientos <span className="text-brand-cyan">Recientes</span>
+             </h3>
+         </div>
+
+         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-3">
              {loading ? (
                  Array(3).fill(0).map((_, i) => (
-                     <div key={i} className="h-12 bg-neutral-50 animate-pulse rounded-lg w-full" />
+                     <div key={i} className="h-14 bg-neutral-100 dark:bg-gray-700 animate-pulse rounded-lg w-full" />
                  ))
              ) : stats.movimientos.length === 0 ? (
-                 <div className="py-6 text-center">
-                     <Package size={24} className="mx-auto text-neutral-200 mb-2" />
-                     <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Sin movimientos recientes</p>
+                 <div className="py-8 text-center col-span-full border-2 border-dashed border-neutral-200 dark:border-gray-700 rounded-xl">
+                     <Package size={24} className="mx-auto text-neutral-300 dark:text-gray-500 mb-2" />
+                     <p className="text-[10px] font-bold text-neutral-400 dark:text-gray-400 uppercase tracking-widest">Sin movimientos recientes</p>
                  </div>
              ) : (
                  stats.movimientos.slice(0, 5).map((mov, i) => {
                      // Determinar el flujo basado en si es ingreso o salida
-                     const isIngreso = mov.tipo === 'INGRESO' || mov.cantidad > 0; // Asumiendo que 'Envío' es ingreso
+                     const isIngreso = mov.tipo === 'INGRESO' || mov.cantidad > 0;
                      const isVenta = mov.tipo === 'VENTA' || mov.tipo === 'EGRESO';
                      
                      let IconComponent = Box;
-                     let colorClass = "bg-neutral-100 text-neutral-600 border-neutral-200";
+                     let colorClass = "bg-neutral-100 dark:bg-gray-700 text-neutral-600 dark:text-gray-300 border-neutral-200 dark:border-gray-600";
                      let verb = "Movimiento";
 
                      if (isIngreso) {
                          IconComponent = Truck;
-                         colorClass = "bg-emerald-50 text-emerald-600 border-emerald-200";
+                         colorClass = "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800";
                          verb = "Stock Recibido";
                      } else if (isVenta) {
                          IconComponent = CreditCard;
-                         colorClass = "bg-blue-50 text-blue-600 border-blue-200";
+                         colorClass = "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800";
                          verb = "Venta";
                      }
 
@@ -331,23 +346,23 @@ const Dashboard = () => {
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: i * 0.1 }}
                             key={i} 
-                            className="group flex items-center justify-between p-2.5 rounded-lg border border-neutral-100 dark:border-gray-700 hover:border-brand-cyan hover:shadow-sm transition-all duration-300 bg-white dark:bg-gray-800"
+                            className="group flex items-center justify-between p-3 rounded-lg border border-neutral-100 dark:border-gray-700 hover:border-brand-cyan dark:hover:border-brand-cyan hover:shadow-sm transition-all duration-300 bg-neutral-50 dark:bg-gray-800"
                          >
                              <div className="flex items-center gap-3">
-                                 <div className={`w-8 h-8 rounded-lg border flex items-center justify-center flex-shrink-0 transition-colors ${colorClass} group-hover:scale-110 duration-300`}>
+                                 <div className={`w-8 h-8 md:w-10 md:h-10 rounded-lg border flex items-center justify-center flex-shrink-0 transition-colors ${colorClass} group-hover:scale-110 duration-300`}>
                                      <IconComponent size={16} strokeWidth={2.5} />
                                  </div>
                                  <div className="flex flex-col">
-                                     <span className="text-[8px] font-black uppercase tracking-widest text-neutral-400">{verb}</span>
-                                     <span className="font-bold text-xs text-neutral-900 dark:text-white group-hover:text-brand-cyan transition-colors truncate max-w-[120px]">{mov.producto_nombre}</span>
-                                     <span className="text-[9px] text-neutral-500 dark:text-gray-400 font-medium">{mov.sucursal_nombre}</span>
+                                     <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-neutral-400 dark:text-gray-500">{verb}</span>
+                                     <span className="font-bold text-xs md:text-sm text-neutral-900 dark:text-white group-hover:text-brand-cyan transition-colors truncate max-w-[150px] md:max-w-[180px]">{mov.producto_nombre}</span>
+                                     <span className="text-[9px] md:text-[10px] text-neutral-500 dark:text-gray-400 font-medium truncate max-w-[150px]">{mov.sucursal_nombre}</span>
                                  </div>
                              </div>
-                             <div className="flex flex-col items-end">
-                                 <span className={`font-sport text-base leading-none ${isIngreso ? 'text-emerald-500' : isVenta ? 'text-blue-500' : 'text-neutral-900 dark:text-white'}`}>
+                             <div className="flex flex-col items-end pl-2">
+                                 <span className={`font-sport text-lg md:text-xl leading-none ${isIngreso ? 'text-emerald-500' : isVenta ? 'text-blue-500' : 'text-neutral-900 dark:text-white'}`}>
                                      {isIngreso ? '+' : '-'}{Math.abs(mov.cantidad)}
                                  </span>
-                                 <span className="text-[7px] font-black uppercase tracking-widest text-neutral-400">UND</span>
+                                 <span className="text-[8px] font-black uppercase tracking-widest text-neutral-400 dark:text-gray-500 mt-0.5">UND</span>
                              </div>
                          </motion.div>
                      );

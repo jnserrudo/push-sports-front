@@ -67,7 +67,7 @@ const PreviewModal = ({ category, isOpen, onClose }) => {
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div>
       
-      <div className="bg-white w-full max-w-4xl max-h-[95vh] overflow-y-auto custom-scrollbar rounded-2xl shadow-2xl relative z-10 flex flex-col md:flex-row min-h-[500px] animate-in zoom-in-95 duration-300">
+      <div className="bg-white dark:bg-gray-900 w-full max-w-4xl max-h-[95vh] overflow-y-auto custom-scrollbar rounded-2xl shadow-2xl relative z-10 flex flex-col md:flex-row min-h-[500px] animate-in zoom-in-95 duration-300">
         
         {/* Imagen Modal */}
         <div className="md:w-1/2 relative bg-black hidden md:block group overflow-hidden">
@@ -80,18 +80,18 @@ const PreviewModal = ({ category, isOpen, onClose }) => {
         </div>
         
         {/* Contenido Modal */}
-        <div className="w-full md:w-1/2 p-6 sm:p-8 md:p-10 bg-white flex flex-col justify-between relative">
-          <button onClick={onClose} className="absolute top-4 right-4 sm:top-6 sm:right-6 text-neutral-400 hover:text-black transition-colors p-2 bg-neutral-100 rounded-full hover:bg-neutral-200">
+        <div className="w-full md:w-1/2 p-6 sm:p-8 md:p-10 bg-white dark:bg-gray-900 flex flex-col justify-between relative">
+          <button onClick={onClose} className="absolute top-4 right-4 sm:top-6 sm:right-6 text-neutral-400 hover:text-black dark:text-white transition-colors p-2 bg-neutral-100 rounded-full hover:bg-neutral-200">
             <CloseCircle size={24} className="sm:w-7 sm:h-7" variant="Broken" />
           </button>
           
           <div className="md:hidden mb-6 mt-6 sm:mt-2 pr-10">
             <span className="text-[10px] sm:text-xs font-bold text-brand-cyan tracking-widest uppercase mb-1 sm:mb-2 block">{data.subtitle}</span>
-            <h2 className="text-2xl sm:text-3xl uppercase leading-tight m-0 font-sport text-black break-words hyphens-auto">{data.title}</h2>
+            <h2 className="text-2xl sm:text-3xl uppercase leading-tight m-0 font-sport text-black dark:text-white break-words hyphens-auto">{data.title}</h2>
           </div>
           
           <div className="mt-4 md:mt-0 flex-1">
-            <h4 className="text-xs font-bold uppercase tracking-widest mb-6 text-neutral-400 border-b border-neutral-100 pb-3">Novedades de Temporada</h4>
+            <h4 className="text-xs font-bold uppercase tracking-widest mb-6 text-neutral-400 border-b border-neutral-100 dark:border-gray-800 pb-3">Novedades de Temporada</h4>
             <div className="space-y-6">
               {data.items.map((item, i) => (
                 <div key={i} className="flex gap-4 items-start group">
@@ -99,15 +99,15 @@ const PreviewModal = ({ category, isOpen, onClose }) => {
                     <TickCircle size={24} variant="Bold" />
                   </div>
                   <div>
-                    <h5 className="font-bold text-lg text-black uppercase tracking-tight m-0 group-hover:text-brand-cyan transition-colors font-sport">{item.name}</h5>
-                    <p className="text-sm text-neutral-500 font-medium mt-1 m-0 leading-relaxed">{item.desc}</p>
+                    <h5 className="font-bold text-lg text-black dark:text-white uppercase tracking-tight m-0 group-hover:text-brand-cyan transition-colors font-sport">{item.name}</h5>
+                    <p className="text-sm text-neutral-500 dark:text-gray-400 font-medium mt-1 m-0 leading-relaxed">{item.desc}</p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="pt-6 mt-8 border-t border-neutral-100">
+          <div className="pt-6 mt-8 border-t border-neutral-100 dark:border-gray-800">
              <Link to="/login" onClick={onClose} className="w-full bg-black text-white py-4 rounded-xl flex items-center justify-center gap-3 font-bold text-sm uppercase tracking-widest hover:bg-brand-cyan hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
                ACCESO STAFF <DirectRight size={20} color="white" variant="Bold" />
              </Link>
@@ -169,7 +169,7 @@ const Landing = () => {
   };
 
   return (
-    <div className="bg-white text-neutral-900 font-sans antialiased overflow-x-hidden selection:bg-brand-cyan selection:text-white">
+    <div className="bg-white dark:bg-gray-900 dark:text-gray-100 font-sans antialiased overflow-x-hidden selection:bg-brand-cyan selection:text-white">
       
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap');
@@ -183,14 +183,14 @@ const Landing = () => {
       <PreviewModal isOpen={preview.isOpen} category={preview.category} onClose={closePreview} />
 
       {/* NAVBAR */}
-      <nav className={`fixed top-0 w-full z-[100] transition-all duration-500 ${isScrolled ? 'bg-white/90 backdrop-blur-lg border-b border-neutral-200 py-4 shadow-sm' : 'bg-gradient-to-b from-black/80 to-transparent py-6'}`}>
+      <nav className={`fixed top-0 w-full z-[100] transition-all duration-500 ${isScrolled ? 'bg-white dark:bg-gray-900/90 backdrop-blur-lg border-b border-neutral-200 dark:border-gray-700 py-4 shadow-sm' : 'bg-gradient-to-b from-black/80 to-transparent py-6'}`}>
         <div className="container mx-auto px-6 max-w-7xl flex justify-between items-center">
           
           <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center p-1.5 shadow-md group-hover:scale-110 transition-transform duration-300">
+            <div className="w-10 h-10 bg-white dark:bg-gray-900 rounded-lg flex items-center justify-center p-1.5 shadow-md group-hover:scale-110 transition-transform duration-300">
               <img src="/icono.jpeg" alt="Logo" className="w-full h-full object-contain" />
             </div>
-            <span className={`text-2xl uppercase m-0 font-sport tracking-wide ${isScrolled ? 'text-black' : 'text-white'}`}>
+            <span className={`text-2xl uppercase m-0 font-sport tracking-wide ${isScrolled ? 'text-black dark:text-white' : 'text-white'}`}>
               PushSport <span className="text-brand-cyan">Salta</span>
             </span>
           </div>
@@ -198,7 +198,7 @@ const Landing = () => {
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8">
             {['Inicio', 'Productos', 'Sedes', 'Nosotros'].map(item => (
-              <a key={item} href={`#${item.toLowerCase()}`} className={`text-xs font-bold uppercase tracking-widest transition-all hover:-translate-y-0.5 ${isScrolled ? 'text-neutral-500 hover:text-brand-cyan' : 'text-white/80 hover:text-brand-cyan'}`}>
+              <a key={item} href={`#${item.toLowerCase()}`} className={`text-xs font-bold uppercase tracking-widest transition-all hover:-translate-y-0.5 ${isScrolled ? 'text-neutral-500 dark:text-gray-400 hover:text-brand-cyan' : 'text-white/80 hover:text-brand-cyan'}`}>
                 {item}
               </a>
             ))}
@@ -210,14 +210,14 @@ const Landing = () => {
           {/* Mobile Toggle */}
           <button 
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className={`md:hidden p-2 rounded-lg transition-all ${isScrolled ? 'text-black' : 'text-white hover:text-brand-cyan'}`}
+            className={`md:hidden p-2 rounded-lg transition-all ${isScrolled ? 'text-black dark:text-white' : 'text-white hover:text-brand-cyan'}`}
           >
             {isMobileMenuOpen ? <CloseCircle size={32} /> : <Menu size={32} />}
           </button>
         </div>
 
         {/* Mobile Menu Overlay */}
-        <div className={`md:hidden fixed inset-0 z-[150] bg-white transition-all duration-500 overflow-y-auto ${isMobileMenuOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0 pointer-events-none'}`}>
+        <div className={`md:hidden fixed inset-0 z-[150] bg-white dark:bg-gray-900 transition-all duration-500 overflow-y-auto ${isMobileMenuOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0 pointer-events-none'}`}>
             <div className="p-8 min-h-full flex flex-col justify-between pt-24 pb-12">
                 <div className="space-y-6 mb-12">
                     {['Inicio', 'Productos', 'Sedes', 'Nosotros'].map((item, idx) => (
@@ -225,7 +225,7 @@ const Landing = () => {
                             key={item} 
                             href={`#${item.toLowerCase()}`} 
                             onClick={() => setIsMobileMenuOpen(false)}
-                            className="block text-3xl sm:text-4xl font-sport uppercase text-black tracking-tight border-b border-neutral-100 pb-2"
+                            className="block text-3xl sm:text-4xl font-sport uppercase text-black dark:text-white tracking-tight border-b border-neutral-100 dark:border-gray-800 pb-2"
                             style={{ transitionDelay: `${idx * 100}ms` }}
                         >
                             {item}.
@@ -273,10 +273,10 @@ const Landing = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-6">
-                <button onClick={() => openPreview('suplementacion')} className="px-8 py-4 bg-brand-cyan text-white rounded-xl font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-white hover:text-black transition-all duration-300 shadow-[0_0_20px_rgba(0,229,255,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] hover:-translate-y-1">
+                <button onClick={() => openPreview('suplementacion')} className="px-8 py-4 bg-brand-cyan text-white rounded-xl font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-white dark:bg-gray-900 hover:text-black dark:text-white transition-all duration-300 shadow-[0_0_20px_rgba(0,229,255,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] hover:-translate-y-1">
                   EXPLORAR CATÁLOGO
                 </button>
-                <a href="#sedes" className="px-8 py-4 bg-transparent border-2 border-white/30 text-white rounded-xl font-bold text-sm uppercase tracking-widest flex items-center justify-center hover:bg-white hover:text-black transition-all duration-300 hover:-translate-y-1">
+                <a href="#sedes" className="px-8 py-4 bg-transparent border-2 border-white/30 text-white rounded-xl font-bold text-sm uppercase tracking-widest flex items-center justify-center hover:bg-white dark:bg-gray-900 hover:text-black dark:text-white transition-all duration-300 hover:-translate-y-1">
                   NUESTRAS SEDES
                 </a>
             </div>
@@ -294,13 +294,13 @@ const Landing = () => {
         <div className="mb-12">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
             <div>
-              <h2 className="uppercase text-4xl md:text-6xl text-black m-0 leading-none font-sport tracking-tight">
+              <h2 className="uppercase text-4xl md:text-6xl text-black dark:text-white m-0 leading-none font-sport tracking-tight">
                 Categorías <span className="text-brand-cyan italic">Premium.</span>
               </h2>
               <div className="w-16 h-2 bg-brand-cyan mt-4 rounded-full"></div>
             </div>
             {/* FIX: El párrafo ahora está alineado al baseline del título en desktop, y debajo en mobile */}
-            <p className="text-neutral-500 md:max-w-xs text-sm font-medium md:text-right leading-relaxed">
+            <p className="text-neutral-500 dark:text-gray-400 md:max-w-xs text-sm font-medium md:text-right leading-relaxed">
               Selecciona una categoría para explorar nuestra tecnología en rendimiento.
             </p>
           </div>
@@ -317,7 +317,7 @@ const Landing = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
                 
                 <div className="absolute bottom-10 left-10 right-10">
-                    <span className="inline-block bg-brand-cyan text-black px-2 py-1 md:px-3 md:py-1.5 rounded-md text-[10px] md:text-xs font-bold tracking-widest uppercase mb-3 md:mb-4 shadow-lg">Rendimiento Máximo</span>
+                    <span className="inline-block bg-brand-cyan text-black dark:text-white px-2 py-1 md:px-3 md:py-1.5 rounded-md text-[10px] md:text-xs font-bold tracking-widest uppercase mb-3 md:mb-4 shadow-lg">Rendimiento Máximo</span>
                     <h3 className="text-white uppercase text-4xl md:text-5xl m-0 mb-2 md:mb-3 font-sport tracking-tight break-words hyphens-auto">Suplementación</h3>
                     <p className="text-neutral-300 text-sm md:text-base font-medium max-w-md m-0">Proteínas, creatinas y pre-entrenos de grado profesional. Diseñados para resultados reales.</p>
                 </div>
@@ -337,7 +337,7 @@ const Landing = () => {
                         <p className="text-neutral-400 font-medium text-xs md:text-sm m-0 mb-4 md:mb-6 max-w-sm">
                           Equipamiento técnico diseñado para resistir las rutinas más intensas y regular la temperatura.
                         </p>
-                        <button className="flex items-center gap-2 md:gap-3 text-[10px] md:text-sm font-bold uppercase tracking-widest text-white group-hover:text-brand-cyan transition-colors w-fit bg-white/5 px-3 py-2 md:px-4 md:py-2 rounded-lg">
+                        <button className="flex items-center gap-2 md:gap-3 text-[10px] md:text-sm font-bold uppercase tracking-widest text-white group-hover:text-brand-cyan transition-colors w-fit bg-white dark:bg-gray-900/5 px-3 py-2 md:px-4 md:py-2 rounded-lg">
                             VER COLECCIÓN <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform"/>
                         </button>
                     </div>
@@ -354,7 +354,7 @@ const Landing = () => {
                         <p className="text-neutral-400 font-medium text-xs md:text-sm m-0 mb-4 md:mb-6 max-w-sm">
                           Shakers premium, cinturones de levantamiento y straps para optimizar cada movimiento.
                         </p>
-                        <button className="flex items-center gap-2 md:gap-3 text-[10px] md:text-sm font-bold uppercase tracking-widest text-white group-hover:text-brand-cyan transition-colors w-fit bg-white/5 px-3 py-2 md:px-4 md:py-2 rounded-lg">
+                        <button className="flex items-center gap-2 md:gap-3 text-[10px] md:text-sm font-bold uppercase tracking-widest text-white group-hover:text-brand-cyan transition-colors w-fit bg-white dark:bg-gray-900/5 px-3 py-2 md:px-4 md:py-2 rounded-lg">
                             VER MÁS <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform"/>
                         </button>
                     </div>
@@ -368,15 +368,15 @@ const Landing = () => {
       <ProductGrid onQuickView={handleQuickView} />
 
       {/* SEDES — FIX: altura flexible, sin mix-blend-multiply en el mapa, z-index del overlay corregido */}
-      <section id="sedes" className="py-24 bg-neutral-50 border-y border-neutral-200">
+      <section id="sedes" className="py-24 bg-neutral-50 dark:bg-gray-800 border-y border-neutral-200 dark:border-gray-700">
         <div className="container mx-auto px-6 max-w-7xl">
             
             <div className="mb-12">
-                <h2 className="uppercase text-4xl md:text-6xl text-black m-0 leading-none font-sport tracking-tight">
+                <h2 className="uppercase text-4xl md:text-6xl text-black dark:text-white m-0 leading-none font-sport tracking-tight">
                     Encuentra tu <br/> <span className="text-brand-cyan italic">Sede PushSport.</span>
                 </h2>
                 <div className="w-16 h-2 bg-brand-cyan mt-4 rounded-full mb-4"></div>
-                <p className="text-neutral-500 text-base font-medium max-w-md">
+                <p className="text-neutral-500 dark:text-gray-400 text-base font-medium max-w-md">
                   Selecciona una sucursal en la lista para verla en el mapa y conocer sus horarios de atención.
                 </p>
             </div>
@@ -393,13 +393,13 @@ const Landing = () => {
                             onClick={() => setActiveLocation(idx)}
                             className={`p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 flex-shrink-0 ${
                               activeLocation === idx 
-                                ? 'border-brand-cyan bg-white shadow-lg' 
-                                : 'border-neutral-200 bg-white shadow-sm hover:border-brand-cyan/40 hover:shadow-md'
+                                ? 'border-brand-cyan bg-white dark:bg-gray-900 shadow-lg' 
+                                : 'border-neutral-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm hover:border-brand-cyan/40 hover:shadow-md'
                             }`}
                         >
                             <div className="flex justify-between items-center mb-3">
                                 <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md ${
-                                  activeLocation === idx ? 'bg-brand-cyan text-black' : 'bg-neutral-100 text-neutral-500'
+                                  activeLocation === idx ? 'bg-brand-cyan text-black dark:text-white' : 'bg-neutral-100 text-neutral-500 dark:text-gray-400'
                                 }`}>
                                     TIENDA OFICIAL
                                 </span>
@@ -407,12 +407,12 @@ const Landing = () => {
                             </div>
                             
                             <h3 className={`mb-4 uppercase text-2xl font-sport tracking-tight m-0 ${
-                              activeLocation === idx ? 'text-brand-cyan' : 'text-black'
+                              activeLocation === idx ? 'text-brand-cyan' : 'text-black dark:text-white'
                             }`}>
                                 {sede.nombre}
                             </h3>
                             
-                            <div className="space-y-2 pt-4 border-t border-neutral-100">
+                            <div className="space-y-2 pt-4 border-t border-neutral-100 dark:border-gray-800">
                                 <div className="flex items-start gap-3 text-neutral-600 font-medium text-sm">
                                     <Location size={18} className={`mt-0.5 flex-shrink-0 ${activeLocation === idx ? 'text-brand-cyan' : 'text-neutral-400'}`} variant="Bold" />
                                     <span className="leading-snug">{sede.dir}</span>
@@ -428,13 +428,13 @@ const Landing = () => {
 
                 {/* Columna Derecha: Mapa */}
                 {/* FIX: altura fija propia, sin mix-blend-multiply, z-index y overflow limpios */}
-                <div className="lg:col-span-7 h-[400px] lg:h-[600px] rounded-3xl overflow-hidden border-2 border-neutral-200 bg-neutral-200 shadow-md relative">
+                <div className="lg:col-span-7 h-[400px] lg:h-[600px] rounded-3xl overflow-hidden border-2 border-neutral-200 dark:border-gray-700 bg-neutral-200 shadow-md relative">
                     
                     {/* Overlay info sede activa — FIX: z-index explícito y fondo sólido */}
-                    <div className="absolute top-5 left-5 z-20 bg-white px-4 py-3 rounded-xl shadow-lg border border-neutral-100 pointer-events-none">
+                    <div className="absolute top-5 left-5 z-20 bg-white dark:bg-gray-900 px-4 py-3 rounded-xl shadow-lg border border-neutral-100 dark:border-gray-800 pointer-events-none">
                         <span className="text-[10px] text-neutral-400 font-bold tracking-widest uppercase block mb-1">Visualizando</span>
-                        <span className="text-black font-sport text-xl uppercase leading-none block">{locations[activeLocation]?.nombre || 'Sede'}</span>
-                        <span className="text-neutral-500 text-xs font-medium block mt-1">{locations[activeLocation]?.dir || 'Dirección'}</span>
+                        <span className="text-black dark:text-white font-sport text-xl uppercase leading-none block">{locations[activeLocation]?.nombre || 'Sede'}</span>
+                        <span className="text-neutral-500 dark:text-gray-400 text-xs font-medium block mt-1">{locations[activeLocation]?.dir || 'Dirección'}</span>
                     </div>
                     
                     {/* FIX: Sin mix-blend-multiply, el mapa se renderiza limpio */}
@@ -455,7 +455,7 @@ const Landing = () => {
           <div className="container mx-auto px-6 max-w-7xl relative z-10">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
                   <div className="space-y-6 md:space-y-8">
-                      <div className="inline-flex items-center gap-2 py-1.5 px-4 border border-white/10 bg-white/5 rounded-full mb-2">
+                      <div className="inline-flex items-center gap-2 py-1.5 px-4 border border-white/10 bg-white dark:bg-gray-900/5 rounded-full mb-2">
                           <Flash size={16} className="text-brand-cyan" variant="Bold"/>
                           <span className="text-xs font-bold uppercase tracking-widest text-white m-0">Nuestra Filosofía</span>
                       </div>
@@ -482,14 +482,14 @@ const Landing = () => {
                   <div className="relative mt-8 lg:mt-0">
                       <div className="absolute inset-0 bg-gradient-to-tr from-brand-cyan to-transparent opacity-20 rounded-[2rem] blur-xl"></div>
                       <img src="/fondo.jpeg" alt="Filosofía PushSport" className="relative z-10 w-full h-[300px] md:h-[500px] lg:h-[600px] object-cover rounded-[2rem] border border-white/10 shadow-2xl grayscale hover:grayscale-0 transition-all duration-700" />
-                      <div className="absolute bottom-6 -left-6 md:bottom-10 md:-left-10 bg-white p-4 md:p-6 rounded-2xl shadow-2xl z-20 border border-neutral-100 hidden sm:block">
+                      <div className="absolute bottom-6 -left-6 md:bottom-10 md:-left-10 bg-white dark:bg-gray-900 p-4 md:p-6 rounded-2xl shadow-2xl z-20 border border-neutral-100 dark:border-gray-800 hidden sm:block">
                           <div className="flex items-center gap-3 md:gap-4">
                               <div className="w-10 h-10 md:w-14 md:h-14 bg-black rounded-full flex items-center justify-center">
                                   <TickCircle size={24} className="text-brand-cyan" variant="Bold" />
                               </div>
                               <div>
-                                  <h5 className="font-sport uppercase text-xl md:text-2xl text-black m-0 leading-none">Calidad Elite</h5>
-                                  <span className="text-[10px] md:text-xs font-bold text-neutral-500 uppercase tracking-widest">Garantía PushSport</span>
+                                  <h5 className="font-sport uppercase text-xl md:text-2xl text-black dark:text-white m-0 leading-none">Calidad Elite</h5>
+                                  <span className="text-[10px] md:text-xs font-bold text-neutral-500 dark:text-gray-400 uppercase tracking-widest">Garantía PushSport</span>
                               </div>
                           </div>
                       </div>
@@ -503,7 +503,7 @@ const Landing = () => {
           <div className="container mx-auto px-6 max-w-7xl">
               <div className="text-center mb-16">
                   <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-brand-cyan mb-2 md:mb-4 block">Evento Destacado</span>
-                  <h2 className="uppercase text-5xl md:text-7xl lg:text-8xl text-black m-0 leading-[0.9] font-sport tracking-tight">
+                  <h2 className="uppercase text-5xl md:text-7xl lg:text-8xl text-black dark:text-white m-0 leading-[0.9] font-sport tracking-tight">
                       UN DESAFÍO CON <br/><span className="text-brand-cyan italic">PROPÓSITO.</span>
                   </h2>
               </div>
@@ -524,24 +524,24 @@ const Landing = () => {
                   </div>
 
                   {/* 80 Donantes */}
-                  <div className="bg-white rounded-[2rem] p-6 md:p-8 shadow-xl flex flex-col justify-between group overflow-hidden relative border border-neutral-200">
+                  <div className="bg-white dark:bg-gray-900 rounded-[2rem] p-6 md:p-8 shadow-xl flex flex-col justify-between group overflow-hidden relative border border-neutral-200 dark:border-gray-700">
                       <div className="absolute -right-6 -top-6 w-24 h-24 md:w-32 md:h-32 bg-brand-cyan/10 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
-                      <span className="text-neutral-500 font-bold uppercase tracking-widest text-[10px]">Objetivo</span>
+                      <span className="text-neutral-500 dark:text-gray-400 font-bold uppercase tracking-widest text-[10px]">Objetivo</span>
                       <div className="relative z-10">
-                         <h4 className="text-black font-sport text-7xl md:text-8xl leading-none tracking-tighter">80</h4>
-                         <span className="text-black font-bold uppercase tracking-widest text-[10px] md:text-sm block mt-2">Donantes</span>
+                         <h4 className="text-black dark:text-white font-sport text-7xl md:text-8xl leading-none tracking-tighter">80</h4>
+                         <span className="text-black dark:text-white font-bold uppercase tracking-widest text-[10px] md:text-sm block mt-2">Donantes</span>
                       </div>
                   </div>
 
                   {/* 240 Vidas */}
                   <div className="md:col-span-1 lg:col-span-1 bg-brand-cyan rounded-[2rem] p-6 md:p-8 shadow-xl flex flex-col justify-between relative overflow-hidden group">
-                      <div className="absolute -left-6 -bottom-6 w-24 h-24 md:w-32 md:h-32 bg-white/20 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
-                      <span className="text-black/60 font-bold uppercase tracking-widest text-[10px] relative z-10">Impacto</span>
+                      <div className="absolute -left-6 -bottom-6 w-24 h-24 md:w-32 md:h-32 bg-white dark:bg-gray-900/20 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                      <span className="text-black dark:text-white/60 font-bold uppercase tracking-widest text-[10px] relative z-10">Impacto</span>
                       <div className="relative z-10">
-                         <h4 className="text-black font-sport text-7xl md:text-8xl leading-none tracking-tighter">240</h4>
-                         <span className="text-black font-bold uppercase tracking-widest text-[10px] md:text-sm block mt-2">Vidas Salvadas</span>
+                         <h4 className="text-black dark:text-white font-sport text-7xl md:text-8xl leading-none tracking-tighter">240</h4>
+                         <span className="text-black dark:text-white font-bold uppercase tracking-widest text-[10px] md:text-sm block mt-2">Vidas Salvadas</span>
                       </div>
-                      <p className="text-black/70 text-[10px] md:text-xs mt-4 font-medium relative z-10 leading-relaxed">Cada donante puede salvar hasta 3 vidas.</p>
+                      <p className="text-black dark:text-white/70 text-[10px] md:text-xs mt-4 font-medium relative z-10 leading-relaxed">Cada donante puede salvar hasta 3 vidas.</p>
                   </div>
 
                   {/* 1 Comunidad - Foto */}
@@ -661,14 +661,14 @@ const Landing = () => {
           </div>
 
           <div className="py-16 md:py-24 text-center bg-gradient-to-t from-black via-black/80 to-transparent absolute bottom-0 left-0 w-full flex items-end justify-center pointer-events-none">
-              <a href="https://www.instagram.com/push_sportsalta?igsh=MWhwejA1dmIyZ2YzOQ==" target="_blank" rel="noopener noreferrer" className="pointer-events-auto inline-flex items-center gap-2 md:gap-3 px-6 py-3 md:px-10 md:py-5 bg-brand-cyan text-black rounded-xl font-bold text-[10px] md:text-sm uppercase tracking-widest hover:bg-white hover:-translate-y-1 transition-all shadow-[0_0_30px_rgba(0,229,255,0.3)]">
+              <a href="https://www.instagram.com/push_sportsalta?igsh=MWhwejA1dmIyZ2YzOQ==" target="_blank" rel="noopener noreferrer" className="pointer-events-auto inline-flex items-center gap-2 md:gap-3 px-6 py-3 md:px-10 md:py-5 bg-brand-cyan text-black dark:text-white rounded-xl font-bold text-[10px] md:text-sm uppercase tracking-widest hover:bg-white dark:bg-gray-900 hover:-translate-y-1 transition-all shadow-[0_0_30px_rgba(0,229,255,0.3)]">
                   <Instagram size={20} className="md:w-6 md:h-6" /> SEGUINOS EN INSTAGRAM
               </a>
           </div>
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-white pt-20 pb-28 md:pb-10 border-t border-neutral-100">
+      <footer className="bg-white dark:bg-gray-900 pt-20 pb-28 md:pb-10 border-t border-neutral-100 dark:border-gray-800">
         <div className="container mx-auto px-6 max-w-7xl">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
                 
@@ -680,14 +680,14 @@ const Landing = () => {
                         </div>
                         <span className="text-3xl uppercase m-0 font-sport tracking-tight">PushSport</span>
                     </div>
-                    <p className="text-neutral-500 font-medium text-sm m-0 mb-6 leading-relaxed max-w-xs">
+                    <p className="text-neutral-500 dark:text-gray-400 font-medium text-sm m-0 mb-6 leading-relaxed max-w-xs">
                         Líderes en suplementación y rendimiento en Salta. Calidad garantizada para atletas exigentes.
                     </p>
                     <div className="flex gap-3">
-                        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-lg bg-neutral-100 flex items-center justify-center text-black hover:bg-brand-cyan hover:text-white hover:-translate-y-1 transition-all duration-300">
+                        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-lg bg-neutral-100 flex items-center justify-center text-black dark:text-white hover:bg-brand-cyan hover:text-white hover:-translate-y-1 transition-all duration-300">
                             <Instagram size={20} />
                         </a>
-                        <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-lg bg-neutral-100 flex items-center justify-center text-black hover:bg-brand-cyan hover:text-white hover:-translate-y-1 transition-all duration-300">
+                        <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-lg bg-neutral-100 flex items-center justify-center text-black dark:text-white hover:bg-brand-cyan hover:text-white hover:-translate-y-1 transition-all duration-300">
                             <Facebook size={20} />
                         </a>
                     </div>
@@ -695,29 +695,29 @@ const Landing = () => {
 
                 {/* Links Nav */}
                 <div className="md:col-span-3">
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-black mb-6 border-b-2 border-brand-cyan inline-block pb-2">Empresa</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-black dark:text-white mb-6 border-b-2 border-brand-cyan inline-block pb-2">Empresa</h4>
                     <ul className="space-y-4 m-0 p-0 list-none">
                         {['Nuestra Historia', 'Team Atletas', 'Contacto Directo'].map(l => (
-                            <li key={l}><a href="#" className="text-sm text-neutral-500 font-medium hover:text-brand-cyan transition-colors flex items-center gap-2"><ArrowRight size={12}/> {l}</a></li>
+                            <li key={l}><a href="#" className="text-sm text-neutral-500 dark:text-gray-400 font-medium hover:text-brand-cyan transition-colors flex items-center gap-2"><ArrowRight size={12}/> {l}</a></li>
                         ))}
                     </ul>
                 </div>
                 
                 <div className="md:col-span-2">
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-black mb-6 border-b-2 border-brand-cyan inline-block pb-2">Productos</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-black dark:text-white mb-6 border-b-2 border-brand-cyan inline-block pb-2">Productos</h4>
                     <ul className="space-y-4 m-0 p-0 list-none">
                         {['Suplementos', 'Indumentaria', 'Accesorios Pro'].map(l => (
-                            <li key={l}><a href="#productos" className="text-sm text-neutral-500 font-medium hover:text-brand-cyan transition-colors flex items-center gap-2"><ArrowRight size={12}/> {l}</a></li>
+                            <li key={l}><a href="#productos" className="text-sm text-neutral-500 dark:text-gray-400 font-medium hover:text-brand-cyan transition-colors flex items-center gap-2"><ArrowRight size={12}/> {l}</a></li>
                         ))}
                     </ul>
                 </div>
                 
                 {/* Newsletter Form */}
                 <div className="md:col-span-3">
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-black mb-6 border-b-2 border-brand-cyan inline-block pb-2">Novedades</h4>
-                    <p className="text-xs text-neutral-500 mb-4">Suscríbete para recibir lanzamientos y ofertas exclusivas.</p>
-                    <div className="flex items-center bg-neutral-50 border border-neutral-200 rounded-xl p-1 focus-within:border-brand-cyan focus-within:shadow-[0_0_15px_rgba(0,229,255,0.2)] transition-all">
-                        <input type="email" placeholder="Ingresa tu email..." className="flex-1 bg-transparent px-4 py-3 text-sm font-medium focus:outline-none text-black placeholder:text-neutral-400 min-w-0" />
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-black dark:text-white mb-6 border-b-2 border-brand-cyan inline-block pb-2">Novedades</h4>
+                    <p className="text-xs text-neutral-500 dark:text-gray-400 mb-4">Suscríbete para recibir lanzamientos y ofertas exclusivas.</p>
+                    <div className="flex items-center bg-neutral-50 dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-xl p-1 focus-within:border-brand-cyan focus-within:shadow-[0_0_15px_rgba(0,229,255,0.2)] transition-all">
+                        <input type="email" placeholder="Ingresa tu email..." className="flex-1 bg-transparent px-4 py-3 text-sm font-medium focus:outline-none text-black dark:text-white placeholder:text-neutral-400 min-w-0" />
                         <button className="flex-shrink-0 px-4 py-3 bg-black rounded-lg hover:bg-brand-cyan transition-colors flex items-center justify-center shadow-md">
                             <DirectRight size={18} color="white" variant="Bold" />
                         </button>
@@ -725,7 +725,7 @@ const Landing = () => {
                 </div>
             </div>
 
-            <div className="pt-8 border-t border-neutral-200 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="pt-8 border-t border-neutral-200 dark:border-gray-700 flex flex-col md:flex-row justify-between items-center gap-4">
                 <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest m-0">&copy; 2026 PUSHSPORT SALTA &middot; SISTEMA CENTRAL</span>
                 <div className="flex gap-6">
                     <a href="#" className="text-xs font-bold text-neutral-400 uppercase tracking-widest hover:text-brand-cyan transition-colors">Privacidad</a>

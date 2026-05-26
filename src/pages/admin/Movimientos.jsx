@@ -433,7 +433,7 @@ const Movimientos = () => {
                     onClick={() => setSelectedMov(null)}
                 >
                     <div 
-                        className="bg-white dark:bg-gray-800 rounded-2xl max-w-xl w-full max-h-[85vh] overflow-auto shadow-2xl"
+                        className="bg-white dark:bg-gray-800 rounded-2xl max-w-xl w-full mx-4 max-h-[85vh] overflow-auto shadow-2xl"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
@@ -461,7 +461,7 @@ const Movimientos = () => {
 
                         <div className="p-5 space-y-4">
                             {/* Info General */}
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div className="bg-neutral-50 dark:bg-gray-700/50 rounded-lg p-3">
                                     <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-1">Producto</p>
                                     <p className="text-sm font-bold text-neutral-800 dark:text-neutral-200">{selectedMov.producto?.nombre || 'N/A'}</p>

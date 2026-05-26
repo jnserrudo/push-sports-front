@@ -33,13 +33,13 @@ const ForgotPassword = () => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-black flex items-center justify-center p-4">
             <div className="w-full max-w-md">
-                <div className="bg-white rounded-2xl shadow-2xl p-8">
+                <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8">
                     {/* Header */}
                     <div className="text-center mb-8">
-                        <h1 className="text-3xl font-sport uppercase text-black mb-2">
+                        <h1 className="text-3xl font-sport uppercase text-black dark:text-white mb-2">
                             Recuperar <span className="text-brand-cyan">Contraseña</span>
                         </h1>
-                        <p className="text-sm text-neutral-600">
+                        <p className="text-sm text-neutral-600 dark:text-gray-400">
                             Ingresa tu email y te enviaremos instrucciones
                         </p>
                     </div>
@@ -67,7 +67,7 @@ const ForgotPassword = () => {
                     {/* Form */}
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label className="block text-xs font-bold uppercase tracking-wider text-neutral-600 mb-2">
+                            <label className="block text-xs font-bold uppercase tracking-wider text-neutral-600 dark:text-gray-400 mb-2">
                                 Email
                             </label>
                             <div className="relative">
@@ -78,7 +78,7 @@ const ForgotPassword = () => {
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
                                     placeholder="tu@email.com"
-                                    className="w-full pl-12 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:border-black transition-colors"
+                                    className="w-full pl-12 pr-4 py-3 bg-neutral-50 dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-xl focus:outline-none focus:border-black dark:focus:border-white transition-colors"
                                 />
                             </div>
                         </div>
@@ -96,7 +96,7 @@ const ForgotPassword = () => {
                     <div className="mt-6 text-center">
                         <Link 
                             to="/login"
-                            className="inline-flex items-center gap-2 text-sm text-neutral-600 hover:text-black transition-colors font-medium"
+                            className="inline-flex items-center gap-2 text-sm text-neutral-600 dark:text-gray-400 hover:text-black dark:text-white transition-colors font-medium"
                         >
                             <ArrowLeft size={16} />
                             Volver al login

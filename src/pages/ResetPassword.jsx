@@ -39,12 +39,12 @@ const ResetPassword = () => {
     if (success) {
         return (
             <div className="min-h-screen bg-[#070707] flex items-center justify-center p-4">
-                <div className="max-w-md w-full bg-white rounded-2xl p-10 text-center shadow-2xl animate-in zoom-in-95 duration-500">
+                <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-2xl p-10 text-center shadow-2xl animate-in zoom-in-95 duration-500">
                     <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
                         <CheckCircle2 size={32} />
                     </div>
-                    <h2 className="text-2xl font-sport text-black uppercase mb-2">¡Todo listo!</h2>
-                    <p className="text-neutral-500 text-sm mb-8">
+                    <h2 className="text-2xl font-sport text-black dark:text-white uppercase mb-2">¡Todo listo!</h2>
+                    <p className="text-neutral-500 dark:text-gray-400 text-sm mb-8">
                         Tu contraseña ha sido actualizada. Te redirigiremos al ingreso en unos segundos...
                     </p>
                     <Link to="/login" className="text-brand-cyan font-bold uppercase tracking-widest text-xs hover:underline">
@@ -56,20 +56,20 @@ const ResetPassword = () => {
     }
 
     return (
-        <div className="min-h-screen bg-neutral-100 flex items-center justify-center p-4 relative font-sans overflow-hidden">
+        <div className="min-h-screen bg-neutral-100 dark:bg-gray-800 flex items-center justify-center p-4 relative font-sans overflow-hidden">
              {/* Background */}
              <div className="absolute inset-0 z-0 pointer-events-none">
                 <img src="/primera.jpeg" className="w-full h-full object-cover opacity-20 grayscale" alt="Fondo" />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/90"></div>
             </div>
 
-            <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl relative z-10 overflow-hidden p-8 md:p-10 animate-in fade-in duration-500">
+            <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-2xl shadow-2xl relative z-10 overflow-hidden p-8 md:p-10 animate-in fade-in duration-500">
                 <div className="text-center mb-8">
                     <div className="w-12 h-12 bg-black text-brand-cyan rounded-xl flex items-center justify-center mx-auto mb-4">
                         <Lock size={24} />
                     </div>
-                    <h1 className="text-3xl font-sport text-black uppercase mb-1">Nueva Contraseña</h1>
-                    <p className="text-neutral-500 text-sm">Ingresa tu nueva clave de acceso</p>
+                    <h1 className="text-3xl font-sport text-black dark:text-white uppercase mb-1">Nueva Contraseña</h1>
+                    <p className="text-neutral-500 dark:text-gray-400 text-sm">Ingresa tu nueva clave de acceso</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -104,14 +104,14 @@ const ResetPassword = () => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-black text-white py-4 rounded-xl font-sport uppercase tracking-[0.2em] text-sm hover:bg-brand-cyan hover:text-black transition-all shadow-lg active:scale-[0.98] disabled:opacity-50"
+                        className="w-full bg-black text-white py-4 rounded-xl font-sport uppercase tracking-[0.2em] text-sm hover:bg-brand-cyan hover:text-black dark:hover:text-white transition-all shadow-lg active:scale-[0.98] disabled:opacity-50"
                     >
                         {loading ? <Loader2 className="animate-spin mx-auto" size={20} /> : 'Actualizar Contraseña'}
                     </button>
                 </form>
 
-                <div className="mt-8 text-center border-t border-neutral-100 pt-6">
-                    <Link to="/login" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-neutral-400 hover:text-black transition-colors">
+                <div className="mt-8 text-center border-t border-neutral-100 dark:border-gray-800 pt-6">
+                    <Link to="/login" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-neutral-400 hover:text-black dark:hover:text-white transition-colors">
                         <ArrowLeft size={14} /> Volver al Ingreso
                     </Link>
                 </div>

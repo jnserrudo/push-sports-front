@@ -9,7 +9,7 @@ const Combos = () => {
             header: 'ID',
             accessor: 'id_combo',
             render: (row) => (
-                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">
+                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400 dark:text-neutral-500">
                     #{String(row.id_combo).split('-')[0]}
                 </span>
             )
@@ -40,7 +40,7 @@ const Combos = () => {
                 <div className={`inline-flex px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border ${
                     row.activo
                         ? 'bg-brand-cyan text-black dark:text-white border-brand-cyan'
-                        : 'bg-transparent text-neutral-400 border-neutral-200'
+                        : 'bg-transparent text-neutral-400 dark:text-neutral-500 border-neutral-200 dark:border-gray-700'
                 }`}>
                     {row.activo ? 'Habilitado' : 'Agotado'}
                 </div>

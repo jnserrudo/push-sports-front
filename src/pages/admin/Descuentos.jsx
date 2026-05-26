@@ -10,7 +10,7 @@ const Descuentos = () => {
             header: 'ID',
             accessor: 'id_descuento',
             render: (row) => (
-                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">
+                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400 dark:text-neutral-500">
                     #{String(row.id_descuento).split('-')[0]}
                 </span>
             )
@@ -49,7 +49,7 @@ const Descuentos = () => {
                     <span className="font-bold text-xs text-black dark:text-white uppercase tracking-widest">
                         {row.usos_actuales ?? 0} Aplicados
                     </span>
-                    <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">
+                    <span className="text-[9px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest">
                         Tope: {row.usos_maximos || 'Ilimitado'}
                     </span>
                 </div>
@@ -61,8 +61,8 @@ const Descuentos = () => {
             render: (row) => (
                 <div className={`inline-flex px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border ${
                     row.activo
-                        ? 'bg-transparent text-black dark:text-white border-black'
-                        : 'bg-neutral-100 text-neutral-400 border-neutral-200'
+                        ? 'bg-transparent text-black dark:text-white border-black dark:border-white'
+                        : 'bg-neutral-100 dark:bg-gray-800 text-neutral-400 dark:text-neutral-500 border-neutral-200 dark:border-gray-700'
                 }`}>
                     {row.activo ? 'Activo' : 'Expirado'}
                 </div>
@@ -78,7 +78,7 @@ const Descuentos = () => {
                     <Hash size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
                     <input
                         required type="text"
-                        className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-bold text-black dark:text-white uppercase placeholder:text-neutral-400 focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan transition-all"
+                        className="w-full pl-10 pr-4 py-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-sm font-bold text-black dark:text-white uppercase placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan transition-all"
                         placeholder="EJ: VERANO26"
                         value={formData.codigo || ''}
                         onChange={e => setFormData({ ...formData, codigo: e.target.value.toUpperCase() })}
@@ -109,7 +109,7 @@ const Descuentos = () => {
                         }
                         <input
                             required type="number" min="1"
-                            className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-bold text-black dark:text-white focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan transition-all"
+                            className="w-full pl-10 pr-4 py-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-sm font-bold text-black dark:text-white focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan transition-all"
                             placeholder="0.00"
                             value={formData.valor_descuento ?? ''}
                             onChange={e => setFormData({ ...formData, valor_descuento: e.target.value })}
@@ -123,7 +123,7 @@ const Descuentos = () => {
                 <input
                     type="number" min="1"
                     placeholder="Dejar vacío para ilimitado"
-                    className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-bold text-black dark:text-white placeholder:text-neutral-400 focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan transition-all"
+                    className="w-full px-4 py-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-sm font-bold text-black dark:text-white placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan transition-all"
                     value={formData.usos_maximos ?? ''}
                     onChange={e => setFormData({ ...formData, usos_maximos: e.target.value })}
                 />
