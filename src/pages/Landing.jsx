@@ -579,7 +579,7 @@ const Landing = () => {
               </div>
 
               {/* Grid de Miembros del Equipo */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 custom-scrollbar md:grid md:grid-cols-2 lg:grid-cols-4 md:overflow-visible md:pb-0">
                   {[
                       { 
                         name: 'Milagros Burgos', 
@@ -596,7 +596,7 @@ const Landing = () => {
                         sportDescription: '',
                         isPremiumMode: true 
                       },
-                      /*{ 
+                      { 
                         name: 'Tomás Ruiz', 
                         role: 'Asesor Técnico', 
                         frontImage: '/segunda.jpeg',
@@ -609,17 +609,18 @@ const Landing = () => {
                         frontImage: '/eventos/lh1.jpeg',
                         backImage: '/eventos/lh1.jpeg',
                         isPremiumMode: false 
-                      }, */
+                      },
                   ].map((miembro, i) => (
-                      <TeamMemberCard
-                          key={i}
-                          name={miembro.name}
-                          role={miembro.role}
-                          frontImage={miembro.frontImage}
-                          backImage={miembro.backImage}
-                          sportDescription={miembro.sportDescription}
-                          isPremiumMode={miembro.isPremiumMode}
-                      />
+                      <div key={i} className="w-[85vw] sm:w-[45vw] md:w-auto flex-shrink-0 snap-center md:snap-align-none aspect-[3/4]">
+                        <TeamMemberCard
+                            name={miembro.name}
+                            role={miembro.role}
+                            frontImage={miembro.frontImage}
+                            backImage={miembro.backImage}
+                            sportDescription={miembro.sportDescription}
+                            isPremiumMode={miembro.isPremiumMode}
+                        />
+                      </div>
                   ))}
               </div>
           </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Package } from 'lucide-react';
 import ProductCard from './ProductCard';
 import ProductFilters from './ProductFilters';
@@ -20,6 +20,12 @@ const ProductGrid = ({ onQuickView }) => {
 
   const [comparingProducts, setComparingProducts] = useState([]);
   const [showComparator, setShowComparator] = useState(false);
+  const [displayCount, setDisplayCount] = useState(8);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setDisplayCount(8);
+  }, [filters]);
 
   const handleCompareToggle = (producto) => {
     setComparingProducts(prev => {
@@ -102,17 +108,32 @@ const ProductGrid = ({ onQuickView }) => {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProducts.map(producto => (
-              <ProductCard
-                key={producto.id}
-                producto={producto}
-                onQuickView={onQuickView}
-                onCompareToggle={handleCompareToggle}
-                isComparing={isProductComparing(producto.id)}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredProducts.slice(0, displayCount).map(producto => (
+                <ProductCard
+                  key={producto.id}
+                  producto={producto}
+                  onQuickView={onQuickView}
+                  onCompareToggle={handleCompareToggle}
+                  isComparing={isProductComparing(producto.id)}
+                />
+              ))}
+            </div>
+
+            {/* Botón Ver Más */}
+            {displayCount < filteredProducts.length && (
+              <div className="mt-12 flex justify-center">
+                <button
+                  onClick={() => setDisplayCount(prev => prev + 8)}
+                  className="px-8 py-4 bg-transparent border-2 border-brand-cyan text-brand-cyan dark:text-cyan-400 hover:bg-brand-cyan hover:text-white dark:hover:bg-brand-cyan dark:hover:text-black rounded-xl font-bold text-sm uppercase tracking-widest transition-all shadow-sm hover:shadow-lg flex items-center gap-2"
+                >
+                  <span>Ver más productos</span>
+                  <span className="text-[10px] bg-brand-cyan/10 px-2 py-1 rounded-md">+{filteredProducts.length - displayCount}</span>
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 

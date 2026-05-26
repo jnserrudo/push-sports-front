@@ -44,12 +44,11 @@ const TeamMemberCard = ({
   };
 
   return (
-    <div className="relative w-full h-full perspective-1000 group">
+    <div className="relative w-full h-full perspective-1000 group" onClick={handleCardClick}>
       <div 
         className={`relative w-full h-full transition-transform duration-700 transform-style-preserve-3d cursor-pointer ${
-          isFlipped ? 'rotate-y-180' : 'group-hover:rotate-y-180'
+          isFlipped ? 'rotate-y-180' : 'lg:group-hover:rotate-y-180'
         }`}
-        onClick={handleCardClick}
       >
         
         {/* Cara Frontal - Versión Formal */}
