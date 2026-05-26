@@ -3,6 +3,7 @@ import { ShoppingCart, Eye, MapPin } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { formatPrice, hasDiscount, getFinalPrice, calculateDiscountPercentage } from '../../utils/priceFormatter';
 import { parseImagenes } from '../../lib/supabaseStorage';
+import { toast } from '../../store/toastStore';
 import LazyImage from '../ui/LazyImage';
 
 const ProductCard = ({ producto, onQuickView, onCompareToggle, isComparing = false }) => {
@@ -19,7 +20,20 @@ const ProductCard = ({ producto, onQuickView, onCompareToggle, isComparing = fal
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
-    if (!hasStock) return;
+    if (!hasStock) {
+      toast.error('Producto sin stock por el momento', {
+          style: {
+              background: '#000',
+              color: '#fff',
+              borderRadius: '16px',
+              border: '1px solid #DC2626',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              letterSpacing: '0.1em'
+          }
+      });
+      return;
+    }
     
     setIsAdding(true);
     addToCart(producto, 1);
@@ -122,7 +136,7 @@ const ProductCard = ({ producto, onQuickView, onCompareToggle, isComparing = fal
 
         {/* Disponibilidad */}
         <div className="mb-4">
-          {hasStock ? (
+          {hasStock && (
             <div className="flex items-start gap-2 text-xs text-neutral-600 dark:text-gray-400">
               <MapPin size={14} className="text-green-500 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
@@ -141,11 +155,6 @@ const ProductCard = ({ producto, onQuickView, onCompareToggle, isComparing = fal
                 </div>
               </div>
             </div>
-          ) : (
-            <div className="flex items-center gap-2 text-xs text-red-500">
-              <MapPin size={14} />
-              <span className="font-bold">Sin stock disponible</span>
-            </div>
           )}
         </div>
 
@@ -153,17 +162,15 @@ const ProductCard = ({ producto, onQuickView, onCompareToggle, isComparing = fal
         <div className="flex gap-1.5 md:gap-2">
           <button
             onClick={handleAddToCart}
-            disabled={!hasStock || isAdding}
+            disabled={isAdding}
             className={`flex-1 py-2 md:py-3 px-1 md:px-3 rounded-xl font-bold text-[9px] md:text-sm uppercase tracking-wider md:tracking-widest transition-all duration-300 flex items-center justify-center gap-1.5 md:gap-2 ${
-              !hasStock
-                ? 'bg-neutral-200 dark:bg-gray-700 text-neutral-400 dark:text-gray-400 cursor-not-allowed'
-                : inCart
+                inCart
                 ? 'bg-green-500 text-white'
                 : 'bg-brand-cyan text-white hover:bg-black hover:shadow-lg hover:-translate-y-0.5'
             } ${isAdding ? 'scale-95' : ''}`}
           >
             <ShoppingCart size={16} className={`md:w-[18px] md:h-[18px] flex-shrink-0 ${isAdding ? 'animate-bounce' : ''}`} />
-            <span className="truncate">{!hasStock ? 'Sin Stock' : inCart ? 'En Carrito' : 'Agregar'}</span>
+            <span className="truncate">{inCart ? 'En Carrito' : 'Agregar'}</span>
           </button>
 
           <button

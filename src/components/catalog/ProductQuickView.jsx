@@ -4,6 +4,7 @@ import { useCart } from '../../context/CartContext';
 import { formatPrice, hasDiscount, getFinalPrice, calculateDiscountPercentage } from '../../utils/priceFormatter';
 import { useProducts } from '../../hooks/useProducts';
 import { parseImagenes } from '../../lib/supabaseStorage';
+import { toast } from '../../store/toastStore';
 import LazyImage from '../ui/LazyImage';
 import ProductCard from './ProductCard';
 
@@ -25,8 +26,22 @@ const ProductQuickView = ({ producto, isOpen, onClose, onQuickView }) => {
   // Simular galería de imágenes (en producción vendrían del backend)
   const images = parseImagenes(producto.imagen_url || producto.imagen);
 
-  const handleAddToCart = () => {
-    if (!hasStock) return;
+  const handleAddToCart = (e) => {
+    e.stopPropagation();
+    if (!hasStock) {
+      toast.error('Producto sin stock por el momento', {
+          style: {
+              background: '#000',
+              color: '#fff',
+              borderRadius: '16px',
+              border: '1px solid #DC2626',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              letterSpacing: '0.1em'
+          }
+      });
+      return;
+    }
     
     setIsAdding(true);
     addToCart(producto, cantidad);
@@ -223,7 +238,7 @@ const ProductQuickView = ({ producto, isOpen, onClose, onQuickView }) => {
               <h3 className="text-xs font-bold uppercase tracking-widest text-neutral-500 dark:text-gray-400 mb-3">
                 Disponibilidad
               </h3>
-              {hasStock ? (
+              {hasStock && (
                 <div className="space-y-2">
                   {producto.disponibilidad.map((disp, idx) => (
                     <div key={idx} className="flex items-center gap-2 text-sm">
@@ -233,11 +248,6 @@ const ProductQuickView = ({ producto, isOpen, onClose, onQuickView }) => {
                       </span>
                     </div>
                   ))}
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 text-sm text-red-500">
-                  <MapPin size={16} />
-                  <span className="font-bold">Sin stock disponible</span>
                 </div>
               )}
             </div>
@@ -271,15 +281,11 @@ const ProductQuickView = ({ producto, isOpen, onClose, onQuickView }) => {
             {/* Botón agregar al carrito */}
             <button
               onClick={handleAddToCart}
-              disabled={!hasStock || isAdding}
-              className={`w-full py-4 rounded-xl font-bold text-sm uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-3 ${
-                !hasStock
-                  ? 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
-                  : 'bg-brand-cyan text-white hover:bg-black hover:shadow-lg hover:-translate-y-0.5'
-              } ${isAdding ? 'scale-95' : ''}`}
+              disabled={isAdding}
+              className={`w-full py-4 rounded-xl font-bold text-sm uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-3 bg-brand-cyan text-white hover:bg-black hover:shadow-lg hover:-translate-y-0.5 ${isAdding ? 'scale-95' : ''}`}
             >
               <ShoppingCart size={20} className={isAdding ? 'animate-bounce' : ''} />
-              {!hasStock ? 'Sin Stock' : isAdding ? 'Agregando...' : `Agregar al Carrito - ${formatPrice(finalPrice * cantidad)}`}
+              {isAdding ? 'Agregando...' : `Agregar al Carrito - ${formatPrice(finalPrice * cantidad)}`}
             </button>
           </div>
         </div>
