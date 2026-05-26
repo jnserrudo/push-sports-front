@@ -1697,7 +1697,7 @@ const Productos = () => {
     return (
         <>
             <GenericABM
-            title="Catálogo de Productos"
+            title="Productos"
             description="Administra el catálogo global de artículos. Establece el Precio Público para venta directa y el Precio Push Sport (Base) para calcular la ganancia que retendrá cada franquicia o sede."
             icon={Package}
             service={productosService}
