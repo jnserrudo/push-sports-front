@@ -27,10 +27,10 @@ const PreviewTab = ({
         return (
             <div className="flex flex-col items-center justify-center py-12 text-center">
                 <AlertCircle size={48} className="text-amber-500 mb-4" />
-                <h4 className="text-lg font-black uppercase text-black mb-2">
+                <h4 className="text-lg font-black uppercase text-black dark:text-gray-100 mb-2">
                     No hay atributos definidos
                 </h4>
-                <p className="text-sm text-neutral-500 mb-4">
+                <p className="text-sm text-neutral-500 dark:text-gray-300 mb-4">
                     Vuelve al paso anterior y agrega atributos con sus valores
                 </p>
                 <button
@@ -214,37 +214,37 @@ const PreviewTab = ({
     return (
         <div className="space-y-4 sm:space-y-6">
             {/* Header con resumen */}
-            <div className="bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-900/20 dark:to-blue-900/20 border border-cyan-200 dark:border-cyan-800 rounded-lg p-3 sm:p-4">
-                <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-black dark:text-white mb-2 sm:mb-3 flex items-center gap-2">
+            <div className="bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-slate-900/60 dark:to-slate-800/60 border border-cyan-200 dark:border-slate-700/50 rounded-lg p-3 sm:p-4">
+                <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-black dark:text-gray-100 mb-2 sm:mb-3 flex items-center gap-2">
                     <Package size={14} className="sm:w-4 sm:h-4 text-brand-cyan" />
                     PASO 2: Preview de Variantes a Crear
                 </h4>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-2 sm:p-3 border border-neutral-200 dark:border-gray-700">
-                        <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-1">
+                    <div className="bg-white dark:bg-slate-800 rounded-lg p-2 sm:p-3 border border-neutral-200 dark:border-slate-700">
+                        <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-neutral-500 dark:text-gray-300 mb-1">
                             Total Combinaciones
                         </p>
-                        <p className="text-[16px] sm:text-[18px] font-sport text-black dark:text-white">
+                        <p className="text-[16px] sm:text-[18px] font-sport text-black dark:text-gray-100">
                             {combinaciones.length}
                         </p>
                     </div>
                     
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-2 sm:p-3 border border-green-200 dark:border-green-800">
-                        <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-green-600 mb-1">
+                    <div className="bg-white dark:bg-slate-800 rounded-lg p-2 sm:p-3 border border-green-200 dark:border-green-800">
+                        <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-green-600 dark:text-green-400 mb-1">
                             Seleccionadas
                         </p>
-                        <p className="text-[16px] sm:text-[18px] font-sport text-green-600">
+                        <p className="text-[16px] sm:text-[18px] font-sport text-green-600 dark:text-green-400">
                             {variantesSeleccionadas.length}
                         </p>
                     </div>
                     
                     {variantesExistentesCount > 0 && (
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-2 sm:p-3 border border-amber-200 dark:border-amber-800">
-                            <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-amber-600 mb-1">
+                        <div className="bg-white dark:bg-slate-800 rounded-lg p-2 sm:p-3 border border-amber-200 dark:border-amber-800">
+                            <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-300 mb-1">
                                 Ya Existen
                             </p>
-                            <p className="text-[16px] sm:text-[18px] font-sport text-amber-600">
+                            <p className="text-[16px] sm:text-[18px] font-sport text-amber-600 dark:text-amber-300">
                                 {variantesExistentesCount}
                             </p>
                         </div>
@@ -262,8 +262,8 @@ const PreviewTab = ({
             </div>
             
             {/* Toggle de modo */}
-            <div className="bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-lg p-3 sm:p-4">
-                <h5 className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-neutral-600 mb-3">
+            <div className="bg-white dark:bg-slate-800 border border-neutral-200 dark:border-slate-700 rounded-lg p-3 sm:p-4">
+                <h5 className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-neutral-600 dark:text-gray-300 mb-3">
                     Modo de Creación
                 </h5>
                 <div className="flex gap-2">
@@ -273,7 +273,7 @@ const PreviewTab = ({
                         className={`flex-1 px-4 py-2.5 rounded-lg font-black text-[9px] uppercase tracking-wider transition-all ${
                             modoCreacion === 'auto'
                                 ? 'bg-cyan-600 text-white shadow-md'
-                                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                                : 'bg-neutral-100 dark:bg-slate-700 text-neutral-600 dark:text-gray-300 hover:bg-neutral-200 dark:hover:bg-slate-600'
                         }`}
                     >
                         ⚡ Auto-Combinar
@@ -284,13 +284,13 @@ const PreviewTab = ({
                         className={`flex-1 px-4 py-2.5 rounded-lg font-black text-[9px] uppercase tracking-wider transition-all ${
                             modoCreacion === 'manual'
                                 ? 'bg-cyan-600 text-white shadow-md'
-                                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                                : 'bg-neutral-100 dark:bg-slate-700 text-neutral-600 dark:text-gray-300 hover:bg-neutral-200 dark:hover:bg-slate-600'
                         }`}
                     >
                         ✋ Manual
                     </button>
                 </div>
-                <p className="text-[8px] text-neutral-500 dark:text-gray-400 mt-2">
+                <p className="text-[8px] text-neutral-500 dark:text-gray-300 mt-2">
                     {modoCreacion === 'auto' 
                         ? 'Selecciona las combinaciones automáticas que deseas crear'
                         : 'Agrega variantes individuales sin combinar todos los atributos'
@@ -299,7 +299,7 @@ const PreviewTab = ({
             </div>
             
             {/* Grid de cards de preview */}
-            <div className="bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-lg p-3 sm:p-4">
+            <div className="bg-white dark:bg-slate-800 border border-neutral-200 dark:border-slate-700 rounded-lg p-3 sm:p-4">
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
                     <h5 className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-neutral-600 dark:text-gray-300">
                         {modoCreacion === 'auto' ? 'Combinaciones Automáticas' : 'Variantes Individuales'}
@@ -332,7 +332,7 @@ const PreviewTab = ({
                                         ? 'border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/20 opacity-60'
                                         : isSelected
                                             ? 'border-cyan-400 dark:border-cyan-600 bg-cyan-50 dark:bg-cyan-900/30 shadow-md'
-                                            : 'border-neutral-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-cyan-300 dark:hover:border-cyan-600'
+                                            : 'border-neutral-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-cyan-300 dark:hover:border-cyan-600'
                                     }
                                 `}
                             >
@@ -343,7 +343,7 @@ const PreviewTab = ({
                                             type="checkbox"
                                             checked={isSelected}
                                             onChange={() => toggleCombo(idx)}
-                                            className="w-4 h-4 text-cyan-600 bg-white dark:bg-gray-700 border-neutral-300 dark:border-gray-500 rounded focus:ring-cyan-500 dark:focus:ring-cyan-400 focus:ring-2 cursor-pointer"
+                                            className="w-4 h-4 text-cyan-600 bg-white dark:bg-slate-950 border-neutral-300 dark:border-slate-600 rounded focus:ring-cyan-500 dark:focus:ring-cyan-400 focus:ring-2 cursor-pointer"
                                         />
                                     </div>
                                 )}
@@ -352,16 +352,16 @@ const PreviewTab = ({
                                 <div className="flex items-start gap-2 mb-2 pr-6">
                                     <div className={`
                                         w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0
-                                        ${variante.yaExiste ? 'bg-amber-100 dark:bg-amber-900/30' : isSelected ? 'bg-cyan-100 dark:bg-cyan-900/40' : 'bg-neutral-100 dark:bg-gray-700'}
+                                        ${variante.yaExiste ? 'bg-amber-100 dark:bg-amber-900/30' : isSelected ? 'bg-cyan-100 dark:bg-cyan-900/40' : 'bg-neutral-100 dark:bg-slate-700'}
                                     `}>
-                                        <Package size={14} className={`sm:w-4 sm:h-4 ${variante.yaExiste ? 'text-amber-600' : isSelected ? 'text-cyan-600' : 'text-neutral-600'}`} />
+                                        <Package size={14} className={`sm:w-4 sm:h-4 ${variante.yaExiste ? 'text-amber-600 dark:text-amber-300' : isSelected ? 'text-cyan-600 dark:text-cyan-300' : 'text-neutral-600 dark:text-gray-300'}`} />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <h6 className="text-[9px] sm:text-[10px] font-black uppercase text-black dark:text-white truncate">
+                                        <h6 className="text-[9px] sm:text-[10px] font-black uppercase text-black dark:text-gray-100 truncate">
                                             {producto.nombre}
                                         </h6>
                                         {variante.yaExiste && (
-                                            <span className="inline-block px-1.5 py-0.5 bg-amber-200 text-amber-800 text-[7px] sm:text-[8px] font-black uppercase rounded mt-1">
+                                            <span className="inline-block px-1.5 py-0.5 bg-amber-200 dark:bg-amber-800/50 text-amber-800 dark:text-amber-300 text-[7px] sm:text-[8px] font-black uppercase rounded mt-1">
                                                 Ya existe
                                             </span>
                                         )}
@@ -372,20 +372,20 @@ const PreviewTab = ({
                             <div className="space-y-1 mb-2">
                                 {Object.entries(variante.atributos).map(([key, value]) => (
                                     <div key={key} className="flex items-center justify-between text-[8px] sm:text-[9px]">
-                                        <span className="font-black uppercase text-neutral-500 dark:text-gray-400">{key}:</span>
+                                        <span className="font-black uppercase text-neutral-500 dark:text-gray-300">{key}:</span>
                                         <span className="font-bold text-neutral-700 dark:text-gray-300">{value}</span>
                                     </div>
                                 ))}
                             </div>
                             
                             {/* SKU y Stock */}
-                            <div className="pt-2 border-t border-neutral-200 dark:border-gray-700 space-y-1">
+                            <div className="pt-2 border-t border-neutral-200 dark:border-slate-700 space-y-1">
                                 <div className="flex items-center justify-between text-[8px] sm:text-[9px]">
-                                    <span className="font-black uppercase text-neutral-500 dark:text-gray-400">SKU:</span>
+                                    <span className="font-black uppercase text-neutral-500 dark:text-gray-300">SKU:</span>
                                     <span className="font-mono font-bold text-neutral-700 dark:text-gray-300">{variante.sku}</span>
                                 </div>
                                 <div className="flex items-center justify-between text-[8px] sm:text-[9px]">
-                                    <span className="font-black uppercase text-neutral-500 dark:text-gray-400">Stock:</span>
+                                    <span className="font-black uppercase text-neutral-500 dark:text-gray-300">Stock:</span>
                                     <span className="font-bold text-neutral-700 dark:text-gray-300">0</span>
                                 </div>
                             </div>
@@ -431,11 +431,11 @@ const PreviewTab = ({
                                             <Package size={14} className="sm:w-4 sm:h-4 text-cyan-600" />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <h6 className="text-[9px] sm:text-[10px] font-black uppercase text-black dark:text-white truncate">
+                                            <h6 className="text-[9px] sm:text-[10px] font-black uppercase text-black dark:text-gray-100 truncate">
                                                 {producto.nombre}
                                             </h6>
                                             {variante.yaExiste && (
-                                                <span className="inline-block px-1.5 py-0.5 bg-amber-200 text-amber-800 text-[7px] sm:text-[8px] font-black uppercase rounded mt-1">
+                                                <span className="inline-block px-1.5 py-0.5 bg-amber-200 dark:bg-amber-800/50 text-amber-800 dark:text-amber-300 text-[7px] sm:text-[8px] font-black uppercase rounded mt-1">
                                                     Ya existe
                                                 </span>
                                             )}
@@ -446,13 +446,13 @@ const PreviewTab = ({
                                     <div className="space-y-2 mb-2">
                                         {Object.keys(atributos).map(key => (
                                             <div key={key}>
-                                                <label className="text-[7px] font-black uppercase text-neutral-500 dark:text-gray-400 block mb-1">
+                                                <label className="text-[7px] font-black uppercase text-neutral-500 dark:text-gray-300 block mb-1">
                                                     {key}
                                                 </label>
                                                 <select
                                                     value={variante.atributos[key] || ''}
                                                     onChange={(e) => actualizarVarianteIndividual(idx, key, e.target.value)}
-                                                    className="w-full px-2 py-1.5 text-[8px] font-bold border border-neutral-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-black dark:text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none"
+                                                    className="w-full px-2 py-1.5 text-[8px] font-bold border border-neutral-300 dark:border-slate-600 rounded bg-white dark:bg-slate-950 text-black dark:text-gray-100 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none"
                                                 >
                                                     {atributos[key].map(valor => (
                                                         <option key={valor} value={valor}>
@@ -465,13 +465,13 @@ const PreviewTab = ({
                                     </div>
                                     
                                     {/* SKU y Stock */}
-                                    <div className="pt-2 border-t border-neutral-200 dark:border-gray-700 space-y-1">
+                                    <div className="pt-2 border-t border-neutral-200 dark:border-slate-700 space-y-1">
                                         <div className="flex items-center justify-between text-[8px] sm:text-[9px]">
-                                            <span className="font-black uppercase text-neutral-500 dark:text-gray-400">SKU:</span>
+                                            <span className="font-black uppercase text-neutral-500 dark:text-gray-300">SKU:</span>
                                             <span className="font-mono font-bold text-neutral-700 dark:text-gray-300">{variante.sku}</span>
                                         </div>
                                         <div className="flex items-center justify-between text-[8px] sm:text-[9px]">
-                                            <span className="font-black uppercase text-neutral-500 dark:text-gray-400">Stock:</span>
+                                            <span className="font-black uppercase text-neutral-500 dark:text-gray-300">Stock:</span>
                                             <span className="font-bold text-neutral-700 dark:text-gray-300">0</span>
                                         </div>
                                     </div>
@@ -488,7 +488,7 @@ const PreviewTab = ({
                     type="button"
                     onClick={onBack}
                     disabled={generando}
-                    className="px-4 py-2.5 sm:py-3 bg-neutral-100 text-neutral-700 rounded-lg font-black text-[10px] sm:text-[11px] uppercase tracking-wider hover:bg-neutral-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 order-2 sm:order-1"
+                    className="px-4 py-2.5 sm:py-3 bg-neutral-100 dark:bg-slate-700 text-neutral-700 dark:text-gray-300 rounded-lg font-black text-[10px] sm:text-[11px] uppercase tracking-wider hover:bg-neutral-200 dark:hover:bg-slate-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 order-2 sm:order-1"
                 >
                     <ChevronLeft size={14} />
                     Volver
@@ -515,16 +515,16 @@ const PreviewTab = ({
             </div>
             
             {variantesSeleccionadas.length === 0 && nuevasVariantes.length > 0 && (
-                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 sm:p-4 text-center">
-                    <p className="text-[9px] sm:text-[10px] font-bold text-amber-800 dark:text-amber-200 uppercase tracking-wider">
+                <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3 sm:p-4 text-center">
+                    <p className="text-[9px] sm:text-[10px] font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wider">
                         No has seleccionado ninguna variante para crear. Marca las casillas de las variantes que deseas generar.
                     </p>
                 </div>
             )}
             
             {nuevasVariantes.length === 0 && (
-                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 sm:p-4 text-center">
-                    <p className="text-[9px] sm:text-[10px] font-bold text-amber-800 dark:text-amber-200 uppercase tracking-wider">
+                <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3 sm:p-4 text-center">
+                    <p className="text-[9px] sm:text-[10px] font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wider">
                         Todas las combinaciones ya existen. No hay variantes nuevas para generar.
                     </p>
                 </div>

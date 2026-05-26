@@ -188,7 +188,7 @@ const NotificationBadge = () => {
       {/* Badge con contador */}
       <button
         onClick={handleBadgeClick}
-        className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+        className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
         title="Consultas pendientes"
       >
         <Bell size={20} />
@@ -210,11 +210,11 @@ const NotificationBadge = () => {
           />
           
           {/* Dropdown content */}
-          <div className="absolute right-0 top-full mt-2 w-96 bg-white rounded-xl shadow-lg border border-gray-200 z-20 overflow-hidden">
+          <div className="absolute right-0 top-full mt-2 w-96 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 z-20 overflow-hidden">
             {/* Header */}
-            <div className="p-4 border-b border-gray-200 bg-gray-50">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   <MessageSquare size={18} />
                   Consultas Pendientes
                 </h3>
@@ -229,15 +229,15 @@ const NotificationBadge = () => {
               {loading ? (
                 <div className="p-4 text-center">
                   <div className="w-6 h-6 border-2 border-brand-cyan border-t-transparent rounded-full animate-spin mx-auto"></div>
-                  <p className="mt-2 text-sm text-gray-500">Cargando...</p>
+                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Cargando...</p>
                 </div>
               ) : consultas.length === 0 ? (
                 <div className="p-8 text-center">
-                  <MessageSquare className="mx-auto text-gray-400 mb-2" size={32} />
-                  <p className="text-gray-500">No hay consultas pendientes</p>
+                  <MessageSquare className="mx-auto text-gray-400 dark:text-gray-500 mb-2" size={32} />
+                  <p className="text-gray-500 dark:text-gray-400">No hay consultas pendientes</p>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-200">
+                <div className="divide-y divide-gray-200 dark:divide-gray-700">
                   {consultas
                     .filter(consulta => !consultasOcultas.has(consulta.id_consulta))
                     .map((consulta) => {
@@ -246,37 +246,37 @@ const NotificationBadge = () => {
                       return (
                         <div 
                           key={consulta.id_consulta} 
-                          className={`p-4 hover:bg-gray-50 transition-colors ${esLeida ? 'opacity-60' : ''}`}
+                          className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${esLeida ? 'opacity-60' : ''}`}
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
-                                <span className="text-xs font-medium text-gray-500">
+                                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
                                   #{consulta.id_consulta.substring(0, 8).toUpperCase()}
                                 </span>
-                                <span className="text-xs text-gray-400">
+                                <span className="text-xs text-gray-400 dark:text-gray-500">
                                   {formatearFecha(consulta.fecha_consulta)}
                                 </span>
-                                <span className="text-xs text-gray-500 flex items-center gap-1">
+                                <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
                                   <Clock size={10} />
                                   {formatearFechaHora(consulta.fecha_consulta)}
                                 </span>
                                 {esLeida && (
-                                  <span className="text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">
+                                  <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded">
                                     Leída
                                   </span>
                                 )}
                               </div>
                               
-                              <p className={`font-medium truncate ${esLeida ? 'text-gray-600' : 'text-gray-900'}`}>
+                              <p className={`font-medium truncate ${esLeida ? 'text-gray-600 dark:text-gray-400' : 'text-gray-900 dark:text-white'}`}>
                                 {consulta.nombre_cliente}
                               </p>
                               
-                              <p className="text-sm text-gray-600">
+                              <p className="text-sm text-gray-600 dark:text-gray-300">
                                 {consulta.cantidad_items} productos • {formatearPrecio(consulta.total)}
                               </p>
                               
-                              <p className="text-xs text-gray-500 mt-1">
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 {consulta.sucursal?.nombre}
                               </p>
                             </div>
@@ -286,8 +286,8 @@ const NotificationBadge = () => {
                                 onClick={() => marcarComoLeida(consulta.id_consulta)}
                                 className={`p-1 rounded transition-colors ${
                                   esLeida 
-                                    ? 'text-gray-400 hover:text-gray-600 hover:bg-gray-100' 
-                                    : 'text-brand-cyan hover:text-brand-cyan/70 hover:bg-brand-cyan/10'
+                                    ? 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' 
+                                    : 'text-brand-cyan hover:text-brand-cyan/70 hover:bg-brand-cyan/10 dark:hover:bg-cyan-900/20'
                                 }`}
                                 title={esLeida ? 'Marcar como no leída' : 'Marcar como leída'}
                               >
@@ -296,7 +296,7 @@ const NotificationBadge = () => {
                               
                               <button
                                 onClick={() => ocultarNotificacion(consulta.id_consulta)}
-                                className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
                                 title="Ocultar notificación"
                               >
                                 <EyeOff size={16} />
@@ -304,7 +304,7 @@ const NotificationBadge = () => {
                               
                               <button
                                 onClick={() => marcarComoProcesada(consulta.id_consulta)}
-                                className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                className="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
                                 title="Marcar como en proceso"
                               >
                                 <Check size={16} />
@@ -312,7 +312,7 @@ const NotificationBadge = () => {
                               
                               <button
                                 onClick={() => verConsulta(consulta.id_consulta)}
-                                className="p-1 text-gray-400 hover:text-brand-cyan hover:bg-brand-cyan/10 rounded transition-colors"
+                                className="p-1 text-gray-400 hover:text-brand-cyan dark:hover:text-cyan-400 hover:bg-brand-cyan/10 dark:hover:bg-cyan-900/20 rounded transition-colors"
                                 title="Ver detalle"
                               >
                                 <ExternalLink size={16} />
@@ -327,9 +327,9 @@ const NotificationBadge = () => {
             </div>
 
             {/* Footer */}
-            <div className="p-3 border-t border-gray-200 bg-gray-50 space-y-2">
+            <div className="p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80 space-y-2">
               {/* Estadísticas */}
-              <div className="flex items-center justify-between text-xs text-gray-600">
+              <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
                 <span>Total: {consultas.length}</span>
                 <span>Leídas: {consultasLeidas.size}</span>
                 <span>Ocultas: {consultasOcultas.size}</span>
@@ -351,7 +351,7 @@ const NotificationBadge = () => {
                       localStorage.removeItem('consultasOcultas');
                       toast.success('Todas las notificaciones visibles');
                     }}
-                    className="px-3 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300 transition-colors"
+                    className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                   >
                     Mostrar Ocultas ({consultasOcultas.size})
                   </button>

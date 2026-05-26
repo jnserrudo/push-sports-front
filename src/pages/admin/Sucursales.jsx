@@ -60,16 +60,29 @@ const MapPicker = ({ lat, lng, onLocationSelect }) => {
 const ImagePicker = ({ value, onChange, label = "Imagen de la Sede" }) => {
     const inputRef = useRef(null);
     const [uploading, setUploading] = useState(false);
+    const [previewUrl, setPreviewUrl] = useState(null);
 
     const handleFile = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
+
+        // Validación estricta de tipo de archivo
+        const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+            toast.error('Formato no soportado. Por favor, selecciona una imagen JPG, PNG o WEBP válida.');
+            return;
+        }
+
         if (file.size > 10 * 1024 * 1024) {
             toast.error('La imagen debe pesar menos de 10MB');
             return;
         }
         
+        // Crear preview local
+        const tempUrl = URL.createObjectURL(file);
+        setPreviewUrl(tempUrl);
         setUploading(true);
+        
         try {
             // Reusing uploadProductImage (uses 'productos' bucket)
             // Ideally should be a 'comercios' bucket, but using existing one for now
@@ -80,6 +93,8 @@ const ImagePicker = ({ value, onChange, label = "Imagen de la Sede" }) => {
             toast.error('Error de conexión al subir imagen');
         } finally {
             setUploading(false);
+            setPreviewUrl(null);
+            URL.revokeObjectURL(tempUrl);
         }
     };
 
@@ -94,10 +109,15 @@ const ImagePicker = ({ value, onChange, label = "Imagen de la Sede" }) => {
                     ${value ? 'border-brand-cyan bg-brand-cyan/5' : 'border-neutral-200 bg-neutral-50 hover:border-brand-cyan hover:bg-brand-cyan/5'}`}
             >
                 {uploading ? (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm z-10">
-                        <div className="w-6 h-6 border-2 border-brand-cyan border-t-transparent rounded-full animate-spin"></div>
-                        <span className="text-[9px] font-black uppercase tracking-wider text-brand-cyan">Subiendo...</span>
-                    </div>
+                    <>
+                        {previewUrl && (
+                            <img src={previewUrl} alt="preview" className="absolute inset-0 w-full h-full object-cover rounded-lg opacity-50 grayscale" />
+                        )}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm z-10">
+                            <div className="w-6 h-6 border-2 border-brand-cyan border-t-transparent rounded-full animate-spin"></div>
+                            <span className="text-[9px] font-black uppercase tracking-wider text-brand-cyan">Subiendo...</span>
+                        </div>
+                    </>
                 ) : value ? (
                     <>
                         <img src={value} alt="preview" className="absolute inset-0 w-full h-full object-cover rounded-lg" />
@@ -126,7 +146,7 @@ const ImagePicker = ({ value, onChange, label = "Imagen de la Sede" }) => {
             <input
                 ref={inputRef}
                 type="file"
-                accept="image/*"
+                accept="image/jpeg, image/png, image/webp"
                 className="hidden"
                 onChange={handleFile}
             />

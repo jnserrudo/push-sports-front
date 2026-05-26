@@ -82,7 +82,6 @@ const RowsPerPageSelect = ({ value, onChange }) => {
    ────────────────────────────────────────────── */
 const RowActions = ({ row, onEdit, onDelete, onView, customActions, refresh }) => {
     const [open, setOpen] = useState(false);
-    const [position, setPosition] = useState({ top: 0, right: 0, openUp: false });
     const ref = useRef(null);
     const buttonRef = useRef(null);
 
@@ -97,20 +96,6 @@ const RowActions = ({ row, onEdit, onDelete, onView, customActions, refresh }) =
         return () => document.removeEventListener('mousedown', handler);
     }, []);
 
-    useEffect(() => {
-        if (open && buttonRef.current) {
-            const rect = buttonRef.current.getBoundingClientRect();
-            const spaceBelow = window.innerHeight - rect.bottom;
-            const openUp = spaceBelow < 250;
-            
-            setPosition({
-                top: openUp ? rect.top - 6 : rect.bottom + 6,
-                right: window.innerWidth - rect.right,
-                openUp
-            });
-        }
-    }, [open]);
-
     return (
         <div ref={ref} className="relative flex justify-end">
             <button
@@ -120,7 +105,7 @@ const RowActions = ({ row, onEdit, onDelete, onView, customActions, refresh }) =
                     e.stopPropagation();
                     setOpen(!open);
                 }}
-                className={`w-8 h-8 flex items-center justify-center rounded-lg border transition-all ${
+                className={`w-10 h-10 flex items-center justify-center rounded-lg border transition-all cursor-pointer z-20 ${
                     open
                         ? 'border-brand-cyan bg-brand-cyan/5 text-brand-cyan shadow-sm'
                         : 'border-neutral-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-neutral-500 hover:border-neutral-400 dark:hover:border-gray-500 hover:text-black dark:hover:text-white'
@@ -131,47 +116,46 @@ const RowActions = ({ row, onEdit, onDelete, onView, customActions, refresh }) =
             </button>
 
             {open && (
-                <div 
-                    className={`fixed z-[9999] bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden min-w-[160px] animate-in fade-in zoom-in-95 duration-200 ${
-                        position.openUp ? 'origin-bottom' : 'origin-top'
-                    }`}
-                    style={{
-                        top: position.openUp ? 'auto' : `${position.top}px`,
-                        bottom: position.openUp ? `${window.innerHeight - position.top}px` : 'auto',
-                        right: `${position.right}px`
-                    }}
+                <div
+                    className="absolute right-0 top-full mt-1 z-[99999] bg-white dark:bg-slate-800 border border-neutral-200 dark:border-slate-700 rounded-xl shadow-2xl overflow-hidden min-w-[160px] pointer-events-auto"
                 >
-                    <div className="px-3 py-2 border-b border-neutral-100 dark:border-gray-700">
-                        <span className="text-[8px] font-black uppercase tracking-[0.2em] text-neutral-400">Acciones disponibles</span>
-                    </div>
-                    
-                    <div className="p-1.5 flex flex-col gap-0.5 text-left">
+                    <div className="p-0 flex flex-col gap-0 text-left pointer-events-auto">
                         {onView && (
                             <button
-                                onClick={() => { onView(row); setOpen(false); }}
-                                className="w-full flex items-center gap-2.5 px-2.5 py-2 text-[10px] font-bold uppercase tracking-widest text-neutral-600 dark:text-gray-300 hover:bg-brand-cyan/10 hover:text-brand-cyan rounded-lg transition-all"
+                                type="button"
+                                onMouseDown={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    onView(row);
+                                    setOpen(false);
+                                }}
+                                className="w-full flex items-center gap-2.5 px-3 py-3 text-[10px] font-bold uppercase tracking-widest text-neutral-600 dark:text-gray-100 hover:bg-brand-cyan/10 hover:text-brand-cyan rounded-lg transition-all cursor-pointer pointer-events-auto min-h-[44px]"
                             >
-                                <Eye size={14} className="opacity-70" />
+                                <Eye size={14} className="opacity-70 flex-shrink-0" />
                                 <span>Ver Detalle</span>
                             </button>
                         )}
                         
                         {onEdit && (
                             <button
-                                onClick={() => { 
-                                    onEdit(row); 
-                                    setOpen(false); 
+                                type="button"
+                                onMouseDown={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    console.log('Click en Editar, row:', row);
+                                    onEdit(row);
+                                    setOpen(false);
                                 }}
-                                className="w-full flex items-center gap-2.5 px-2.5 py-2 text-[10px] font-bold uppercase tracking-widest text-neutral-600 dark:text-gray-300 hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-lg transition-all"
+                                className="w-full flex items-center gap-2.5 px-3 py-3 text-[10px] font-bold uppercase tracking-widest text-neutral-600 dark:text-gray-100 hover:bg-neutral-100 dark:hover:bg-slate-700 rounded-lg transition-all cursor-pointer pointer-events-auto select-none min-h-[44px]"
                             >
-                                <Pencil size={14} className="opacity-70" />
+                                <Pencil size={14} className="opacity-70 flex-shrink-0" />
                                 <span>Editar</span>
                             </button>
                         )}
 
                         {customActions && (
-                            <div className="contents" onClick={() => setOpen(false)}>
-                                {customActions(row, true, refresh)}
+                            <div className="contents pointer-events-auto">
+                                {customActions(row, true, refresh, () => setOpen(false))}
                             </div>
                         )}
 
@@ -179,8 +163,13 @@ const RowActions = ({ row, onEdit, onDelete, onView, customActions, refresh }) =
                             <>
                                 <div className="h-px bg-neutral-100 dark:bg-gray-700 my-1" />
                                 <button
-                                    onClick={() => { onDelete(row); setOpen(false); }}
-                                    className="w-full flex items-center gap-2.5 px-2.5 py-2 text-[10px] font-bold uppercase tracking-widest text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onDelete(row);
+                                        setOpen(false);
+                                    }}
+                                    className="w-full flex items-center gap-2.5 px-2.5 py-2.5 text-[10px] font-bold uppercase tracking-widest text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all cursor-pointer pointer-events-auto min-h-[40px]"
                                 >
                                     <Trash2 size={14} className="opacity-70" />
                                     <span>Dar de Baja</span>
@@ -278,7 +267,7 @@ const DataTable = ({
     };
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-1 md:p-1.5 shadow-sm border border-neutral-100 dark:border-gray-700 relative overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-500">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-1 md:p-1.5 shadow-sm border border-neutral-100 dark:border-gray-700 relative animate-in fade-in slide-in-from-bottom-3 duration-500">
             {/* Ambient Accent (Subtle) */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-cyan/5 blur-3xl pointer-events-none rounded-full -translate-y-1/2 translate-x-1/2" />
 
@@ -328,7 +317,7 @@ const DataTable = ({
 
             {/* Table Area */}
             <div className="rounded border border-neutral-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-sm relative z-10 w-full mb-2 min-h-[180px] overflow-visible">
-                <div className="overflow-x-auto custom-scrollbar rounded">
+                <div className="overflow-visible custom-scrollbar rounded">
                     <table className="w-full text-left border-collapse min-w-full md:min-w-[700px]">
                         <thead>
                             <tr className="bg-neutral-50/50 dark:bg-gray-700/50 text-neutral-500 dark:text-gray-400 border-b border-neutral-200 dark:border-gray-600">
@@ -380,7 +369,7 @@ const DataTable = ({
                                             </td>
                                         ))}
                                         {(onEdit || onDelete || onView || customActions) && (
-                                            <td className="px-1.5 py-1 md:px-3 md:py-1 text-right align-middle">
+                                            <td className="px-1.5 py-1 md:px-3 md:py-1 text-right align-middle relative">
                                                 <RowActions 
                                                     row={row} 
                                                     onEdit={onEdit} 

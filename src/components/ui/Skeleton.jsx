@@ -2,12 +2,12 @@ import React from 'react';
 
 export const Skeleton = ({ className = '', variant = 'default' }) => {
     const variants = {
-        default: 'h-4 bg-neutral-200',
-        title: 'h-8 bg-neutral-300 w-1/3',
-        text: 'h-3 bg-neutral-200',
-        card: 'h-48 bg-neutral-200 rounded-xl',
-        circle: 'w-12 h-12 rounded-full bg-neutral-200',
-        button: 'h-10 bg-neutral-200 rounded-lg w-32'
+        default: 'h-4 bg-neutral-200 dark:bg-gray-700',
+        title: 'h-8 bg-neutral-300 dark:bg-gray-600 w-1/3',
+        text: 'h-3 bg-neutral-200 dark:bg-gray-700',
+        card: 'h-48 bg-neutral-200 dark:bg-gray-700 rounded-xl',
+        circle: 'w-12 h-12 rounded-full bg-neutral-200 dark:bg-gray-700',
+        button: 'h-10 bg-neutral-200 dark:bg-gray-700 rounded-lg w-32'
     };
     
     return (
@@ -28,7 +28,7 @@ export const SkeletonTable = ({ rows = 5, cols = 4 }) => (
 );
 
 export const SkeletonCard = () => (
-    <div className="bg-white rounded-xl p-6 space-y-4">
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 space-y-4">
         <Skeleton variant="title" />
         <Skeleton variant="text" className="w-2/3" />
         <Skeleton variant="text" className="w-1/2" />

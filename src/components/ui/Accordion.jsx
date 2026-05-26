@@ -13,18 +13,18 @@ const Accordion = ({
 }) => {
     const colorClasses = {
         blue: {
-            header: 'bg-blue-50 border-blue-300',
-            title: 'text-blue-900',
-            subtitle: 'text-blue-600',
-            content: 'bg-blue-50/30',
-            border: 'border-blue-300'
+            header: 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-800',
+            title: 'text-blue-900 dark:text-blue-300',
+            subtitle: 'text-blue-600 dark:text-blue-400',
+            content: 'bg-blue-50/30 dark:bg-blue-900/10',
+            border: 'border-blue-300 dark:border-blue-800'
         },
         cyan: {
-            header: 'bg-cyan-50 border-cyan-400',
-            title: 'text-cyan-900',
-            subtitle: 'text-cyan-600',
-            content: 'bg-gradient-to-br from-cyan-50/80 to-green-50/30',
-            border: 'border-cyan-400'
+            header: 'bg-cyan-50 dark:bg-cyan-900/20 border-cyan-400 dark:border-cyan-800',
+            title: 'text-cyan-900 dark:text-cyan-300',
+            subtitle: 'text-cyan-600 dark:text-cyan-400',
+            content: 'bg-gradient-to-br from-cyan-50/80 dark:from-cyan-900/20 to-green-50/30 dark:to-green-900/10',
+            border: 'border-cyan-400 dark:border-cyan-800'
         }
     };
     

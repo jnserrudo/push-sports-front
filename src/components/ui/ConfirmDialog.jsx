@@ -28,12 +28,12 @@ export const ConfirmDialog = ({
         <Modal isOpen={isOpen} onClose={onClose} title={title}>
             <div className="flex items-start gap-4 mb-6">
                 <AlertTriangle className={`${iconColors[variant]} shrink-0`} size={24} />
-                <p className="text-sm text-neutral-700">{message}</p>
+                <p className="text-sm text-neutral-700 dark:text-gray-300">{message}</p>
             </div>
             <div className="flex gap-3 justify-end">
                 <button
                     onClick={onClose}
-                    className="px-4 py-2 bg-neutral-200 text-neutral-700 rounded-lg hover:bg-neutral-300 transition-colors font-bold text-xs uppercase tracking-wider"
+                    className="px-4 py-2 bg-neutral-200 dark:bg-gray-700 text-neutral-700 dark:text-gray-300 rounded-lg hover:bg-neutral-300 dark:hover:bg-gray-600 transition-colors font-bold text-xs uppercase tracking-wider"
                 >
                     {cancelText}
                 </button>

@@ -580,7 +580,7 @@ const POS = () => {
                             <span className="text-white font-bold text-[6px] uppercase tracking-[0.2em] border border-white/20 px-2 py-1 rounded-full">AGOTADO</span>
                         </div>
                     ) : (item.producto?.usa_variantes || item.usa_desglose_variantes || (item.variantes && item.variantes.length > 0)) ? (
-                        <div className="absolute top-1 right-1 bg-black/80 backdrop-blur-md text-white text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded shadow-sm border border-white/10 flex items-center gap-1">
+                        <div className="absolute top-1 right-1 bg-black/80 backdrop-blur-md text-white text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded shadow-sm border border-white/10 flex items-center gap-1 pointer-events-none">
                             <span>Elegir Variante</span>
                         </div>
                     ) : null}

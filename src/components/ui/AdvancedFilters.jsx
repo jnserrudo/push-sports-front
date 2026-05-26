@@ -21,7 +21,7 @@ export const AdvancedFilters = ({ filters, onApply, onClear }) => {
         <div className="relative">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="px-4 py-2 bg-neutral-100 rounded-lg flex items-center gap-2 hover:bg-neutral-200 transition-colors text-xs font-bold uppercase tracking-wider"
+                className="px-4 py-2 bg-neutral-100 dark:bg-gray-800 rounded-lg flex items-center gap-2 hover:bg-neutral-200 dark:hover:bg-gray-700 transition-colors text-xs font-bold uppercase tracking-wider dark:text-white"
             >
                 <Filter size={16} />
                 Filtros
@@ -38,10 +38,10 @@ export const AdvancedFilters = ({ filters, onApply, onClear }) => {
                         className="fixed inset-0 z-40" 
                         onClick={() => setIsOpen(false)}
                     />
-                    <div className="absolute top-full right-0 mt-2 bg-white border border-neutral-200 rounded-xl shadow-xl p-4 w-80 z-50">
+                    <div className="absolute top-full right-0 mt-2 bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-xl shadow-xl p-4 w-80 z-50">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-bold text-sm uppercase tracking-wider">Filtros Avanzados</h3>
-                            <button onClick={() => setIsOpen(false)} className="text-neutral-400 hover:text-black">
+                            <h3 className="font-bold text-sm uppercase tracking-wider dark:text-white">Filtros Avanzados</h3>
+                            <button onClick={() => setIsOpen(false)} className="text-neutral-400 hover:text-black dark:hover:text-white">
                                 <X size={16} />
                             </button>
                         </div>
@@ -49,7 +49,7 @@ export const AdvancedFilters = ({ filters, onApply, onClear }) => {
                         <div className="space-y-3 max-h-96 overflow-y-auto">
                             {filters.map(filter => (
                                 <div key={filter.key}>
-                                    <label className="block text-xs font-bold mb-1.5 text-neutral-600 uppercase tracking-wider">
+                                    <label className="block text-xs font-bold mb-1.5 text-neutral-600 dark:text-gray-300 uppercase tracking-wider">
                                         {filter.label}
                                     </label>
                                     {filter.type === 'select' ? (
@@ -92,16 +92,16 @@ export const AdvancedFilters = ({ filters, onApply, onClear }) => {
                             ))}
                         </div>
                         
-                        <div className="flex gap-2 mt-4 pt-4 border-t border-neutral-200">
+                        <div className="flex gap-2 mt-4 pt-4 border-t border-neutral-200 dark:border-gray-700">
                             <button
                                 onClick={handleClear}
-                                className="flex-1 px-3 py-2 bg-neutral-100 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-neutral-200 transition-colors"
+                                className="flex-1 px-3 py-2 bg-neutral-100 dark:bg-gray-700 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-neutral-200 dark:hover:bg-gray-600 dark:text-white transition-colors"
                             >
                                 Limpiar
                             </button>
                             <button
                                 onClick={handleApply}
-                                className="flex-1 px-3 py-2 bg-black text-white rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-neutral-800 transition-colors"
+                                className="flex-1 px-3 py-2 bg-black dark:bg-cyan-600 text-white rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-neutral-800 dark:hover:bg-cyan-700 transition-colors"
                             >
                                 Aplicar
                             </button>

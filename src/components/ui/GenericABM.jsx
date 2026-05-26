@@ -241,7 +241,7 @@ const GenericABM = ({
             
             {/* Tabla de Datos */}
             {isLoading ? (
-                <div className="bg-white dark:bg-gray-800 rounded-xl md:rounded-2xl p-3 md:p-4 shadow-sm border border-neutral-100 dark:border-gray-700 relative overflow-hidden animate-in fade-in duration-500">
+                <div className="bg-white dark:bg-gray-800 rounded-xl md:rounded-2xl p-3 md:p-4 shadow-sm border border-neutral-100 dark:border-gray-700 relative animate-in fade-in duration-500">
                     <div className="flex flex-col md:flex-row justify-between mb-4 gap-3">
                         <div className="w-full md:max-w-md h-10 md:h-12 bg-neutral-100 dark:bg-gray-700 rounded-lg animate-pulse" />
                         <div className="w-28 md:w-40 h-10 md:h-12 bg-neutral-100 dark:bg-gray-700 rounded-lg animate-pulse" />

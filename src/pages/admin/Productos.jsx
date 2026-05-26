@@ -111,14 +111,14 @@ const ProductCardPreview = ({ formData, categorias, marcas, isPrivileged, varian
 
                 {/* Info */}
                 <div className="p-3">
-                    <p className="text-[8px] font-black uppercase tracking-wider text-brand-cyan mb-0.5">
+                    <p className="text-[8px] font-black uppercase tracking-wider text-brand-cyan dark:text-cyan-400 mb-0.5">
                         {marc?.nombre_marca || 'Marca'}
                     </p>
                     <h3 className="font-sport text-sm uppercase leading-tight text-black dark:text-white mb-2 min-h-[2rem]">
                         {formData.nombre || 'Nombre del Producto'}
                     </h3>
                     {formData.descripcion && (
-                        <p className="text-[9px] font-medium text-neutral-400 dark:text-gray-500 mb-2 line-clamp-2">
+                        <p className="text-[9px] font-medium text-neutral-400 dark:text-gray-300 mb-2 line-clamp-2">
                             {formData.descripcion}
                         </p>
                     )}
@@ -129,22 +129,22 @@ const ProductCardPreview = ({ formData, categorias, marcas, isPrivileged, varian
                             <button
                                 type="button"
                                 onClick={() => setShowCaracteristicas(!showCaracteristicas)}
-                                className="w-full p-2 bg-blue-50 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors"
+                                className="w-full p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
                             >
                                 <div className="flex items-center justify-between">
-                                    <span className="text-[8px] font-black uppercase tracking-wider text-blue-700">CARACTERÍSTICAS</span>
+                                    <span className="text-[8px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400">CARACTERÍSTICAS</span>
                                     {showCaracteristicas 
-                                        ? <ChevronDown size={14} className="text-blue-700" />
-                                        : <ChevronRight size={14} className="text-blue-700" />
+                                        ? <ChevronDown size={14} className="text-blue-700 dark:text-blue-400" />
+                                        : <ChevronRight size={14} className="text-blue-700 dark:text-blue-400" />
                                     }
                                 </div>
                             </button>
                             {showCaracteristicas && (
-                                <div className="mt-1 p-2 bg-blue-50/50 rounded-lg border border-blue-100 space-y-1">
+                                <div className="mt-1 p-2 bg-blue-50/50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-800/50 space-y-1">
                                     {Object.entries(atributosTecnicos).map(([key, valores]) => (
                                         <div key={key} className="text-[8px]">
-                                            <span className="font-black uppercase text-blue-700">{key}:</span>
-                                            <span className="ml-1 text-neutral-600">{Array.isArray(valores) ? valores.join(', ') : valores}</span>
+                                            <span className="font-black uppercase text-blue-700 dark:text-blue-400">{key}:</span>
+                                            <span className="ml-1 text-neutral-600 dark:text-gray-300">{Array.isArray(valores) ? valores.join(', ') : valores}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -158,36 +158,36 @@ const ProductCardPreview = ({ formData, categorias, marcas, isPrivileged, varian
                             <button
                                 type="button"
                                 onClick={() => setShowVariantes(!showVariantes)}
-                                className="w-full p-2 bg-brand-cyan/10 rounded-lg border border-brand-cyan/20 hover:bg-brand-cyan/20 transition-colors"
+                                className="w-full p-2 bg-brand-cyan/10 dark:bg-cyan-900/20 rounded-lg border border-brand-cyan/20 dark:border-cyan-800/30 hover:bg-brand-cyan/20 dark:hover:bg-cyan-900/40 transition-colors"
                             >
                                 <div className="flex items-center justify-between mb-1">
-                                    <span className="text-[8px] font-black uppercase tracking-wider text-brand-cyan">VARIANTES</span>
+                                    <span className="text-[8px] font-black uppercase tracking-wider text-brand-cyan dark:text-cyan-400">VARIANTES</span>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-[10px] font-sport text-brand-cyan">{totalVariantes}</span>
+                                        <span className="text-[10px] font-sport text-brand-cyan dark:text-cyan-400">{totalVariantes}</span>
                                         {showVariantes 
-                                            ? <ChevronDown size={14} className="text-brand-cyan" />
-                                            : <ChevronRight size={14} className="text-brand-cyan" />
+                                            ? <ChevronDown size={14} className="text-brand-cyan dark:text-cyan-400" />
+                                            : <ChevronRight size={14} className="text-brand-cyan dark:text-cyan-400" />
                                         }
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-between text-[8px]">
-                                    <span className="text-neutral-500">Activas: {variantesActivas}</span>
-                                    <span className="text-neutral-500">Stock: {stockTotal}</span>
+                                    <span className="text-neutral-500 dark:text-gray-400">Activas: {variantesActivas}</span>
+                                    <span className="text-neutral-500 dark:text-gray-400">Stock: {stockTotal}</span>
                                 </div>
                             </button>
                             {showVariantes && (
                                 <div className="mt-1 max-h-[200px] overflow-y-auto space-y-1">
                                     {variantes.map((variante, idx) => (
-                                        <div key={idx} className="p-2 bg-cyan-50/50 rounded border border-cyan-100">
+                                        <div key={idx} className="p-2 bg-cyan-50/50 dark:bg-cyan-900/10 rounded border border-cyan-100 dark:border-cyan-800/50">
                                             <div className="flex items-center justify-between mb-1">
-                                                <span className="text-[8px] font-black uppercase text-cyan-700">
+                                                <span className="text-[8px] font-black uppercase text-cyan-700 dark:text-cyan-400">
                                                     {Object.entries(variante.atributos_valores || {}).map(([k, v]) => v).join(' / ')}
                                                 </span>
-                                                <span className={`text-[7px] px-1 py-0.5 rounded ${variante.activo ? 'bg-green-500 text-white' : 'bg-neutral-300 text-neutral-600'}`}>
+                                                <span className={`text-[7px] px-1 py-0.5 rounded ${variante.activo ? 'bg-green-500 dark:bg-green-600 text-white' : 'bg-neutral-300 dark:bg-gray-700 text-neutral-600 dark:text-gray-400'}`}>
                                                     {variante.activo ? 'ACTIVO' : 'INACTIVO'}
                                                 </span>
                                             </div>
-                                            <div className="flex items-center justify-between text-[7px] text-neutral-600">
+                                            <div className="flex items-center justify-between text-[7px] text-neutral-600 dark:text-gray-400">
                                                 <span>Stock: {variante.stock_central || 0}</span>
                                                 <span className="font-mono">{variante.sku_variante}</span>
                                             </div>
@@ -242,10 +242,15 @@ const ImageSlot = ({ url, uploadingLocal, onFileSelect, onRemove, index }) => {
                     }`}
             >
                 {uploadingLocal ? (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-neutral-50">
-                        <Loader2 size={20} className="animate-spin text-brand-cyan" />
-                        <span className="text-[8px] font-black uppercase tracking-widest text-brand-cyan">Subiendo...</span>
-                    </div>
+                    <>
+                        {typeof uploadingLocal === 'string' && (
+                            <img src={uploadingLocal} alt="preview" className="w-full h-full object-cover opacity-50 grayscale" />
+                        )}
+                        <div className={`absolute inset-0 flex flex-col items-center justify-center gap-2 ${typeof uploadingLocal === 'string' ? 'bg-black/40' : 'bg-neutral-50 dark:bg-gray-800'}`}>
+                            <Loader2 size={20} className="animate-spin text-brand-cyan" />
+                            <span className="text-[8px] font-black uppercase tracking-widest text-brand-cyan">Subiendo...</span>
+                        </div>
+                    </>
                 ) : url ? (
                     <>
                         <img src={url} alt={`img-${index}`} className="w-full h-full object-cover" />
@@ -272,7 +277,7 @@ const ImageSlot = ({ url, uploadingLocal, onFileSelect, onRemove, index }) => {
             <input
                 ref={inputRef}
                 type="file"
-                accept="image/*"
+                accept="image/jpeg, image/png, image/webp"
                 className="hidden"
                 onChange={e => onFileSelect(e.target.files?.[0], index)}
             />
@@ -288,13 +293,26 @@ const MultiImagePicker = ({ formData, setFormData }) => {
 
     const handleFile = async (file, index) => {
         if (!file) return;
-        if (file.size > 10 * 1024 * 1024) {
-            toast.error('La imagen debe pesar menos de 10MB');
+        
+        // Validación estricta de tipo de archivo
+        const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+            toast.error('Formato no soportado. Por favor, selecciona una imagen JPG, PNG o WEBP válida.');
             return;
         }
-        // Mark uploading
+
+        // Validación de tamaño (5MB como indica la UI)
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error('La imagen debe pesar menos de 5MB');
+            return;
+        }
+
+        // Crear preview local
+        const previewUrl = URL.createObjectURL(file);
+        
+        // Marcar como subiendo y mostrar preview
         const newUploading = [...uploading];
-        newUploading[index] = true;
+        newUploading[index] = previewUrl;
         setFormData(prev => ({ ...prev, _uploading: newUploading }));
 
         try {
@@ -313,6 +331,9 @@ const MultiImagePicker = ({ formData, setFormData }) => {
             const newUploading2 = [...uploading];
             newUploading2[index] = false;
             setFormData(prev => ({ ...prev, _uploading: newUploading2 }));
+        } finally {
+            // Liberar memoria del preview
+            URL.revokeObjectURL(previewUrl);
         }
     };
 
@@ -527,9 +548,9 @@ const AttributesManager = ({ formData, setFormData }) => {
                                     disabled={!canAdd}
                                     className={`px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest transition-all border ${
                                         isComplete 
-                                            ? 'bg-green-50 text-green-600 border-green-200 cursor-not-allowed shadow-none' 
+                                            ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 cursor-not-allowed shadow-none' 
                                             : isEmpty
-                                                ? 'bg-amber-50 text-amber-600 border-amber-200 cursor-not-allowed shadow-none'
+                                                ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800 cursor-not-allowed shadow-none'
                                                 : 'bg-white dark:bg-gray-700 text-neutral-500 dark:text-gray-400 border-neutral-200 dark:border-gray-600 hover:border-brand-cyan hover:text-brand-cyan shadow-sm active:scale-95'
                                     }`}
                                 >
@@ -545,17 +566,17 @@ const AttributesManager = ({ formData, setFormData }) => {
                         attributesArray.map((attr, index) => {
                             const isEmpty = attr.value.length === 0;
                             return (
-                                <div key={index} className={`flex flex-col sm:grid sm:grid-cols-[120px_1fr_40px] gap-2 sm:gap-3 items-start animate-in fade-in slide-in-from-left-2 duration-300 p-2 rounded-lg ${isEmpty ? 'bg-amber-50/50 border border-amber-200' : ''}`}>
+                                <div key={index} className={`flex flex-col sm:grid sm:grid-cols-[120px_1fr_40px] gap-2 sm:gap-3 items-start animate-in fade-in slide-in-from-left-2 duration-300 p-2 rounded-lg ${isEmpty ? 'bg-amber-50/50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/50' : ''}`}>
                                     <div className="relative">
                                         <input
                                             type="text"
                                             placeholder="ETIQUETA"
-                                            className={`w-full px-3 py-2.5 bg-white dark:bg-gray-700 border rounded-lg text-[10px] font-bold text-black dark:text-white uppercase focus:border-brand-cyan dark:focus:border-cyan-400 outline-none transition-all shadow-sm ${isEmpty ? 'border-amber-300 focus:border-amber-400' : 'border-neutral-200 dark:border-gray-600'}`}
+                                            className={`w-full px-3 py-2.5 bg-white dark:bg-gray-700 border rounded-lg text-[10px] font-bold text-black dark:text-white uppercase focus:border-brand-cyan dark:focus:border-cyan-400 outline-none transition-all shadow-sm ${isEmpty ? 'border-amber-300 dark:border-amber-700 focus:border-amber-400 dark:focus:border-amber-500' : 'border-neutral-200 dark:border-gray-600'}`}
                                             value={attr.key}
                                             onChange={(e) => handleChange(index, 'key', e.target.value.toUpperCase())}
                                         />
                                         {isEmpty && (
-                                            <span className="absolute -top-2 -right-2 px-1.5 py-0.5 bg-amber-400 text-white text-[7px] font-black uppercase rounded">
+                                            <span className="absolute -top-2 -right-2 px-1.5 py-0.5 bg-amber-400 dark:bg-amber-600 text-white text-[7px] font-black uppercase rounded">
                                                 Vacío
                                             </span>
                                         )}
@@ -568,7 +589,7 @@ const AttributesManager = ({ formData, setFormData }) => {
                                     <button
                                         type="button"
                                         onClick={() => removeAttribute(index)}
-                                        className="w-10 h-10 flex items-center justify-center text-neutral-300 hover:text-red-500 hover:bg-neutral-50 rounded-lg transition-all"
+                                        className="w-10 h-10 flex items-center justify-center text-neutral-300 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-neutral-50 dark:hover:bg-gray-600 rounded-lg transition-all"
                                     >
                                         <X size={16} />
                                     </button>
@@ -576,7 +597,7 @@ const AttributesManager = ({ formData, setFormData }) => {
                             );
                         })
                     ) : (
-                        <div className="py-8 border border-dashed border-neutral-200 rounded-xl flex flex-col items-center justify-center gap-2 text-neutral-300 grayscale opacity-60">
+                        <div className="py-8 border border-dashed border-neutral-200 dark:border-gray-700 rounded-xl flex flex-col items-center justify-center gap-2 text-neutral-300 dark:text-gray-600 grayscale opacity-60">
                             <Settings size={32} strokeWidth={1} className="animate-pulse" />
                             <div className="text-center">
                                 <span className="text-[10px] font-black uppercase tracking-[0.2em] block">Personaliza tu producto</span>
@@ -843,10 +864,10 @@ const VariantesManager = ({ producto, refresh, onVariantesChange }) => {
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h4 className="text-[11px] font-black uppercase tracking-wider text-cyan-900">
+                            <h4 className="text-[11px] font-black uppercase tracking-wider text-cyan-900 dark:text-cyan-300">
                                 Variantes Existentes
                             </h4>
-                            <p className="text-[9px] text-cyan-600 mt-1">
+                            <p className="text-[9px] text-cyan-600 dark:text-cyan-400 mt-1">
                                 {variantes.length} variante{variantes.length !== 1 ? 's' : ''} registrada{variantes.length !== 1 ? 's' : ''}
                             </p>
                         </div>
@@ -877,16 +898,19 @@ const VariantesManager = ({ producto, refresh, onVariantesChange }) => {
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h4 className="text-[11px] font-black uppercase tracking-wider text-cyan-900">
+                            <h4 className="text-[11px] font-black uppercase tracking-wider text-cyan-900 dark:text-cyan-200">
                                 Crear Nuevas Variantes
                             </h4>
-                            <p className="text-[9px] text-cyan-600 mt-1">
+                            <p className="text-[9px] text-cyan-600 dark:text-cyan-400 mt-1">
                                 Define atributos y selecciona las combinaciones a crear
                             </p>
                         </div>
                         <button
                             type="button"
-                            onClick={() => setModo('gestion')}
+                            onClick={() => {
+                                console.log('Cambiando a modo gestión');
+                                setModo('gestion');
+                            }}
                             className="flex items-center gap-2 px-4 py-2 bg-neutral-600 text-white rounded-lg hover:bg-neutral-700 transition-all font-black text-[10px] uppercase tracking-wider"
                         >
                             <ChevronLeft size={14} />
@@ -895,6 +919,7 @@ const VariantesManager = ({ producto, refresh, onVariantesChange }) => {
                     </div>
                     
                     <VariantesTabSystem
+                        key={`crear-${modo}`}
                         producto={producto}
                         atributos={atributos}
                         setAtributos={setAtributos}
@@ -904,6 +929,7 @@ const VariantesManager = ({ producto, refresh, onVariantesChange }) => {
                         generando={generando}
                         modoInicial="crear"
                         onVolverAGestion={() => setModo('gestion')}
+                        forzarTab={modo === 'crear' ? 'atributos' : 'gestion'}
                     />
                 </div>
             )}
@@ -1000,13 +1026,13 @@ const ModalReposicion = ({ isOpen, onClose, producto: initialProducto, onSave })
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Ingreso a Casa Central (Reposición)">
             <form onSubmit={handleSubmit} className="space-y-4 py-1">
-                <div className="p-3 border border-neutral-100 rounded bg-neutral-50/50">
-                    <p className="text-neutral-400 text-[8px] font-black uppercase tracking-[0.3em] mb-0.5">Producto Seleccionado</p>
-                    <p className="text-black font-sport text-lg uppercase truncate leading-tight">{producto.nombre}</p>
+                <div className="p-3 border border-neutral-100 dark:border-gray-700 rounded bg-neutral-50/50 dark:bg-gray-800">
+                    <p className="text-neutral-400 dark:text-gray-400 text-[8px] font-black uppercase tracking-[0.3em] mb-0.5">Producto Seleccionado</p>
+                    <p className="text-black dark:text-white font-sport text-lg uppercase truncate leading-tight">{producto.nombre}</p>
                     <div className="flex items-center gap-2 mt-1">
-                        <p className="text-neutral-500 text-[9px] font-bold uppercase tracking-widest">Stock Central: {producto.stock_central} UN.</p>
+                        <p className="text-neutral-500 dark:text-gray-400 text-[9px] font-bold uppercase tracking-widest">Stock Central: {producto.stock_central} UN.</p>
                         {producto.usa_variantes && (
-                            <span className="px-1.5 py-0.5 bg-black text-white text-[7px] font-black uppercase rounded">Variantes Activas</span>
+                            <span className="px-1.5 py-0.5 bg-black dark:bg-gray-700 text-white text-[7px] font-black uppercase rounded">Variantes Activas</span>
                         )}
                     </div>
                 </div>
@@ -1029,9 +1055,9 @@ const ModalReposicion = ({ isOpen, onClose, producto: initialProducto, onSave })
                             <table className="w-full text-left">
                                 <thead className="bg-neutral-50 dark:bg-gray-700">
                                     <tr>
-                                        <th className="px-3 py-2 text-[9px] font-bold uppercase tracking-wider text-neutral-500">Atributos</th>
-                                        <th className="px-3 py-2 text-[9px] font-bold uppercase tracking-wider text-neutral-500 text-center">Actual</th>
-                                        <th className="px-3 py-2 text-[9px] font-bold uppercase tracking-wider text-neutral-500 text-center w-28">Ingreso</th>
+                                        <th className="px-3 py-2 text-[9px] font-bold uppercase tracking-wider text-neutral-500 dark:text-gray-400">Atributos</th>
+                                        <th className="px-3 py-2 text-[9px] font-bold uppercase tracking-wider text-neutral-500 dark:text-gray-400 text-center">Actual</th>
+                                        <th className="px-3 py-2 text-[9px] font-bold uppercase tracking-wider text-neutral-500 dark:text-gray-400 text-center w-28">Ingreso</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-neutral-100 dark:divide-gray-600">
@@ -1044,7 +1070,7 @@ const ModalReposicion = ({ isOpen, onClose, producto: initialProducto, onSave })
                                                         {Object.values(attrs || {}).join(' / ')}
                                                     </span>
                                                 </td>
-                                                <td className="px-3 py-2 text-center text-[10px] font-black text-neutral-400">
+                                                <td className="px-3 py-2 text-center text-[10px] font-black text-neutral-400 dark:text-gray-400">
                                                     {v.stock_central}
                                                 </td>
                                                 <td className="px-3 py-2">
@@ -1052,7 +1078,7 @@ const ModalReposicion = ({ isOpen, onClose, producto: initialProducto, onSave })
                                                         type="number" min="0" placeholder="0"
                                                         value={cantidadesVariantes[v.id_variante] || ''}
                                                         onChange={(e) => handleVarianteChange(v.id_variante, e.target.value)}
-                                                        className="w-full text-center px-2 py-1.5 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded text-xs font-bold focus:outline-none focus:border-brand-cyan transition-colors"
+                                                        className="w-full text-center px-2 py-1.5 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded text-xs font-bold text-black dark:text-white focus:outline-none focus:border-brand-cyan dark:focus:border-cyan-400 transition-colors"
                                                     />
                                                 </td>
                                             </tr>
@@ -1064,7 +1090,7 @@ const ModalReposicion = ({ isOpen, onClose, producto: initialProducto, onSave })
                     </div>
                 ) : (
                     <div className="space-y-2 mt-4">
-                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-neutral-400 block ml-1">Cantidad a Ingresar</label>
+                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-neutral-400 dark:text-gray-400 block ml-1">Cantidad a Ingresar</label>
                         <div className="relative">
                             <Package size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
                             <input
@@ -1081,7 +1107,7 @@ const ModalReposicion = ({ isOpen, onClose, producto: initialProducto, onSave })
                 <div className="pt-3 border-t border-neutral-100 flex flex-col gap-2 mt-4">
                     <button
                         type="submit" disabled={submitting}
-                        className="w-full bg-black text-white py-3 rounded text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-neutral-800 transition-colors disabled:opacity-50 h-11"
+                        className="w-full bg-black dark:bg-cyan-600 text-white py-3 rounded text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-neutral-800 dark:hover:bg-cyan-700 transition-colors disabled:opacity-50 h-11"
                     >
                         {submitting ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                         Confirmar Reposición
@@ -1089,7 +1115,7 @@ const ModalReposicion = ({ isOpen, onClose, producto: initialProducto, onSave })
                     <button
                         type="button"
                         onClick={onClose}
-                        className="w-full text-[9px] font-black text-neutral-400 uppercase tracking-widest py-2 hover:text-red-500 transition-colors"
+                        className="w-full text-[9px] font-black text-neutral-400 dark:text-gray-400 uppercase tracking-widest py-2 hover:text-red-500 dark:hover:text-red-400 transition-colors"
                     >
                         Cancelar Operación
                     </button>
@@ -1163,8 +1189,8 @@ const Productos = () => {
                             {Object.keys(atributos).length > 0 && (
                                 <div className="flex flex-wrap gap-x-2 gap-y-0 mt-0.5">
                                     {Object.entries(atributos).slice(0, 3).map(([key, value]) => (
-                                        <span key={key} className="text-[7px] font-bold text-neutral-300 uppercase">
-                                            {key}: <span className="text-neutral-500">{Array.isArray(value) ? value.join('/') : String(value)}</span>
+                                        <span key={key} className="text-[7px] font-bold text-neutral-300 dark:text-gray-500 uppercase">
+                                            {key}: <span className="text-neutral-500 dark:text-gray-400">{Array.isArray(value) ? value.join('/') : String(value)}</span>
                                         </span>
                                     ))}
                                 </div>
@@ -1186,11 +1212,11 @@ const Productos = () => {
                     <div className="flex flex-col gap-0.5 py-1">
                         <div className="flex items-center gap-1.5">
                             <span className="text-[9px] font-black text-black dark:text-white">
-                                {stockTotal} <span className="text-neutral-300 font-bold text-[7px]">STOCK</span>
+                                {stockTotal} <span className="text-neutral-300 dark:text-gray-500 font-bold text-[7px]">STOCK</span>
                             </span>
-                            <div className="w-px h-2 bg-neutral-200" />
-                            <span className="text-[9px] font-black text-neutral-400">
-                                {variantesCount} <span className="text-neutral-200 font-bold text-[7px]">VAR</span>
+                            <div className="w-px h-2 bg-neutral-200 dark:bg-gray-600" />
+                            <span className="text-[9px] font-black text-neutral-400 dark:text-gray-400">
+                                {variantesCount} <span className="text-neutral-200 dark:text-gray-600 font-bold text-[7px]">VAR</span>
                             </span>
                         </div>
                         <div className="flex items-center">
@@ -1203,7 +1229,7 @@ const Productos = () => {
                                     <AlertCircle size={7} /> Pendiente
                                 </span>
                             ) : (
-                                <span className="text-[7px] font-black uppercase text-neutral-300 flex items-center gap-0.5">
+                                <span className="text-[7px] font-black uppercase text-neutral-300 dark:text-gray-500 flex items-center gap-0.5">
                                     <Layout size={7} /> Simple
                                 </span>
                             )}
@@ -1224,11 +1250,11 @@ const Productos = () => {
                         <span className="text-[6px] text-neutral-300 dark:text-gray-400 font-black uppercase">PÚB</span>
                     </div>
                     {isPrivileged && (
-                        <div className="flex flex-col border-t border-neutral-50 mt-0.5 pt-0.5">
+                        <div className="flex flex-col border-t border-neutral-50 dark:border-gray-700 mt-0.5 pt-0.5">
                             <span className="font-black text-[8px] text-brand-cyan dark:text-cyan-400 leading-none">
                                 ${Number(row.precio_pushsport || 0).toLocaleString()} <span className="text-[6px] opacity-40">PUSH</span>
                             </span>
-                            <span className="text-[6px] font-bold text-neutral-300 uppercase mt-0.5">
+                            <span className="text-[6px] font-bold text-neutral-300 dark:text-gray-500 uppercase mt-0.5">
                                 COST: ${Number(row.costo_compra || 0).toLocaleString()}
                             </span>
                         </div>
@@ -1409,7 +1435,7 @@ const Productos = () => {
                                 <CircleDollarSign size={14} className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
                                 <input
                                     required type="number" step="0.01" min="0"
-                                    className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-xs sm:text-sm font-bold text-black dark:text-white focus:outline-none focus:border-brand-cyan dark:focus:border-cyan-400 transition-all"
+                                    className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-xs sm:text-sm font-bold text-black dark:text-gray-100 focus:outline-none focus:border-brand-cyan dark:focus:border-cyan-400 transition-all dark:placeholder-gray-500"
                                     placeholder="0.00"
                                     value={formData.costo_compra ?? ''}
                                     onChange={e => setFormData({ ...formData, costo_compra: e.target.value })}
@@ -1623,16 +1649,20 @@ const Productos = () => {
         }
     };
 
-    const customActions = isPrivileged ? (row, isInDropdown = false) => {
+    const customActions = isPrivileged ? (row, isInDropdown = false, refresh, onCloseDropdown) => {
         if (isInDropdown) {
             // Versión para dropdown con texto
             return (
                 <button
-                    onClick={() => {
+                    type="button"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        console.log('Click en Reponer Stock');
                         setReposicionProducto(row);
                         setIsReposicionModalOpen(true);
+                        if (onCloseDropdown) onCloseDropdown();
                     }}
-                    className="w-full flex items-center gap-2.5 px-2.5 py-2 text-[10px] font-bold uppercase tracking-widest text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-all"
+                    className="w-full flex items-center gap-2.5 px-3 py-3 text-[10px] font-bold uppercase tracking-widest text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-all cursor-pointer pointer-events-auto min-h-[44px]"
                 >
                     <Package size={14} className="opacity-70" />
                     <span>Reponer Stock</span>
