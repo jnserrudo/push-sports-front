@@ -80,7 +80,7 @@ const RowsPerPageSelect = ({ value, onChange }) => {
    Compact Actions Dropdown
    Replaces separate buttons to save space
    ────────────────────────────────────────────── */
-const RowActions = ({ row, onEdit, onDelete, onView, customActions, refresh }) => {
+const RowActions = ({ row, onEdit, onDelete, onView, customActions, refresh, isLastRows }) => {
     const [open, setOpen] = useState(false);
     const ref = useRef(null);
     const buttonRef = useRef(null);
@@ -117,7 +117,9 @@ const RowActions = ({ row, onEdit, onDelete, onView, customActions, refresh }) =
 
             {open && (
                 <div
-                    className="absolute right-0 top-full mt-1 z-[99999] bg-white dark:bg-slate-800 border border-neutral-200 dark:border-slate-700 rounded-xl shadow-2xl overflow-hidden min-w-[160px] pointer-events-auto"
+                    className={`absolute right-0 z-[99999] bg-white dark:bg-slate-800 border border-neutral-200 dark:border-slate-700 rounded-xl shadow-2xl overflow-hidden min-w-[160px] pointer-events-auto ${
+                        isLastRows ? 'bottom-full mb-1' : 'top-full mt-1'
+                    }`}
                 >
                     <div className="p-0 flex flex-col gap-0 text-left pointer-events-auto">
                         {onView && (
@@ -316,7 +318,7 @@ const DataTable = ({
             </div>
 
             {/* Table Area */}
-            <div className="rounded border border-neutral-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-sm relative z-10 w-full mb-2 min-h-[180px] overflow-visible">
+            <div className="rounded border border-neutral-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-sm relative z-30 w-full mb-2 min-h-[180px] overflow-visible">
                 <div className="overflow-visible custom-scrollbar rounded">
                     <table className="w-full text-left border-collapse min-w-full md:min-w-[700px]">
                         <thead>
@@ -377,6 +379,7 @@ const DataTable = ({
                                                     onView={onView} 
                                                     customActions={customActions} 
                                                     refresh={refresh}
+                                                    isLastRows={rowIdx >= paginatedData.length - 2 && paginatedData.length > 2}
                                                 />
                                             </td>
                                         )}
