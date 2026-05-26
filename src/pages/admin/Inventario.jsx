@@ -217,10 +217,10 @@ const Inventario = () => {
                         <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">Logística & Stock Central</span>
                     </div>
                     <h2 className="text-xl md:text-2xl uppercase leading-none m-0 font-sport text-black dark:text-white">
-                        Stock por <span className="text-brand-cyan">Sede</span>
+                        <span className="text-brand-cyan">Stock</span>
                     </h2>
-                    <p className="text-neutral-500 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed max-w-xl mt-2 whitespace-normal line-clamp-3 md:line-clamp-none">
-                        Mapa de disponibilidad y mapeo de productos. Vincula el catálogo a cada ubicación para habilitar ventas y controlar niveles mínimos.
+                    <p className="text-neutral-500 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed max-w-xl mt-2 whitespace-normal">
+                        Asigná y modificá el stock real en cada sucursal. Los cambios hechos acá impactan directamente en el sistema y habilitan las ventas.
                     </p>
                     <div className="flex items-center gap-2 mt-2">
                         <span className="text-[10px] font-black uppercase text-brand-cyan bg-brand-cyan/10 px-2 py-0.5 rounded">

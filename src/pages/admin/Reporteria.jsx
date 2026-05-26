@@ -18,6 +18,7 @@ import {
   DollarSign
 } from 'lucide-react';
 import api from '../../api/api';
+import { Link } from 'react-router-dom';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { motion, AnimatePresence } from 'framer-motion';
 import { productosService } from '../../services/productosService';
@@ -185,10 +186,10 @@ const Reporteria = () => {
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">PUSH SPORT</span>
             </div>
             <h1 className="text-xl md:text-2xl uppercase leading-none m-0 font-sport text-black dark:text-white">
-                Reportería <span className="text-brand-cyan">Central</span>
+                <span className="text-brand-cyan">Reportería</span>
             </h1>
             <p className="text-neutral-500 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed max-w-xl mt-2 whitespace-normal">
-                Generá reportes de precios para comercios o listados de visitas para envíos. Todo en formato PDF profesional de manera instantánea.
+                Generá listas de precios o remitos de entrega en PDF. Nota: la generación de remitos es informativa y no modifica la base de datos.
             </p>
         </div>
 
@@ -199,14 +200,14 @@ const Reporteria = () => {
                 className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'global' ? 'bg-white dark:bg-gray-700 text-black dark:text-white shadow-md border border-neutral-200 dark:border-gray-600' : 'text-neutral-500 dark:text-gray-400 hover:text-neutral-800 dark:hover:text-gray-200'}`}
             >
                 <Download size={14} />
-                Lista de Precios
+                Precios
             </button>
             <button 
                 onClick={() => setActiveTab('shop')}
                 className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'shop' ? 'bg-white dark:bg-gray-700 text-black dark:text-white shadow-md border border-neutral-200 dark:border-gray-600' : 'text-neutral-500 dark:text-gray-400 hover:text-neutral-800 dark:hover:text-gray-200'}`}
             >
                 <Store size={14} />
-                Visita a Comercio
+                Remito
             </button>
         </div>
       </div>
@@ -364,10 +365,10 @@ const Reporteria = () => {
           >
             {/* Context banner for shop mode */}
             <div className="bg-neutral-900 dark:bg-gray-800 rounded-2xl px-6 py-4">
-              <p className="text-white dark:text-gray-100 font-black text-sm uppercase tracking-tight">Reporte de Visita a Comercio</p>
+              <p className="text-white dark:text-gray-100 font-black text-sm uppercase tracking-tight">Generador de Remitos</p>
               <p className="text-neutral-400 dark:text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-0.5">
-                Elegí la sucursal a visitar, seleccioná los productos que vas a dejar, ingresá las cantidades y generá el PDF para el comercio.
-                El <span className="text-white">precio público siempre aparece</span> en el reporte — podés incluir el precio Push opcionalmente.
+                Elegí la sucursal, seleccioná los productos que vas a dejar, ingresá las cantidades y generá el PDF de entrega.
+                <span className="text-brand-cyan font-black ml-1">Nota: Generar este PDF es administrativo y NO modifica el stock del sistema.</span>
               </p>
             </div>
 
@@ -403,7 +404,7 @@ const Reporteria = () => {
                 <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black shrink-0 ${
                   shopStep === 2 ? 'bg-brand-cyan text-black' : 'bg-neutral-200 text-neutral-400'
                 }`}>2</span>
-                <ListPlus size={13} /> Armar Reporte
+                <ListPlus size={13} /> Armar Remito
                 {selectedItems.length > 0 && (
                   <span className="bg-brand-cyan text-black text-[9px] font-black px-2 py-0.5 rounded-full">{selectedItems.length}</span>
                 )}
@@ -481,14 +482,28 @@ const Reporteria = () => {
                   exit={{ opacity: 0, y: -10 }}
                   className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6"
                 >
+                  {/* Warning Notice Banner */}
+                  <div className="lg:col-span-3 bg-amber-500/10 border-2 border-amber-500/30 text-amber-700 dark:text-amber-400 rounded-2xl p-4 flex items-start gap-3 shadow-sm">
+                    <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
+                    <div className="text-[11px] font-bold uppercase tracking-wider leading-relaxed">
+                      <p className="font-black text-xs mb-1">⚠️ ATENCIÓN: ESTE REMITO NO CAMBIA EL STOCK EN EL SISTEMA</p>
+                      <p>
+                        Esta pantalla sirve solo para calcular cantidades e descargar/imprimir el remito físico (PDF) para firmar. 
+                        Para que la sucursal tenga este stock disponible en su POS para vender, debés registrar el nuevo stock ingresando a la sección 
+                        <Link to="/dashboard/inventario" className="underline font-black hover:text-black dark:hover:text-white mx-1 text-neutral-900 dark:text-gray-100">STOCK</Link> 
+                        e ingresar el "Stock nuevo" allí.
+                      </p>
+                    </div>
+                  </div>
+
                   {/* Left: Catalog */}
                   <div className="lg:col-span-1">
                     <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-[2.5rem] p-4 md:p-6 shadow-premium border border-neutral-100 dark:border-gray-700 flex flex-col" style={{ height: '60vh', minHeight: '320px' }}>
                       <div className="mb-4 space-y-2">
                         <h3 className="text-sm font-black uppercase tracking-widest text-neutral-900 dark:text-white flex items-center gap-2">
-                          <Plus size={16} className="text-brand-cyan" /> Productos a dejar
+                          <Plus size={16} className="text-brand-cyan" /> Productos a entregar
                         </h3>
-                        <p className="text-[9px] text-neutral-400 font-bold uppercase tracking-widest">Tocá el <span className="text-brand-cyan">+</span> para agregar al reporte</p>
+                        <p className="text-[9px] text-neutral-400 font-bold uppercase tracking-widest">Tocá el <span className="text-brand-cyan">+</span> para agregar al remito</p>
                         <div className="relative">
                           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400" size={15} />
                           <input
@@ -552,7 +567,7 @@ const Reporteria = () => {
                           <Store className="text-brand-cyan" size={16} />
                         </div>
                         <div>
-                          <p className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest">Preparando reporte para</p>
+                          <p className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest">Preparando remito para</p>
                           <p className="text-sm font-black text-white uppercase tracking-tight leading-none">{sucursal.nombre}</p>
                         </div>
                         <div className="w-2 h-2 bg-brand-cyan rounded-full animate-pulse" />
@@ -585,7 +600,7 @@ const Reporteria = () => {
                                   disabled
                                   className="h-9 px-5 rounded-xl flex items-center gap-2 bg-neutral-700 text-neutral-500 cursor-not-allowed font-black uppercase tracking-widest text-[10px]"
                                 >
-                                  <Download size={13} /> Generar PDF
+                                  <Download size={13} /> Descargar Remito
                                 </button>
                               ) : (
                                 <PDFDownloadLink
@@ -599,7 +614,7 @@ const Reporteria = () => {
                                 >
                                   {({ loading: pdfLoading }) => pdfLoading
                                     ? <><Loader2 size={13} className="animate-spin" /> Generando...</>
-                                    : <><Download size={13} />{hayExceso ? ' PDF (con advertencia)' : ` Generar PDF (${selectedItems.length})`}</>
+                                    : <><Download size={13} />{hayExceso ? ' Remito PDF (con adv.)' : ` Descargar Remito PDF (${selectedItems.length})`}</>
                                   }
                                 </PDFDownloadLink>
                               )}
@@ -628,7 +643,7 @@ const Reporteria = () => {
                           <ListPlus size={56} strokeWidth={1} className="text-brand-cyan/20 mb-4" />
                           <p className="text-sm font-black text-neutral-300 uppercase tracking-widest">Sin productos todavía</p>
                           <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-2 max-w-xs mx-auto">
-                            Usá el panel izquierdo para agregar productos que vas a dejar en <span className="text-brand-cyan">{sucursal.nombre}</span>
+                            Usá el panel izquierdo para agregar productos que vas a entregar a <span className="text-brand-cyan">{sucursal.nombre}</span>
                           </p>
                         </div>
                       ) : (
@@ -740,16 +755,24 @@ const Reporteria = () => {
                       )}
 
                       {selectedItems.length > 0 && (
-                        <div className="mt-6 pt-5 border-t border-neutral-100 dark:border-gray-700 flex flex-wrap justify-between items-center gap-4">
-                          <div className="text-xs font-black uppercase tracking-widest">
-                            <p className="text-neutral-400 dark:text-gray-400">Total unidades a dejar</p>
-                            <p className="text-3xl text-neutral-900 dark:text-white tracking-tighter mt-1">{selectedItems.reduce((a, c) => a + c.cantidadDejada, 0)}</p>
+                        <>
+                          <div className="mt-6 pt-5 border-t border-neutral-100 dark:border-gray-700 flex flex-wrap justify-between items-center gap-4">
+                            <div className="text-xs font-black uppercase tracking-widest">
+                              <p className="text-neutral-400 dark:text-gray-400">Total unidades a entregar</p>
+                              <p className="text-3xl text-neutral-900 dark:text-white tracking-tighter mt-1">{selectedItems.reduce((a, c) => a + c.cantidadDejada, 0)}</p>
+                            </div>
+                            <div className="text-right text-xs font-black uppercase tracking-widest">
+                              <p className="text-neutral-400 dark:text-gray-400">Productos en remito</p>
+                              <p className="text-3xl text-neutral-900 dark:text-white tracking-tighter mt-1">{selectedItems.length}</p>
+                            </div>
                           </div>
-                          <div className="text-right text-xs font-black uppercase tracking-widest">
-                            <p className="text-neutral-400 dark:text-gray-400">Productos en reporte</p>
-                            <p className="text-3xl text-neutral-900 dark:text-white tracking-tighter mt-1">{selectedItems.length}</p>
+                          
+                          <div className="mt-4 p-3.5 bg-neutral-50 dark:bg-gray-700/30 rounded-2xl border border-neutral-200 dark:border-gray-600 text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-gray-400 leading-normal">
+                            💡 RECUERDA: Tras realizar la entrega física de la mercadería y firmar este remito, debés ir a 
+                            <Link to="/dashboard/inventario" className="text-brand-cyan dark:text-cyan-400 underline font-black mx-1 hover:text-black dark:hover:text-white">STOCK</Link> 
+                            y actualizar el "Stock Actual" de cada producto al valor indicado arriba en "Stock nuevo".
                           </div>
-                        </div>
+                        </>
                       )}
                     </div>
                   </div>

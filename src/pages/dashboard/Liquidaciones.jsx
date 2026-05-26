@@ -319,10 +319,10 @@ const Liquidaciones = () => {
                          </div>
                     </div>
                      <h2 className="text-lg md:text-xl uppercase leading-none m-0 font-sport text-black dark:text-white">
-                        Cierre de Caja <span className="text-brand-cyan">/ Liquidaciones</span>
+                        <span className="text-brand-cyan">Liquidaciones</span>
                     </h2>
                     <p className="text-neutral-500 text-[9px] md:text-[10px] font-bold uppercase tracking-widest leading-relaxed max-w-xl mt-1.5 whitespace-normal">
-                        Módulo de auditoría y cierre. Revisa las ventas pendientes de cada sucursal, comprueba los desgloses de métodos de pago y emite los comprobantes finales.
+                        Módulo de liquidación y cierre. Conciliá el dinero cobrado por las sucursales en sus ventas para registrar el cierre de caja.
                     </p>
                  </div>
                  
@@ -342,6 +342,23 @@ const Liquidaciones = () => {
                 </div>
             ) : (
                 <>
+                    {/* Explanation Banner for Liquidaciones */}
+                    <div className="flex items-start gap-3 p-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/50 rounded-2xl mb-2">
+                        <ShieldCheck className="text-emerald-500 shrink-0 mt-0.5" size={18} />
+                        <div className="space-y-1">
+                            <h4 className="text-[10px] font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-widest">
+                                ¿Cómo funciona el flujo de Liquidaciones y Caja?
+                            </h4>
+                            <p className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium leading-relaxed">
+                                1. <strong>Ventas:</strong> Cada venta realizada en la sección <strong>Ventas</strong> descuenta stock del local automáticamente y suma dinero al saldo acumulado de la sucursal.
+                                <br />
+                                2. <strong>Control:</strong> En esta sección, auditás esas ventas y contás el dinero físico real entregado por el encargado.
+                                <br />
+                                3. <strong>Cierre:</strong> Al liquidar una sucursal, confirmás el monto físico recibido, emitís el recibo PDF y <strong>el saldo a rendir de la sucursal se reinicia a cero ($0)</strong> para comenzar un nuevo ciclo.
+                            </p>
+                        </div>
+                    </div>
+
                     {/* Tarjetas de Sucursales */}
                     <div className="space-y-3">
                         <div className="flex items-center gap-1.5 mb-1.5">
@@ -620,10 +637,10 @@ const Liquidaciones = () => {
                                 </div>
 
                                 {/* Alerta + Botones compactos */}
-                                <div className="p-1.5 bg-brand-cyan/10 border border-brand-cyan/20 rounded flex items-center gap-1.5">
-                                    <AlertCircle size={10} className="text-brand-cyan shrink-0" />
-                                    <p className="text-[7px] font-bold uppercase tracking-widest text-neutral-600 dark:text-gray-300 m-0">
-                                        {previewData.cantVentas} ventas se liquidarán. Saldo → CERO.
+                                <div className="p-2 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/50 rounded flex items-start gap-1.5">
+                                    <AlertCircle size={12} className="text-emerald-600 shrink-0 mt-0.5" />
+                                    <p className="text-[8px] font-bold uppercase tracking-widest text-emerald-800 dark:text-emerald-300 m-0 leading-normal">
+                                        ⚠️ IMPORTANTE: Al confirmar la liquidación, se archivarán las {previewData.cantVentas} ventas de este período, se registrará el dinero en el historial consolidado, se generará el recibo PDF y el saldo a cobrar de la sede volverá a $0.
                                     </p>
                                 </div>
 

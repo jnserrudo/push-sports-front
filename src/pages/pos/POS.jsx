@@ -434,9 +434,9 @@ const POS = () => {
                     <Box size={18} md:size={22} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-lg md:text-xl font-black tracking-tighter m-0 uppercase leading-none text-neutral-950">Catálogo</h2>
-                  <p className="text-[9px] md:text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5 whitespace-normal">Operá el inventario de {currentSucursal?.nombre || 'la sede'}</p>
-                  <p className="text-[10px] text-neutral-500 font-medium mt-1 whitespace-normal">Explorá productos, filtrá por sede y agregalos al carrito.</p>
+                  <h2 className="text-lg md:text-xl font-black tracking-tighter m-0 uppercase leading-none text-neutral-950">Ventas</h2>
+                  <p className="text-[9px] md:text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5 whitespace-normal">Registrá ventas para {currentSucursal?.nombre || 'la sede'}</p>
+                  <p className="text-[10px] text-neutral-500 font-medium mt-1 whitespace-normal">Buscá productos del stock de esta sede, agregalos al carrito y cobrá.</p>
                 </div>
             </div>
 
@@ -521,6 +521,20 @@ const POS = () => {
                     </div>
                 ) : null;
             })()}
+
+            {/* System impact warning card */}
+            {(!isSuperAdmin || selectedSucursalId) && (
+              <div className="mx-4 md:mx-5 mb-3 flex items-start gap-2.5 px-3.5 py-2.5 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-xl">
+                <AlertCircle size={15} className="text-blue-500 dark:text-blue-400 shrink-0 mt-0.5" />
+                <div className="text-[9px] md:text-[10px] text-blue-700 dark:text-blue-300 font-bold leading-relaxed uppercase tracking-wide">
+                  <span>ℹ️ IMPACTO REAL EN EL SISTEMA:</span> Al concretar una venta:
+                  <ul className="list-disc pl-4 mt-1 space-y-0.5 normal-case font-medium">
+                    <li>El stock del producto se <strong className="font-black">resta automáticamente</strong> en la sección <strong className="font-black text-blue-900 dark:text-blue-100">Stock</strong> para esta sucursal.</li>
+                    <li>El monto cobrado se <strong className="font-black">suma al saldo acumulado</strong> de esta sucursal que debe rendirse en <strong className="font-black text-blue-900 dark:text-blue-100">Liquidaciones</strong>.</li>
+                  </ul>
+                </div>
+              </div>
+            )}
         </div>
 
         <div className="flex-1 p-2 md:p-3 overflow-y-auto scrollbar-hide">
@@ -732,6 +746,16 @@ const POS = () => {
                 <Loader2 size={13} className="text-brand-cyan shrink-0 animate-spin" />
                 <p className="text-[9px] md:text-[10px] font-bold text-neutral-500 dark:text-gray-300 leading-relaxed m-0">
                     <span className="font-black text-black dark:text-white mr-1">Procesando:</span>Guardando la venta, no cierres la pantalla...
+                </p>
+            </div>
+        )}
+
+        {/* System impact explanation in Drawer */}
+        {!showDrafts && activeTab === 'cart' && !isProcessing && (
+            <div className="mx-4 md:mx-5 mt-2 flex items-start gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-xl">
+                <AlertCircle size={14} className="text-blue-500 dark:text-blue-400 shrink-0 mt-0.5" />
+                <p className="text-[9px] text-blue-700 dark:text-blue-300 font-bold leading-relaxed m-0 uppercase tracking-wide">
+                    🔄 IMPACTO EN EL SISTEMA: Esta venta <span className="underline">restará stock automáticamente</span> en la base de datos de esta sede y <span className="underline">sumará saldo pendiente</span> en <strong className="font-black text-blue-900 dark:text-blue-100">Liquidaciones</strong>.
                 </p>
             </div>
         )}

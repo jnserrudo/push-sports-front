@@ -140,11 +140,11 @@ const DashboardLayout = () => {
 
   const menuItems = [
     { label: 'Visión General',    icon: LayoutDashboard, path: '/dashboard',                roles: [1, 2, 3] },
-    { label: 'Terminal POS',      icon: ShoppingCart,    path: '/dashboard/pos',            roles: [1, 2, 3] },
-    { label: 'Catálogo Base',     icon: Package,         path: '/dashboard/productos',      roles: [1] },
+    { label: 'Ventas',            icon: ShoppingCart,    path: '/dashboard/pos',            roles: [1, 2, 3] },
+    { label: 'Productos',         icon: Package,         path: '/dashboard/productos',      roles: [1] },
     { label: 'Categorías',        icon: Component,       path: '/dashboard/categorias',     roles: [1] },
     { label: 'Marcas',            icon: Tag,             path: '/dashboard/marcas',         roles: [1] },
-    { label: 'Control de Inventario', icon: Box,             path: '/dashboard/inventario',     roles: [1, 2, 3] },
+    { label: 'Stock',             icon: Box,             path: '/dashboard/inventario',     roles: [1, 2, 3] },
     { label: 'Gestión de Personal',   icon: Users,           path: '/dashboard/usuarios',       roles: [1] },
     { label: 'Sucursales',        icon: MapPin,          path: '/dashboard/sucursales',     roles: [1] },
     { label: 'Tipos de Sede',     icon: Wallet,          path: '/dashboard/tipos-comercio', roles: [1] },
@@ -154,7 +154,7 @@ const DashboardLayout = () => {
     { label: 'Gestión de Devoluciones', icon: RotateCcw,       path: '/dashboard/devoluciones',   roles: [1, 2, 3] },
     { label: 'Consultas Web',    icon: MessageSquare,    path: '/dashboard/consultas',      roles: [1, 2, 3] },
     { label: 'Rectificaciones',   icon: AlertTriangle,   path: '/dashboard/rectificaciones',roles: [1, 2, 3] },
-    { label: 'Cierres de Caja',   icon: CreditCard,      path: '/dashboard/liquidaciones',  roles: [1, 2] },
+    { label: 'Liquidaciones',     icon: CreditCard,      path: '/dashboard/liquidaciones',  roles: [1, 2] },
     { label: 'Gestión de Descuentos', icon: Ticket,          path: '/dashboard/descuentos',     roles: [1] },
     { label: 'Eventos & Campañas',    icon: CalendarDays,    path: '/dashboard/eventos',        roles: [1] },
     { label: 'Packs y Combos',    icon: Package,         path: '/dashboard/combos',         roles: [1] },
