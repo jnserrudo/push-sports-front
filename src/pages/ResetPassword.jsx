@@ -74,9 +74,9 @@ const ResetPassword = () => {
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="space-y-2">
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Nueva Contraseña</label>
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 dark:text-gray-500">Nueva Contraseña</label>
                         <div className="relative group">
-                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-300 group-focus-within:text-brand-cyan transition-colors" size={18} />
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-300 dark:text-gray-500 group-focus-within:text-brand-cyan dark:group-focus-within:text-cyan-400 transition-colors" size={18} />
                             <input 
                                 required type="password"
                                 className="w-full pl-12 pr-4 py-4 bg-neutral-50 dark:bg-gray-700 border-2 border-neutral-100 dark:border-gray-600 rounded-xl text-black dark:text-white placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-black dark:focus:border-cyan-400 transition-all"
@@ -88,9 +88,9 @@ const ResetPassword = () => {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Confirmar Contraseña</label>
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 dark:text-gray-500">Confirmar Contraseña</label>
                         <div className="relative group">
-                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-300 group-focus-within:text-brand-cyan transition-colors" size={18} />
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-300 dark:text-gray-500 group-focus-within:text-brand-cyan dark:group-focus-within:text-cyan-400 transition-colors" size={18} />
                             <input 
                                 required type="password"
                                 className="w-full pl-12 pr-4 py-4 bg-neutral-50 dark:bg-gray-700 border-2 border-neutral-100 dark:border-gray-600 rounded-xl text-black dark:text-white placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-black dark:focus:border-cyan-400 transition-all"
@@ -111,7 +111,7 @@ const ResetPassword = () => {
                 </form>
 
                 <div className="mt-8 text-center border-t border-neutral-100 dark:border-gray-800 pt-6">
-                    <Link to="/login" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-neutral-400 hover:text-black dark:hover:text-white transition-colors">
+                    <Link to="/login" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-neutral-400 dark:text-gray-500 hover:text-black dark:hover:text-white transition-colors">
                         <ArrowLeft size={14} /> Volver al Ingreso
                     </Link>
                 </div>

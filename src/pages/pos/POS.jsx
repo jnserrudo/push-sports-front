@@ -152,7 +152,7 @@ const POS = () => {
       setIsLoadingProducts(true);
       try {
         const id = selectedSucursalId || sucursalId || user?.id_comercio_asignado;
-        if (id) {
+        if (id && id !== 'undefined' && id !== undefined) {
           const [inventario, sucursalData, combosData] = await Promise.all([
             posService.getInventarioSucursal(id),
             sucursalesService.getById(id),
@@ -428,19 +428,17 @@ const POS = () => {
       
       {/* CATALOG AREA */}
       <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-gray-800 rounded-3xl md:rounded-[2rem] shadow-premium border border-neutral-100 dark:border-gray-700 overflow-hidden h-full">
-        <div className="p-4 md:p-5 border-b border-neutral-50 dark:border-gray-700 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 md:gap-6 flex-wrap">
-            <div className="flex items-start md:items-center gap-3 md:gap-4 w-full lg:w-auto flex-1">
-                <div className="w-9 h-9 md:w-11 md:h-11 bg-neutral-950 text-brand-cyan flex items-center justify-center rounded-xl shadow-lg flex-shrink-0 mt-1 md:mt-0">
-                    <Box size={18} md:size={22} />
+        <div className="p-3 md:p-4 border-b border-neutral-50 dark:border-gray-700 flex flex-col lg:flex-row justify-between items-center gap-3 md:gap-4 flex-wrap">
+            <div className="flex items-center gap-2 md:gap-3 w-full lg:w-auto flex-1">
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-neutral-950 text-brand-cyan flex items-center justify-center rounded-lg shadow-lg flex-shrink-0">
+                    <Box size={16} md:size={20} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-lg md:text-xl font-black tracking-tighter m-0 uppercase leading-none text-neutral-950">Ventas</h2>
-                  <p className="text-[9px] md:text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5 whitespace-normal">Registrá ventas para {currentSucursal?.nombre || 'la sede'}</p>
-                  <p className="text-[10px] text-neutral-500 font-medium mt-1 whitespace-normal">Buscá productos del stock de esta sede, agregalos al carrito y cobrá.</p>
+                  <h2 className="text-base md:text-lg font-black tracking-tighter m-0 uppercase leading-none text-neutral-950">Ventas - {currentSucursal?.nombre || 'Seleccioná sede'}</h2>
                 </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4 w-full lg:w-auto mt-2 lg:mt-0">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 md:gap-3 w-full lg:w-auto">
                 {/* SuperAdmin sucursal picker */}
                 {isSuperAdmin && (
                     <div className="w-full sm:w-64">
@@ -455,29 +453,27 @@ const POS = () => {
                     </div>
                 )}
 
-                <div className="relative flex-1 w-full sm:w-64 group min-w-0">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-300 group-focus-within:text-brand-cyan transition-colors" size={16} />
+                <div className="relative flex-1 w-full sm:w-56 group min-w-0">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-300 dark:text-gray-500 group-focus-within:text-brand-cyan dark:group-focus-within:text-cyan-400 transition-colors" size={14} />
                     <input 
                         ref={searchInputRef}
                         type="text" 
                         placeholder="BUSCAR..."
-                        className="input-premium-v2 pl-10 py-2.5 md:pl-12 md:py-3.5 text-[8px] md:text-[10px] tracking-[0.2em] uppercase font-black w-full text-ellipsis"
+                        className="input-premium-v2 pl-9 py-2 md:pl-10 md:py-2.5 text-[8px] md:text-[9px] tracking-[0.2em] uppercase font-black w-full text-ellipsis"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
                 
-                <button 
+                <button
                     onClick={() => setActiveTab('cart')}
                     disabled={isProcessing}
-                    className="relative bg-black text-white px-4 md:px-6 py-2.5 md:py-3.5 rounded-xl font-bold uppercase tracking-widest text-[10px] flex items-center gap-2 hover:bg-brand-cyan hover:text-black transition-all shadow-premium active:scale-95 w-full sm:w-auto justify-center flex-shrink-0 disabled:opacity-50"
+                    className="relative bg-black text-white px-3 md:px-5 py-2 md:py-2.5 rounded-lg font-bold uppercase tracking-widest text-[9px] md:text-[10px] flex items-center gap-1.5 md:gap-2 hover:bg-brand-cyan hover:text-black transition-all shadow-premium active:scale-95 w-full sm:w-auto justify-center flex-shrink-0 disabled:opacity-50"
                 >
-                    <div className="flex items-center justify-center p-1 bg-white/20 rounded-md">
-                        <ShoppingBag size={14} />
-                    </div>
-                    Paso 2: Checkout
+                    <ShoppingBag size={14} />
+                    Ver Carrito
                     {cart.length > 0 && (
-                        <span className="absolute -top-2 -right-2 bg-brand-cyan text-black w-5 h-5 flex items-center justify-center rounded-full text-[9px] font-black shadow-md border-2 border-neutral-800">
+                        <span className="absolute -top-1.5 -right-1.5 bg-brand-cyan text-black w-4 h-4 flex items-center justify-center rounded-full text-[8px] font-black shadow-md border-2 border-neutral-800">
                             {cart.reduce((s,i)=>s+i.cantidad,0)}
                         </span>
                     )}
@@ -492,30 +488,30 @@ const POS = () => {
 
                 if (isSuperAdmin && !selectedSucursalId) {
                     stepNum = 'Paso 1';
-                    stepMsg = 'Seleccioná una sede en el desplegable de arriba para cargar su inventario.';
-                    stepIcon = <MapPin size={13} className="text-brand-cyan shrink-0" />;
+                    stepMsg = 'Seleccioná una sede';
+                    stepIcon = <MapPin size={12} className="text-brand-cyan shrink-0" />;
                 } else if (cart.length === 0 && activeTab === 'catalog') {
                     stepNum = 'Paso 2';
-                    stepMsg = 'Tocá un producto del catálogo para sumarlo al carrito. Usá el buscador para encontrarlo más rápido.';
-                    stepIcon = <Package size={13} className="text-brand-cyan shrink-0" />;
+                    stepMsg = 'Tocá un producto para agregar al carrito';
+                    stepIcon = <Package size={12} className="text-brand-cyan shrink-0" />;
                 } else if (cart.length > 0 && activeTab === 'catalog') {
                     stepNum = 'Paso 3';
-                    stepMsg = `Tenés ${cart.reduce((s,i)=>s+i.cantidad,0)} artículo(s). Presioná "Checkout" para revisar el resumen y finalizar la venta.`;
-                    stepIcon = <ShoppingBag size={13} className="text-brand-cyan shrink-0" />;
+                    stepMsg = `${cart.reduce((s,i)=>s+i.cantidad,0)} ítems. Presioná Checkout para finalizar.`;
+                    stepIcon = <ShoppingBag size={12} className="text-brand-cyan shrink-0" />;
                 } else if (activeTab === 'cart' && !isProcessing) {
                     stepNum = 'Paso 4';
-                    stepMsg = 'Revisá los ítems, aplicá un código promo si tenés, elegí el método de pago y presioná "Finalizar Venta".';
-                    stepIcon = <Receipt size={13} className="text-brand-cyan shrink-0" />;
+                    stepMsg = 'Revisá, elegí método de pago y finaliza';
+                    stepIcon = <Receipt size={12} className="text-brand-cyan shrink-0" />;
                 } else if (isProcessing) {
                     stepNum = 'Procesando';
-                    stepMsg = 'Guardando la venta, no cierres la pantalla...';
-                    stepIcon = <Loader2 size={13} className="text-brand-cyan shrink-0 animate-spin" />;
+                    stepMsg = 'Guardando venta...';
+                    stepIcon = <Loader2 size={12} className="text-brand-cyan shrink-0 animate-spin" />;
                 }
 
                 return stepMsg ? (
-                    <div className="mx-4 md:mx-5 mb-3 flex items-center gap-2.5 px-3.5 py-2.5 bg-neutral-50 dark:bg-gray-700/40 border border-neutral-200/70 dark:border-gray-600 rounded-xl">
+                    <div className="mx-3 md:mx-4 mb-2 flex items-center gap-2 px-3 py-2 bg-neutral-50 dark:bg-gray-700/40 border border-neutral-200/70 dark:border-gray-600 rounded-lg">
                         {stepIcon}
-                        <p className="text-[9px] md:text-[10px] font-bold text-neutral-500 dark:text-gray-300 leading-relaxed m-0">
+                        <p className="text-[8px] md:text-[9px] font-bold text-neutral-500 dark:text-gray-300 leading-relaxed m-0">
                             <span className="font-black text-black dark:text-white mr-1">{stepNum}:</span>{stepMsg}
                         </p>
                     </div>
@@ -524,15 +520,11 @@ const POS = () => {
 
             {/* System impact warning card */}
             {(!isSuperAdmin || selectedSucursalId) && (
-              <div className="mx-4 md:mx-5 mb-3 flex items-start gap-2.5 px-3.5 py-2.5 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-xl">
-                <AlertCircle size={15} className="text-blue-500 dark:text-blue-400 shrink-0 mt-0.5" />
-                <div className="text-[9px] md:text-[10px] text-blue-700 dark:text-blue-300 font-bold leading-relaxed uppercase tracking-wide">
-                  <span>ℹ️ IMPACTO REAL EN EL SISTEMA:</span> Al concretar una venta:
-                  <ul className="list-disc pl-4 mt-1 space-y-0.5 normal-case font-medium">
-                    <li>El stock del producto se <strong className="font-black">resta automáticamente</strong> en la sección <strong className="font-black text-blue-900 dark:text-blue-100">Stock</strong> para esta sucursal.</li>
-                    <li>El monto cobrado se <strong className="font-black">suma al saldo acumulado</strong> de esta sucursal que debe rendirse en <strong className="font-black text-blue-900 dark:text-blue-100">Liquidaciones</strong>.</li>
-                  </ul>
-                </div>
+              <div className="mx-3 md:mx-4 mb-2 flex items-start gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg">
+                <AlertCircle size={12} className="text-blue-500 dark:text-blue-400 shrink-0 mt-0.5" />
+                <p className="text-[8px] md:text-[9px] text-blue-700 dark:text-blue-300 font-bold leading-relaxed m-0">
+                  La venta resta stock de esta sede y suma el monto a liquidaciones. Si una variante figura como AGOTADO, es porque no tiene stock en esta sucursal. Para agregar stock, usa la seccion Envíos a Sucursales.
+                </p>
               </div>
             )}
         </div>
@@ -543,14 +535,14 @@ const POS = () => {
             <div className="flex flex-col items-center justify-center py-20 md:py-32 gap-4 opacity-50">
               <MapPin size={60} strokeWidth={0.5} className="text-brand-cyan" />
               <div className="text-center space-y-1">
-                <p className="text-[10px] font-black uppercase tracking-[1em] text-neutral-600">Seleccioná una sede</p>
-                <p className="text-[8px] font-bold uppercase tracking-widest text-neutral-400">Cargar el inventario</p>
+                <p className="text-[10px] font-black uppercase tracking-[1em] text-neutral-600 dark:text-gray-300">Seleccioná una sede</p>
+                <p className="text-[8px] font-bold uppercase tracking-widest text-neutral-400 dark:text-gray-500">Cargar el inventario</p>
               </div>
             </div>
           ) : isLoadingProducts ? (
             <div className="flex flex-col items-center justify-center py-16 md:py-24 gap-4 opacity-60">
                 <div className="w-10 h-10 border-4 border-neutral-100 dark:border-gray-700 border-t-brand-cyan rounded-full animate-spin"></div>
-                <p className="text-[9px] font-black uppercase tracking-[0.5em] text-neutral-400">Accediendo a la RED...</p>
+                <p className="text-[9px] font-black uppercase tracking-[0.5em] text-neutral-400 dark:text-gray-500">Accediendo a la RED...</p>
             </div>
           ) : filteredProducts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 md:py-32 opacity-20 filter grayscale">
@@ -600,10 +592,10 @@ const POS = () => {
                     ) : null}
                 </div>
                 
-                <h3 className="font-bold text-[9px] md:text-xs uppercase tracking-tight mb-0.5 text-neutral-900 truncate">{nombre}</h3>
-                <div className="flex flex-col md:flex-row md:justify-between md:items-center text-neutral-900">
+                <h3 className="font-bold text-[9px] md:text-xs uppercase tracking-tight mb-0.5 text-neutral-900 dark:text-gray-100 truncate">{nombre}</h3>
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center text-neutral-900 dark:text-gray-100">
                     <span className="font-black text-base md:text-lg tracking-tighter">${precio.toLocaleString()}</span>
-                    <span className={`text-[7px] md:text-[8px] font-black uppercase tracking-widest ${stock < 5 ? 'text-brand-cyan' : 'text-neutral-400'}`}>
+                    <span className={`text-[7px] md:text-[8px] font-black uppercase tracking-widest ${stock < 5 ? 'text-brand-cyan dark:text-cyan-400' : 'text-neutral-400 dark:text-gray-500'}`}>
                         {stock} DISP.
                     </span>
                 </div>
@@ -619,7 +611,7 @@ const POS = () => {
             <div className="mt-8">
               <div className="flex items-center gap-2 mb-4">
                 <Package size={14} className="text-brand-cyan" />
-                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-400">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-400 dark:text-gray-500">
                   Combos Especiales
                 </h3>
               </div>
@@ -656,17 +648,17 @@ const POS = () => {
                         COMBO
                       </span>
                     </div>
-                    <h4 className="font-black text-xs md:text-sm uppercase text-neutral-900 mb-2 line-clamp-2">
+                    <h4 className="font-black text-xs md:text-sm uppercase text-neutral-900 dark:text-gray-100 mb-2 line-clamp-2">
                       {combo.nombre}
                     </h4>
                     {combo.descripcion && (
-                      <p className="text-[9px] text-neutral-500 mb-2 line-clamp-1">
+                      <p className="text-[9px] text-neutral-500 dark:text-gray-400 mb-2 line-clamp-1">
                         {combo.descripcion}
                       </p>
                     )}
                     <div className="flex items-baseline gap-1">
-                      <span className="text-[10px] font-bold text-neutral-600">$</span>
-                      <span className="text-lg md:text-xl font-sport text-neutral-900">
+                      <span className="text-[10px] font-bold text-neutral-600 dark:text-gray-300">$</span>
+                      <span className="text-lg md:text-xl font-sport text-neutral-900 dark:text-gray-100">
                         {Number(combo.precio_combo).toLocaleString()}
                       </span>
                     </div>
@@ -701,7 +693,7 @@ const POS = () => {
                 {/* Close Drawer Button */}
                 <button 
                   onClick={() => setActiveTab('catalog')}
-                  className="w-10 h-10 rounded-xl bg-white dark:bg-gray-700 border border-neutral-100 dark:border-gray-600 flex items-center justify-center text-neutral-400 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
+                  className="w-10 h-10 rounded-xl bg-white dark:bg-gray-700 border border-neutral-100 dark:border-gray-600 flex items-center justify-center text-neutral-400 dark:text-gray-500 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
                 >
                   <ChevronRight size={20} />
                 </button>
@@ -715,8 +707,8 @@ const POS = () => {
                     )}
                 </div>
                     <div>
-                        <h2 className="text-lg md:text-xl font-black tracking-tighter m-0 uppercase leading-none text-neutral-900">Ticket</h2>
-                        <span className="text-[10px] md:text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5 block">
+                        <h2 className="text-lg md:text-xl font-black tracking-tighter m-0 uppercase leading-none text-neutral-900 dark:text-gray-100">Ticket</h2>
+                        <span className="text-[10px] md:text-[11px] font-bold text-neutral-400 dark:text-gray-500 uppercase tracking-widest mt-0.5 block">
                             Terminal de venta rápida. Agregá productos y finalizá cobros en segundos.
                         </span>
                     </div>
@@ -755,7 +747,7 @@ const POS = () => {
             <div className="mx-4 md:mx-5 mt-2 flex items-start gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-xl">
                 <AlertCircle size={14} className="text-blue-500 dark:text-blue-400 shrink-0 mt-0.5" />
                 <p className="text-[9px] text-blue-700 dark:text-blue-300 font-bold leading-relaxed m-0 uppercase tracking-wide">
-                    🔄 IMPACTO EN EL SISTEMA: Esta venta <span className="underline">restará stock automáticamente</span> en la base de datos de esta sede y <span className="underline">sumará saldo pendiente</span> en <strong className="font-black text-blue-900 dark:text-blue-100">Liquidaciones</strong>.
+                    IMPACTO EN EL SISTEMA: Esta venta <span className="underline">restará stock automáticamente</span> en la base de datos de esta sede y <span className="underline">sumará saldo pendiente</span> en <strong className="font-black text-blue-900 dark:text-blue-100">Liquidaciones</strong>.
                 </p>
             </div>
         )}
@@ -764,13 +756,13 @@ const POS = () => {
           {showDrafts ? (
             <div className="space-y-3">
                <div className="flex items-center justify-between mb-2">
-                 <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Ventas en Espera</h3>
-                 <button onClick={() => setShowDrafts(false)} className="text-neutral-400 hover:text-black"><X size={14} /></button>
+                 <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400 dark:text-gray-500">Ventas en Espera</h3>
+                 <button onClick={() => setShowDrafts(false)} className="text-neutral-400 dark:text-gray-500 hover:text-black dark:hover:text-white"><X size={14} /></button>
                </div>
                {drafts.length === 0 ? (
                  <div className="text-center p-8 opacity-50">
-                    <Clock size={32} className="mx-auto text-neutral-300 mb-3" />
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400">No hay ventas pausadas</p>
+                    <Clock size={32} className="mx-auto text-neutral-300 dark:text-gray-500 mb-3" />
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 dark:text-gray-500">No hay ventas pausadas</p>
                  </div>
                ) : (
                  drafts.map((draft) => (
@@ -798,8 +790,8 @@ const POS = () => {
             </div>
           ) : cart.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-4 opacity-30">
-                <Store size={40} className="text-neutral-300" />
-                <p className="text-[9px] text-neutral-400 font-bold uppercase tracking-widest leading-relaxed">Seleccioná productos<br/>para iniciar la venta.</p>
+                <Store size={40} className="text-neutral-300 dark:text-gray-500" />
+                <p className="text-[9px] text-neutral-400 dark:text-gray-500 font-bold uppercase tracking-widest leading-relaxed">Seleccioná productos<br/>para iniciar la venta.</p>
             </div>
           ) : (
             <AnimatePresence>
@@ -818,25 +810,25 @@ const POS = () => {
                          <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl overflow-hidden border border-neutral-200 bg-neutral-100 flex items-center justify-center">
                             {item.img 
                               ? <img src={item.img} alt={item.nombre} className="w-full h-full object-cover" />
-                              : <Box size={14} className="text-neutral-400" />
+                              : <Box size={14} className="text-neutral-400 dark:text-gray-500" />
                             }
                          </div>
                          <div className="flex flex-col min-w-0 max-w-[140px] md:max-w-none">
-                            <h4 className="font-bold uppercase text-[9px] md:text-[10px] tracking-tight text-neutral-900 mb-0.5 md:mb-1 truncate">{item.nombre}</h4>
-                            <span className="text-[8px] font-bold text-neutral-400 uppercase tracking-widest">${item.precio.toLocaleString()} c/u</span>
+                            <h4 className="font-bold uppercase text-[9px] md:text-[10px] tracking-tight text-neutral-900 dark:text-gray-100 mb-0.5 md:mb-1 truncate">{item.nombre}</h4>
+                            <span className="text-[8px] font-bold text-neutral-400 dark:text-gray-500 uppercase tracking-widest">${item.precio.toLocaleString()} c/u</span>
                          </div>
                     </div>
-                    <button onClick={() => removeFromCart(item.id)} className="p-2 text-neutral-300 hover:text-red-500 active:scale-125 transition-all">
+                    <button onClick={() => removeFromCart(item.id)} className="p-2 text-neutral-300 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 active:scale-125 transition-all">
                         <Trash2 size={16} />
                     </button>
                 </div>
                 <div className="flex justify-between items-center">
                     <div className="flex items-center gap-1 bg-white dark:bg-gray-700 border border-neutral-100 dark:border-gray-600 rounded-lg p-0.5 shadow-sm">
-                        <button onClick={() => updateQuantity(item.id, -1)} className="w-6 h-6 md:w-7 md:h-7 flex items-center justify-center text-neutral-400 active:text-brand-cyan"><Minus size={12} /></button>
+                        <button onClick={() => updateQuantity(item.id, -1)} className="w-6 h-6 md:w-7 md:h-7 flex items-center justify-center text-neutral-400 dark:text-gray-500 active:text-brand-cyan dark:active:text-cyan-400"><Minus size={12} /></button>
                         <span className="w-5 md:w-7 text-center font-bold text-xs md:text-sm tabular-nums text-neutral-900 dark:text-white">{item.cantidad}</span>
-                        <button onClick={() => updateQuantity(item.id, 1)} className="w-6 h-6 md:w-7 md:h-7 flex items-center justify-center text-neutral-400 active:text-brand-cyan"><Plus size={12} /></button>
+                        <button onClick={() => updateQuantity(item.id, 1)} className="w-6 h-6 md:w-7 md:h-7 flex items-center justify-center text-neutral-400 dark:text-gray-500 active:text-brand-cyan dark:active:text-cyan-400"><Plus size={12} /></button>
                     </div>
-                    <span className="font-black text-neutral-900 text-sm md:text-base tracking-tighter">${(item.precio * item.cantidad).toLocaleString()}</span>
+                    <span className="font-black text-neutral-900 dark:text-gray-100 text-sm md:text-base tracking-tighter">${(item.precio * item.cantidad).toLocaleString()}</span>
                 </div>
               </motion.div>
             ))}
@@ -860,7 +852,7 @@ const POS = () => {
             {!descuentoAplicado ? (
                 <div className="flex gap-2">
                     <div className="relative flex-1">
-                        <Tag size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+                        <Tag size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-gray-500" />
                         <input
                             type="text"
                             placeholder="CÓDIGO PROMO..."
@@ -886,7 +878,7 @@ const POS = () => {
                             {descuentoAplicado.codigo} &mdash; -{descuentoAplicado.tipo_descuento === 'porcentaje' ? `${descuentoAplicado.valor_descuento}%` : `$${descuentoAplicado.valor_descuento.toLocaleString()}`}
                         </span>
                     </div>
-                    <button onClick={handleRemoveCodigo} className="text-neutral-400 hover:text-red-500 transition-colors">
+                    <button onClick={handleRemoveCodigo} className="text-neutral-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors">
                         <X size={13} />
                     </button>
                 </div>
@@ -900,7 +892,7 @@ const POS = () => {
 
             {/* Desglose de totales */}
             <div className="space-y-1.5 pt-1">
-                <div className="flex justify-between text-neutral-400 font-extrabold uppercase text-[10px] tracking-[0.2em]">
+                <div className="flex justify-between text-neutral-400 dark:text-gray-500 font-extrabold uppercase text-[10px] tracking-[0.2em]">
                     <span>Subtotal</span>
                     <span>${subtotal.toLocaleString()}</span>
                 </div>
@@ -910,7 +902,7 @@ const POS = () => {
                         <span>-${montoDescuento.toLocaleString()}</span>
                     </div>
                 )}
-                <div className="flex justify-between items-center font-bold text-[10px] tracking-[0.2em] text-neutral-500">
+                <div className="flex justify-between items-center font-bold text-[10px] tracking-[0.2em] text-neutral-500 dark:text-gray-400">
                     <span>Método de pago</span>
                     <div className="w-32">
                         <PremiumSelect
@@ -927,7 +919,7 @@ const POS = () => {
                     </div>
                 </div>
                 <div className="pt-3 border-t border-neutral-200 flex justify-between items-end">
-                    <span className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.3em]">Total</span>
+                    <span className="text-[10px] font-black text-neutral-400 dark:text-gray-500 uppercase tracking-[0.3em]">Total</span>
                     <motion.span
                         key={total}
                         initial={{ scale: 1.05, color: '#00d2ff' }}
@@ -946,7 +938,7 @@ const POS = () => {
                     <button
                         onClick={saveDraft}
                         disabled={isProcessing}
-                        className="flex-shrink-0 bg-neutral-100 text-neutral-500 font-black text-[9px] uppercase tracking-widest px-3 py-3.5 rounded-xl hover:bg-amber-100 hover:text-amber-600 transition-colors flex items-center gap-1.5 disabled:opacity-20"
+                        className="flex-shrink-0 bg-neutral-100 dark:bg-gray-700 text-neutral-500 dark:text-gray-400 font-black text-[9px] uppercase tracking-widest px-3 py-3.5 rounded-xl hover:bg-amber-100 dark:hover:bg-gray-600 hover:text-amber-600 dark:hover:text-white transition-colors flex items-center gap-1.5 disabled:opacity-20"
                     >
                         <Clock size={13} />
                     </button>
@@ -954,7 +946,7 @@ const POS = () => {
                 {lastSale && cart.length === 0 && (
                     <button
                         onClick={() => generateComprobante(lastSale)}
-                        className="flex-shrink-0 bg-neutral-100 text-neutral-500 font-black text-[9px] uppercase tracking-widest px-3 py-3.5 rounded-xl hover:bg-neutral-200 hover:text-black transition-colors flex items-center gap-1.5"
+                        className="flex-shrink-0 bg-neutral-100 dark:bg-gray-700 text-neutral-500 dark:text-gray-400 font-black text-[9px] uppercase tracking-widest px-3 py-3.5 rounded-xl hover:bg-neutral-200 dark:hover:bg-gray-600 hover:text-black dark:hover:text-white transition-colors flex items-center gap-1.5"
                         title="Reimprimir último comprobante"
                     >
                         <Printer size={13} />
@@ -996,69 +988,105 @@ const POS = () => {
                 <h3 className="text-sm font-black uppercase tracking-tight text-neutral-900 dark:text-white">
                   Seleccionar Variante
                 </h3>
-                <p className="text-xs text-neutral-500 mt-1">
+                <p className="text-xs text-neutral-500 dark:text-gray-400 mt-1">
                   {getProductNombre(selectedProduct)}
                 </p>
               </div>
-              <button 
+              <button
                 onClick={() => setShowVariantesModal(false)}
-                className="text-neutral-400 hover:text-neutral-600 transition-colors"
+                className="text-neutral-400 dark:text-gray-400 hover:text-neutral-600 dark:hover:text-gray-200 transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
-            
-            <div className="space-y-2 max-h-64 overflow-y-auto">
+
+            {/* Guía de stock para el usuario */}
+            {(() => {
+              const variantes = selectedProduct.producto?.variantes || selectedProduct.variantes || [];
+              const variantesConStock = variantes.filter(v => {
+                const isFromProduct = !v.variante;
+                const varDef = isFromProduct ? v : v.variante;
+                const idVar = isFromProduct ? v.id_variante : v.id_variante;
+                const localStockItem = selectedProduct.variantes?.find(sv => sv.id_variante === idVar);
+                return (localStockItem?.cantidad_actual || 0) > 0;
+              });
+
+              if (variantesConStock.length === 0) {
+                return (
+                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3 mb-4">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle size={16} className="text-red-500 dark:text-red-400" />
+                      <p className="text-xs font-bold text-red-700 dark:text-red-300 uppercase tracking-wider">
+                        Todas las variantes están agotadas
+                      </p>
+                    </div>
+                    <p className="text-[10px] text-red-600 dark:text-red-400 mt-1 leading-relaxed">
+                      Este producto tiene variantes (talla, color, etc.) pero ninguna tiene stock asignado. Flujo para habilitarlo: 1) Panel de administración → Inventario, 2) Buscar el producto, 3) Seleccionar la sucursal, 4) Para cada variante, ingresar la cantidad de stock disponible. Sin stock asignado, el sistema no permite vender.
+                    </p>
+                  </div>
+                );
+              } else if (variantesConStock.length < variantes.length) {
+                return (
+                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-3 mb-4">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle size={16} className="text-amber-500 dark:text-amber-400" />
+                      <p className="text-xs font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wider">
+                        Solo {variantesConStock.length} de {variantes.length} variantes con stock
+                      </p>
+                    </div>
+                    <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1 leading-relaxed">
+                      Seleccioná una variante que muestre stock disponible para agregarla al carrito.
+                    </p>
+                  </div>
+                );
+              }
+              return null;
+            })()}
+
+            <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
               {(selectedProduct.producto?.variantes || selectedProduct.variantes || [])
                 .map(v => {
                   // Si no tiene la propiedad 'variante', viene de producto.variantes
                   const isFromProduct = !v.variante;
                   const varDef = isFromProduct ? v : v.variante;
                   const idVar = isFromProduct ? v.id_variante : v.id_variante;
-                  
+
                   const localStockItem = selectedProduct.variantes?.find(sv => sv.id_variante === idVar);
                   const stockVar = localStockItem?.cantidad_actual || 0;
-                  
+
                   // Intentar parsear atributos si por alguna razón vienen como string
                   let atributos = varDef?.atributos_valores || {};
                   if (typeof atributos === 'string') {
                     try { atributos = JSON.parse(atributos); } catch(e) {}
                   }
 
+                  // Mostrar solo los valores de los atributos, sin las claves
                   const formatAtributos = () => {
-                     const entries = Object.entries(atributos);
-                     if (entries.length === 0) return 'Sin atributos definidos';
-                     return entries.map(([k, val]) => `${k}: ${val}`).join(' | ');
+                     const values = Object.values(atributos);
+                     if (values.length === 0) return 'Sin atributos definidos';
+                     return values.join(' - ');
                   };
 
-                  // Generar un nombre bonito usando los atributos si no hay SKU
-                  const atributosString = Object.values(atributos).join(' ');
-                  const fallbackName = atributosString ? `Variante ${atributosString}` : `Variante ${idVar.slice(0, 8)}`;
-                  const sku = varDef?.sku_variante || fallbackName;
-                  
                   return (
                     <button
                       key={idVar}
                       onClick={() => stockVar > 0 ? addVarianteToCart(selectedProduct, { ...localStockItem, id_variante: idVar, variante: varDef }) : null}
                       disabled={stockVar <= 0}
                       className={`w-full p-3 md:p-4 rounded-xl border transition-all text-left flex items-center justify-between
-                        ${stockVar > 0 
-                          ? 'bg-neutral-50 dark:bg-gray-700 hover:bg-brand-cyan/10 dark:hover:bg-brand-cyan/20 border-neutral-100 dark:border-gray-600 hover:border-brand-cyan/30' 
+                        ${stockVar > 0
+                          ? 'bg-neutral-50 dark:bg-gray-700 hover:bg-brand-cyan/10 dark:hover:bg-brand-cyan/20 border-neutral-100 dark:border-gray-600 hover:border-brand-cyan/30'
                           : 'bg-neutral-50/50 dark:bg-gray-800/50 border-transparent opacity-50 cursor-not-allowed grayscale'}`}
                     >
                       <div>
-                        <p className="font-bold text-sm text-neutral-900 dark:text-white">
-                          {sku}
-                        </p>
-                        <p className="text-xs text-neutral-500 mt-1">
+                        <p className="font-bold text-sm text-neutral-900 dark:text-gray-100">
                           {formatAtributos()}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-black text-sm text-neutral-900 dark:text-white">
+                        <p className="font-black text-sm text-neutral-900 dark:text-gray-100">
                           ${getProductPrecio(selectedProduct).toLocaleString()}
                         </p>
-                        <p className={`text-xs font-bold ${stockVar < 5 && stockVar > 0 ? 'text-brand-cyan' : 'text-neutral-400'}`}>
+                        <p className={`text-xs font-bold ${stockVar < 5 && stockVar > 0 ? 'text-brand-cyan dark:text-cyan-400' : 'text-neutral-400 dark:text-gray-400'}`}>
                           {stockVar > 0 ? `${stockVar} DISP.` : 'AGOTADO'}
                         </p>
                       </div>
@@ -1069,7 +1097,7 @@ const POS = () => {
             
             <button
               onClick={() => setShowVariantesModal(false)}
-              className="w-full mt-4 py-3 bg-neutral-100 dark:bg-gray-700 text-neutral-600 dark:text-neutral-300 font-bold text-xs uppercase rounded-xl hover:bg-neutral-200 dark:hover:bg-gray-600 transition-colors"
+              className="w-full mt-4 py-3 bg-neutral-100 dark:bg-gray-700 text-neutral-600 dark:text-gray-300 font-bold text-xs uppercase rounded-xl hover:bg-neutral-200 dark:hover:bg-gray-600 transition-colors"
             >
               Cancelar
             </button>

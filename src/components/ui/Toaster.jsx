@@ -36,7 +36,7 @@ const Toaster = () => {
 
           <button 
             onClick={() => removeToast(t.id)}
-            className="p-1 text-neutral-300 hover:text-neutral-900 transition-colors"
+            className="p-1 text-neutral-300 dark:text-gray-500 hover:text-neutral-900 dark:hover:text-white transition-colors"
           >
             <X size={18} />
           </button>

@@ -24,7 +24,7 @@ const Usuarios = () => {
             header: 'ID',
             accessor: 'id_usuario',
             render: (row) => (
-                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">
+                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400 dark:text-gray-500">
                     #{String(row.id_usuario).split('-')[0]}
                 </span>
             )
@@ -37,7 +37,7 @@ const Usuarios = () => {
                     <span className="font-black text-xs md:text-xl text-black dark:text-white uppercase leading-none mb-[2px] md:mb-1">
                         {row.nombre} {row.apellido}
                     </span>
-                    <span className="text-[8px] md:text-[10px] font-black text-neutral-500 uppercase tracking-widest leading-none">{row.email}</span>
+                    <span className="text-[8px] md:text-[10px] font-black text-neutral-500 dark:text-gray-400 uppercase tracking-widest leading-none">{row.email}</span>
                 </div>
             )
         },
@@ -103,7 +103,7 @@ const Usuarios = () => {
                     <div key={field} className="space-y-2">
                         <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">{label}</label>
                         <div className="relative group">
-                            <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
+                            <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-gray-500 group-focus-within:text-brand-cyan dark:group-focus-within:text-cyan-400 transition-colors pointer-events-none" />
                             <input
                                 required type="text"
                                 className="w-full pl-10 pr-4 py-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-sm font-bold text-black dark:text-white uppercase placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-brand-cyan dark:focus:border-cyan-400 focus:ring-1 focus:ring-brand-cyan transition-all"
@@ -119,7 +119,7 @@ const Usuarios = () => {
             <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">Email Corporativo</label>
                 <div className="relative group">
-                    <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
+                    <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-gray-500 group-focus-within:text-brand-cyan dark:group-focus-within:text-cyan-400 transition-colors pointer-events-none" />
                     <input
                         required type="email"
                         className="w-full pl-10 pr-4 py-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-sm font-bold text-black dark:text-gray-200 uppercase placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-brand-cyan dark:focus:border-cyan-400 focus:ring-1 focus:ring-brand-cyan transition-all"
@@ -135,7 +135,7 @@ const Usuarios = () => {
                 <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">Clave de Acceso Temporal</label>
                     <div className="relative group">
-                        <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
+                        <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-gray-500 group-focus-within:text-brand-cyan dark:group-focus-within:text-cyan-400 transition-colors pointer-events-none" />
                         <input
                             required type="password"
                             className="w-full pl-10 pr-4 py-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-sm font-bold text-black dark:text-white placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-brand-cyan dark:focus:border-cyan-400 focus:ring-1 focus:ring-brand-cyan transition-all"

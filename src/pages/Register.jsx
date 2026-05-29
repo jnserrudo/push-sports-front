@@ -136,7 +136,7 @@ const Register = () => {
                         Nuevo <br />
                         <span className="text-brand-cyan">Ingreso.</span>
                     </h2>
-                    <p className="text-neutral-400 font-medium text-sm leading-relaxed mt-4 max-w-[90%]">
+                    <p className="text-neutral-400 dark:text-gray-400 font-medium text-sm leading-relaxed mt-4 max-w-[90%]">
                         Incorpórese al personal para la gestión de inventario y caja.
                     </p>
                 </div>

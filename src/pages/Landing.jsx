@@ -81,7 +81,7 @@ const PreviewModal = ({ category, isOpen, onClose }) => {
         
         {/* Contenido Modal */}
         <div className="w-full md:w-1/2 p-6 sm:p-8 md:p-10 bg-white dark:bg-gray-900 flex flex-col justify-between relative">
-          <button onClick={onClose} className="absolute top-4 right-4 sm:top-6 sm:right-6 text-neutral-400 hover:text-black dark:text-white transition-colors p-2 bg-neutral-100 rounded-full hover:bg-neutral-200">
+          <button onClick={onClose} className="absolute top-4 right-4 sm:top-6 sm:right-6 text-neutral-400 dark:text-gray-500 hover:text-black dark:hover:text-white transition-colors p-2 bg-neutral-100 dark:bg-gray-700 rounded-full hover:bg-neutral-200 dark:hover:bg-gray-600">
             <CloseCircle size={24} className="sm:w-7 sm:h-7" variant="Broken" />
           </button>
           
@@ -91,11 +91,11 @@ const PreviewModal = ({ category, isOpen, onClose }) => {
           </div>
           
           <div className="mt-4 md:mt-0 flex-1">
-            <h4 className="text-xs font-bold uppercase tracking-widest mb-6 text-neutral-400 border-b border-neutral-100 dark:border-gray-800 pb-3">Novedades de Temporada</h4>
+            <h4 className="text-xs font-bold uppercase tracking-widest mb-6 text-neutral-400 dark:text-gray-500 border-b border-neutral-100 dark:border-gray-800 pb-3">Novedades de Temporada</h4>
             <div className="space-y-6">
               {data.items.map((item, i) => (
                 <div key={i} className="flex gap-4 items-start group">
-                  <div className="mt-1 text-neutral-300 group-hover:text-brand-cyan transition-colors">
+                  <div className="mt-1 text-neutral-300 dark:text-gray-500 group-hover:text-brand-cyan dark:group-hover:text-cyan-400 transition-colors">
                     <TickCircle size={24} variant="Bold" />
                   </div>
                   <div>
@@ -111,7 +111,7 @@ const PreviewModal = ({ category, isOpen, onClose }) => {
              <Link to="/login" onClick={onClose} className="w-full bg-black text-white py-4 rounded-xl flex items-center justify-center gap-3 font-bold text-sm uppercase tracking-widest hover:bg-brand-cyan hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
                ACCESO STAFF <DirectRight size={20} color="white" variant="Bold" />
              </Link>
-             <p className="text-xs text-neutral-400 font-bold uppercase tracking-widest text-center mt-4 m-0">Inicie sesión para ver disponibilidad</p>
+             <p className="text-xs text-neutral-400 dark:text-gray-500 font-bold uppercase tracking-widest text-center mt-4 m-0">Inicie sesión para ver disponibilidad</p>
           </div>
         </div>
       </div>
@@ -198,7 +198,7 @@ const Landing = () => {
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8">
             {['Inicio', 'Productos', 'Sedes', 'Nosotros'].map(item => (
-              <a key={item} href={`#${item.toLowerCase()}`} className={`text-xs font-bold uppercase tracking-widest transition-all hover:-translate-y-0.5 ${isScrolled ? 'text-neutral-500 dark:text-gray-400 hover:text-brand-cyan' : 'text-white/80 hover:text-brand-cyan'}`}>
+              <a key={item} href={`#${item.toLowerCase()}`} className={`text-xs font-bold uppercase tracking-widest transition-all hover:-translate-y-0.5 ${isScrolled ? 'text-neutral-500 dark:text-gray-400 hover:text-brand-cyan dark:hover:text-cyan-400' : 'text-white/80 hover:text-brand-cyan'}`}>
                 {item}
               </a>
             ))}
@@ -241,7 +241,7 @@ const Landing = () => {
                     >
                         ACCESO STAFF <ArrowRight size={20} />
                     </Link>
-                    <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest text-center">Gestión Central PushSport Salta</p>
+                    <p className="text-[10px] text-neutral-400 dark:text-gray-500 font-bold uppercase tracking-widest text-center">Gestión Central PushSport Salta</p>
                 </div>
             </div>
         </div>
@@ -268,7 +268,7 @@ const Landing = () => {
                 <span className="text-brand-cyan italic">SOLO EL INICIO.</span>
             </h1>
             
-            <p className="text-neutral-300 text-lg md:text-xl font-medium leading-relaxed max-w-lg m-0">
+            <p className="text-neutral-300 dark:text-gray-500 text-lg md:text-xl font-medium leading-relaxed max-w-lg m-0">
                 Suplementación de élite y equipamiento profesional. Elevamos el estándar del rendimiento deportivo en la región.
             </p>
 
@@ -319,7 +319,7 @@ const Landing = () => {
                 <div className="absolute bottom-10 left-10 right-10">
                     <span className="inline-block bg-brand-cyan text-black dark:text-white px-2 py-1 md:px-3 md:py-1.5 rounded-md text-[10px] md:text-xs font-bold tracking-widest uppercase mb-3 md:mb-4 shadow-lg">Rendimiento Máximo</span>
                     <h3 className="text-white uppercase text-4xl md:text-5xl m-0 mb-2 md:mb-3 font-sport tracking-tight break-words hyphens-auto">Suplementación</h3>
-                    <p className="text-neutral-300 text-sm md:text-base font-medium max-w-md m-0">Proteínas, creatinas y pre-entrenos de grado profesional. Diseñados para resultados reales.</p>
+                    <p className="text-neutral-300 dark:text-gray-500 text-sm md:text-base font-medium max-w-md m-0">Proteínas, creatinas y pre-entrenos de grado profesional. Diseñados para resultados reales.</p>
                 </div>
             </div>
             
@@ -334,7 +334,7 @@ const Landing = () => {
                     
                     <div className="relative z-10">
                         <h3 className="uppercase text-3xl md:text-4xl m-0 text-white mb-2 md:mb-3 font-sport group-hover:text-brand-cyan transition-colors tracking-tight break-words hyphens-auto">Indumentaria Team</h3>
-                        <p className="text-neutral-400 font-medium text-xs md:text-sm m-0 mb-4 md:mb-6 max-w-sm">
+                        <p className="text-neutral-400 dark:text-gray-500 font-medium text-xs md:text-sm m-0 mb-4 md:mb-6 max-w-sm">
                           Equipamiento técnico diseñado para resistir las rutinas más intensas y regular la temperatura.
                         </p>
                         <button className="flex items-center gap-2 md:gap-3 text-[10px] md:text-sm font-bold uppercase tracking-widest text-white group-hover:text-brand-cyan transition-colors w-fit bg-white dark:bg-gray-900/5 px-3 py-2 md:px-4 md:py-2 rounded-lg">
@@ -351,7 +351,7 @@ const Landing = () => {
 
                     <div className="relative z-10">
                         <h3 className="uppercase text-3xl md:text-4xl m-0 text-white mb-2 md:mb-3 font-sport group-hover:text-brand-cyan transition-colors tracking-tight break-words hyphens-auto">Accesorios Pro</h3>
-                        <p className="text-neutral-400 font-medium text-xs md:text-sm m-0 mb-4 md:mb-6 max-w-sm">
+                        <p className="text-neutral-400 dark:text-gray-500 font-medium text-xs md:text-sm m-0 mb-4 md:mb-6 max-w-sm">
                           Shakers premium, cinturones de levantamiento y straps para optimizar cada movimiento.
                         </p>
                         <button className="flex items-center gap-2 md:gap-3 text-[10px] md:text-sm font-bold uppercase tracking-widest text-white group-hover:text-brand-cyan transition-colors w-fit bg-white dark:bg-gray-900/5 px-3 py-2 md:px-4 md:py-2 rounded-lg">
@@ -399,7 +399,7 @@ const Landing = () => {
                         >
                             <div className="flex justify-between items-center mb-3">
                                 <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md ${
-                                  activeLocation === idx ? 'bg-brand-cyan text-black dark:text-white' : 'bg-neutral-100 text-neutral-500 dark:text-gray-400'
+                                  activeLocation === idx ? 'bg-brand-cyan text-black dark:text-white' : 'bg-neutral-100 dark:bg-gray-700 text-neutral-500 dark:text-gray-400'
                                 }`}>
                                     TIENDA OFICIAL
                                 </span>
@@ -413,12 +413,12 @@ const Landing = () => {
                             </h3>
                             
                             <div className="space-y-2 pt-4 border-t border-neutral-100 dark:border-gray-800">
-                                <div className="flex items-start gap-3 text-neutral-600 font-medium text-sm">
-                                    <Location size={18} className={`mt-0.5 flex-shrink-0 ${activeLocation === idx ? 'text-brand-cyan' : 'text-neutral-400'}`} variant="Bold" />
+                                <div className="flex items-start gap-3 text-neutral-600 dark:text-gray-400 font-medium text-sm">
+                                    <Location size={18} className={`mt-0.5 flex-shrink-0 ${activeLocation === idx ? 'text-brand-cyan' : 'text-neutral-400 dark:text-gray-500'}`} variant="Bold" />
                                     <span className="leading-snug">{sede.dir}</span>
                                 </div>
-                                <div className="flex items-start gap-3 text-neutral-600 font-medium text-sm">
-                                    <Timer1 size={18} className={`mt-0.5 flex-shrink-0 ${activeLocation === idx ? 'text-brand-cyan' : 'text-neutral-400'}`} variant="Bold" />
+                                <div className="flex items-start gap-3 text-neutral-600 dark:text-gray-400 font-medium text-sm">
+                                    <Timer1 size={18} className={`mt-0.5 flex-shrink-0 ${activeLocation === idx ? 'text-brand-cyan' : 'text-neutral-400 dark:text-gray-500'}`} variant="Bold" />
                                     <span className="leading-snug">{sede.h}</span>
                                 </div>
                             </div>
@@ -432,7 +432,7 @@ const Landing = () => {
                     
                     {/* Overlay info sede activa — FIX: z-index explícito y fondo sólido */}
                     <div className="absolute top-5 left-5 z-20 bg-white dark:bg-gray-900 px-4 py-3 rounded-xl shadow-lg border border-neutral-100 dark:border-gray-800 pointer-events-none">
-                        <span className="text-[10px] text-neutral-400 font-bold tracking-widest uppercase block mb-1">Visualizando</span>
+                        <span className="text-[10px] text-neutral-400 dark:text-gray-500 font-bold tracking-widest uppercase block mb-1">Visualizando</span>
                         <span className="text-black dark:text-white font-sport text-xl uppercase leading-none block">{locations[activeLocation]?.nombre || 'Sede'}</span>
                         <span className="text-neutral-500 dark:text-gray-400 text-xs font-medium block mt-1">{locations[activeLocation]?.dir || 'Dirección'}</span>
                     </div>
@@ -463,10 +463,10 @@ const Landing = () => {
                           NO VENDEMOS <br/> <span className="text-brand-cyan italic">SUPLEMENTOS.</span>
                       </h2>
                       <div className="w-16 md:w-20 h-2 bg-brand-cyan rounded-full"></div>
-                      <p className="text-neutral-400 text-base md:text-lg leading-relaxed font-medium">
+                      <p className="text-neutral-400 dark:text-gray-500 text-base md:text-lg leading-relaxed font-medium">
                           PushSport nació con una única misión: elevar el estándar del rendimiento atlético en Salta. No somos solo una tienda, somos el motor detrás de cada récord personal, cada repetición extra y cada meta alcanzada.
                       </p>
-                      <p className="text-neutral-400 text-base md:text-lg leading-relaxed font-medium hidden md:block">
+                      <p className="text-neutral-400 dark:text-gray-500 text-base md:text-lg leading-relaxed font-medium hidden md:block">
                           Trabajamos directamente con laboratorios de élite para garantizar que cada producto en nuestras estanterías cumpla con las exigencias del deporte profesional. Si no lo usaríamos nosotros, no te lo vendemos.
                       </p>
                       <div className="flex gap-8 md:gap-12 pt-6 border-t border-white/10">
@@ -517,7 +517,7 @@ const Landing = () => {
                       <div className="relative z-10 h-full flex flex-col justify-end">
                           <span className="text-brand-cyan font-bold uppercase tracking-widest text-[10px] md:text-xs mb-3 block">Por qué corremos</span>
                           <h3 className="text-white font-sport text-4xl md:text-5xl lg:text-6xl uppercase leading-[0.9] mb-4">No es solo una carrera</h3>
-                          <p className="text-neutral-300 font-medium text-sm md:text-base max-w-md">
+                          <p className="text-neutral-300 dark:text-gray-500 font-medium text-sm md:text-base max-w-md">
                              Este evento busca reunir donantes de sangre. Es una iniciativa para activar a la comunidad alrededor del deporte, la solidaridad y la salud.
                           </p>
                       </div>
@@ -633,7 +633,7 @@ const Landing = () => {
                   VIVIENDO <span className="text-brand-cyan italic">PUSH.</span>
               </h2>
               <div className="w-16 md:w-20 h-2 bg-brand-cyan mx-auto mt-4 md:mt-6 rounded-full"></div>
-              <p className="text-neutral-400 mt-4 md:mt-6 font-medium text-sm md:text-lg max-w-xl mx-auto px-6">La exigencia no se cuenta, se demuestra. Sumate a la comunidad.</p>
+              <p className="text-neutral-400 dark:text-gray-500 mt-4 md:mt-6 font-medium text-sm md:text-lg max-w-xl mx-auto px-6">La exigencia no se cuenta, se demuestra. Sumate a la comunidad.</p>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-1 md:gap-2 px-1 md:px-2 pb-1 md:pb-2 auto-rows-[120px] md:auto-rows-[180px]">
@@ -699,7 +699,7 @@ const Landing = () => {
                     <h4 className="text-xs font-bold uppercase tracking-widest text-black dark:text-white mb-6 border-b-2 border-brand-cyan inline-block pb-2">Empresa</h4>
                     <ul className="space-y-4 m-0 p-0 list-none">
                         {['Nuestra Historia', 'Team Atletas', 'Contacto Directo'].map(l => (
-                            <li key={l}><a href="#" className="text-sm text-neutral-500 dark:text-gray-400 font-medium hover:text-brand-cyan transition-colors flex items-center gap-2"><ArrowRight size={12}/> {l}</a></li>
+                            <li key={l}><a href="#" className="text-sm text-neutral-500 dark:text-gray-400 font-medium hover:text-brand-cyan dark:hover:text-cyan-400 transition-colors flex items-center gap-2"><ArrowRight size={12}/> {l}</a></li>
                         ))}
                     </ul>
                 </div>
@@ -708,7 +708,7 @@ const Landing = () => {
                     <h4 className="text-xs font-bold uppercase tracking-widest text-black dark:text-white mb-6 border-b-2 border-brand-cyan inline-block pb-2">Productos</h4>
                     <ul className="space-y-4 m-0 p-0 list-none">
                         {['Suplementos', 'Indumentaria', 'Accesorios Pro'].map(l => (
-                            <li key={l}><a href="#productos" className="text-sm text-neutral-500 dark:text-gray-400 font-medium hover:text-brand-cyan transition-colors flex items-center gap-2"><ArrowRight size={12}/> {l}</a></li>
+                            <li key={l}><a href="#productos" className="text-sm text-neutral-500 dark:text-gray-400 font-medium hover:text-brand-cyan dark:hover:text-cyan-400 transition-colors flex items-center gap-2"><ArrowRight size={12}/> {l}</a></li>
                         ))}
                     </ul>
                 </div>
@@ -718,7 +718,7 @@ const Landing = () => {
                     <h4 className="text-xs font-bold uppercase tracking-widest text-black dark:text-white mb-6 border-b-2 border-brand-cyan inline-block pb-2">Novedades</h4>
                     <p className="text-xs text-neutral-500 dark:text-gray-400 mb-4">Suscríbete para recibir lanzamientos y ofertas exclusivas.</p>
                     <div className="flex items-center bg-neutral-50 dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-xl p-1 focus-within:border-brand-cyan focus-within:shadow-[0_0_15px_rgba(0,229,255,0.2)] transition-all">
-                        <input type="email" placeholder="Ingresa tu email..." className="flex-1 bg-transparent px-4 py-3 text-sm font-medium focus:outline-none text-black dark:text-white placeholder:text-neutral-400 min-w-0" />
+                        <input type="email" placeholder="Ingresa tu email..." className="flex-1 bg-transparent px-4 py-3 text-sm font-medium focus:outline-none text-black dark:text-white placeholder:text-neutral-400 dark:placeholder:text-gray-500 min-w-0" />
                         <button className="flex-shrink-0 px-4 py-3 bg-black rounded-lg hover:bg-brand-cyan transition-colors flex items-center justify-center shadow-md">
                             <DirectRight size={18} color="white" variant="Bold" />
                         </button>
@@ -727,10 +727,10 @@ const Landing = () => {
             </div>
 
             <div className="pt-8 border-t border-neutral-200 dark:border-gray-700 flex flex-col md:flex-row justify-between items-center gap-4">
-                <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest m-0">&copy; 2026 PUSHSPORT SALTA &middot; SISTEMA CENTRAL</span>
+                <span className="text-xs font-bold text-neutral-400 dark:text-gray-500 uppercase tracking-widest m-0">&copy; 2026 PUSHSPORT SALTA &middot; SISTEMA CENTRAL</span>
                 <div className="flex gap-6">
-                    <a href="#" className="text-xs font-bold text-neutral-400 uppercase tracking-widest hover:text-brand-cyan transition-colors">Privacidad</a>
-                    <a href="#" className="text-xs font-bold text-neutral-400 uppercase tracking-widest hover:text-brand-cyan transition-colors">Términos Legales</a>
+                    <a href="#" className="text-xs font-bold text-neutral-400 dark:text-gray-500 uppercase tracking-widest hover:text-brand-cyan dark:hover:text-cyan-400 transition-colors">Privacidad</a>
+                    <a href="#" className="text-xs font-bold text-neutral-400 dark:text-gray-500 uppercase tracking-widest hover:text-brand-cyan dark:hover:text-cyan-400 transition-colors">Términos Legales</a>
                 </div>
             </div>
         </div>

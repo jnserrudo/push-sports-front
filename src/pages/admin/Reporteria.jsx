@@ -183,12 +183,12 @@ const Reporteria = () => {
         <div className="flex-1 min-w-0 pr-0 md:pr-4">
             <div className="flex items-center gap-2 mb-1">
                 <ClipboardList size={14} className="text-brand-cyan" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">PUSH SPORT</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500 dark:text-gray-400">PUSH SPORT</span>
             </div>
             <h1 className="text-xl md:text-2xl uppercase leading-none m-0 font-sport text-black dark:text-white">
                 <span className="text-brand-cyan">Reportería</span>
             </h1>
-            <p className="text-neutral-500 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed max-w-xl mt-2 whitespace-normal">
+            <p className="text-neutral-500 dark:text-gray-400 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed max-w-xl mt-2 whitespace-normal">
                 Generá listas de precios o remitos de entrega en PDF. Nota: la generación de remitos es informativa y no modifica la base de datos.
             </p>
         </div>
@@ -231,7 +231,7 @@ const Reporteria = () => {
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 {prefetchingImages && (
-                  <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">
+                  <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400 dark:text-gray-500">
                     <Loader2 size={12} className="animate-spin text-brand-cyan" /> Preparando...
                   </span>
                 )}
@@ -240,7 +240,7 @@ const Reporteria = () => {
                   className={`h-9 px-4 rounded-xl flex items-center gap-2 transition-all text-[10px] font-black uppercase tracking-widest border-2 ${
                     showPushPriceGlobal
                       ? 'bg-brand-cyan/20 border-brand-cyan text-brand-cyan'
-                      : 'bg-white/5 border-white/10 text-neutral-400 hover:border-white/30'
+                      : 'bg-white/5 border-white/10 text-neutral-400 dark:text-gray-500 hover:border-white/30'
                   }`}
                 >
                   {showPushPriceGlobal ? <Eye size={13} /> : <EyeOff size={13} />}
@@ -289,7 +289,7 @@ const Reporteria = () => {
             <div className="bg-white dark:bg-gray-800 rounded-xl md:rounded-2xl p-3 md:p-4 shadow-sm border border-neutral-100 dark:border-gray-700">
               <div className="flex flex-col md:flex-row gap-2 items-center justify-between mb-4">
                 <div className="relative flex-1 w-full max-w-md">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={16} />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-gray-500" size={16} />
                   <input
                     type="text"
                     placeholder="Buscar por nombre o marca..."
@@ -298,7 +298,7 @@ const Reporteria = () => {
                     className="w-full pl-10 pr-4 h-10 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg focus:border-brand-cyan dark:focus:border-cyan-400 outline-none transition-all font-bold text-xs text-neutral-900 dark:text-gray-100 placeholder:text-neutral-400 dark:placeholder:text-gray-500"
                   />
                 </div>
-                <p className="text-[10px] font-black text-neutral-400 dark:text-gray-400 uppercase tracking-widest shrink-0">
+                <p className="text-[10px] font-black text-neutral-400 dark:text-gray-500 uppercase tracking-widest shrink-0">
                   {filteredProducts.length} producto{filteredProducts.length !== 1 ? 's' : ''}
                 </p>
               </div>
@@ -316,7 +316,7 @@ const Reporteria = () => {
                             <img src={imageMap[p.id_producto][0]} className="w-full h-full object-cover" />
                           ) : parseImagenes(p.imagen_url)[0] ? (
                             <img src={parseImagenes(p.imagen_url)[0]} className="w-full h-full object-cover" />
-                          ) : <Package className="text-neutral-200" size={16} />}
+                          ) : <Package className="text-neutral-200 dark:text-gray-500" size={16} />}
                         </div>
                         <div className="min-w-0">
                           <p className="text-[10px] font-black text-neutral-900 dark:text-gray-100 uppercase leading-none truncate max-w-[200px]">{p.nombre}</p>
@@ -389,7 +389,7 @@ const Reporteria = () => {
                 </span>
                 <Store size={13} />
                 {shopStep > 1 && sucursal
-                  ? <><span className="text-neutral-400 font-bold normal-case hidden sm:inline">Sucursal:</span> <span className="text-brand-cyan truncate max-w-[100px]">{sucursal.nombre}</span></>
+                  ? <><span className="text-neutral-400 dark:text-gray-500 font-bold normal-case hidden sm:inline">Sucursal:</span> <span className="text-brand-cyan truncate max-w-[100px]">{sucursal.nombre}</span></>
                   : 'Elegir Sucursal'
                 }
               </button>
@@ -402,7 +402,7 @@ const Reporteria = () => {
                 }`}
               >
                 <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black shrink-0 ${
-                  shopStep === 2 ? 'bg-brand-cyan text-black' : 'bg-neutral-200 text-neutral-400'
+                  shopStep === 2 ? 'bg-brand-cyan text-black' : 'bg-neutral-200 dark:bg-gray-600 text-neutral-400 dark:text-gray-500'
                 }`}>2</span>
                 <ListPlus size={13} /> Armar Remito
                 {selectedItems.length > 0 && (
@@ -427,14 +427,14 @@ const Reporteria = () => {
                         <Store className="text-brand-cyan w-6 h-6" />
                       </div>
                       <h3 className="text-lg font-black text-neutral-900 dark:text-white uppercase tracking-tight mb-1">¿A qué comercio vas a ir?</h3>
-                      <p className="text-xs font-bold text-neutral-400 uppercase tracking-widest max-w-sm mx-auto">
+                      <p className="text-xs font-bold text-neutral-400 dark:text-gray-500 uppercase tracking-widest max-w-sm mx-auto">
                         Seleccioná el comercio destino. El sistema va a consultar el stock actual de cada producto para ese local.
                       </p>
                     </div>
 
                     {/* Search — always visible, scales from 2 to 200 sucursales */}
                     <div className="relative mb-6">
-                      <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-neutral-400" size={18} />
+                      <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-gray-500" size={18} />
                       <input
                         type="text"
                         placeholder={`Buscar entre ${sucursales.length} comercio${sucursales.length !== 1 ? 's' : ''}...`}

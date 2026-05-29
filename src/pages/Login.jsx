@@ -99,7 +99,7 @@ const Login = () => {
                         <h1 className="text-black dark:text-white text-4xl font-sport uppercase m-0 mb-1 leading-none">
                             Iniciar Sesión
                         </h1>
-                        <p className="text-neutral-500 font-medium text-sm m-0">
+                        <p className="text-neutral-500 dark:text-gray-400 font-medium text-sm m-0">
                             Ingrese sus credenciales corporativas.
                         </p>
                     </div>
@@ -118,7 +118,7 @@ const Login = () => {
                         <div className="space-y-2">
                             <label className="text-xs font-bold uppercase tracking-[0.1em] text-black dark:text-white">Email o Usuario</label>
                             <div className="relative group">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors" size={18} />
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-gray-500 group-focus-within:text-brand-cyan dark:group-focus-within:text-cyan-400 transition-colors" size={18} />
                                 <input 
                                     required name="email" type="text"
                                     className="w-full pl-11 pr-4 py-3.5 bg-white dark:bg-gray-700 border-2 border-neutral-200 dark:border-gray-600 rounded-lg text-sm font-bold text-black dark:text-white placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-black dark:focus:border-cyan-400 focus:ring-1 focus:ring-black dark:focus:ring-cyan-400 transition-all"
@@ -131,7 +131,7 @@ const Login = () => {
                         <div className="space-y-2">
                             <label className="text-xs font-bold uppercase tracking-[0.1em] text-black dark:text-white">Contraseña</label>
                             <div className="relative group">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors" size={18} />
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-gray-500 group-focus-within:text-brand-cyan dark:group-focus-within:text-cyan-400 transition-colors" size={18} />
                                 <input 
                                     required name="password" type="password"
                                     className="w-full pl-11 pr-4 py-3.5 bg-white dark:bg-gray-700 border-2 border-neutral-200 dark:border-gray-600 rounded-lg text-sm font-bold text-black dark:text-white placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-black dark:focus:border-cyan-400 focus:ring-1 focus:ring-black dark:focus:ring-cyan-400 transition-all"
@@ -141,7 +141,7 @@ const Login = () => {
                             </div>
                             {/* ENLACE "OLVIDÉ MI CONTRASEÑA" CORREGIDO (Debajo del input, a la derecha) */}
                             <div className="flex justify-end pt-1">
-                                <Link to="/forgot-password" className="text-[11px] font-bold text-neutral-500 hover:text-brand-cyan underline underline-offset-4 transition-colors">
+                                <Link to="/forgot-password" className="text-[11px] font-bold text-neutral-500 dark:text-gray-400 hover:text-brand-cyan dark:hover:text-cyan-400 underline underline-offset-4 transition-colors">
                                     ¿Olvidaste tu contraseña?
                                 </Link>
                             </div>
@@ -164,7 +164,7 @@ const Login = () => {
                                 disabled={loading}
                                 className={`w-full py-4 flex items-center justify-center gap-2 rounded-lg text-[13px] font-sport uppercase tracking-[0.1em] transition-all ${
                                     loading 
-                                    ? 'bg-neutral-200 text-neutral-500 cursor-not-allowed' 
+                                    ? 'bg-neutral-200 dark:bg-gray-700 text-neutral-500 dark:text-gray-400 cursor-not-allowed' 
                                     : 'bg-black text-white hover:bg-brand-cyan hover:text-black dark:hover:text-white shadow-lg group'
                                 }`}
                             >
@@ -178,10 +178,10 @@ const Login = () => {
                             
                             {/* BOTONES SECUNDARIOS CLAROS Y VISIBLES (Grid) */}
                             <div className="grid grid-cols-2 gap-3 mt-2">
-                                <Link to="/" className="flex items-center justify-center gap-2 py-3 border-2 border-neutral-200 rounded-lg text-[10px] font-black uppercase tracking-widest text-neutral-600 hover:border-black hover:text-black dark:hover:text-white transition-colors bg-neutral-50 hover:bg-white dark:hover:bg-gray-800">
+                                <Link to="/" className="flex items-center justify-center gap-2 py-3 border-2 border-neutral-200 dark:border-gray-600 rounded-lg text-[10px] font-black uppercase tracking-widest text-neutral-600 dark:text-gray-400 hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white transition-colors bg-neutral-50 dark:bg-gray-700 hover:bg-white dark:hover:bg-gray-800">
                                     <Home size={14} /> Inicio
                                 </Link>
-                                <Link to="/register" className="flex items-center justify-center gap-2 py-3 border-2 border-neutral-200 rounded-lg text-[10px] font-black uppercase tracking-widest text-neutral-600 hover:border-brand-cyan hover:text-brand-cyan transition-colors bg-neutral-50 hover:bg-white dark:hover:bg-gray-800">
+                                <Link to="/register" className="flex items-center justify-center gap-2 py-3 border-2 border-neutral-200 dark:border-gray-600 rounded-lg text-[10px] font-black uppercase tracking-widest text-neutral-600 dark:text-gray-400 hover:border-brand-cyan dark:hover:border-cyan-400 hover:text-brand-cyan dark:hover:text-cyan-400 transition-colors bg-neutral-50 dark:bg-gray-700 hover:bg-white dark:hover:bg-gray-800">
                                     Crear Cuenta
                                 </Link>
                             </div>

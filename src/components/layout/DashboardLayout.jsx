@@ -120,7 +120,7 @@ const DashboardLayout = () => {
     loadNotifications();
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
-  }, [user?.id_usuario, notificationView]);
+  }, [user?.id_usuario]);
 
   const handleLogout = () => {
     logout();
@@ -140,26 +140,26 @@ const DashboardLayout = () => {
 
   const menuItems = [
     { label: 'Visión General',    icon: LayoutDashboard, path: '/dashboard',                roles: [1, 2, 3] },
-    { label: 'Ventas',            icon: ShoppingCart,    path: '/dashboard/pos',            roles: [1, 2, 3] },
+    { label: 'Registrar Ventas',  icon: ShoppingCart,    path: '/dashboard/pos',            roles: [1, 2, 3] },
     { label: 'Productos',         icon: Package,         path: '/dashboard/productos',      roles: [1] },
     { label: 'Categorías',        icon: Component,       path: '/dashboard/categorias',     roles: [1] },
     { label: 'Marcas',            icon: Tag,             path: '/dashboard/marcas',         roles: [1] },
-    { label: 'Stock',             icon: Box,             path: '/dashboard/inventario',     roles: [1, 2, 3] },
-    { label: 'Gestión de Personal',   icon: Users,           path: '/dashboard/usuarios',       roles: [1] },
+    { label: 'Inventario',        icon: Box,             path: '/dashboard/inventario',     roles: [1, 2, 3] },
+    { label: 'Usuarios',          icon: Users,           path: '/dashboard/usuarios',       roles: [1] },
     { label: 'Sucursales',        icon: MapPin,          path: '/dashboard/sucursales',     roles: [1] },
     { label: 'Tipos de Sede',     icon: Wallet,          path: '/dashboard/tipos-comercio', roles: [1] },
-    { label: 'Gestión de Ingresos',   icon: Truck,           path: '/dashboard/envios',         roles: [1] },
-    { label: 'Historial de Movimientos', icon: Activity,        path: '/dashboard/movimientos',    roles: [1, 2] },
-    { label: 'Reportería',        icon: ClipboardList,   path: '/dashboard/reporteria',     roles: [1] },
-    { label: 'Gestión de Devoluciones', icon: RotateCcw,       path: '/dashboard/devoluciones',   roles: [1, 2, 3] },
+    { label: 'Envíos a Sucursales',icon: Truck,          path: '/dashboard/envios',         roles: [1] },
+    { label: 'Movimientos de Stock',icon: Activity,     path: '/dashboard/movimientos',    roles: [1, 2] },
+    { label: 'Listas y Remitos',  icon: ClipboardList,   path: '/dashboard/reporteria',     roles: [1] },
+    { label: 'Devoluciones',      icon: RotateCcw,       path: '/dashboard/devoluciones',   roles: [1, 2, 3] },
     { label: 'Consultas Web',    icon: MessageSquare,    path: '/dashboard/consultas',      roles: [1, 2, 3] },
     { label: 'Rectificaciones',   icon: AlertTriangle,   path: '/dashboard/rectificaciones',roles: [1, 2, 3] },
     { label: 'Liquidaciones',     icon: CreditCard,      path: '/dashboard/liquidaciones',  roles: [1, 2] },
-    { label: 'Gestión de Descuentos', icon: Ticket,          path: '/dashboard/descuentos',     roles: [1] },
-    { label: 'Eventos & Campañas',    icon: CalendarDays,    path: '/dashboard/eventos',        roles: [1] },
-    { label: 'Packs y Combos',    icon: Package,         path: '/dashboard/combos',         roles: [1] },
-    { label: 'Gestión de Ofertas', icon: Ticket,          path: '/dashboard/ofertas',        roles: [1] },
-    { label: 'Proveedores',       icon: Truck,           path: '/dashboard/proveedores',    roles: [1] },
+    { label: 'Descuentos',        icon: Ticket,          path: '/dashboard/descuentos',     roles: [1] },
+    { label: 'Eventos & Campañas',icon: CalendarDays,    path: '/dashboard/eventos',        roles: [1] },
+    { label: 'Combos',            icon: Package,         path: '/dashboard/combos',         roles: [1] },
+    { label: 'Ofertas',           icon: Ticket,          path: '/dashboard/ofertas',        roles: [1] },
+    { label: 'Proveedores',       icon: Truck,          path: '/dashboard/proveedores',    roles: [1] },
     { label: 'Auditoría',         icon: Activity,        path: '/dashboard/auditoria',      roles: [1] },
   ];
 

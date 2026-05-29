@@ -49,7 +49,7 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth, size = "medium", hi
             {!hideHeader && (
               <div className="flex justify-between items-center px-4 py-2 md:px-5 md:py-3 bg-neutral-50/50 dark:bg-gray-700/50 backdrop-blur-sm flex-shrink-0 border-b border-neutral-100 dark:border-gray-700">
                 <div className="flex flex-col">
-                  <span className="text-[7px] md:text-[8px] font-bold uppercase tracking-[0.2em] text-neutral-400 mb-0.5">Push Sport Salta</span>
+                  <span className="text-[7px] md:text-[8px] font-bold uppercase tracking-[0.2em] text-neutral-400 dark:text-gray-500 mb-0.5">Push Sport Salta</span>
                   <h3 className="font-bold text-sm md:text-base text-black dark:text-white tracking-tight uppercase font-sport leading-none">{title}</h3>
                 </div>
                 <button 

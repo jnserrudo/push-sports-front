@@ -46,7 +46,7 @@ const Unsubscribe = () => {
           <div className="bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-8">
             <AlertCircle size={40} className="text-amber-400 mx-auto mb-4" />
             <h1 className="text-xl font-black text-black dark:text-white mb-3">Enlace inválido</h1>
-            <p className="text-sm text-neutral-500 mb-6">
+            <p className="text-sm text-neutral-500 dark:text-gray-400 mb-6">
               El enlace de desuscripción no es válido o ha sido usado incorrectamente. 
               Si querés dejar de recibir correos, hacé clic en el enlace que te enviamos por email.
             </p>
@@ -63,15 +63,15 @@ const Unsubscribe = () => {
         {status === 'idle' && token && (
           <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-8 shadow-xl shadow-black/5">
             <div className="w-16 h-16 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mx-auto mb-6">
-              <MailX size={28} className="text-neutral-500" />
+              <MailX size={28} className="text-neutral-500 dark:text-gray-400" />
             </div>
             <h1 className="text-2xl font-black text-black dark:text-white mb-3 font-sport">
               ¿Dejar de recibir<br />comunicaciones?
             </h1>
-            <p className="text-sm text-neutral-500 leading-relaxed mb-8">
+            <p className="text-sm text-neutral-500 dark:text-gray-400 leading-relaxed mb-8">
               Si confirmás, ya no recibirás emails con ofertas, novedades o promociones de Push Sport.
               <br /><br />
-              <span className="text-[11px] text-neutral-400">
+              <span className="text-[11px] text-neutral-400 dark:text-gray-500">
                 Tus datos permanecen en nuestra plataforma y podés volver a suscribirte cuando quieras.
               </span>
             </p>
@@ -85,7 +85,7 @@ const Unsubscribe = () => {
 
             <Link
               to="/"
-              className="mt-4 block text-xs font-bold text-neutral-400 hover:text-black dark:hover:text-white transition-colors uppercase tracking-wider no-underline"
+              className="mt-4 block text-xs font-bold text-neutral-400 dark:text-gray-500 hover:text-black dark:hover:text-white transition-colors uppercase tracking-wider no-underline"
             >
               Cancelar y volver
             </Link>
@@ -96,7 +96,7 @@ const Unsubscribe = () => {
         {status === 'loading' && (
           <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-8">
             <Loader2 size={40} className="text-brand-cyan mx-auto mb-4 animate-spin" />
-            <p className="text-sm font-bold text-neutral-500">Procesando tu solicitud...</p>
+            <p className="text-sm font-bold text-neutral-500 dark:text-gray-400">Procesando tu solicitud...</p>
           </div>
         )}
 
@@ -107,11 +107,11 @@ const Unsubscribe = () => {
             <h2 className="text-xl font-black text-black dark:text-white mb-3">
               Solicitud procesada
             </h2>
-            <p className="text-sm text-neutral-500 leading-relaxed mb-6">
+            <p className="text-sm text-neutral-500 dark:text-gray-400 leading-relaxed mb-6">
               {message}
             </p>
             <div className="bg-neutral-50 dark:bg-neutral-800 rounded-xl px-4 py-3 mb-6">
-              <p className="text-[11px] text-neutral-400 leading-relaxed">
+              <p className="text-[11px] text-neutral-400 dark:text-gray-500 leading-relaxed">
                 Si en el futuro querés volver a recibir nuestras comunicaciones, contactanos directamente o activá la opción desde tu perfil.
               </p>
             </div>
@@ -131,7 +131,7 @@ const Unsubscribe = () => {
             <h2 className="text-xl font-black text-black dark:text-white mb-3">
               No pudimos procesar tu solicitud
             </h2>
-            <p className="text-sm text-neutral-500 leading-relaxed mb-6">
+            <p className="text-sm text-neutral-500 dark:text-gray-400 leading-relaxed mb-6">
               {message}
             </p>
             <div className="flex flex-col gap-3">
@@ -143,7 +143,7 @@ const Unsubscribe = () => {
               </button>
               <Link
                 to="/"
-                className="block text-xs font-bold text-neutral-400 hover:text-black dark:hover:text-white transition-colors uppercase tracking-wider no-underline text-center"
+                className="block text-xs font-bold text-neutral-400 dark:text-gray-500 hover:text-black dark:hover:text-white transition-colors uppercase tracking-wider no-underline text-center"
               >
                 Volver al inicio
               </Link>

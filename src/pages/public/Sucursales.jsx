@@ -22,8 +22,8 @@ const SucursalCard = ({ sucursal }) => {
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-            <Store size={40} className="text-neutral-300 dark:text-neutral-600" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Sin imagen</span>
+            <Store size={40} className="text-neutral-300 dark:text-gray-500" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 dark:text-gray-500">Sin imagen</span>
           </div>
         )}
         {/* Overlay gradiente */}
@@ -41,7 +41,7 @@ const SucursalCard = ({ sucursal }) => {
         {/* Dirección */}
         <div className="flex items-start gap-2.5">
           <MapPin size={14} className="text-brand-cyan flex-shrink-0 mt-0.5" />
-          <p className="text-xs font-medium text-neutral-600 dark:text-neutral-400 leading-relaxed">
+          <p className="text-xs font-medium text-neutral-600 dark:text-gray-400 leading-relaxed">
             {sucursal.direccion || 'Dirección no disponible'}
           </p>
         </div>
@@ -78,14 +78,14 @@ const Sucursales = () => {
   if (loading) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
       <div className="w-12 h-12 border-4 border-neutral-200 border-t-brand-cyan rounded-full animate-spin" />
-      <p className="text-xs font-black uppercase tracking-widest text-neutral-400">Cargando sucursales...</p>
+      <p className="text-xs font-black uppercase tracking-widest text-neutral-400 dark:text-gray-500">Cargando sucursales...</p>
     </div>
   );
 
   if (error) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center gap-4">
-      <Store size={48} className="text-neutral-300" />
-      <p className="text-sm font-bold text-neutral-500">{error}</p>
+      <Store size={48} className="text-neutral-300 dark:text-gray-500" />
+      <p className="text-sm font-bold text-neutral-500 dark:text-gray-400">{error}</p>
     </div>
   );
 
@@ -97,7 +97,7 @@ const Sucursales = () => {
         <h1 className="text-4xl md:text-5xl font-black uppercase text-black dark:text-white leading-none mb-3 font-sport">
           Nuestras <span className="text-brand-cyan">Sucursales</span>
         </h1>
-        <p className="text-neutral-500 text-sm max-w-xl">
+        <p className="text-neutral-500 dark:text-gray-400 text-sm max-w-xl">
           Encontrá tu sucursal más cercana y visitanos. Nuestros equipos están listos para asesorarte.
         </p>
       </div>
@@ -111,15 +111,15 @@ const Sucursales = () => {
           <p className="text-sm font-black text-black dark:text-white">
             {sucursales.length} punto{sucursales.length !== 1 ? 's' : ''} de venta
           </p>
-          <p className="text-xs text-neutral-500">Hacé clic en "Ver en Mapa" para obtener las indicaciones</p>
+          <p className="text-xs text-neutral-500 dark:text-gray-400">Hacé clic en "Ver en Mapa" para obtener las indicaciones</p>
         </div>
       </div>
 
       {/* Grid de sucursales */}
       {sucursales.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Store size={40} className="text-neutral-300 mb-4" />
-          <p className="text-sm font-bold text-neutral-500">No hay sucursales activas por el momento</p>
+          <Store size={40} className="text-neutral-300 dark:text-gray-500 mb-4" />
+          <p className="text-sm font-bold text-neutral-500 dark:text-gray-400">No hay sucursales activas por el momento</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">

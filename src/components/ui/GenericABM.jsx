@@ -211,12 +211,12 @@ const GenericABM = ({
                         {Icon ? <Icon size={14} className="md:w-4 md:h-4" /> : <Box size={14} />}
                     </div>
                     <div className="flex flex-col flex-1 min-w-0">
-                        <span className="text-[7px] md:text-[8px] font-black uppercase tracking-[0.2em] text-neutral-500 mb-0">GESTIÓN CENTRAL</span>
+                        <span className="text-[7px] md:text-[8px] font-black uppercase tracking-[0.2em] text-neutral-500 dark:text-gray-400 mb-0">GESTIÓN CENTRAL</span>
                         <h1 className="text-md md:text-lg font-black tracking-tighter m-0 text-black dark:text-white uppercase leading-tight">
                             {title}
                         </h1>
                         {description && (
-                            <p className="text-[9px] md:text-[9px] font-bold text-neutral-400 mt-0.5 max-w-2xl leading-relaxed whitespace-normal line-clamp-2 md:line-clamp-none">
+                            <p className="text-[9px] md:text-[9px] font-bold text-neutral-400 dark:text-gray-500 mt-0.5 max-w-2xl leading-relaxed whitespace-normal line-clamp-2 md:line-clamp-none">
                                 {description}
                             </p>
                         )}
@@ -322,11 +322,11 @@ const GenericABM = ({
                                                         formData[field.name] ? 'left-4' : 'left-0.5'
                                                     }`} />
                                                 </div>
-                                                <span className="text-[10px] font-black uppercase tracking-wider text-neutral-600">{field.label}</span>
+                                                <span className="text-[10px] font-black uppercase tracking-wider text-neutral-600 dark:text-gray-400">{field.label}</span>
                                             </label>
                                         ) : (
                                             <>
-                                                <label className="text-[10px] font-black uppercase tracking-wider text-neutral-500 ml-1 block">{field.label}</label>
+                                                <label className="text-[10px] font-black uppercase tracking-wider text-neutral-500 dark:text-gray-400 ml-1 block">{field.label}</label>
                                                 <input
                                                     required={field.required}
                                                     type={field.type || 'text'}
@@ -369,7 +369,7 @@ const GenericABM = ({
                             <button 
                                 type="button"
                                 onClick={() => setIsModalOpen(false)}
-                                className="w-full text-xs font-black uppercase tracking-[0.4em] text-neutral-400 hover:text-red-500 transition-all py-4 flex items-center justify-center gap-3"
+                                className="w-full text-xs font-black uppercase tracking-[0.4em] text-neutral-400 dark:text-gray-500 hover:text-red-500 transition-all py-4 flex items-center justify-center gap-3"
                             >
                                 <XSquare size={20} />
                                 DESCARTAR CAMBIOS
@@ -399,7 +399,7 @@ const GenericABM = ({
                         </div>
 
                         <div className="bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-xl p-4 text-center">
-                            <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-neutral-400 dark:text-gray-400 mb-1">Registro a dar de baja</p>
+                            <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-neutral-400 dark:text-gray-500 mb-1">Registro a dar de baja</p>
                             <p className="text-sm font-black uppercase tracking-widest text-black dark:text-white">
                                 {deleteTarget?.nombre || deleteTarget?.nombre_marca || deleteTarget?.nombre_proveedor || deleteTarget?.codigo || `ID: ${deleteTarget?.[idField]?.toString().split('-')[0]}`}
                             </p>
@@ -414,7 +414,7 @@ const GenericABM = ({
                             </button>
                             <button
                                 onClick={() => setDeleteTarget(null)}
-                                className="w-full py-3 text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-black dark:hover:text-white transition-colors"
+                                className="w-full py-3 text-[10px] font-bold uppercase tracking-widest text-neutral-400 dark:text-gray-500 hover:text-black dark:hover:text-white transition-colors"
                             >
                                 Cancelar
                             </button>

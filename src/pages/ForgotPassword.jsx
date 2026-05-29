@@ -71,7 +71,7 @@ const ForgotPassword = () => {
                                 Email
                             </label>
                             <div className="relative">
-                                <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400" />
+                                <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-gray-500" />
                                 <input
                                     type="email"
                                     value={email}
@@ -96,7 +96,7 @@ const ForgotPassword = () => {
                     <div className="mt-6 text-center">
                         <Link 
                             to="/login"
-                            className="inline-flex items-center gap-2 text-sm text-neutral-600 dark:text-gray-400 hover:text-black dark:text-white transition-colors font-medium"
+                            className="inline-flex items-center gap-2 text-sm text-neutral-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors font-medium"
                         >
                             <ArrowLeft size={16} />
                             Volver al login
@@ -106,7 +106,7 @@ const ForgotPassword = () => {
 
                 {/* Footer */}
                 <div className="text-center mt-6">
-                    <p className="text-xs text-neutral-400 uppercase tracking-widest">
+                    <p className="text-xs text-neutral-400 dark:text-gray-500 uppercase tracking-widest">
                         PUSH SPORT © 2026
                     </p>
                 </div>

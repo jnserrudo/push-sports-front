@@ -25,7 +25,7 @@ const ProductCard = ({ producto, onClick }) => {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <Package size={48} className="text-neutral-300 dark:text-neutral-600" />
+            <Package size={48} className="text-neutral-300 dark:text-gray-500" />
           </div>
         )}
         {/* Badge disponibilidad */}
@@ -64,7 +64,7 @@ const ProductCard = ({ producto, onClick }) => {
 
         {/* Sucursales con stock */}
         {disponible ? (
-          <div className="flex items-center gap-1.5 text-[10px] text-neutral-500 dark:text-neutral-400 font-medium">
+          <div className="flex items-center gap-1.5 text-[10px] text-neutral-500 dark:text-gray-400 font-medium">
             <MapPin size={11} className="text-brand-cyan flex-shrink-0" />
             <span>
               {producto.disponibilidad.length === 1
@@ -73,7 +73,7 @@ const ProductCard = ({ producto, onClick }) => {
             </span>
           </div>
         ) : (
-          <div className="flex items-center gap-1.5 text-[10px] text-neutral-400 font-medium">
+          <div className="flex items-center gap-1.5 text-[10px] text-neutral-400 dark:text-gray-500 font-medium">
             <MapPin size={11} className="flex-shrink-0" />
             <span>Sin stock en sucursales</span>
           </div>
@@ -124,7 +124,7 @@ const ProductModal = ({ producto, onClose }) => {
           </div>
 
           {producto.descripcion && (
-            <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4 leading-relaxed">
+            <p className="text-sm text-neutral-600 dark:text-gray-400 mb-4 leading-relaxed">
               {producto.descripcion}
             </p>
           )}
@@ -140,13 +140,13 @@ const ProductModal = ({ producto, onClose }) => {
           {/* Variantes */}
           {producto.usa_variantes && producto.variantes?.length > 0 && (
             <div className="mb-4">
-              <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500 mb-2">Variantes disponibles</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500 dark:text-gray-400 mb-2">Variantes disponibles</p>
               <div className="flex flex-wrap gap-2">
                 {producto.variantes.map(v => {
                   const attrs = typeof v.atributos_valores === 'string' ? JSON.parse(v.atributos_valores) : v.atributos_valores;
                   const label = attrs ? Object.values(attrs).filter(Boolean).join(' / ') : 'Variante';
                   return (
-                    <span key={v.id_variante} className="px-3 py-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-lg text-xs font-bold text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700">
+                    <span key={v.id_variante} className="px-3 py-1.5 bg-neutral-100 dark:bg-gray-700 rounded-lg text-xs font-bold text-neutral-700 dark:text-gray-300 border border-neutral-200 dark:border-gray-600">
                       {label}
                     </span>
                   );

@@ -45,15 +45,15 @@ const RowsPerPageSelect = ({ value, onChange }) => {
                         : 'border-neutral-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-white hover:border-neutral-400 dark:hover:border-gray-500'
                 }`}
             >
-                <Rows3 size={11} className={open ? 'text-brand-cyan' : 'text-neutral-400'} />
+                <Rows3 size={11} className={open ? 'text-brand-cyan' : 'text-neutral-400 dark:text-gray-500'} />
                 <span>{value} filas</span>
-                <ChevronDown size={11} className={`transition-transform duration-200 ${open ? 'rotate-180 text-brand-cyan' : 'text-neutral-400'}`} />
+                <ChevronDown size={11} className={`transition-transform duration-200 ${open ? 'rotate-180 text-brand-cyan' : 'text-neutral-400 dark:text-gray-500'}`} />
             </button>
 
             {open && (
                 <div className="absolute bottom-full mb-1.5 left-0 z-[80] bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden min-w-[120px] animate-in fade-in slide-in-from-bottom-2 duration-200">
                     <div className="px-3 py-1.5 border-b border-neutral-100 dark:border-gray-700">
-                        <span className="text-[8px] font-black uppercase tracking-[0.2em] text-neutral-400">Filas por página</span>
+                        <span className="text-[8px] font-black uppercase tracking-[0.2em] text-neutral-400 dark:text-gray-500">Filas por página</span>
                     </div>
                     {OPTIONS.map(opt => (
                         <button
@@ -108,7 +108,7 @@ const RowActions = ({ row, onEdit, onDelete, onView, customActions, refresh, isL
                 className={`w-10 h-10 flex items-center justify-center rounded-lg border transition-all cursor-pointer z-20 ${
                     open
                         ? 'border-brand-cyan bg-brand-cyan/5 text-brand-cyan shadow-sm'
-                        : 'border-neutral-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-neutral-500 hover:border-neutral-400 dark:hover:border-gray-500 hover:text-black dark:hover:text-white'
+                        : 'border-neutral-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-neutral-500 dark:text-gray-400 hover:border-neutral-400 dark:hover:border-gray-500 hover:text-black dark:hover:text-white'
                 }`}
                 title="Acciones"
             >
@@ -278,7 +278,7 @@ const DataTable = ({
                 {!hideSearch && (
                     <div className="relative flex-1 group w-full min-w-0 sm:min-w-[200px]">
                         <div className="relative flex items-center">
-                            <div className="absolute left-3 md:left-4 flex items-center pointer-events-none text-neutral-400 group-focus-within:text-brand-cyan transition-colors">
+                            <div className="absolute left-3 md:left-4 flex items-center pointer-events-none text-neutral-400 dark:text-gray-500 group-focus-within:text-brand-cyan dark:group-focus-within:text-cyan-400 transition-colors">
                                 <Search size={16} className="md:w-5 md:h-5" />
                             </div>
                             <input 
@@ -367,7 +367,7 @@ const DataTable = ({
                                     }`}>
                                         {columns.map((col, colIdx) => (
                                             <td key={colIdx} className={`px-1.5 py-1 md:px-2 md:py-1 align-middle ${colIdx > 1 ? 'hidden sm:table-cell' : ''} ${colIdx === 0 ? 'text-black font-bold' : ''}`}>
-                                                {col.render ? col.render(row) : <span className="text-neutral-600 dark:text-neutral-400">{row[col.accessor] ?? '—'}</span>}
+                                                {col.render ? col.render(row) : <span className="text-neutral-600 dark:text-gray-400">{row[col.accessor] ?? '—'}</span>}
                                             </td>
                                         ))}
                                         {(onEdit || onDelete || onView || customActions) && (
@@ -400,8 +400,8 @@ const DataTable = ({
                         onChange={(v) => { setItemsPerPage(v); setCurrentPage(1); }}
                     />
                     <div className="h-4 w-px bg-neutral-200 dark:bg-gray-700" />
-                    <span className="text-[9px] font-black text-neutral-400 uppercase tracking-widest">
-                        {rangeStart}–{rangeEnd} <span className="text-neutral-300">de</span> {processedData.length}
+                    <span className="text-[9px] font-black text-neutral-400 dark:text-gray-500 uppercase tracking-widest">
+                        {rangeStart}–{rangeEnd} <span className="text-neutral-300 dark:text-gray-500">de</span> {processedData.length}
                     </span>
                 </div>
                 

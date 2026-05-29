@@ -136,10 +136,10 @@ const ImagePicker = ({ value, onChange, label = "Imagen de la Sede" }) => {
                         </button>
                     </>
                 ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-neutral-400 group-hover:text-brand-cyan transition-colors">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-neutral-400 dark:text-gray-500 group-hover:text-brand-cyan dark:group-hover:text-cyan-400 transition-colors">
                         <Landmark size={24} />
                         <span className="text-[9px] font-black uppercase tracking-wider">Subir foto de la sede</span>
-                        <span className="text-[8px] font-bold text-neutral-300">JPG, PNG (máx. 10MB)</span>
+                        <span className="text-[8px] font-bold text-neutral-300 dark:text-gray-500">JPG, PNG (máx. 10MB)</span>
                     </div>
                 )}
             </div>
@@ -170,7 +170,7 @@ const Sucursales = () => {
                     {row.imagen_url ? (
                         <img src={row.imagen_url} alt={row.nombre} className="w-full h-full object-cover" />
                     ) : (
-                        <Store size={18} className="text-neutral-300" />
+                        <Store size={18} className="text-neutral-300 dark:text-gray-500" />
                     )}
                 </div>
             )
@@ -183,7 +183,7 @@ const Sucursales = () => {
                     <span className="font-bold text-sm text-black dark:text-white uppercase tracking-widest">{row.nombre}</span>
                     <div className="flex items-center gap-1">
                         <MapPin size={10} className="text-brand-cyan" />
-                        <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">{row.direccion}</span>
+                        <span className="text-[9px] font-bold text-neutral-400 dark:text-gray-500 uppercase tracking-widest">{row.direccion}</span>
                     </div>
                 </div>
             )
@@ -196,7 +196,7 @@ const Sucursales = () => {
                     <span className="text-[10px] font-bold uppercase tracking-widest text-black dark:text-white">
                         {row.tipo_comercio?.nombre || 'General'}
                     </span>
-                    <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">{row.tipo_comercio?.descripcion || 'Sin descripción'}</span>
+                    <span className="text-[9px] font-bold text-neutral-400 dark:text-gray-500 uppercase tracking-widest">{row.tipo_comercio?.descripcion || 'Sin descripción'}</span>
                 </div>
             )
         },
@@ -259,7 +259,7 @@ const Sucursales = () => {
                 <div className="space-y-1.5">
                     <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-black dark:text-white">Nombre de la Sede *</label>
                     <div className="relative group">
-                        <Store size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
+                        <Store size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-gray-500 group-focus-within:text-brand-cyan dark:group-focus-within:text-cyan-400 transition-colors pointer-events-none" />
                         <input
                             required type="text"
                             className="w-full pl-10 pr-4 py-2.5 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-sm font-bold text-black dark:text-white uppercase placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-brand-cyan dark:focus:border-cyan-400 focus:ring-2 focus:ring-brand-cyan/20 dark:focus:ring-cyan-400/20 transition-all"
@@ -289,7 +289,7 @@ const Sucursales = () => {
             <div className="space-y-1.5">
                 <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-black dark:text-white">Dirección de la Sede *</label>
                 <div className="relative group">
-                    <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
+                    <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-gray-500 group-focus-within:text-brand-cyan dark:group-focus-within:text-cyan-400 transition-colors pointer-events-none" />
                     <input
                         required type="text"
                         className="w-full pl-10 pr-4 py-2.5 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-sm font-bold text-black dark:text-white uppercase placeholder:text-neutral-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-brand-cyan dark:focus:border-cyan-400 focus:ring-2 focus:ring-brand-cyan/20 dark:focus:ring-cyan-400/20 transition-all"
@@ -305,7 +305,7 @@ const Sucursales = () => {
                     <div className="w-8 h-8 bg-white dark:bg-gray-700 rounded-lg shadow-sm flex items-center justify-center flex-shrink-0">
                         <Info size={16} className="text-brand-cyan" />
                     </div>
-                    <p className="text-[10px] md:text-xs font-bold text-neutral-700 dark:text-neutral-300 leading-relaxed m-0">
+                    <p className="text-[10px] md:text-xs font-bold text-neutral-700 dark:text-gray-300 leading-relaxed m-0">
                         Click en el mapa o arrastre el marcador para definir la <span className="text-brand-cyan">ubicación</span>.
                     </p>
                 </div>
@@ -321,7 +321,7 @@ const Sucursales = () => {
                 <label className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-neutral-100 dark:border-gray-700 rounded-xl cursor-pointer group hover:border-brand-cyan transition-all">
                     <div className="flex flex-col">
                         <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-black dark:text-white">Estado Operativo</span>
-                        <span className="text-[9px] text-neutral-400 font-bold tracking-wider mt-0.5">Visible y recibe operaciones</span>
+                        <span className="text-[9px] text-neutral-400 dark:text-gray-500 font-bold tracking-wider mt-0.5">Visible y recibe operaciones</span>
                     </div>
                     <div
                         onClick={(e) => {

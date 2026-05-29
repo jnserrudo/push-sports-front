@@ -80,7 +80,7 @@ const PremiumSelect = ({
                 `}
             >
                 <div className="flex items-center gap-3 min-w-0">
-                    {Icon && <Icon size={16} className={`${isOpen ? 'text-brand-cyan' : 'text-neutral-400'} transition-colors flex-shrink-0`} />}
+                    {Icon && <Icon size={16} className={`${isOpen ? 'text-brand-cyan' : 'text-neutral-400 dark:text-gray-500'} transition-colors flex-shrink-0`} />}
                     <div className="flex flex-col min-w-0">
                         {selectedOption ? (
                             <>
@@ -88,13 +88,13 @@ const PremiumSelect = ({
                                     {selectedOption.label}
                                 </span>
                                 {selectedOption.subtitle && (
-                                    <span className="text-[9px] font-bold text-neutral-400 uppercase truncate">
+                                    <span className="text-[9px] font-bold text-neutral-400 dark:text-gray-500 uppercase truncate">
                                         {selectedOption.subtitle}
                                     </span>
                                 )}
                             </>
                         ) : (
-                            <span className="text-sm font-bold text-neutral-400 uppercase tracking-widest truncate">
+                            <span className="text-sm font-bold text-neutral-400 dark:text-gray-500 uppercase tracking-widest truncate">
                                 {placeholder}
                             </span>
                         )}
@@ -102,7 +102,7 @@ const PremiumSelect = ({
                 </div>
                 <ChevronDown 
                     size={16} 
-                    className={`text-neutral-400 transition-transform duration-300 ${isOpen ? 'rotate-180 text-brand-cyan' : ''}`} 
+                    className={`text-neutral-400 dark:text-gray-500 transition-transform duration-300 ${isOpen ? 'rotate-180 text-brand-cyan' : ''}`} 
                 />
             </div>
 
@@ -121,7 +121,7 @@ const PremiumSelect = ({
                         {searchable && (
                             <div className="p-3 border-b border-neutral-50 dark:border-gray-700 bg-neutral-50/50 dark:bg-gray-900/50">
                                 <div className="relative">
-                                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+                                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-gray-500" />
                                     <input
                                         autoFocus
                                         type="text"
@@ -134,7 +134,7 @@ const PremiumSelect = ({
                                     {searchTerm && (
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); setSearchTerm(""); }}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black dark:hover:text-white"
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-gray-500 hover:text-black dark:hover:text-white"
                                         >
                                             <X size={12} />
                                         </button>
@@ -161,13 +161,13 @@ const PremiumSelect = ({
                                             `}
                                         >
                                             <div className="flex items-center gap-3 min-w-0">
-                                                {opt.icon && <opt.icon size={14} className={isSelected ? 'text-brand-cyan' : 'text-neutral-400'} />}
+                                                {opt.icon && <opt.icon size={14} className={isSelected ? 'text-brand-cyan' : 'text-neutral-400 dark:text-gray-500'} />}
                                                 <div className="flex flex-col min-w-0">
                                                     <span className={`text-[11px] font-black uppercase tracking-widest truncate ${isSelected ? 'text-brand-cyan' : 'text-black dark:text-white'}`}>
                                                         {opt.label}
                                                     </span>
                                                     {opt.subtitle && (
-                                                        <span className="text-[9px] font-bold text-neutral-400 uppercase truncate">
+                                                        <span className="text-[9px] font-bold text-neutral-400 dark:text-gray-500 uppercase truncate">
                                                             {opt.subtitle}
                                                         </span>
                                                     )}
@@ -180,9 +180,9 @@ const PremiumSelect = ({
                             ) : (
                                 <div className="p-8 text-center flex flex-col items-center gap-2">
                                     <div className="w-8 h-8 rounded-full bg-neutral-50 dark:bg-gray-700 flex items-center justify-center">
-                                        <Search size={14} className="text-neutral-300" />
+                                        <Search size={14} className="text-neutral-300 dark:text-gray-500" />
                                     </div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Sin resultados</p>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400 dark:text-gray-500">Sin resultados</p>
                                 </div>
                             )}
                         </div>
