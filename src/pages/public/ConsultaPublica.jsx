@@ -132,7 +132,9 @@ const ConsultaPublica = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-3 mb-4">
-            <img src="/icono.jpeg" alt="Push Sport" className="w-12 h-12 rounded-lg" />
+            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-sm">
+              <img src="/icono_new.jpeg" alt="Push Sport" className="w-full h-full object-cover scale-110" style={{objectPosition: '50% 60%'}} />
+            </div>
             <h1 className="text-3xl font-black text-gray-900">
               PUSH<span className="text-brand-cyan">SPORT</span>
             </h1>

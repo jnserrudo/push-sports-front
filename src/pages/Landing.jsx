@@ -187,8 +187,8 @@ const Landing = () => {
         <div className="container mx-auto px-6 max-w-7xl flex justify-between items-center">
           
           <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <div className="w-10 h-10 bg-white dark:bg-gray-900 rounded-lg flex items-center justify-center p-1.5 shadow-md group-hover:scale-110 transition-transform duration-300">
-              <img src="/icono.jpeg" alt="Logo" className="w-full h-full object-contain" />
+            <div className="w-10 h-10 bg-white dark:bg-gray-900 rounded-full flex items-center justify-center overflow-hidden shadow-md group-hover:scale-110 transition-transform duration-300">
+              <img src="/icono_new.jpeg" alt="Logo" className="w-full h-full object-cover scale-110" style={{objectPosition: '50% 60%'}} />
             </div>
             <span className={`text-2xl uppercase m-0 font-sport tracking-wide ${isScrolled ? 'text-black dark:text-white' : 'text-white'}`}>
               PushSport <span className="text-brand-cyan">Salta</span>

@@ -251,8 +251,8 @@ const EventLanding = () => {
             <div className="relative z-10 w-full max-w-lg px-4 py-12 flex flex-col items-center gap-8">
                 {/* Brand */}
                 <div className="flex flex-col items-center gap-2 text-center">
-                    <div className="w-14 h-14 bg-white rounded-xl flex items-center justify-center p-2 shadow-[0_0_40px_rgba(0,229,255,0.25)]">
-                        <img src="/icono.jpeg" alt="PushSport" className="w-full h-full object-contain" />
+                    <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-[0_0_40px_rgba(0,229,255,0.25)]">
+                        <img src="/icono_new.jpeg" alt="PushSport" className="w-full h-full object-cover scale-110" style={{objectPosition: '50% 60%'}} />
                     </div>
                     <span className="text-[10px] font-black uppercase tracking-[0.4em] text-brand-cyan mt-1">— PushSport Salta —</span>
                 </div>

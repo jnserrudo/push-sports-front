@@ -126,8 +126,8 @@ const Register = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
                 
                 <div className="relative z-20">
-                    <div className="w-12 h-12 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center p-2 shadow-sm mb-6">
-                        <img src="/icono.jpeg" alt="Logo" className="w-full h-full object-contain" />
+                    <div className="w-12 h-12 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center overflow-hidden shadow-sm mb-6">
+                        <img src="/icono_new.jpeg" alt="Logo" className="w-full h-full object-cover scale-110" style={{objectPosition: '50% 60%'}} />
                     </div>
                 </div>
 
@@ -145,8 +145,8 @@ const Register = () => {
             <div className="w-full md:w-7/12 p-8 md:p-12 bg-white dark:bg-gray-800 flex flex-col justify-center">
                 
                 <div className="md:hidden flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center p-1.5">
-                        <img src="/icono.jpeg" alt="Logo" className="w-full h-full object-contain invert" />
+                    <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center overflow-hidden">
+                        <img src="/icono_new.jpeg" alt="Logo" className="w-full h-full object-cover scale-110 invert" style={{objectPosition: '50% 60%'}} />
                     </div>
                     <h2 className="text-3xl uppercase leading-none font-sport m-0 text-black dark:text-white">PushSport</h2>
                 </div>

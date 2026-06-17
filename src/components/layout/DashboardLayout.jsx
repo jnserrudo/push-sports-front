@@ -219,10 +219,10 @@ const DashboardLayout = () => {
               <X size={12} strokeWidth={2.5} />
             </button>
 
-            <div className={`bg-white dark:bg-gray-700 border border-neutral-100 dark:border-gray-600 rounded-lg shadow-sm transition-all duration-500 mb-1
-                ${isSidebarOpen ? 'w-8 h-8 md:w-10 md:h-10 p-1 md:p-2 md:rounded-xl md:mb-1' : 'w-7 h-7 p-1 md:rounded-lg'}
+            <div className={`bg-white dark:bg-gray-700 border border-neutral-100 dark:border-gray-600 rounded-full shadow-sm transition-all duration-500 mb-1 flex items-center justify-center overflow-hidden
+                ${isSidebarOpen ? 'w-8 h-8 md:w-10 md:h-10' : 'w-7 h-7'}
             `}>
-                <img src="/icono.jpeg" alt="Push Sport" className="w-full h-full object-contain" />
+                <img src="/icono_new.jpeg" alt="Push Sport" className="w-full h-full object-cover scale-110" style={{objectPosition: '50% 60%'}} />
             </div>
 
             <div className={`text-center transition-all duration-300 overflow-hidden ${isSidebarOpen ? 'opacity-100' : 'opacity-0 h-0 m-0'}`}>

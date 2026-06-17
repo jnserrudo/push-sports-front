@@ -67,7 +67,7 @@ const QRModal = ({ evento, onClose }) => {
                             level="H"
                             marginSize={1}
                             imageSettings={{
-                                src: '/icono.jpeg',
+                                src: '/icono_new.jpeg',
                                 x: undefined,
                                 y: undefined,
                                 height: 40,
@@ -257,7 +257,7 @@ const HubQRModal = ({ onClose }) => {
                             level="H"
                             marginSize={1}
                             imageSettings={{
-                                src: '/icono.jpeg',
+                                src: '/icono_new.jpeg',
                                 x: undefined,
                                 y: undefined,
                                 height: 40,

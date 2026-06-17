@@ -88,8 +88,8 @@ const Hub = () => {
             <div className="relative z-10 w-full max-w-md px-4 py-12 flex flex-col items-center gap-8">
                 {/* Brand */}
                 <div className="flex flex-col items-center gap-3 text-center">
-                    <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center p-2 shadow-[0_0_40px_rgba(0,229,255,0.25)]">
-                        <img src="/icono.jpeg" alt="PushSport" className="w-full h-full object-contain" />
+                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-[0_0_40px_rgba(0,229,255,0.25)]">
+                        <img src="/icono_new.jpeg" alt="PushSport" className="w-full h-full object-cover scale-110" style={{objectPosition: '50% 60%'}} />
                     </div>
                     <h1 className="text-4xl sm:text-5xl font-sport uppercase text-white leading-[0.95] m-0 break-words hyphens-auto">
                         Conectá con <br /><span className="text-brand-cyan italic">Push Sport</span>
