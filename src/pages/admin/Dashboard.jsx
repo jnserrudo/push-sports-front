@@ -4,7 +4,7 @@ import {
   BarChart3, TrendingUp, Package, Users, Store, Clock, RefreshCw, 
   MapPin, AlertCircle, ShoppingCart, DollarSign, ArrowUpRight, ArrowDownRight,
   TrendingDown, ArrowRight, Monitor, ShieldCheck, Truck, Tag, Ticket, 
-  AlertTriangle, CheckCircle2, ChevronRight, CircleDollarSign, CreditCard, RotateCcw
+  AlertTriangle, CheckCircle2, ChevronRight, CircleDollarSign, CreditCard, RotateCcw, Info
 } from 'lucide-react';
 import PremiumSelect from '../../components/ui/PremiumSelect';
 import { useAuthStore } from '../../store/authStore';
@@ -22,33 +22,64 @@ import {
 import { motion } from 'framer-motion';
 
 // ─── Metric Card ──────────────────────────────────────────────────────────────
-const MetricCard = ({ title, value, icon: Icon, trend, sub, link, loading }) => (
+const MetricCard = ({ title, value, icon: Icon, trend, sub, link, loading, description }) => {
+  const [tooltipVisible, setTooltipVisible] = useState(false);
+  return (
   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="h-full">
       <Link
         to={link}
-        className="group bg-white dark:bg-gray-800 p-3 md:p-4 rounded-xl border border-neutral-200 dark:border-gray-700 shadow-sm hover:shadow-md hover:border-brand-cyan dark:hover:border-brand-cyan relative overflow-hidden transition-all duration-300 flex flex-col justify-between h-full"
+        className="group bg-white dark:bg-gray-800 p-3 md:p-4 rounded-xl border border-neutral-200 dark:border-gray-700 shadow-sm hover:shadow-md hover:border-brand-cyan dark:hover:border-brand-cyan relative transition-all duration-300 flex flex-col justify-between h-full"
       >
         <div className="absolute -right-3 -top-3 w-16 h-16 bg-neutral-50 dark:bg-gray-900 rounded-full group-hover:bg-brand-cyan/10 transition-colors duration-500" />
         <div className="flex justify-between items-start mb-2 relative z-10">
           <div className="w-8 h-8 rounded-md bg-neutral-100 dark:bg-gray-900 flex items-center justify-center text-black dark:text-white group-hover:bg-brand-cyan group-hover:text-black transition-all duration-300 border border-neutral-200 dark:border-gray-700">
             <Icon size={14} strokeWidth={2.5} />
           </div>
-          {trend != null ? (
-            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-green-50 text-green-700 rounded text-[8px] font-black uppercase tracking-widest border border-green-200">
-              <TrendingUp size={10} strokeWidth={3} />+{trend}%
-            </div>
-          ) : null}
+          <div className="flex items-center gap-1">
+            {trend != null ? (
+              <div className="flex items-center gap-1 px-1.5 py-0.5 bg-green-50 text-green-700 rounded text-[8px] font-black uppercase tracking-widest border border-green-200">
+                <TrendingUp size={10} strokeWidth={3} />+{trend}%
+              </div>
+            ) : null}
+            {description && (
+              <div 
+                className="relative group/tooltip"
+                onMouseEnter={() => setTooltipVisible(true)}
+                onMouseLeave={() => setTooltipVisible(false)}
+              >
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setTooltipVisible(!tooltipVisible);
+                  }}
+                  className="w-6 h-6 rounded flex items-center justify-center text-neutral-400 dark:text-gray-500 hover:text-brand-cyan hover:bg-neutral-100 dark:hover:bg-gray-900 transition-colors focus:outline-none relative z-10"
+                  aria-label="Ver información"
+                >
+                  <Info size={14} strokeWidth={2.5} />
+                </button>
+                <div className={`absolute bottom-full right-0 mb-2 w-44 p-2.5 bg-neutral-900 dark:bg-gray-900 text-white text-[10px] leading-relaxed rounded-lg shadow-2xl border border-neutral-700 transition-all duration-200 ${tooltipVisible ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-1'} z-[100]`}>
+                  {description}
+                  <div className="absolute -bottom-1 right-2 w-2 h-2 bg-neutral-900 dark:bg-gray-900 transform rotate-45 border-b border-r border-neutral-700"></div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-        <div className="relative z-10 flex-1 flex flex-col justify-center">
+        <div className="relative z-10 flex-1 flex flex-col justify-center min-h-[60px]">
           <span className="text-[9px] md:text-[10px] font-black text-neutral-500 dark:text-gray-400 uppercase tracking-widest block mb-0.5">{title}</span>
           {loading ? (
-              <div className="flex items-center gap-2 mt-1">
-                  <div className="w-4 h-4 border-2 border-neutral-200 dark:border-gray-600 border-t-brand-cyan rounded-full animate-spin" />
+              <div className="flex items-center gap-2 mt-2">
+                  <div className="w-5 h-5 border-2 border-neutral-200 dark:border-gray-600 border-t-brand-cyan rounded-full animate-spin" />
+                  <span className="text-[10px] font-bold text-neutral-400 dark:text-gray-500 uppercase tracking-wider">Cargando...</span>
               </div>
           ) : (
-              <h3 className="text-xl md:text-2xl font-sport m-0 text-black dark:text-white uppercase leading-none tracking-tight">{value ?? '—'}</h3>
+              <>
+                <h3 className="text-xl md:text-2xl font-sport m-0 text-black dark:text-white uppercase leading-none tracking-tight">{value ?? '—'}</h3>
+                {sub && <p className="text-[7px] md:text-[8px] font-black text-neutral-400 dark:text-gray-500 uppercase tracking-widest mt-1 m-0">{sub}</p>}
+              </>
           )}
-          {!loading && sub && <p className="text-[7px] md:text-[8px] font-black text-neutral-400 dark:text-gray-500 uppercase tracking-widest mt-1 m-0">{sub}</p>}
         </div>
         <div className="mt-3 flex items-center justify-between text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] text-neutral-400 dark:text-gray-500 group-hover:text-brand-cyan transition-colors pt-2 border-t border-neutral-100 dark:border-gray-700 relative z-10">
           <span>Detalles</span>
@@ -56,7 +87,8 @@ const MetricCard = ({ title, value, icon: Icon, trend, sub, link, loading }) => 
         </div>
       </Link>
   </motion.div>
-);
+  );
+};
 
 // ─── Quick Action Card ─────────────────────────────────────────────────────────
 const QuickCard = ({ icon: Icon, title, desc, link, accent = false }) => (
@@ -99,7 +131,10 @@ const Dashboard = () => {
   const [stats, setStats] = useState({
     ventas: null, usuarios: null, productos: null,
     stockCritico: [], movimientos: [], sucursalesCount: 0,
-    chartData: [], sucursalesDeuda: []
+    chartData: [], sucursalesDeuda: [],
+    totalVentas: null, cantidadVentas: null, crecimientoVentas: 0,
+    totalIngresos: null, cantidadLiquidaciones: null,
+    productosTop: [], metodosPago: [], rendimientoSucursales: []
   });
 
   const loadStats = async () => {
@@ -123,7 +158,22 @@ const Dashboard = () => {
         stockCritico: dashboardData.stockCritico || [],
         movimientos: [], // Optimizamos eliminando fetch redundante de movimientos
         chartData: dashboardData.chartData || [],
-        sucursalesDeuda: dashboardData.sucursalesDeuda || []
+        sucursalesDeuda: dashboardData.sucursalesDeuda || [],
+        totalVentas: dashboardData.metrics.totalVentas,
+        cantidadVentas: dashboardData.metrics.cantidadVentas,
+        crecimientoVentas: dashboardData.metrics.crecimientoVentas,
+        totalIngresos: dashboardData.metrics.totalIngresos,
+        cantidadLiquidaciones: dashboardData.metrics.cantidadLiquidaciones,
+        productosTop: dashboardData.productosTop || [],
+        metodosPago: dashboardData.metodosPago || [],
+        rendimientoSucursales: dashboardData.rendimientoSucursales || []
+      });
+
+      console.log('📊 Frontend Stats:', {
+        totalVentas: dashboardData.metrics.totalVentas,
+        totalIngresos: dashboardData.metrics.totalIngresos,
+        productosTop: dashboardData.productosTop?.length,
+        metodosPago: dashboardData.metodosPago?.length
       });
 
     } catch (error) {
@@ -291,12 +341,73 @@ const Dashboard = () => {
         )}
       </div>
 
+      {/* ── EXPLICACIÓN DE MÉTRICAS ── */}
+      <section className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-3 md:p-4">
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center flex-shrink-0 border border-blue-200 dark:border-blue-800">
+            <Info size={16} className="text-blue-600 dark:text-blue-400" />
+          </div>
+          <div className="flex-1">
+            <h4 className="text-xs font-black text-blue-800 dark:text-blue-300 uppercase tracking-wider mb-1">¿Cómo interpretar estas métricas?</h4>
+            <p className="text-[11px] md:text-xs text-blue-700 dark:text-blue-300 leading-relaxed m-0">
+              <strong>Total Ventas:</strong> todo lo vendido en los últimos 30 días.{' '}
+              <strong>Ingresos:</strong> dinero ya cobrado por liquidaciones.{' '}
+              <strong>Caja Fuerte:</strong> saldo pendiente de liquidar. Si Caja Fuerte es $0 significa que ya cobraste todo.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* ── MÉTRICAS ── */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
-        <MetricCard title="Caja Fuerte" value={stats.ventas} icon={CreditCard} sub="Saldo acumulado" link="/dashboard/liquidaciones" loading={loading} />
+        <MetricCard 
+          title="Total Ventas" 
+          value={`$${Number(stats.totalVentas || 0).toLocaleString('es-AR')}`} 
+          icon={ShoppingCart} 
+          trend={!loading && stats.crecimientoVentas > 0 ? stats.crecimientoVentas : null}
+          sub={`${stats.cantidadVentas || 0} ventas (30 días)`} 
+          link="/dashboard/liquidaciones" 
+          loading={loading} 
+          description="Suma de todas las ventas realizadas en los últimos 30 días, incluyendo ventas activas y ya liquidadas."
+        />
+        <MetricCard 
+          title="Ingresos" 
+          value={`$${Number(stats.totalIngresos || 0).toLocaleString('es-AR')}`} 
+          icon={DollarSign} 
+          sub={`${stats.cantidadLiquidaciones || 0} liquidaciones (30 días)`} 
+          link="/dashboard/liquidaciones" 
+          loading={loading} 
+          description="Dinero efectivamente cobrado a través de liquidaciones de sucursales en los últimos 30 días."
+        />
+        <MetricCard 
+          title="Caja Fuerte" 
+          value={`$${Number(stats.ventas || 0).toLocaleString('es-AR')}`} 
+          icon={CircleDollarSign} 
+          sub="Saldo pendiente" 
+          link="/dashboard/liquidaciones" 
+          loading={loading} 
+          description="Saldo acumulado que aún no ha sido liquidado por las sucursales. Si es $0, todo el dinero ya fue cobrado."
+        />
         {isSuperAdmin && (
-            <MetricCard title="Staff" value={stats.usuarios} icon={Users} sub="Operadores" link="/dashboard/usuarios" loading={loading} />
+            <MetricCard 
+              title="Staff" 
+              value={stats.usuarios || 0} 
+              icon={Users} 
+              sub="Operadores" 
+              link="/dashboard/usuarios" 
+              loading={loading} 
+              description="Cantidad total de operadores/usuarios registrados en el sistema con acceso habilitado."
+            />
         )}
+        <MetricCard 
+          title="Productos" 
+          value={stats.productos || 0} 
+          icon={Package} 
+          sub="En catálogo" 
+          link="/dashboard/productos" 
+          loading={loading} 
+          description="Total de productos activos disponibles en el catálogo del sistema."
+        />
       </section>
 
       {/* ── MOVIMIENTOS RECIENTES ── */}
@@ -370,6 +481,150 @@ const Dashboard = () => {
              )}
          </div>
       </section>
+
+      {/* ── PRODUCTOS MÁS VENDIDOS & MÉTODOS DE PAGO ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 mt-3 md:mt-4">
+        {/* Productos Top */}
+        <section className="bg-white dark:bg-gray-800 rounded-xl border border-neutral-200 dark:border-gray-700 shadow-sm p-3 md:p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-6 h-6 bg-purple-100 dark:bg-purple-900/30 rounded flex items-center justify-center border border-purple-200 dark:border-purple-800">
+              <Tag size={14} className="text-purple-600 dark:text-purple-400" />
+            </div>
+            <h3 className="font-sport text-sm md:text-base uppercase leading-none text-black dark:text-white m-0">
+              Productos <span className="text-brand-cyan">Top</span>
+            </h3>
+          </div>
+          <div className="space-y-2">
+            {loading ? (
+              Array(5).fill(0).map((_, i) => (
+                <div key={i} className="h-12 bg-neutral-100 dark:bg-gray-700 animate-pulse rounded-lg" />
+              ))
+            ) : stats.productosTop.length === 0 ? (
+              <div className="py-8 text-center border-2 border-dashed border-neutral-200 dark:border-gray-700 rounded-xl">
+                <Package size={24} className="mx-auto text-neutral-300 dark:text-gray-500 mb-2" />
+                <p className="text-[10px] font-bold text-neutral-400 dark:text-gray-400 uppercase tracking-widest">Sin datos de productos</p>
+              </div>
+            ) : (
+              stats.productosTop.map((prod, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="bg-neutral-50 dark:bg-gray-900 border border-neutral-200 dark:border-gray-700 p-3 rounded-lg flex justify-between items-center group hover:border-brand-cyan transition-colors"
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center flex-shrink-0 border border-purple-200 dark:border-purple-800">
+                      <span className="font-sport text-purple-600 dark:text-purple-400 text-sm">#{idx + 1}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-black dark:text-white truncate">{prod.nombre}</p>
+                      <p className="text-[10px] text-neutral-500 dark:text-gray-400">{prod.cantidad} unidades</p>
+                    </div>
+                  </div>
+                  <span className="font-sport text-brand-cyan text-sm md:text-base flex-shrink-0 ml-2">
+                    ${Number(prod.total || 0).toLocaleString()}
+                  </span>
+                </motion.div>
+              ))
+            )}
+          </div>
+        </section>
+
+        {/* Métodos de Pago */}
+        <section className="bg-white dark:bg-gray-800 rounded-xl border border-neutral-200 dark:border-gray-700 shadow-sm p-3 md:p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-6 h-6 bg-green-100 dark:bg-green-900/30 rounded flex items-center justify-center border border-green-200 dark:border-green-800">
+              <CreditCard size={14} className="text-green-600 dark:text-green-400" />
+            </div>
+            <h3 className="font-sport text-sm md:text-base uppercase leading-none text-black dark:text-white m-0">
+              Métodos de <span className="text-brand-cyan">Pago</span>
+            </h3>
+          </div>
+          <div className="space-y-2">
+            {loading ? (
+              Array(3).fill(0).map((_, i) => (
+                <div key={i} className="h-12 bg-neutral-100 dark:bg-gray-700 animate-pulse rounded-lg" />
+              ))
+            ) : stats.metodosPago.length === 0 ? (
+              <div className="py-8 text-center border-2 border-dashed border-neutral-200 dark:border-gray-700 rounded-xl">
+                <CreditCard size={24} className="mx-auto text-neutral-300 dark:text-gray-500 mb-2" />
+                <p className="text-[10px] font-bold text-neutral-400 dark:text-gray-400 uppercase tracking-widest">Sin datos de pagos</p>
+              </div>
+            ) : (
+              stats.metodosPago.map((metodo, idx) => {
+                const totalGeneral = stats.metodosPago.reduce((sum, m) => sum + m.total, 0);
+                const porcentaje = totalGeneral > 0 ? Math.round((metodo.total / totalGeneral) * 100) : 0;
+                
+                return (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="bg-neutral-50 dark:bg-gray-900 border border-neutral-200 dark:border-gray-700 p-3 rounded-lg"
+                  >
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs font-bold text-black dark:text-white uppercase">{metodo.metodo}</span>
+                      <span className="font-sport text-brand-cyan text-sm">
+                        ${Number(metodo.total || 0).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-2 bg-neutral-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-brand-cyan rounded-full transition-all duration-500"
+                          style={{ width: `${porcentaje}%` }}
+                        />
+                      </div>
+                      <span className="text-[10px] font-black text-neutral-500 dark:text-gray-400">{porcentaje}%</span>
+                    </div>
+                    <p className="text-[10px] text-neutral-500 dark:text-gray-400 mt-1">{metodo.cantidad} transacciones</p>
+                  </motion.div>
+                );
+              })
+            )}
+          </div>
+        </section>
+      </div>
+
+      {/* ── RENDIMIENTO POR SUCURSAL (Solo SuperAdmin) ── */}
+      {isSuperAdmin && stats.rendimientoSucursales.length > 0 && (
+        <section className="bg-gradient-to-br from-neutral-900 to-black rounded-xl border border-neutral-800 shadow-lg p-3 md:p-4 mt-3 md:mt-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-6 h-6 bg-brand-cyan/20 rounded flex items-center justify-center border border-brand-cyan/30">
+              <Store size={14} className="text-brand-cyan" />
+            </div>
+            <h3 className="font-sport text-sm md:text-base uppercase leading-none text-white m-0">
+              Ranking de <span className="text-brand-cyan">Sucursales</span>
+            </h3>
+          </div>
+          <div className="space-y-2">
+            {stats.rendimientoSucursales.map((suc, idx) => (
+              <motion.div
+                key={suc.id_comercio}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                className="bg-black/50 border border-neutral-800 p-3 rounded-lg flex justify-between items-center group hover:border-brand-cyan transition-colors"
+              >
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="w-8 h-8 bg-brand-cyan/20 rounded-lg flex items-center justify-center flex-shrink-0 border border-brand-cyan/30">
+                    <span className="font-sport text-brand-cyan text-sm">#{idx + 1}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-white truncate">{suc.nombre}</p>
+                    <p className="text-[10px] text-neutral-400">{suc.cantidad} ventas</p>
+                  </div>
+                </div>
+                <span className="font-sport text-brand-cyan text-base md:text-lg flex-shrink-0 ml-2">
+                  ${Number(suc.total || 0).toLocaleString()}
+                </span>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── ALERTAS DE STOCK CRÍTICO ── */}
       {stats.stockCritico.length > 0 && (
