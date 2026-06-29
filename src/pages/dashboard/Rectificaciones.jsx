@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     Search, AlertTriangle, FileEdit, CheckCircle2, XCircle, Clock, Package,
-    Send, ChevronRight, X, Plus, Minus, Trash2, Info, History, RefreshCw
+    Send, ChevronRight, X, Plus, Minus, Trash2, Info, History, RefreshCw, Eye
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { rectificacionesService } from '../../services/rectificacionesService';
@@ -40,6 +40,8 @@ const Rectificaciones = () => {
     const [isResolucionModalOpen, setIsResolucionModalOpen] = useState(false);
     const [isCadenaModalOpen, setIsCadenaModalOpen] = useState(false);
     const [selectedSolicitud, setSelectedSolicitud] = useState(null);
+    const [isDetalleRectModalOpen, setIsDetalleRectModalOpen] = useState(false);
+    const [selectedRectificacion, setSelectedRectificacion] = useState(null);
 
     // --- Tipos de Rectificación ---
     const [tipos, setTipos] = useState([]);
@@ -90,9 +92,10 @@ const Rectificaciones = () => {
             const data = activeTab === 'solicitudes'
                 ? await rectificacionesService.getPendientes()
                 : await rectificacionesService.getHistorial();
+            console.log('📋 Solicitudes/Historial cargado:', activeTab, data.length, data);
             setSolicitudes(data);
         } catch (e) {
-            console.error(e);
+            console.error('Error cargando solicitudes/historial:', e);
         } finally {
             setIsLoadingSol(false);
         }
@@ -590,8 +593,8 @@ const Rectificaciones = () => {
                     </motion.div>
                 )}
 
-                {/* ─── TAB SOLICITUDES / HISTORIAL ─── */}
-                {(activeTab === 'solicitudes' || activeTab === 'historial') && (
+                {/* ─── TAB PENDIENTES (SOLICITUDES) ─── */}
+                {activeTab === 'solicitudes' && (
                     <motion.div key="listado" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                         <div className="bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-2xl overflow-hidden shadow-sm p-4">
                             {isLoadingSol ? <p className="text-center p-10 text-xs text-neutral-400">Cargando...</p> : (
@@ -631,7 +634,84 @@ const Rectificaciones = () => {
                                             )
                                         }
                                     ]}
-                                    onView={activeTab === 'solicitudes' ? (sol) => { setSelectedSolicitud(sol); setMotivo(''); setIsResolucionModalOpen(true); } : null}
+                                    onView={(sol) => { setSelectedSolicitud(sol); setMotivo(''); setIsResolucionModalOpen(true); }}
+                                />
+                            )}
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* ─── TAB HISTORIAL (RECTIFICACIONES EJECUTADAS) ─── */}
+                {activeTab === 'historial' && (
+                    <motion.div key="historial" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                        <div className="bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-2xl overflow-hidden shadow-sm p-4">
+                            {isLoadingSol ? <p className="text-center p-10 text-xs text-neutral-400">Cargando...</p> : (
+                                <DataTable 
+                                    data={solicitudes}
+                                    columns={[
+                                        { 
+                                            header: 'Fecha', 
+                                            accessor: 'fecha_rectificacion',
+                                            render: (rect) => (
+                                                <div className="text-xs">
+                                                    <span className="font-bold block">{new Date(rect.fecha_rectificacion).toLocaleDateString()}</span>
+                                                    <span className="text-[10px] text-neutral-400">{new Date(rect.fecha_rectificacion).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                                </div>
+                                            )
+                                        },
+                                        { 
+                                            header: 'Venta Original', 
+                                            accessor: 'id_venta_origen',
+                                            render: (rect) => (
+                                                <div className="text-xs">
+                                                    <span className="font-bold block">VENTA</span>
+                                                    <span className="text-[10px] text-neutral-400 font-mono">#{rect.id_venta_origen.split('-')[0].toUpperCase()}</span>
+                                                </div>
+                                            )
+                                        },
+                                        {
+                                            header: 'Sucursal',
+                                            accessor: 'comercio_nombre',
+                                            render: (rect) => <span className="text-xs font-bold uppercase">{rect.comercio_nombre}</span>
+                                        },
+                                        { 
+                                            header: 'Tipo', 
+                                            accessor: 'tipo_rectificacion',
+                                            render: (rect) => (
+                                                <div className="text-xs">
+                                                    <span className="font-bold block">{rect.tipo_rectificacion || 'Rectificación'}</span>
+                                                    {rect.es_anulacion && <span className="text-[10px] text-red-500">ANULACIÓN</span>}
+                                                </div>
+                                            )
+                                        },
+                                        { 
+                                            header: 'Motivo', 
+                                            accessor: 'motivo_rectificacion',
+                                            render: (rect) => <div className="text-xs text-neutral-600 dark:text-gray-300 max-w-xs truncate">{rect.motivo_rectificacion}</div> 
+                                        },
+                                        { 
+                                            header: 'Usuario', 
+                                            accessor: 'usuario_nombre',
+                                            render: (rect) => <span className="text-xs text-neutral-500">{rect.usuario_nombre}</span>
+                                        },
+                                        {
+                                            header: 'Acciones',
+                                            render: (rect) => (
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedRectificacion(rect);
+                                                        setIsDetalleRectModalOpen(true);
+                                                    }}
+                                                    className="p-2 text-neutral-400 hover:text-black dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                                                    title="Ver Detalles"
+                                                >
+                                                    <Eye size={16} strokeWidth={2.5} />
+                                                </button>
+                                            )
+                                        }
+                                    ]}
+                                    searchPlaceholder="Buscar rectificaciones..."
+                                    variant="minimal"
                                 />
                             )}
                         </div>
@@ -918,6 +998,156 @@ const Rectificaciones = () => {
                         </button>
                     </div>
                 </div>
+            </Modal>
+
+            {/* Modal Detalles de Rectificación */}
+            <Modal 
+                isOpen={isDetalleRectModalOpen} 
+                onClose={() => setIsDetalleRectModalOpen(false)} 
+                title="Detalles de Rectificación"
+            >
+                {selectedRectificacion && (
+                    <div className="space-y-4 p-4 max-h-[70vh] overflow-y-auto">
+                        {/* Información General */}
+                        <div className="bg-neutral-50 dark:bg-gray-800 p-4 rounded-xl border border-neutral-200 dark:border-gray-700">
+                            <h3 className="text-xs font-black uppercase text-neutral-500 mb-3">Información General</h3>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <p className="text-[10px] font-bold text-neutral-400 uppercase">Fecha de Rectificación</p>
+                                    <p className="text-xs font-bold text-black dark:text-white">
+                                        {new Date(selectedRectificacion.fecha_rectificacion).toLocaleDateString('es-AR', {
+                                            day: '2-digit',
+                                            month: '2-digit',
+                                            year: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-neutral-400 uppercase">Sucursal</p>
+                                    <p className="text-xs font-bold text-black dark:text-white">{selectedRectificacion.comercio_nombre}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-neutral-400 uppercase">Realizado por</p>
+                                    <p className="text-xs font-bold text-black dark:text-white">{selectedRectificacion.usuario_nombre}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-neutral-400 uppercase">Tipo de Rectificación</p>
+                                    <p className="text-xs font-bold text-black dark:text-white">
+                                        {selectedRectificacion.tipo_rectificacion ? (
+                                            <span className="text-xs px-3 py-1 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded-lg font-bold">
+                                                {selectedRectificacion.tipo_rectificacion}
+                                            </span>
+                                        ) : (
+                                            <span className="text-xs px-3 py-1 bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 rounded-lg font-bold">
+                                                Sin especificar
+                                            </span>
+                                        )}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Venta Original */}
+                        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-200 dark:border-blue-800">
+                            <h3 className="text-xs font-black uppercase text-blue-700 dark:text-blue-400 mb-3">Venta Original</h3>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase">Fecha de Venta</p>
+                                    <p className="text-xs font-bold text-black dark:text-white">
+                                        {selectedRectificacion.venta_origen_fecha 
+                                            ? new Date(selectedRectificacion.venta_origen_fecha).toLocaleDateString('es-AR', {
+                                                day: '2-digit',
+                                                month: '2-digit',
+                                                year: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })
+                                            : 'N/A'
+                                        }
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase">Método de Pago</p>
+                                    <p className="text-xs font-bold text-black dark:text-white">{selectedRectificacion.metodo_pago}</p>
+                                </div>
+                                <div className="col-span-2">
+                                    <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase">Total de la Venta</p>
+                                    <p className="text-lg font-black text-black dark:text-white">
+                                        ${Number(selectedRectificacion.venta_origen_total || 0).toLocaleString('es-AR', {minimumFractionDigits: 2})}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Descripción de la Rectificación */}
+                        {selectedRectificacion.motivo_rectificacion && 
+                         selectedRectificacion.motivo_rectificacion !== selectedRectificacion.tipo_rectificacion && (
+                            <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-xl border border-amber-200 dark:border-amber-800">
+                                <h3 className="text-xs font-black uppercase text-amber-700 dark:text-amber-400 mb-2">Descripción</h3>
+                                <p className="text-sm text-black dark:text-white leading-relaxed">{selectedRectificacion.motivo_rectificacion}</p>
+                            </div>
+                        )}
+
+                        {/* Productos */}
+                        {selectedRectificacion.detalles && selectedRectificacion.detalles.length > 0 && (
+                            <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-xl border border-green-200 dark:border-green-800">
+                                <h3 className="text-xs font-black uppercase text-green-700 dark:text-green-400 mb-3">
+                                    {selectedRectificacion.es_anulacion ? 'Productos Anulados' : 'Nueva Venta Generada'}
+                                </h3>
+                                
+                                {/* Productos de la nueva venta */}
+                                {selectedRectificacion.detalles && selectedRectificacion.detalles.length > 0 && (
+                                    <div className="mb-3">
+                                        <p className="text-[10px] font-bold text-green-600 dark:text-green-400 uppercase mb-2">
+                                            Productos ({selectedRectificacion.detalles.length})
+                                        </p>
+                                        <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                                            {selectedRectificacion.detalles.map((det, idx) => (
+                                                <div key={idx} className="flex justify-between items-center bg-white dark:bg-gray-800 p-3 rounded-lg border border-neutral-200 dark:border-gray-700">
+                                                    <div className="flex-1">
+                                                        <p className="text-sm font-bold text-black dark:text-white">{det.producto_nombre}</p>
+                                                        <p className="text-xs text-neutral-500">Cantidad: {det.cantidad} × ${Number(det.precio_unitario || 0).toLocaleString('es-AR', {minimumFractionDigits: 2})}</p>
+                                                    </div>
+                                                    <p className="text-sm font-black text-black dark:text-white ml-3">
+                                                        ${Number((det.cantidad * det.precio_unitario) || 0).toLocaleString('es-AR', {minimumFractionDigits: 2})}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="border-t border-green-300 dark:border-green-700 pt-3">
+                                    <div className="flex justify-between items-center">
+                                        <p className="text-xs font-bold text-green-600 dark:text-green-400 uppercase">Nuevo Total</p>
+                                        <p className="text-lg font-black text-black dark:text-white">
+                                            ${Number(selectedRectificacion.total_venta || 0).toLocaleString('es-AR', {minimumFractionDigits: 2})}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Diferencia */}
+                        {!selectedRectificacion.es_anulacion && (
+                            <div className="bg-neutral-100 dark:bg-gray-800 p-4 rounded-xl border border-neutral-300 dark:border-gray-700">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-xs font-black uppercase text-neutral-600 dark:text-neutral-400">Diferencia</span>
+                                    <span className={`text-lg font-black ${
+                                        (selectedRectificacion.total_venta - selectedRectificacion.venta_origen_total) > 0 
+                                            ? 'text-green-600' 
+                                            : 'text-red-600'
+                                    }`}>
+                                        {(selectedRectificacion.total_venta - selectedRectificacion.venta_origen_total) > 0 ? '+' : ''}
+                                        ${(selectedRectificacion.total_venta - selectedRectificacion.venta_origen_total).toLocaleString('es-AR', {minimumFractionDigits: 2})}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
             </Modal>
 
         </motion.div>

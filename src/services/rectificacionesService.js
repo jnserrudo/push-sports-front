@@ -68,6 +68,11 @@ export const rectificacionesService = {
     },
 
     getHistorial: async () => {
+        const response = await api.get('/rectificaciones/historial-ejecutadas');
+        return response.data;
+    },
+
+    getHistorialSolicitudes: async () => {
         const response = await api.get('/rectificaciones/solicitudes/historial');
         return response.data;
     },

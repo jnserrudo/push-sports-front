@@ -37,7 +37,7 @@ const Liquidaciones = () => {
     const [filtrosVentas, setFiltrosVentas] = useState({});
     const [selectedVenta, setSelectedVenta] = useState(null);
     const [isDetallesVentaModalOpen, setIsDetallesVentaModalOpen] = useState(false);
-    const [isLoadingDetalleVenta, setIsLoadingDetalleVenta] = useState(false);
+    const [loadingVentaId, setLoadingVentaId] = useState(null);
     
     // Estados para el Modal de Preview y Liquidación
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -355,9 +355,9 @@ const Liquidaciones = () => {
     };
 
     const handleVerDetallesVenta = async (venta) => {
-        if (isLoadingDetalleVenta) return; // Prevenir clics múltiples
+        if (loadingVentaId === venta.id_venta) return; // Prevenir clics múltiples en la misma venta
         
-        setIsLoadingDetalleVenta(true);
+        setLoadingVentaId(venta.id_venta);
         try {
             const detalles = await ventasService.getVentaDetalle(venta.id_venta);
             setSelectedVenta(detalles);
@@ -366,7 +366,7 @@ const Liquidaciones = () => {
             console.error('Error al cargar detalles de venta:', error);
             toast.error("Error al cargar detalles de la venta");
         } finally {
-            setIsLoadingDetalleVenta(false);
+            setLoadingVentaId(null);
         }
     };
 
@@ -1022,11 +1022,11 @@ const Liquidaciones = () => {
                                         render: (row) => (
                                             <button
                                                 onClick={() => handleVerDetallesVenta(row)}
-                                                disabled={isLoadingDetalleVenta}
+                                                disabled={loadingVentaId === row.id_venta}
                                                 className="p-2 text-neutral-400 hover:text-black dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                                 title="Ver Detalles"
                                             >
-                                                {isLoadingDetalleVenta ? (
+                                                {loadingVentaId === row.id_venta ? (
                                                     <div className="w-4 h-4 border-2 border-neutral-300 border-t-brand-cyan rounded-full animate-spin"></div>
                                                 ) : (
                                                     <Eye size={16} strokeWidth={2.5} />
