@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { ChevronDown, Search, X, Check } from 'lucide-react';
+import { ChevronDown, Search, X, Check, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 /**
@@ -16,6 +16,8 @@ import { motion, AnimatePresence } from 'framer-motion';
  * @param {string} props.className - Extra styles for the container
  * @param {boolean} props.disabled - Disable the select
  * @param {string} props.maxHeight - Max height for the dropdown (default: 300px)
+ * @param {boolean} props.isLoading - Show loading spinner instead of empty state
+ * @param {boolean} props.compact - Reduce padding and icon sizes for compact display
  */
 const PremiumSelect = ({
     options = [],
@@ -26,7 +28,9 @@ const PremiumSelect = ({
     icon: Icon,
     className = "",
     disabled = false,
-    maxHeight = "300px"
+    maxHeight = "300px",
+    isLoading = false,
+    compact = false
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
@@ -74,35 +78,35 @@ const PremiumSelect = ({
             <div
                 onClick={() => !disabled && setIsOpen(!isOpen)}
                 className={`
-                    w-full flex items-center justify-between px-4 py-3 
+                    w-full flex items-center justify-between ${compact ? 'px-2 py-1.5' : 'px-4 py-3'} 
                     bg-white dark:bg-gray-800 border-2 rounded-xl transition-all duration-300 cursor-pointer
                     ${isOpen ? 'border-brand-cyan shadow-[0_0_15px_rgba(0,194,255,0.15)]' : 'border-neutral-100 dark:border-gray-700 hover:border-neutral-300 dark:hover:border-gray-600'}
                 `}
             >
-                <div className="flex items-center gap-3 min-w-0">
-                    {Icon && <Icon size={16} className={`${isOpen ? 'text-brand-cyan' : 'text-neutral-400 dark:text-gray-500'} transition-colors flex-shrink-0`} />}
+                <div className="flex items-center gap-2 min-w-0">
+                    {Icon && <Icon size={compact ? 12 : 16} className={`${isOpen ? 'text-brand-cyan' : 'text-neutral-400 dark:text-gray-500'} transition-colors flex-shrink-0`} />}
                     <div className="flex flex-col min-w-0">
                         {selectedOption ? (
                             <>
-                                <span className="text-sm font-bold text-black dark:text-white uppercase truncate tracking-widest">
+                                <span className={`${compact ? 'text-[10px]' : 'text-sm'} font-bold text-black dark:text-white uppercase truncate tracking-widest`}>
                                     {selectedOption.label}
                                 </span>
                                 {selectedOption.subtitle && (
-                                    <span className="text-[9px] font-bold text-neutral-400 dark:text-gray-500 uppercase truncate">
+                                    <span className={`${compact ? 'text-[8px]' : 'text-[9px]'} font-bold text-neutral-400 dark:text-gray-500 uppercase truncate`}>
                                         {selectedOption.subtitle}
                                     </span>
                                 )}
                             </>
                         ) : (
-                            <span className="text-sm font-bold text-neutral-400 dark:text-gray-500 uppercase tracking-widest truncate">
+                            <span className={`${compact ? 'text-[10px]' : 'text-sm'} font-bold text-neutral-400 dark:text-gray-500 uppercase tracking-widest truncate`}>
                                 {placeholder}
                             </span>
                         )}
                     </div>
                 </div>
-                <ChevronDown 
-                    size={16} 
-                    className={`text-neutral-400 dark:text-gray-500 transition-transform duration-300 ${isOpen ? 'rotate-180 text-brand-cyan' : ''}`} 
+                <ChevronDown
+                    size={compact ? 12 : 16}
+                    className={`text-neutral-400 dark:text-gray-500 transition-transform duration-300 ${isOpen ? 'rotate-180 text-brand-cyan' : ''}`}
                 />
             </div>
 
@@ -148,7 +152,12 @@ const PremiumSelect = ({
                             className="overflow-y-auto custom-scrollbar"
                             style={{ maxHeight }}
                         >
-                            {filteredOptions.length > 0 ? (
+                            {isLoading ? (
+                                <div className="p-8 text-center flex flex-col items-center gap-2">
+                                    <RefreshCw size={20} className="animate-spin text-neutral-400 dark:text-gray-500" />
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400 dark:text-gray-500">Cargando...</p>
+                                </div>
+                            ) : filteredOptions.length > 0 ? (
                                 filteredOptions.map((opt, index) => {
                                     const isSelected = String(opt.value) === String(value);
                                     return (

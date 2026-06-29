@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Send } from 'lucide-react';
+import { X, Send, RefreshCw } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { generateWhatsAppMessage, openWhatsApp } from '../../utils/whatsappHelper';
 import publicService from '../../services/publicService';
@@ -375,20 +375,28 @@ const CheckoutModal = ({ isOpen, onClose }) => {
                 </p>
               </div>
             ) : (
-              <select
-                name="sucursal"
-                value={formData.sucursal}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 bg-neutral-50 dark:bg-gray-800 border ${
-                  errors.sucursal ? 'border-red-500' : 'border-neutral-200 dark:border-gray-700'
-                } rounded-xl text-sm font-medium focus:outline-none focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/20 transition-all cursor-pointer`}
-              >
-                {sucursales.map(suc => (
-                  <option key={suc.id_comercio} value={suc.nombre}>
-                    {suc.nombre}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  name="sucursal"
+                  value={formData.sucursal}
+                  onChange={handleChange}
+                  disabled={loadingSucursales}
+                  className={`w-full px-4 py-3 bg-neutral-50 dark:bg-gray-800 border ${
+                    errors.sucursal ? 'border-red-500' : 'border-neutral-200 dark:border-gray-700'
+                  } rounded-xl text-sm font-medium focus:outline-none focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/20 transition-all cursor-pointer disabled:opacity-50 appearance-none`}
+                >
+                  {sucursales.map(suc => (
+                    <option key={suc.id_comercio} value={suc.nombre}>
+                      {suc.nombre}
+                    </option>
+                  ))}
+                </select>
+                {loadingSucursales && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <RefreshCw size={16} className="animate-spin text-neutral-400" />
+                  </div>
+                )}
+              </div>
             )}
             {errors.sucursal && (
               <p className="text-xs text-red-500 mt-1">{errors.sucursal}</p>

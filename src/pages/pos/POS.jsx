@@ -21,7 +21,15 @@ import {
   Zap,
   Printer,
   Package,
-  ShoppingBag
+  ShoppingBag,
+  Info,
+  HelpCircle,
+  ArrowRight,
+  RotateCcw,
+  CreditCard,
+  DollarSign,
+  Landmark,
+  XCircle
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { useAuthStore } from '../../store/authStore';
@@ -32,7 +40,7 @@ import { toast } from '../../store/toastStore';
 
 import { parseImagenes } from '../../lib/supabaseStorage';
 import PremiumSelect from '../../components/ui/PremiumSelect';
-import { CreditCard, DollarSign, Landmark } from 'lucide-react';
+import Modal from '../../components/ui/Modal';
 
 const POS = () => {
   const { user, sucursalId } = useAuthStore();
@@ -42,6 +50,7 @@ const POS = () => {
 
   const [currentSucursal, setCurrentSucursal] = useState(null);
   const [sucursalOptions, setSucursalOptions] = useState([]);
+  const [loadingSucursales, setLoadingSucursales] = useState(false);
   const [selectedSucursalId, setSelectedSucursalId] = useState(null); // for SuperAdmin picker
   const [products, setProducts] = useState([]);
   const [combos, setCombos] = useState([]);
@@ -69,7 +78,10 @@ const POS = () => {
   // Modal de selección de variantes
   const [showVariantesModal, setShowVariantesModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  
+
+  // Modal informativo de estados de ventas
+  const [showSalesInfoModal, setShowSalesInfoModal] = useState(false);
+
   const searchInputRef = useRef(null);
 
   // Load Drafts from local storage on mount
@@ -142,7 +154,11 @@ const POS = () => {
   // Load sucursal options for SuperAdmin picker
   useEffect(() => {
     if (isSuperAdmin) {
-      sucursalesService.getAll().then(setSucursalOptions).catch(console.error);
+      setLoadingSucursales(true);
+      sucursalesService.getAll()
+        .then(setSucursalOptions)
+        .catch(console.error)
+        .finally(() => setLoadingSucursales(false));
     }
   }, [isSuperAdmin]);
 
@@ -250,6 +266,8 @@ const POS = () => {
         id_variante: variante.id_variante,
         nombre: `${getProductNombre(item)} - ${nombreVariante}`,
         precio,
+        precio_base: getProductPrecioBase(item),
+        precio_push: Number(item.producto?.precio_pushsport || 0),
         stock: stockMax,
         img: getProductImg(item),
         cantidad: 1
@@ -277,6 +295,8 @@ const POS = () => {
         id_producto: item.id_producto,
         nombre: getProductNombre(item),
         precio: getProductPrecio(item),
+        precio_base: getProductPrecioBase(item),
+        precio_push: Number(item.producto?.precio_pushsport || 0),
         stock: stockMax,
         img: getProductImg(item),
         cantidad: 1
@@ -326,8 +346,34 @@ const POS = () => {
 
   const generateComprobante = (ventaData) => {
     const doc = new jsPDF({ format: 'a6', orientation: 'portrait' });
-    const comercioNombre = currentSucursal?.nombre || 'Sede';
-    const fecha = new Date().toLocaleString();
+    const comercioNombre = currentSucursal?.nombre || ventaData?.ventaCabecera?.comercio?.nombre || 'Sede';
+    const fecha = ventaData?.ventaCabecera?.fecha_venta
+      ? new Date(ventaData.ventaCabecera.fecha_venta).toLocaleString()
+      : new Date().toLocaleString();
+    const metodoPagoDoc = ventaData?.ventaCabecera?.metodo_pago || metodoPago;
+    const refId = ventaData?.ventaCabecera?.id_venta || ventaData?.id_venta || '';
+    const totalVenta = Number(ventaData?.ventaCabecera?.total_venta ?? total ?? 0);
+
+    // Normalizar detalles: si la venta ya fue guardada, usar detalles; si no, usar el carrito actual
+    const detalles = ventaData?.detalles?.length
+      ? ventaData.detalles.map(d => ({
+          nombre: d.producto?.nombre || d.nombre || 'Producto',
+          cantidad: Number(d.cantidad || 1),
+          precio: Number(d.precio_unitario || d.precio_venta || 0),
+          precioPublico: Number(d.producto?.precio_venta_sugerido || 0),
+          precioPush: Number(d.producto?.precio_pushsport || 0)
+        }))
+      : cart.map(item => ({
+          nombre: item.nombre,
+          cantidad: item.cantidad,
+          precio: item.precio,
+          precioPublico: item.precio_base || 0,
+          precioPush: item.precio_push || 0
+        }));
+
+    const descuentoMonto = ventaData?.ventaCabecera?.descuento_aplicado
+      ? Number(ventaData.ventaCabecera.descuento_aplicado)
+      : montoDescuento;
 
     doc.setFillColor(0, 0, 0);
     doc.rect(0, 0, 105, 30, 'F');
@@ -345,43 +391,68 @@ const POS = () => {
     doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
     doc.text(`Fecha: ${fecha}`, 8, 38);
-    doc.text(`Método de pago: ${metodoPago}`, 8, 44);
-    if (ventaData?.id_venta) doc.text(`Ref: #${String(ventaData.ventaCabecera?.id_venta || '').split('-')[0]}`, 8, 50);
+    doc.text(`Método de pago: ${metodoPagoDoc}`, 8, 44);
+    if (refId) doc.text(`Ref: #${String(refId).split('-')[0]}`, 8, 50);
 
     doc.setLineWidth(0.3);
     doc.line(8, 54, 97, 54);
 
     let y = 62;
     doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6);
     doc.text('PRODUCTO', 8, y);
-    doc.text('CANT', 72, y, { align: 'right' });
+    doc.text('CANT', 35, y, { align: 'right' });
+    doc.text('PÚBLICO', 45, y, { align: 'right' });
+    doc.text('PUSH', 58, y, { align: 'right' });
+    doc.text('GANANCIA', 70, y, { align: 'right' });
+    doc.text('COBRADO', 82, y, { align: 'right' });
     doc.text('TOTAL', 97, y, { align: 'right' });
     y += 4;
     doc.line(8, y, 97, y);
     y += 6;
 
     doc.setFont('helvetica', 'normal');
-    cart.forEach(item => {
-      const lineTotal = (item.precio * item.cantidad).toLocaleString();
-      doc.text(item.nombre.substring(0, 28), 8, y);
-      doc.text(String(item.cantidad), 72, y, { align: 'right' });
-      doc.text(`$${lineTotal}`, 97, y, { align: 'right' });
-      y += 6;
+    doc.setFontSize(5.5);
+    detalles.forEach(item => {
+      const lineTotal = item.precio * item.cantidad;
+      const ganancia = item.precioPublico - item.precioPush;
+      
+      doc.text(item.nombre.substring(0, 20), 8, y);
+      doc.text(String(item.cantidad), 35, y, { align: 'right' });
+      doc.text(`$${item.precioPublico.toLocaleString()}`, 45, y, { align: 'right' });
+      doc.text(`$${item.precioPush.toLocaleString()}`, 58, y, { align: 'right' });
+      
+      // Ganancia en verde
+      if (ganancia > 0) {
+        doc.setTextColor(0, 150, 0);
+        doc.text(`+$${ganancia.toLocaleString()}`, 70, y, { align: 'right' });
+        doc.setTextColor(0, 0, 0);
+      } else {
+        doc.setTextColor(150, 150, 150);
+        doc.text('$0', 70, y, { align: 'right' });
+        doc.setTextColor(0, 0, 0);
+      }
+      
+      doc.text(`$${item.precio.toLocaleString()}`, 82, y, { align: 'right' });
+      doc.text(`$${lineTotal.toLocaleString()}`, 97, y, { align: 'right' });
+      y += 5;
     });
 
+    doc.setFontSize(7);
     doc.line(8, y, 97, y);
     y += 6;
 
-    if (descuentoAplicado) {
-      doc.text(`Descuento (${descuentoAplicado.codigo}):`, 8, y);
-      doc.text(`-$${montoDescuento.toLocaleString()}`, 97, y, { align: 'right' });
+    if (descuentoMonto > 0) {
+      const codigoDesc = ventaData?.ventaCabecera?.codigo_descuento || descuentoAplicado?.codigo || 'Descuento';
+      doc.text(`Descuento (${codigoDesc}):`, 8, y);
+      doc.text(`-$${descuentoMonto.toLocaleString()}`, 97, y, { align: 'right' });
       y += 6;
     }
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
     doc.text('TOTAL:', 8, y);
-    doc.text(`$${total.toLocaleString()}`, 97, y, { align: 'right' });
+    doc.text(`$${totalVenta.toLocaleString()}`, 97, y, { align: 'right' });
 
     doc.setFontSize(6);
     doc.setFont('helvetica', 'normal');
@@ -396,20 +467,22 @@ const POS = () => {
     if (!cart.length) return;
     setIsProcessing(true);
     try {
-      const comercioId = sucursalId || user?.id_comercio_asignado;
+      const comercioId = selectedSucursalId || sucursalId || user?.id_comercio_asignado;
       const itemsPayload = cart.map(item => ({
         id_producto: item.id_producto,
         id_variante: item.id_variante, // Soportar variantes
         cantidadAComprar: item.cantidad,
-        precio_venta: item.precio
+        precio_venta: item.precio,
+        precio_push: item.precio_push || 0,
+        precio_base: item.precio_base || 0
       }));
       const ventaResult = await posService.registrarVenta(comercioId, user?.id_usuario, itemsPayload, total, metodoPago);
       setLastSale(ventaResult);
+      generateComprobante(ventaResult);
       setCart([]);
       setDescuentoAplicado(null);
       setCodigoPromo('');
       setActiveTab('catalog');
-      setShowCheckoutModal(false);
       toast.success("Venta procesada exitosamente");
       // Recargar inventario tras la venta para reflejar stock actualizado
       const inventario = await posService.getInventarioSucursal(comercioId);
@@ -434,8 +507,15 @@ const POS = () => {
                     <Box size={16} md:size={20} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-base md:text-lg font-black tracking-tighter m-0 uppercase leading-none text-neutral-950">Ventas - {currentSucursal?.nombre || 'Seleccioná sede'}</h2>
+                  <h2 className="text-base md:text-lg font-black tracking-tighter m-0 uppercase leading-none text-neutral-950">Registrar Ventas - {currentSucursal?.nombre || 'Seleccioná sede'}</h2>
                 </div>
+                <button
+                    onClick={() => setShowSalesInfoModal(true)}
+                    className="p-2 rounded-lg bg-neutral-100 dark:bg-gray-700 text-neutral-600 dark:text-gray-300 hover:bg-black hover:text-white transition-colors flex-shrink-0"
+                    title="¿Cómo funcionan los estados de una venta?"
+                >
+                    <HelpCircle size={16} />
+                </button>
             </div>
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 md:gap-3 w-full lg:w-auto">
@@ -445,6 +525,7 @@ const POS = () => {
                         <PremiumSelect
                             icon={MapPin}
                             placeholder="SELECCIONAR SEDE..."
+                            isLoading={loadingSucursales}
                             options={sucursalOptions.map(s => ({ value: s.id_comercio, label: s.nombre }))}
                             value={selectedSucursalId || ''}
                             onChange={val => { setCart([]); setSelectedSucursalId(val || null); }}
@@ -634,6 +715,8 @@ const POS = () => {
                           id: combo.id_combo,
                           nombre: combo.nombre,
                           precio: Number(combo.precio_combo),
+                          precio_base: Number(combo.precio_combo),
+                          precio_push: 0,
                           cantidad: 1,
                           isCombo: true
                         }]);
@@ -752,7 +835,7 @@ const POS = () => {
             </div>
         )}
 
-        <div className="flex-1 overflow-y-auto p-4 md:p-5 space-y-3 md:space-y-4 scrollbar-hide">
+        <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-2 md:space-y-3 scrollbar-hide">
           {showDrafts ? (
             <div className="space-y-3">
                <div className="flex items-center justify-between mb-2">
@@ -836,13 +919,13 @@ const POS = () => {
           )}
         </div>
 
-        <div className="p-3 md:p-4 bg-neutral-50 dark:bg-gray-700 border-t border-neutral-100 dark:border-gray-700 space-y-2">
+        <div className="p-1.5 md:p-2 bg-neutral-50 dark:bg-gray-700 border-t border-neutral-100 dark:border-gray-700 space-y-1">
 
             {/* Banner oferta vigente */}
             {ofertasVigentes.length > 0 && (
-                <div className="flex items-center gap-2 px-3 py-2 bg-brand-cyan/10 border border-brand-cyan/30 rounded-xl">
-                    <Zap size={12} className="text-brand-cyan shrink-0" />
-                    <span className="text-[9px] font-black uppercase tracking-widest text-black">
+                <div className="flex items-center gap-1 px-1.5 py-1 bg-brand-cyan/10 border border-brand-cyan/30 rounded-lg">
+                    <Zap size={8} className="text-brand-cyan shrink-0" />
+                    <span className="text-[7px] font-black uppercase tracking-widest text-black">
                         OFERTA ACTIVA: {ofertasVigentes[0].nombre} &mdash; {ofertasVigentes[0].descuento_porcentaje}% OFF
                     </span>
                 </div>
@@ -850,63 +933,64 @@ const POS = () => {
 
             {/* Campo código promo */}
             {!descuentoAplicado ? (
-                <div className="flex gap-2">
+                <div className="flex gap-1">
                     <div className="relative flex-1">
-                        <Tag size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-gray-500" />
+                        <Tag size={7} className="absolute left-1.5 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-gray-500" />
                         <input
                             type="text"
                             placeholder="CÓDIGO PROMO..."
                             value={codigoPromo}
                             onChange={e => { setCodigoPromo(e.target.value.toUpperCase()); setPromoError(''); }}
                             onKeyDown={e => e.key === 'Enter' && handleValidarCodigo()}
-                            className="w-full pl-8 pr-3 py-2.5 bg-white dark:bg-gray-600 border border-neutral-200 dark:border-gray-500 rounded-xl text-[9px] font-black uppercase tracking-widest text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-cyan-400 transition-colors"
+                            className="w-full pl-5 pr-1 py-0.5 bg-white dark:bg-gray-600 border border-neutral-200 dark:border-gray-500 rounded-lg text-[7px] font-black uppercase tracking-widest text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-cyan-400 transition-colors"
                         />
                     </div>
                     <button
                         onClick={handleValidarCodigo}
                         disabled={!codigoPromo.trim() || isValidatingCodigo || cart.length === 0}
-                        className="px-3 py-2.5 bg-black text-white text-[9px] font-black uppercase rounded-xl hover:bg-brand-cyan hover:text-black transition-colors disabled:opacity-30 flex items-center gap-1"
+                        className="px-1 py-0.5 bg-black text-white text-[7px] font-black uppercase rounded-lg hover:bg-brand-cyan hover:text-black transition-colors disabled:opacity-30 flex items-center gap-0.5"
                     >
-                        {isValidatingCodigo ? <Loader2 size={12} className="animate-spin" /> : 'OK'}
+                        {isValidatingCodigo ? <Loader2 size={7} className="animate-spin" /> : 'OK'}
                     </button>
                 </div>
             ) : (
-                <div className="flex items-center justify-between px-3 py-2.5 bg-green-50 border border-green-200 rounded-xl">
-                    <div className="flex items-center gap-2">
-                        <CheckCircle2 size={13} className="text-green-600" />
-                        <span className="text-[9px] font-black uppercase tracking-widest text-green-700">
+                <div className="flex items-center justify-between px-1.5 py-0.5 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center gap-1">
+                        <CheckCircle2 size={8} className="text-green-600" />
+                        <span className="text-[7px] font-black uppercase tracking-widest text-green-700">
                             {descuentoAplicado.codigo} &mdash; -{descuentoAplicado.tipo_descuento === 'porcentaje' ? `${descuentoAplicado.valor_descuento}%` : `$${descuentoAplicado.valor_descuento.toLocaleString()}`}
                         </span>
                     </div>
                     <button onClick={handleRemoveCodigo} className="text-neutral-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors">
-                        <X size={13} />
+                        <X size={8} />
                     </button>
                 </div>
             )}
             {promoError && (
-                <div className="flex items-center gap-2 px-3 py-1.5">
-                    <AlertCircle size={11} className="text-red-500" />
-                    <span className="text-[9px] font-bold text-red-500">{promoError}</span>
+                <div className="flex items-center gap-1.5 px-2 py-1">
+                    <AlertCircle size={10} className="text-red-500" />
+                    <span className="text-[8px] font-bold text-red-500">{promoError}</span>
                 </div>
             )}
 
             {/* Desglose de totales */}
-            <div className="space-y-1.5 pt-1">
-                <div className="flex justify-between text-neutral-400 dark:text-gray-500 font-extrabold uppercase text-[10px] tracking-[0.2em]">
+            <div className="space-y-0.5 pt-0">
+                <div className="flex justify-between text-neutral-400 dark:text-gray-500 font-extrabold uppercase text-[7px] tracking-[0.12em]">
                     <span>Subtotal</span>
                     <span>${subtotal.toLocaleString()}</span>
                 </div>
                 {descuentoAplicado && (
-                    <div className="flex justify-between font-bold text-[10px] tracking-[0.1em] text-green-600">
+                    <div className="flex justify-between font-bold text-[7px] tracking-[0.08em] text-green-600">
                         <span>Descuento ({descuentoAplicado.codigo})</span>
                         <span>-${montoDescuento.toLocaleString()}</span>
                     </div>
                 )}
-                <div className="flex justify-between items-center font-bold text-[10px] tracking-[0.2em] text-neutral-500 dark:text-gray-400">
+                <div className="flex justify-between items-center font-bold text-[8px] tracking-[0.12em] text-neutral-500 dark:text-gray-400">
                     <span>Método de pago</span>
-                    <div className="w-32">
+                    <div className="w-36">
                         <PremiumSelect
                             searchable={false}
+                            compact
                             options={[
                                 { value: 'Efectivo', label: 'Efectivo', icon: DollarSign },
                                 { value: 'Tarjeta', label: 'Tarjeta', icon: CreditCard },
@@ -914,18 +998,17 @@ const POS = () => {
                             ]}
                             value={metodoPago}
                             onChange={val => setMetodoPago(val)}
-                            className="!py-0"
                         />
                     </div>
                 </div>
-                <div className="pt-3 border-t border-neutral-200 flex justify-between items-end">
-                    <span className="text-[10px] font-black text-neutral-400 dark:text-gray-500 uppercase tracking-[0.3em]">Total</span>
+                <div className="pt-1.5 border-t border-neutral-200 flex justify-between items-end">
+                    <span className="text-[7px] font-black text-neutral-400 dark:text-gray-500 uppercase tracking-[0.15em]">Total</span>
                     <motion.span
                         key={total}
                         initial={{ scale: 1.05, color: '#00d2ff' }}
                         animate={{ scale: 1, color: '#171717' }}
                         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                        className="text-xl md:text-2xl font-black tracking-tighter leading-none"
+                        className="text-base md:text-lg font-black tracking-tighter leading-none"
                     >
                         ${total.toLocaleString()}
                     </motion.span>
@@ -938,27 +1021,27 @@ const POS = () => {
                     <button
                         onClick={saveDraft}
                         disabled={isProcessing}
-                        className="flex-shrink-0 bg-neutral-100 dark:bg-gray-700 text-neutral-500 dark:text-gray-400 font-black text-[9px] uppercase tracking-widest px-3 py-3.5 rounded-xl hover:bg-amber-100 dark:hover:bg-gray-600 hover:text-amber-600 dark:hover:text-white transition-colors flex items-center gap-1.5 disabled:opacity-20"
+                        className="flex-shrink-0 bg-neutral-100 dark:bg-gray-700 text-neutral-500 dark:text-gray-400 font-black text-[8px] uppercase tracking-widest px-1.5 py-1.5 rounded-xl hover:bg-amber-100 dark:hover:bg-gray-600 hover:text-amber-600 dark:hover:text-white transition-colors flex items-center gap-0.5 disabled:opacity-20"
                     >
-                        <Clock size={13} />
+                        <Clock size={10} />
                     </button>
                 )}
                 {lastSale && cart.length === 0 && (
                     <button
                         onClick={() => generateComprobante(lastSale)}
-                        className="flex-shrink-0 bg-neutral-100 dark:bg-gray-700 text-neutral-500 dark:text-gray-400 font-black text-[9px] uppercase tracking-widest px-3 py-3.5 rounded-xl hover:bg-neutral-200 dark:hover:bg-gray-600 hover:text-black dark:hover:text-white transition-colors flex items-center gap-1.5"
+                        className="flex-shrink-0 bg-neutral-100 dark:bg-gray-700 text-neutral-500 dark:text-gray-400 font-black text-[8px] uppercase tracking-widest px-1.5 py-1.5 rounded-xl hover:bg-neutral-200 dark:hover:bg-gray-600 hover:text-black dark:hover:text-white transition-colors flex items-center gap-0.5"
                         title="Reimprimir último comprobante"
                     >
-                        <Printer size={13} />
+                        <Printer size={10} />
                     </button>
                 )}
                 <button
                     onClick={handleConfirmSale}
                     disabled={cart.length === 0 || isProcessing || showDrafts}
-                    className="flex-1 btn-cyan h-14 text-[10px] flex items-center justify-center gap-2 disabled:opacity-20 transition-all active:scale-95"
+                    className="flex-1 btn-cyan h-9 text-[9px] flex items-center justify-center gap-1 disabled:opacity-20 transition-all active:scale-95"
                 >
-                    {isProcessing ? <Loader2 size={16} className="animate-spin" /> : null}
-                    FINALIZAR VENTA <ChevronRight size={16} />
+                    {isProcessing ? <Loader2 size={12} className="animate-spin" /> : null}
+                    FINALIZAR VENTA <ChevronRight size={12} />
                 </button>
             </div>
         </div>
@@ -1104,6 +1187,89 @@ const POS = () => {
           </motion.div>
         </motion.div>
       )}
+
+      {/* MODAL INFORMATIVO: ESTADOS DE VENTAS */}
+      <Modal isOpen={showSalesInfoModal} onClose={() => setShowSalesInfoModal(false)} title="¿Cómo funcionan las ventas?">
+        <div className="p-2 max-h-[70vh] overflow-y-auto space-y-4">
+          {/* Diagrama de transiciones */}
+          <div className="p-3 bg-neutral-50 dark:bg-gray-700 rounded-xl border border-neutral-200 dark:border-gray-600">
+            <p className="text-[10px] font-black uppercase text-neutral-500 mb-3">Estados de una venta</p>
+            <div className="flex flex-col gap-2 text-[10px] sm:text-xs font-bold">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-2 py-1 bg-green-100 text-green-700 rounded">ACTIVA</span>
+                <ArrowRight size={14} className="text-neutral-400" />
+                <span className="px-2 py-1 bg-neutral-100 text-neutral-600 rounded">LIQUIDADA</span>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-2 py-1 bg-green-100 text-green-700 rounded">ACTIVA</span>
+                <ArrowRight size={14} className="text-neutral-400" />
+                <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded">RECTIFICADA</span>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-2 py-1 bg-green-100 text-green-700 rounded">ACTIVA</span>
+                <ArrowRight size={14} className="text-neutral-400" />
+                <span className="px-2 py-1 bg-red-100 text-red-700 rounded">ANULADA</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Explicación de cada estado */}
+          <div className="space-y-2">
+            <div className="p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800/50 rounded-xl">
+              <div className="flex items-center gap-2 mb-1">
+                <CheckCircle2 size={14} className="text-green-600" />
+                <span className="text-xs font-black text-green-800 dark:text-green-300 uppercase">ACTIVA</span>
+              </div>
+              <p className="text-[10px] text-green-700 dark:text-green-300 leading-relaxed">
+                Venta normal recién creada. Puede liquidarse o rectificarse. Mientras esté activa, su monto suma al saldo a liquidar de la sucursal.
+              </p>
+            </div>
+
+            <div className="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/50 rounded-xl">
+              <div className="flex items-center gap-2 mb-1">
+                <RotateCcw size={14} className="text-amber-600" />
+                <span className="text-xs font-black text-amber-800 dark:text-amber-300 uppercase">RECTIFICADA</span>
+              </div>
+              <p className="text-[10px] text-amber-700 dark:text-amber-300 leading-relaxed">
+                La venta fue reemplazada por una nueva. El stock y el saldo se ajustan. Se conserva el historial completo con la venta original y la nueva.
+              </p>
+            </div>
+
+            <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/50 rounded-xl">
+              <div className="flex items-center gap-2 mb-1">
+                <XCircle size={14} className="text-red-600" />
+                <span className="text-xs font-black text-red-800 dark:text-red-300 uppercase">ANULADA</span>
+              </div>
+              <p className="text-[10px] text-red-700 dark:text-red-300 leading-relaxed">
+                Venta cancelada sin crear una nueva. El stock se devuelve y el saldo se descuenta. Queda registrado el motivo.
+              </p>
+            </div>
+
+            <div className="p-3 bg-neutral-100 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-xl">
+              <div className="flex items-center gap-2 mb-1">
+                <CreditCard size={14} className="text-neutral-600 dark:text-gray-300" />
+                <span className="text-xs font-black text-neutral-800 dark:text-gray-200 uppercase">LIQUIDADA</span>
+              </div>
+              <p className="text-[10px] text-neutral-700 dark:text-gray-300 leading-relaxed">
+                Venta incluida en una liquidación. Ya no se puede rectificar ni anular, porque el cierre de caja ya fue confirmado.
+              </p>
+            </div>
+          </div>
+
+          {/* Explicación de rectificaciones y liquidaciones */}
+          <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/50 rounded-xl">
+            <p className="text-xs font-black text-blue-800 dark:text-blue-300 uppercase mb-2 flex items-center gap-2">
+              <Info size={14} /> ¿Qué es una rectificación?
+            </p>
+            <p className="text-[10px] text-blue-700 dark:text-blue-300 leading-relaxed mb-2">
+              Es una corrección de una venta activa. Por ejemplo, si te equivocaste en el precio, la cantidad o el producto, podés anular la venta original y generar una nueva corregida. Solo los usuarios con rol Admin pueden hacerlo.
+            </p>
+            <p className="text-[10px] text-blue-700 dark:text-blue-300 leading-relaxed">
+              <strong>Las liquidaciones</strong> son el cierre de caja: agrupan las ventas activas seleccionadas, generan el recibo y reinician el saldo de la sucursal. Antes de liquidar, el sistema te permite elegir cuáles ventas incluir; las que no incluyas quedan activas para rectificar después.
+            </p>
+          </div>
+        </div>
+      </Modal>
 
       {/* MOBILE FLOATING CART BUTTON */}
       {cartItemsCount > 0 && activeTab === 'catalog' && (

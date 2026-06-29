@@ -2,8 +2,12 @@ import api from '../api/api';
 
 export const liquidacionesService = {
     // Preview: obtener resumen pre-liquidación de un comercio
-    getPreview: async (sucursalId) => {
-        const response = await api.get(`/liquidaciones/${sucursalId}/preview`);
+    getPreview: async (sucursalId, idVentas = null) => {
+        const params = {};
+        if (idVentas && Array.isArray(idVentas) && idVentas.length > 0) {
+            params.id_ventas = JSON.stringify(idVentas);
+        }
+        const response = await api.get(`/liquidaciones/${sucursalId}/preview`, { params });
         return response.data;
     },
 
@@ -38,10 +42,13 @@ export const liquidacionesService = {
     },
 
     // Generar una liquidación para un comercio
-    liquidarSucursal: async (sucursalId, montoRecibido = null) => {
+    liquidarSucursal: async (sucursalId, montoRecibido = null, idVentas = null) => {
         const body = { id_comercio: sucursalId };
         if (montoRecibido !== null && montoRecibido !== undefined) {
             body.monto_recibido = parseFloat(montoRecibido);
+        }
+        if (idVentas && Array.isArray(idVentas) && idVentas.length > 0) {
+            body.id_ventas = idVentas;
         }
         const response = await api.post('/liquidaciones', body);
         return response.data;

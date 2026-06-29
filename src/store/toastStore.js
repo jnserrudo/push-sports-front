@@ -1,9 +1,11 @@
 import { create } from 'zustand';
 
+let toastCounter = 0;
+
 export const useToastStore = create((set) => ({
   toasts: [],
   addToast: (message, type = 'success', duration = 4000) => {
-    const id = Date.now();
+    const id = `${Date.now()}-${++toastCounter}`;
     set((state) => ({
       toasts: [...state.toasts, { id, message, type }],
     }));

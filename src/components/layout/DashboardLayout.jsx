@@ -140,7 +140,7 @@ const DashboardLayout = () => {
 
   const menuItems = [
     { label: 'Visión General',    icon: LayoutDashboard, path: '/dashboard',                roles: [1, 2, 3] },
-    { label: 'Registrar Ventas',  icon: ShoppingCart,    path: '/dashboard/pos',            roles: [1, 2, 3] },
+    { label: 'Registrar Ventas',  icon: ShoppingCart,    path: '/dashboard/ventas',            roles: [1, 2, 3] },
     { label: 'Productos',         icon: Package,         path: '/dashboard/productos',      roles: [1] },
     { label: 'Categorías',        icon: Component,       path: '/dashboard/categorias',     roles: [1] },
     { label: 'Marcas',            icon: Tag,             path: '/dashboard/marcas',         roles: [1] },
@@ -150,7 +150,7 @@ const DashboardLayout = () => {
     { label: 'Tipos de Sede',     icon: Wallet,          path: '/dashboard/tipos-comercio', roles: [1] },
     { label: 'Envíos a Sucursales',icon: Truck,          path: '/dashboard/envios',         roles: [1] },
     { label: 'Movimientos de Stock',icon: Activity,     path: '/dashboard/movimientos',    roles: [1, 2] },
-    { label: 'Listas y Remitos',  icon: ClipboardList,   path: '/dashboard/reporteria',     roles: [1] },
+    { label: 'Reportería',        icon: ClipboardList,   path: '/dashboard/reporteria',     roles: [1] },
     { label: 'Devoluciones',      icon: RotateCcw,       path: '/dashboard/devoluciones',   roles: [1, 2, 3] },
     { label: 'Consultas Web',    icon: MessageSquare,    path: '/dashboard/consultas',      roles: [1, 2, 3] },
     { label: 'Rectificaciones',   icon: AlertTriangle,   path: '/dashboard/rectificaciones',roles: [1, 2, 3] },

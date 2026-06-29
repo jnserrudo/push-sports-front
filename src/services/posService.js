@@ -18,9 +18,13 @@ export const posService = {
                 id_producto: item.id_producto,
                 id_variante: item.id_variante, // Soportar variantes
                 cantidad: item.cantidadAComprar,
-                precio_unitario: item.precio_venta
+                precio_unitario: item.precio_venta,
+                precio_push: item.precio_push || 0,   // Precio PUSH del momento de la venta
+                precio_base: item.precio_base || 0    // Precio público base sin oferta
             }))
         };
+
+        console.log('[DEBUG posService] Payload a enviar:', JSON.stringify(payload, null, 2));
 
         const response = await api.post('/ventas', payload);
         return response.data;

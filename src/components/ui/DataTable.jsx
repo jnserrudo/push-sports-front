@@ -51,7 +51,7 @@ const RowsPerPageSelect = ({ value, onChange }) => {
             </button>
 
             {open && (
-                <div className="absolute bottom-full mb-1.5 left-0 z-[80] bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden min-w-[120px] animate-in fade-in slide-in-from-bottom-2 duration-200">
+                <div className="absolute bottom-full mb-1.5 left-0 z-[9999] bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden min-w-[120px] animate-in fade-in slide-in-from-bottom-2 duration-200">
                     <div className="px-3 py-1.5 border-b border-neutral-100 dark:border-gray-700">
                         <span className="text-[8px] font-black uppercase tracking-[0.2em] text-neutral-400 dark:text-gray-500">Filas por página</span>
                     </div>
@@ -318,8 +318,8 @@ const DataTable = ({
             </div>
 
             {/* Table Area */}
-            <div className="rounded border border-neutral-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-sm relative z-30 w-full mb-2 min-h-[180px] overflow-visible">
-                <div className="overflow-visible custom-scrollbar rounded">
+            <div className="rounded border border-neutral-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-sm relative z-10 w-full mb-2 min-h-[180px]">
+                <div className="overflow-x-auto custom-scrollbar rounded">
                     <table className="w-full text-left border-collapse min-w-full md:min-w-[700px]">
                         <thead>
                             <tr className="bg-neutral-50/50 dark:bg-gray-700/50 text-neutral-500 dark:text-gray-400 border-b border-neutral-200 dark:border-gray-600">
@@ -392,9 +392,9 @@ const DataTable = ({
             </div>
 
             {/* ── Premium Pagination Footer ── */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 z-10 relative mt-1 px-1">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 z-[100] relative mt-1 px-1">
                 {/* Left: rows-per-page + count */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 relative z-[100]">
                     <RowsPerPageSelect
                         value={itemsPerPage}
                         onChange={(v) => { setItemsPerPage(v); setCurrentPage(1); }}

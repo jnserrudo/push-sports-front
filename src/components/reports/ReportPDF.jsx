@@ -151,7 +151,7 @@ const ReportPDF = ({ products, imageMap = {}, currentDate, showPushPrice = true 
             <View style={colImg}><Text style={styles.headerText}>Producto</Text></View>
             <View style={colInfo}><Text style={styles.headerText}>Descripción</Text></View>
             {showPushPrice && colPush && <View style={colPush}><Text style={styles.headerText}>P. Push</Text></View>}
-            <View style={colPublic}><Text style={styles.headerText}>P. Público ★</Text></View>
+            <View style={colPublic}><Text style={styles.headerText}>P. Público</Text></View>
           </View>
 
           {activeProducts.map((prod, idx) => {

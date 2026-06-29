@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Calendar, MapPin, User, Phone, Mail, Package, DollarSign, Eye, Edit, Trash2, Check, X, Clock, AlertCircle } from 'lucide-react';
+import { Search, Filter, Calendar, MapPin, User, Phone, Mail, Package, DollarSign, Eye, Edit, Trash2, Check, X, Clock, AlertCircle, RefreshCw } from 'lucide-react';
 import api from '../../api/api';
 import toast from 'react-hot-toast';
 
 const Consultas = () => {
   const [consultas, setConsultas] = useState([]);
   const [sucursales, setSucursales] = useState([]);
+  const [loadingSucursales, setLoadingSucursales] = useState(false);
   const [loading, setLoading] = useState(true);
   const [consultaSeleccionada, setConsultaSeleccionada] = useState(null);
   const [mostrarModal, setMostrarModal] = useState(false);
@@ -76,6 +77,7 @@ const Consultas = () => {
 
   const cargarSucursales = async () => {
     console.log('📥 Iniciando cargarSucursales()');
+    setLoadingSucursales(true);
     try {
       const response = await api.get('/public/sucursales');
       console.log('📊 Respuesta de sucursales:', response);
@@ -85,6 +87,8 @@ const Consultas = () => {
       }
     } catch (error) {
       console.error('❌ Error al cargar sucursales:', error);
+    } finally {
+      setLoadingSucursales(false);
     }
   };
 
@@ -203,18 +207,26 @@ const Consultas = () => {
               {/* Sucursal */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Sucursal</label>
-                <select
-                  value={filtros.id_sucursal}
-                  onChange={(e) => handleFiltroChange('id_sucursal', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-brand-cyan focus:border-brand-cyan"
-                >
-                  <option value="">Todas las sucursales</option>
-                  {sucursales.map(sucursal => (
-                    <option key={sucursal.id_comercio} value={sucursal.id_comercio}>
-                      {sucursal.nombre}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    value={filtros.id_sucursal}
+                    onChange={(e) => handleFiltroChange('id_sucursal', e.target.value)}
+                    disabled={loadingSucursales}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-brand-cyan focus:border-brand-cyan disabled:opacity-50 appearance-none"
+                  >
+                    <option value="">Todas las sucursales</option>
+                    {sucursales.map(sucursal => (
+                      <option key={sucursal.id_comercio} value={sucursal.id_comercio}>
+                        {sucursal.nombre}
+                      </option>
+                    ))}
+                  </select>
+                  {loadingSucursales && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <RefreshCw size={16} className="animate-spin text-gray-400" />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Fecha inicio */}

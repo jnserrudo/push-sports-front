@@ -156,9 +156,14 @@ const ImagePicker = ({ value, onChange, label = "Imagen de la Sede" }) => {
 
 const Sucursales = () => {
     const [tiposComercio, setTiposComercio] = useState([]);
+    const [loadingTipos, setLoadingTipos] = useState(false);
 
     useEffect(() => {
-        service.getTiposComercio().then(setTiposComercio).catch(console.error);
+        setLoadingTipos(true);
+        service.getTiposComercio()
+            .then(setTiposComercio)
+            .catch(console.error)
+            .finally(() => setLoadingTipos(false));
     }, []);
 
     const columns = [
@@ -275,6 +280,7 @@ const Sucursales = () => {
                     <PremiumSelect
                         icon={Layout}
                         placeholder="SELECCIONAR TIPO..."
+                        isLoading={loadingTipos}
                         options={(Array.isArray(tiposComercio) ? tiposComercio : []).map(t => ({
                             value: t.id_tipo_comercio,
                             label: t.nombre,

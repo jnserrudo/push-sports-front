@@ -19,11 +19,12 @@ import {
 } from 'lucide-react';
 import api from '../../api/api';
 import { Link } from 'react-router-dom';
-import { PDFDownloadLink } from '@react-pdf/renderer';
+import { PDFDownloadLink, pdf } from '@react-pdf/renderer';
 import { motion, AnimatePresence } from 'framer-motion';
 import { productosService } from '../../services/productosService';
 import { sucursalesService } from '../../services/sucursalesService';
 import { inventarioService } from '../../services/inventarioService';
+import { reportesEntregaService } from '../../services/reportesEntregaService';
 import ReportPDF from '../../components/reports/ReportPDF';
 import ShopReportPDF from '../../components/reports/ShopReportPDF';
 import { 
@@ -58,6 +59,8 @@ const Reporteria = () => {
   // Toggles
   const [showPushPriceGlobal, setShowPushPriceGlobal] = useState(false);
   const [showPushPriceShop, setShowPushPriceShop] = useState(false);
+  const [showBasePriceShop, setShowBasePriceShop] = useState(false);
+  const [savingReport, setSavingReport] = useState(false);
 
   const [toaster, setToaster] = useState(null);
 
@@ -132,7 +135,8 @@ const Reporteria = () => {
           stockCentral,
           cantidadDejada: 0,
           precio_venta_sugerido: p.precio_venta_sugerido,
-          precio_pushsport: p.precio_pushsport
+          precio_pushsport: p.precio_pushsport,
+          precio_base: p.costo_compra
         }
       ]);
     } catch (error) {
@@ -145,6 +149,56 @@ const Reporteria = () => {
 
   const removeItemFromReport = (index) => {
     setSelectedItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDownloadReport = async () => {
+    if (!sucursal || selectedItems.length === 0) return;
+    setSavingReport(true);
+    try {
+      const detalles = selectedItems.map(item => ({
+        id_producto: item.producto.id_producto,
+        cantidad: Number(item.cantidadDejada) || 0,
+        precio_venta: Number(item.precio_venta_sugerido) || 0,
+        precio_pushsport: Number(item.precio_pushsport) || 0,
+        precio_base: Number(item.precio_base) || 0
+      }));
+
+      const { data: savedData } = await reportesEntregaService.create({
+        id_comercio: sucursal.id_comercio,
+        detalles
+      });
+
+      const reporte = savedData?.data || savedData;
+      const numeroReporte = reporte?.numero_reporte || '';
+
+      const blob = await pdf(
+        <ShopReportPDF
+          shopName={sucursal.nombre}
+          items={selectedItems}
+          imageMap={imageMap}
+          currentDate={new Date().toLocaleDateString()}
+          showPushPrice={showPushPriceShop}
+          showBasePrice={showBasePriceShop}
+          reportNumber={numeroReporte}
+        />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Reporte_${numeroReporte}_${sucursal.nombre}_${new Date().toLocaleDateString()}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      setToaster({ type: 'success', message: `Reporte ${numeroReporte} guardado y descargado` });
+    } catch (error) {
+      console.error('Error guardando/descargando reporte:', error);
+      setToaster({ type: 'error', message: error.response?.data?.error || 'Error al guardar o descargar el reporte' });
+    } finally {
+      setSavingReport(false);
+    }
   };
 
   const handleBulkPriceUpdate = async (data) => {
@@ -189,7 +243,7 @@ const Reporteria = () => {
                 <span className="text-brand-cyan">Reportería</span>
             </h1>
             <p className="text-neutral-500 dark:text-gray-400 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed max-w-xl mt-2 whitespace-normal">
-                Generá listas de precios o remitos de entrega en PDF. Nota: la generación de remitos es informativa y no modifica la base de datos.
+                Generá listas de precios o reportes de entrega en PDF. Nota: la generación de reportes es informativa y no modifica la base de datos.
             </p>
         </div>
 
@@ -207,7 +261,7 @@ const Reporteria = () => {
                 className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'shop' ? 'bg-white dark:bg-gray-700 text-black dark:text-white shadow-md border border-neutral-200 dark:border-gray-600' : 'text-neutral-500 dark:text-gray-400 hover:text-neutral-800 dark:hover:text-gray-200'}`}
             >
                 <Store size={14} />
-                Remito
+                Entrega
             </button>
         </div>
       </div>
@@ -365,7 +419,7 @@ const Reporteria = () => {
           >
             {/* Context banner for shop mode */}
             <div className="bg-neutral-900 dark:bg-gray-800 rounded-2xl px-6 py-4">
-              <p className="text-white dark:text-gray-100 font-black text-sm uppercase tracking-tight">Generador de Remitos</p>
+              <p className="text-white dark:text-gray-100 font-black text-sm uppercase tracking-tight">Generador de Reportes de Entrega</p>
               <p className="text-neutral-400 dark:text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-0.5">
                 Elegí la sucursal, seleccioná los productos que vas a dejar, ingresá las cantidades y generá el PDF de entrega.
                 <span className="text-brand-cyan font-black ml-1">Nota: Generar este PDF es administrativo y NO modifica el stock del sistema.</span>
@@ -404,7 +458,7 @@ const Reporteria = () => {
                 <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black shrink-0 ${
                   shopStep === 2 ? 'bg-brand-cyan text-black' : 'bg-neutral-200 dark:bg-gray-600 text-neutral-400 dark:text-gray-500'
                 }`}>2</span>
-                <ListPlus size={13} /> Armar Remito
+                <ListPlus size={13} /> Armar Entrega
                 {selectedItems.length > 0 && (
                   <span className="bg-brand-cyan text-black text-[9px] font-black px-2 py-0.5 rounded-full">{selectedItems.length}</span>
                 )}
@@ -486,9 +540,9 @@ const Reporteria = () => {
                   <div className="lg:col-span-3 bg-amber-500/10 border-2 border-amber-500/30 text-amber-700 dark:text-amber-400 rounded-2xl p-4 flex items-start gap-3 shadow-sm">
                     <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
                     <div className="text-[11px] font-bold uppercase tracking-wider leading-relaxed">
-                      <p className="font-black text-xs mb-1">⚠️ ATENCIÓN: ESTE REMITO NO CAMBIA EL STOCK EN EL SISTEMA</p>
+                      <p className="font-black text-xs mb-1">ATENCIÓN: ESTE REPORTE NO CAMBIA EL STOCK EN EL SISTEMA</p>
                       <p>
-                        Esta pantalla sirve solo para calcular cantidades e descargar/imprimir el remito físico (PDF) para firmar. 
+                        Esta pantalla sirve solo para calcular cantidades e descargar/imprimir el reporte físico (PDF) para firmar. 
                         Para que la sucursal tenga este stock disponible en su POS para vender, debés registrar el nuevo stock ingresando a la sección 
                         <Link to="/dashboard/inventario" className="underline font-black hover:text-black dark:hover:text-white mx-1 text-neutral-900 dark:text-gray-100">STOCK</Link> 
                         e ingresar el "Stock nuevo" allí.
@@ -503,7 +557,7 @@ const Reporteria = () => {
                         <h3 className="text-sm font-black uppercase tracking-widest text-neutral-900 dark:text-white flex items-center gap-2">
                           <Plus size={16} className="text-brand-cyan" /> Productos a entregar
                         </h3>
-                        <p className="text-[9px] text-neutral-400 font-bold uppercase tracking-widest">Tocá el <span className="text-brand-cyan">+</span> para agregar al remito</p>
+                        <p className="text-[9px] text-neutral-400 font-bold uppercase tracking-widest">Tocá el <span className="text-brand-cyan">+</span> para agregar al reporte</p>
                         <div className="relative">
                           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400" size={15} />
                           <input
@@ -567,7 +621,7 @@ const Reporteria = () => {
                           <Store className="text-brand-cyan" size={16} />
                         </div>
                         <div>
-                          <p className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest">Preparando remito para</p>
+                          <p className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest">Preparando reporte para</p>
                           <p className="text-sm font-black text-white uppercase tracking-tight leading-none">{sucursal.nombre}</p>
                         </div>
                         <div className="w-2 h-2 bg-brand-cyan rounded-full animate-pulse" />
@@ -583,6 +637,17 @@ const Reporteria = () => {
                         >
                           {showPushPriceShop ? <Eye size={12} /> : <EyeOff size={12} />}
                           {showPushPriceShop ? 'P. Push: ON' : 'P. Push: OFF'}
+                        </button>
+                        <button
+                          onClick={() => setShowBasePriceShop(!showBasePriceShop)}
+                          className={`h-9 px-4 rounded-xl flex items-center gap-2 transition-all text-[9px] font-black uppercase tracking-widest border-2 ${
+                            showBasePriceShop
+                              ? 'bg-amber-500/20 border-amber-500 text-amber-400'
+                              : 'bg-white/5 border-white/10 text-neutral-400 hover:border-white/30'
+                          }`}
+                        >
+                          {showBasePriceShop ? <Eye size={12} /> : <EyeOff size={12} />}
+                          {showBasePriceShop ? 'P. Base: ON' : 'P. Base: OFF'}
                         </button>
                         {(() => {
                           const hayExceso = selectedItems.some(i => i.cantidadDejada > (i.stockCentral ?? 0));
@@ -600,23 +665,23 @@ const Reporteria = () => {
                                   disabled
                                   className="h-9 px-5 rounded-xl flex items-center gap-2 bg-neutral-700 text-neutral-500 cursor-not-allowed font-black uppercase tracking-widest text-[10px]"
                                 >
-                                  <Download size={13} /> Descargar Remito
+                                  <Download size={13} /> Descargar Reporte
                                 </button>
                               ) : (
-                                <PDFDownloadLink
-                                  document={<ShopReportPDF shopName={sucursal.nombre} items={selectedItems} imageMap={imageMap} currentDate={new Date().toLocaleDateString()} showPushPrice={showPushPriceShop} />}
-                                  fileName={`Reporte_${sucursal.nombre}_${new Date().toLocaleDateString()}.pdf`}
+                                <button
+                                  onClick={handleDownloadReport}
+                                  disabled={savingReport}
                                   className={`h-9 px-5 rounded-xl flex items-center gap-2 transition-all shadow-md font-black uppercase tracking-widest text-[10px] ${
                                     hayExceso
                                       ? 'bg-amber-500/80 text-black hover:scale-105'
                                       : 'bg-brand-cyan text-black hover:scale-105'
-                                  }`}
+                                  } disabled:opacity-60`}
                                 >
-                                  {({ loading: pdfLoading }) => pdfLoading
-                                    ? <><Loader2 size={13} className="animate-spin" /> Generando...</>
-                                    : <><Download size={13} />{hayExceso ? ' Remito PDF (con adv.)' : ` Descargar Remito PDF (${selectedItems.length})`}</>
+                                  {savingReport
+                                    ? <><Loader2 size={13} className="animate-spin" /> Guardando...</>
+                                    : <><Download size={13} />{hayExceso ? ' Reporte PDF (con adv.)' : ` Descargar Reporte PDF (${selectedItems.length})`}</>
                                   }
-                                </PDFDownloadLink>
+                                </button>
                               )}
                             </>
                           );
@@ -762,13 +827,13 @@ const Reporteria = () => {
                               <p className="text-3xl text-neutral-900 dark:text-white tracking-tighter mt-1">{selectedItems.reduce((a, c) => a + c.cantidadDejada, 0)}</p>
                             </div>
                             <div className="text-right text-xs font-black uppercase tracking-widest">
-                              <p className="text-neutral-400 dark:text-gray-400">Productos en remito</p>
+                              <p className="text-neutral-400 dark:text-gray-400">Productos en entrega</p>
                               <p className="text-3xl text-neutral-900 dark:text-white tracking-tighter mt-1">{selectedItems.length}</p>
                             </div>
                           </div>
                           
                           <div className="mt-4 p-3.5 bg-neutral-50 dark:bg-gray-700/30 rounded-2xl border border-neutral-200 dark:border-gray-600 text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-gray-400 leading-normal">
-                            💡 RECUERDA: Tras realizar la entrega física de la mercadería y firmar este remito, debés ir a 
+                            RECUERDA: Tras realizar la entrega física de la mercadería y firmar este reporte, debés ir a 
                             <Link to="/dashboard/inventario" className="text-brand-cyan dark:text-cyan-400 underline font-black mx-1 hover:text-black dark:hover:text-white">STOCK</Link> 
                             y actualizar el "Stock Actual" de cada producto al valor indicado arriba en "Stock nuevo".
                           </div>

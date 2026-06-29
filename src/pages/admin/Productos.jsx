@@ -1132,6 +1132,9 @@ const Productos = () => {
     const [categorias, setCategorias] = useState([]);
     const [marcas, setMarcas] = useState([]);
     const [proveedores, setProveedores] = useState([]);
+    const [loadingCategorias, setLoadingCategorias] = useState(false);
+    const [loadingMarcas, setLoadingMarcas] = useState(false);
+    const [loadingProveedores, setLoadingProveedores] = useState(false);
     const [reposicionProducto, setReposicionProducto] = useState(null);
     const [isReposicionModalOpen, setIsReposicionModalOpen] = useState(false);
     const refreshABM = useRef(null);
@@ -1140,6 +1143,9 @@ const Productos = () => {
     const [allProducts, setAllProducts] = useState([]);
 
     useEffect(() => {
+        setLoadingCategorias(true);
+        setLoadingMarcas(true);
+        setLoadingProveedores(true);
         Promise.all([
             productosService.getCategorias(),
             productosService.getMarcas(),
@@ -1148,7 +1154,11 @@ const Productos = () => {
             setCategorias(cats);
             setMarcas(mars);
             setProveedores(provs);
-        }).catch(console.error);
+        }).catch(console.error).finally(() => {
+            setLoadingCategorias(false);
+            setLoadingMarcas(false);
+            setLoadingProveedores(false);
+        });
     }, []);
 
     const columns = [
@@ -1339,6 +1349,7 @@ const Productos = () => {
                             <PremiumSelect
                                 icon={Component}
                                 placeholder="SELECCIONAR..."
+                                isLoading={loadingCategorias}
                                 options={categorias.map(c => ({ value: c.id_categoria, label: c.nombre }))}
                                 value={formData.id_categoria || ''}
                                 onChange={val => {
@@ -1356,6 +1367,7 @@ const Productos = () => {
                             <PremiumSelect
                                 icon={Tag}
                                 placeholder="SELECCIONAR..."
+                                isLoading={loadingMarcas}
                                 options={marcas.map(m => ({ value: m.id_marca, label: m.nombre_marca }))}
                                 value={formData.id_marca || ''}
                                 onChange={val => setFormData({ ...formData, id_marca: parseInt(val) })}
@@ -1369,6 +1381,7 @@ const Productos = () => {
                         <PremiumSelect
                             icon={Truck}
                             placeholder="SIN PROVEEDOR"
+                            isLoading={loadingProveedores}
                             options={proveedores.map(p => ({ value: p.id_proveedor, label: p.nombre_proveedor }))}
                             value={formData.id_proveedor || ''}
                             onChange={val => setFormData({ ...formData, id_proveedor: val || null })}

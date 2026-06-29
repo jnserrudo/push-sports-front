@@ -77,6 +77,7 @@ const styles = StyleSheet.create({
 
   // ── Price ──
   priceLabel: { fontSize: 5.5, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 },
+  priceBase: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: '#B45309' },
   pricePush: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: '#005F7A' },
   pricePublic: { fontSize: 10, fontFamily: 'Helvetica-Bold', color: BLACK },
 
@@ -101,7 +102,7 @@ const styles = StyleSheet.create({
 const formatPrice = (price) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(price || 0);
 
-const ShopReportPDF = ({ shopName, items, imageMap = {}, currentDate, showPushPrice = false }) => {
+const ShopReportPDF = ({ shopName, items, imageMap = {}, currentDate, showPushPrice = false, showBasePrice = false, reportNumber = '' }) => {
   const totalUnidades = items.reduce((acc, curr) => acc + (Number(curr.cantidadDejada) || 0), 0);
   const totalProductos = items.length;
   const stockTotalActual = items.reduce(
@@ -109,11 +110,13 @@ const ShopReportPDF = ({ shopName, items, imageMap = {}, currentDate, showPushPr
     0
   );
 
-  const colImg      = { width: showPushPrice ? '32%' : '36%', justifyContent: 'center', alignItems: 'center' };
-  const colInfo     = { width: showPushPrice ? '28%' : '34%', paddingRight: 6 };
-  const colDetalle  = { width: '14%', paddingRight: 4 };
-  const colPush     = showPushPrice ? { width: '13%', alignItems: 'flex-end' } : null;
-  const colPublic   = { width: showPushPrice ? '13%' : '16%', alignItems: 'flex-end' };
+  const activePriceCols = (showPushPrice ? 1 : 0) + (showBasePrice ? 1 : 0);
+  const colImg      = { width: activePriceCols > 0 ? '28%' : '32%', justifyContent: 'center', alignItems: 'center' };
+  const colInfo     = { width: activePriceCols > 0 ? '24%' : '28%', paddingRight: 6 };
+  const colDetalle  = { width: activePriceCols > 0 ? '13%' : '14%', paddingRight: 4 };
+  const colBase     = showBasePrice ? { width: '12%', alignItems: 'flex-end' } : null;
+  const colPush     = showPushPrice ? { width: '12%', alignItems: 'flex-end' } : null;
+  const colPublic   = { width: activePriceCols > 0 ? '11%' : '16%', alignItems: 'flex-end' };
 
   return (
     <Document title={`Reporte_${shopName || 'Comercio'}_${currentDate}`}>
@@ -130,9 +133,13 @@ const ShopReportPDF = ({ shopName, items, imageMap = {}, currentDate, showPushPr
           <View style={styles.shopBlock}>
             <Text style={styles.shopLabel}>Comercio Destino</Text>
             <Text style={styles.shopName}>{shopName || 'SIN NOMBRE'}</Text>
-            <Text style={styles.shopType}>
-              {showPushPrice ? 'CON PRECIO PUSH INCLUIDO' : 'PRECIOS PÚBLICOS'}
-            </Text>
+            {reportNumber ? (
+              <Text style={styles.shopType}>N° {reportNumber}</Text>
+            ) : (
+              <Text style={styles.shopType}>
+                {showPushPrice ? 'CON PRECIO PUSH INCLUIDO' : 'PRECIOS PÚBLICOS'}
+              </Text>
+            )}
           </View>
         </View>
 
@@ -167,6 +174,7 @@ const ShopReportPDF = ({ shopName, items, imageMap = {}, currentDate, showPushPr
             <View style={colImg}><Text style={styles.headerText}>Producto</Text></View>
             <View style={colInfo}><Text style={styles.headerText}>Descripción</Text></View>
             <View style={colDetalle}><Text style={styles.headerText}>Entrega</Text></View>
+            {showBasePrice && colBase && <View style={colBase}><Text style={styles.headerText}>P. Base</Text></View>}
             {showPushPrice && colPush && <View style={colPush}><Text style={styles.headerText}>P. Push</Text></View>}
             <View style={colPublic}><Text style={styles.headerText}>P. Público</Text></View>
           </View>
@@ -242,6 +250,16 @@ const ShopReportPDF = ({ shopName, items, imageMap = {}, currentDate, showPushPr
                     <Text style={styles.stockTotalVal}>{totalStock}</Text>
                   </View>
                 </View>
+
+                {/* P. Base */}
+                {showBasePrice && colBase && (
+                  <View style={colBase}>
+                    <Text style={styles.priceLabel}>Base</Text>
+                    <Text style={styles.priceBase}>
+                      {item.precio_base > 0 ? formatPrice(item.precio_base) : '—'}
+                    </Text>
+                  </View>
+                )}
 
                 {/* P. Push */}
                 {showPushPrice && colPush && (

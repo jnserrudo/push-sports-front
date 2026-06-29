@@ -16,6 +16,8 @@ const Envios = () => {
     const [envios, setEnvios]         = useState([]);
     const [sucursales, setSucursales] = useState([]);
     const [productos, setProductos]   = useState([]);
+    const [loadingSucursales, setLoadingSucursales] = useState(false);
+    const [loadingProductos, setLoadingProductos] = useState(false);
     const [isLoading, setIsLoading]   = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isModalOpen, setIsModalOpen]   = useState(false);
@@ -33,6 +35,8 @@ const Envios = () => {
 
     const loadData = useCallback(async () => {
         setIsLoading(true);
+        setLoadingSucursales(true);
+        setLoadingProductos(true);
         try {
             const [envData, sucData, prodData] = await Promise.all([
                 enviosService.getAll().then(res => {
@@ -50,6 +54,8 @@ const Envios = () => {
             console.error('Error cargando envíos:', err);
         } finally {
             setIsLoading(false);
+            setLoadingSucursales(false);
+            setLoadingProductos(false);
         }
     }, []);
 
@@ -307,6 +313,7 @@ const Envios = () => {
                             <PremiumSelect
                                 icon={Home}
                                 placeholder="Seleccione destino..."
+                                isLoading={loadingSucursales}
                                 options={sucursales.map(s => ({ value: s.id_comercio, label: s.nombre }))}
                                 value={formData.sucursal_id}
                                 onChange={val => setFormData({ ...formData, sucursal_id: val })}
@@ -319,6 +326,7 @@ const Envios = () => {
                             <PremiumSelect
                                 icon={Box}
                                 placeholder="Seleccione ítem..."
+                                isLoading={loadingProductos}
                                 options={productos.map(p => ({ 
                                     value: p.id_producto, 
                                     label: p.nombre,

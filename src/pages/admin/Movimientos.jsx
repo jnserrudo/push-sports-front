@@ -26,6 +26,9 @@ const Movimientos = () => {
     const [sucursalesOptions, setSucursalesOptions] = useState([]);
     const [tiposMovimiento, setTiposMovimiento] = useState([]);
     const [usuariosDisponibles, setUsuariosDisponibles] = useState([]);
+    const [loadingSucursales, setLoadingSucursales] = useState(false);
+    const [loadingTipos, setLoadingTipos] = useState(false);
+    const [loadingUsuarios, setLoadingUsuarios] = useState(false);
     const [selectedMov, setSelectedMov] = useState(null);
     const [showFilters, setShowFilters] = useState(false);
 
@@ -44,12 +47,18 @@ const Movimientos = () => {
     // Cargar sucursales al inicio (solo superadmin)
     useEffect(() => {
         if (isSuperAdmin) {
-            sucursalesService.getAll().then(sucs => setSucursalesOptions(sucs)).catch(() => []);
+            setLoadingSucursales(true);
+            sucursalesService.getAll()
+                .then(sucs => setSucursalesOptions(sucs))
+                .catch(() => [])
+                .finally(() => setLoadingSucursales(false));
         }
     }, [isSuperAdmin]);
 
     const loadData = useCallback(async () => {
         setIsLoading(true);
+        setLoadingTipos(true);
+        setLoadingUsuarios(true);
         try {
             const params = {
                 limit: ITEMS_PER_PAGE,
@@ -83,6 +92,8 @@ const Movimientos = () => {
             console.error('Error cargando movimientos:', err);
         } finally {
             setIsLoading(false);
+            setLoadingTipos(false);
+            setLoadingUsuarios(false);
         }
     }, [page, filtrosAplicados, isSuperAdmin, sucursalId, filtros.sucursalId]);
 
@@ -234,6 +245,7 @@ const Movimientos = () => {
                                 <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-1.5 block">Sucursal</label>
                                 <PremiumSelect
                                     placeholder="Todas las sucursales"
+                                    isLoading={loadingSucursales}
                                     options={[
                                         { value: 'ALL', label: 'Todas las sucursales' },
                                         ...sucursalesOptions.map(suc => ({ value: suc.id_comercio, label: suc.nombre }))
@@ -248,6 +260,7 @@ const Movimientos = () => {
                             <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-1.5 block">Tipo de Operación</label>
                             <PremiumSelect
                                 placeholder="Todos los tipos"
+                                isLoading={loadingTipos}
                                 options={[
                                     { value: '', label: 'Todos los tipos' },
                                     ...tiposMovimiento.map(t => ({ value: t.id_tipo_movimiento, label: t.nombre_movimiento }))
@@ -261,6 +274,7 @@ const Movimientos = () => {
                             <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-1.5 block">Operador</label>
                             <PremiumSelect
                                 placeholder="Todos los operadores"
+                                isLoading={loadingUsuarios}
                                 options={[
                                     { value: '', label: 'Todos los operadores' },
                                     ...usuariosDisponibles.map(u => ({ value: u.id_usuario, label: `${u.nombre} ${u.apellido || ''}` }))

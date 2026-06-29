@@ -7,9 +7,14 @@ import PremiumSelect from '../../components/ui/PremiumSelect';
 
 const Usuarios = () => {
     const [sucursales, setSucursales] = useState([]);
+    const [loadingSucursales, setLoadingSucursales] = useState(false);
 
     useEffect(() => {
-        sucursalesService.getAll().then(setSucursales).catch(console.error);
+        setLoadingSucursales(true);
+        sucursalesService.getAll()
+            .then(setSucursales)
+            .catch(console.error)
+            .finally(() => setLoadingSucursales(false));
     }, []);
 
     const ROLES = {
@@ -169,6 +174,7 @@ const Usuarios = () => {
                     <PremiumSelect
                         icon={Store}
                         placeholder="GLOBAL — Aplica a todas las sedes"
+                        isLoading={loadingSucursales}
                         options={[
                             { value: '', label: 'GLOBAL', subtitle: 'Todas las sedes' },
                             ...sucursales.map(s => ({ value: s.id_comercio, label: s.nombre }))

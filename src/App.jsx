@@ -102,13 +102,13 @@ const App = () => {
           <Route path="consultas" element={<Consultas />} />
           <Route path="consultas/:id" element={<ConsultaDetalle />} />
           <Route path="perfil" element={<Perfil />} />
-          {/* POS also accessible under /dashboard for Vendedores */}
-          <Route path="pos" element={<POS />} />
+          {/* Registrar Ventas accessible under /dashboard for Vendedores */}
+          <Route path="ventas" element={<POS />} />
         </Route>
 
         {/* LEGACY / REDIRECTS */}
         <Route path="/admin" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/pos" element={<Navigate to="/dashboard/pos" replace />} />
+        <Route path="/pos" element={<Navigate to="/dashboard/ventas" replace />} />
 
         {/* FALLBACK */}
         <Route path="*" element={<Navigate to="/" replace />} />

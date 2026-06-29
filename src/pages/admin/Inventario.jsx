@@ -18,6 +18,8 @@ const Inventario = () => {
     const [data, setData] = useState([]);
     const [productos, setProductos] = useState([]);
     const [sucursales, setSucursales] = useState([]);
+    const [loadingProductos, setLoadingProductos] = useState(false);
+    const [loadingSucursales, setLoadingSucursales] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
@@ -34,6 +36,8 @@ const Inventario = () => {
     // ─── Load data ──────────────────────────────────────────────────────────
     const loadAll = useCallback(async () => {
         setIsLoading(true);
+        setLoadingProductos(true);
+        setLoadingSucursales(true);
         try {
             const [inv, prods, sucs] = await Promise.all([
                 isSuperAdmin ? inventarioService.getAll() : inventarioService.getBySucursal(sucursalId),
@@ -49,6 +53,8 @@ const Inventario = () => {
             setData([]);
         } finally {
             setIsLoading(false);
+            setLoadingProductos(false);
+            setLoadingSucursales(false);
         }
     }, [isSuperAdmin, sucursalId]);
 
@@ -293,6 +299,7 @@ const Inventario = () => {
                             <PremiumSelect
                                 icon={Box}
                                 placeholder="Seleccionar producto"
+                                isLoading={loadingProductos}
                                 options={productos.map(p => ({ 
                                     value: p.id_producto, 
                                     label: p.nombre,
@@ -313,6 +320,7 @@ const Inventario = () => {
                             <PremiumSelect
                                 icon={MapPin}
                                 placeholder="Seleccionar sede"
+                                isLoading={loadingSucursales}
                                 options={sucursales.map(s => ({ value: s.id_comercio, label: s.nombre }))}
                                 value={formData.id_comercio}
                                 onChange={val => setFormData({ ...formData, id_comercio: val })}
