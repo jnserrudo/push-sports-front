@@ -1215,8 +1215,11 @@ const Productos = () => {
             width: 'w-[120px]',
             render: (row) => {
                 const variantesCount = row.variantes?.length || 0;
-                const stockTotal = row.variantes?.reduce((sum, v) => sum + (v.stock_central || 0), 0) || 0;
+                const stockVariantes = row.variantes?.reduce((sum, v) => sum + (v.stock_central || 0), 0) || 0;
                 const tieneVariantes = variantesCount > 0;
+                
+                // Si usa variantes, mostrar stock de variantes; si no, mostrar stock_central del producto
+                const stockTotal = row.usa_variantes && tieneVariantes ? stockVariantes : (row.stock_central || 0);
 
                 return (
                     <div className="flex flex-col gap-0.5 py-1">

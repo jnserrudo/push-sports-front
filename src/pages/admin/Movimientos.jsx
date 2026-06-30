@@ -336,7 +336,42 @@ const Movimientos = () => {
             )}
 
             {/* Tabla de Movimientos */}
-            <DataTable 
+            {isLoading ? (
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-neutral-200 dark:border-gray-700 animate-in fade-in duration-500">
+                    <div className="flex justify-between mb-4 gap-3">
+                        <div className="w-full max-w-md h-12 bg-neutral-100 dark:bg-gray-700 rounded-lg animate-pulse" />
+                        <div className="w-40 h-12 bg-neutral-100 dark:bg-gray-700 rounded-lg animate-pulse" />
+                    </div>
+                    <div className="rounded-lg border border-neutral-200 dark:border-gray-600 overflow-hidden bg-white dark:bg-gray-800">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-neutral-50 dark:bg-gray-700 border-b border-neutral-200 dark:border-gray-600">
+                                    {[...Array(7)].map((_, i) => (
+                                        <th key={i} className="px-4 py-3">
+                                            <div className="h-3 bg-neutral-200 dark:bg-gray-600 rounded w-16 animate-pulse" />
+                                        </th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-neutral-100">
+                                {[1, 2, 3, 4, 5].map(i => (
+                                    <tr key={i}>
+                                        {[...Array(7)].map((_, colI) => (
+                                            <td key={colI} className="px-4 py-3 relative">
+                                                <div className="flex items-center gap-2">
+                                                    {colI === 0 && <div className="w-8 h-8 bg-neutral-100 rounded-lg flex-shrink-0 animate-pulse" />}
+                                                    <div className="h-2.5 bg-neutral-100 rounded animate-pulse" style={{ width: `${Math.max(30, 80 - (i * colI * 10) % 50)}%` }} />
+                                                </div>
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            ) : (
+                <DataTable 
                     data={movimientos}
                     totalItems={total}
                     onPageChange={(p) => setPage(p - 1)}
@@ -440,6 +475,7 @@ const Movimientos = () => {
                     ]}
                     onView={(mov) => setSelectedMov(mov)}
                 />
+            )}
             {/* Modal de Detalle de Movimiento */}
             {selectedMov && (
                 <div 
