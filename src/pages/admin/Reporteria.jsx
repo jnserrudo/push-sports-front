@@ -15,7 +15,9 @@ import {
   AlertCircle,
   X,
   Mail,
-  DollarSign
+  DollarSign,
+  Info,
+  Boxes
 } from 'lucide-react';
 import api from '../../api/api';
 import { Link } from 'react-router-dom';
@@ -27,6 +29,7 @@ import { inventarioService } from '../../services/inventarioService';
 import { reportesEntregaService } from '../../services/reportesEntregaService';
 import ReportPDF from '../../components/reports/ReportPDF';
 import ShopReportPDF from '../../components/reports/ShopReportPDF';
+import ShopStockPDF from '../../components/reports/ShopStockPDF';
 import { 
   parseImagenes,
   prefetchProductImages
@@ -56,6 +59,12 @@ const Reporteria = () => {
   const [selectedItems, setSelectedItems] = useState([]);
   const [addingProduct, setAddingProduct] = useState(null); // id_producto being loaded
 
+  // Shop sub-tab: 'entrega' | 'inventario'
+  const [shopSubTab, setShopSubTab] = useState('entrega');
+  const [stockInventory, setStockInventory] = useState([]);
+  const [loadingStockInventory, setLoadingStockInventory] = useState(false);
+  const [stockInventorySearch, setStockInventorySearch] = useState('');
+
   // Toggles
   const [showPushPriceGlobal, setShowPushPriceGlobal] = useState(false);
   const [showPushPriceShop, setShowPushPriceShop] = useState(false);
@@ -63,6 +72,17 @@ const Reporteria = () => {
   const [savingReport, setSavingReport] = useState(false);
 
   const [toaster, setToaster] = useState(null);
+
+  // Helper para labels con tooltip explicativo
+  const LabelTip = ({ label, tip }) => (
+    <span className="group/tooltip relative inline-flex items-center gap-1">
+      {label}
+      <Info size={10} className="text-neutral-400 dark:text-gray-500 cursor-help" />
+      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 p-2 bg-neutral-900 dark:bg-gray-900 text-white text-[9px] font-bold rounded-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-20 shadow-lg normal-case tracking-normal leading-snug">
+        {tip}
+      </span>
+    </span>
+  );
 
   useEffect(() => { fetchData(); }, []);
 
@@ -114,6 +134,35 @@ const Reporteria = () => {
     setSelectedItems([]);
     setShopStep(2);
     setSucursalSearch('');
+    if (shopSubTab === 'inventario') {
+      loadStockInventory(s.id_comercio);
+    }
+  };
+
+  const loadStockInventory = async (comercioId) => {
+    if (!comercioId) return;
+    setLoadingStockInventory(true);
+    try {
+      const inv = await inventarioService.getBySucursal(comercioId);
+      // Ordenar: primero con stock, luego sin stock, ambos por nombre
+      const sorted = (inv || []).sort((a, b) => {
+        const stockA = a.producto?.usa_desglose_variantes || a.usa_desglose_variantes
+          ? (a.variantes || []).reduce((sum, v) => sum + (v.cantidad_actual || 0), 0)
+          : (a.cantidad_actual || 0);
+        const stockB = b.producto?.usa_desglose_variantes || b.usa_desglose_variantes
+          ? (b.variantes || []).reduce((sum, v) => sum + (v.cantidad_actual || 0), 0)
+          : (b.cantidad_actual || 0);
+        if (stockB > 0 && stockA === 0) return 1;
+        if (stockA > 0 && stockB === 0) return -1;
+        return (a.producto?.nombre || '').localeCompare(b.producto?.nombre || '');
+      });
+      setStockInventory(sorted);
+    } catch (error) {
+      console.error('Error cargando inventario:', error);
+      setToaster({ type: 'error', message: 'Error al cargar el inventario de la sucursal' });
+    } finally {
+      setLoadingStockInventory(false);
+    }
   };
 
   const handleAddProduct = useCallback(async (p) => {
@@ -201,6 +250,50 @@ const Reporteria = () => {
     }
   };
 
+  const handleDownloadStockPDF = async () => {
+    if (!sucursal || stockInventory.length === 0) return;
+    try {
+      const itemsForPdf = stockInventory.map(item => {
+        const prod = item.producto || item;
+        const cantidad = item.producto?.usa_desglose_variantes || item.usa_desglose_variantes
+          ? (item.variantes || []).reduce((sum, v) => sum + (v.cantidad_actual || 0), 0)
+          : (item.cantidad_actual || 0);
+        return {
+          ...prod,
+          cantidad_actual: cantidad,
+          precio_venta_sugerido: prod.precio_venta_sugerido,
+          precio_pushsport: prod.precio_pushsport,
+          costo_compra: prod.costo_compra
+        };
+      });
+
+      const blob = await pdf(
+        <ShopStockPDF
+          shopName={sucursal.nombre}
+          items={itemsForPdf}
+          imageMap={imageMap}
+          currentDate={new Date().toLocaleDateString()}
+          showPushPrice={showPushPriceShop}
+          showBasePrice={showBasePriceShop}
+        />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Inventario_${sucursal.nombre}_${new Date().toLocaleDateString()}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      setToaster({ type: 'success', message: 'PDF de inventario descargado' });
+    } catch (error) {
+      console.error('Error descargando PDF de inventario:', error);
+      setToaster({ type: 'error', message: 'Error al generar el PDF de inventario' });
+    }
+  };
+
   const handleBulkPriceUpdate = async (data) => {
     try {
       const result = await productosService.bulkUpdatePrices(data);
@@ -243,7 +336,7 @@ const Reporteria = () => {
                 <span className="text-brand-cyan">Reportería</span>
             </h1>
             <p className="text-neutral-500 dark:text-gray-400 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed max-w-xl mt-2 whitespace-normal">
-                Generá listas de precios o reportes de entrega en PDF. Nota: la generación de reportes es informativa y no modifica la base de datos.
+                Generá listas de precios, planificá entregas a sucursales o descargá el stock actual de una sucursal en PDF. La generación de PDFs es informativa y no modifica la base de datos.
             </p>
         </div>
 
@@ -261,7 +354,7 @@ const Reporteria = () => {
                 className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'shop' ? 'bg-white dark:bg-gray-700 text-black dark:text-white shadow-md border border-neutral-200 dark:border-gray-600' : 'text-neutral-500 dark:text-gray-400 hover:text-neutral-800 dark:hover:text-gray-200'}`}
             >
                 <Store size={14} />
-                Entrega
+                Sucursal
             </button>
         </div>
       </div>
@@ -417,13 +510,41 @@ const Reporteria = () => {
             exit={{ opacity: 0, x: -20 }}
             className="space-y-2"
           >
-            {/* Context banner for shop mode */}
-            <div className="bg-neutral-900 dark:bg-gray-800 rounded-2xl px-6 py-4">
-              <p className="text-white dark:text-gray-100 font-black text-sm uppercase tracking-tight">Generador de Reportes de Entrega</p>
-              <p className="text-neutral-400 dark:text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-0.5">
-                Elegí la sucursal, seleccioná los productos que vas a dejar, ingresá las cantidades y generá el PDF de entrega.
-                <span className="text-brand-cyan font-black ml-1">Nota: Generar este PDF es administrativo y NO modifica el stock del sistema.</span>
-              </p>
+            {/* Context banner + sub-tabs for shop mode */}
+            <div className="bg-neutral-900 dark:bg-gray-800 rounded-2xl px-4 md:px-6 py-4">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div>
+                  <p className="text-white dark:text-gray-100 font-black text-sm uppercase tracking-tight">Reportes por Sucursal</p>
+                  <p className="text-neutral-400 dark:text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-0.5 max-w-xl">
+                    Elegí una sucursal. Luego podés planificar una entrega o descargar el stock actual de esa sucursal.
+                  </p>
+                </div>
+                <div className="flex items-center bg-black/30 dark:bg-black/40 rounded-xl p-1 gap-1">
+                  <button
+                    onClick={() => setShopSubTab('entrega')}
+                    className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                      shopSubTab === 'entrega'
+                        ? 'bg-brand-cyan text-black'
+                        : 'text-neutral-400 dark:text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    <ListPlus size={12} className="inline mr-1.5" /> Entrega
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShopSubTab('inventario');
+                      if (sucursal && shopStep === 2) loadStockInventory(sucursal.id_comercio);
+                    }}
+                    className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                      shopSubTab === 'inventario'
+                        ? 'bg-brand-cyan text-black'
+                        : 'text-neutral-400 dark:text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    <Boxes size={12} className="inline mr-1.5" /> Inventario
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* ── Step indicator ── */}
@@ -458,8 +579,9 @@ const Reporteria = () => {
                 <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black shrink-0 ${
                   shopStep === 2 ? 'bg-brand-cyan text-black' : 'bg-neutral-200 dark:bg-gray-600 text-neutral-400 dark:text-gray-500'
                 }`}>2</span>
-                <ListPlus size={13} /> Armar Entrega
-                {selectedItems.length > 0 && (
+                {shopSubTab === 'inventario' ? <Boxes size={13} /> : <ListPlus size={13} />}
+                {shopSubTab === 'inventario' ? 'Ver Inventario' : 'Armar Entrega'}
+                {shopSubTab === 'entrega' && selectedItems.length > 0 && (
                   <span className="bg-brand-cyan text-black text-[9px] font-black px-2 py-0.5 rounded-full">{selectedItems.length}</span>
                 )}
               </div>
@@ -530,26 +652,39 @@ const Reporteria = () => {
               {/* ── STEP 2: Build report ── */}
               {shopStep === 2 && sucursal && (
                 <motion.div
-                  key="step2"
+                  key={`step2-${shopSubTab}`}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6"
                 >
-                  {/* Warning Notice Banner */}
-                  <div className="lg:col-span-3 bg-amber-500/10 border-2 border-amber-500/30 text-amber-700 dark:text-amber-400 rounded-2xl p-4 flex items-start gap-3 shadow-sm">
-                    <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
-                    <div className="text-[11px] font-bold uppercase tracking-wider leading-relaxed">
-                      <p className="font-black text-xs mb-1">ATENCIÓN: ESTE REPORTE NO CAMBIA EL STOCK EN EL SISTEMA</p>
-                      <p>
-                        Esta pantalla sirve solo para calcular cantidades e descargar/imprimir el reporte físico (PDF) para firmar. 
-                        Para que la sucursal tenga este stock disponible en su POS para vender, debés registrar el nuevo stock ingresando a la sección 
-                        <Link to="/dashboard/inventario" className="underline font-black hover:text-black dark:hover:text-white mx-1 text-neutral-900 dark:text-gray-100">STOCK</Link> 
-                        e ingresar el "Stock nuevo" allí.
-                      </p>
+                  {/* Context Banner */}
+                  {shopSubTab === 'entrega' ? (
+                    <div className="lg:col-span-3 bg-amber-500/10 border-2 border-amber-500/30 text-amber-700 dark:text-amber-400 rounded-2xl p-4 flex items-start gap-3 shadow-sm">
+                      <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
+                      <div className="text-[11px] font-bold uppercase tracking-wider leading-relaxed">
+                        <p className="font-black text-xs mb-1">ATENCIÓN: ESTE REPORTE NO CAMBIA EL STOCK EN EL SISTEMA</p>
+                        <p>
+                          Esta pantalla sirve para planificar la mercadería que vas a entregar físicamente. El PDF se imprime para firmar, pero el stock real de la sucursal no cambia.
+                          Para que el comercio pueda vender este stock, registrá el ingreso desde la sección <Link to="/dashboard/inventario" className="underline font-black hover:text-black dark:hover:text-white mx-1 text-neutral-900 dark:text-gray-100">STOCK</Link>.
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="lg:col-span-3 bg-blue-500/10 border-2 border-blue-500/30 text-blue-700 dark:text-blue-400 rounded-2xl p-4 flex items-start gap-3 shadow-sm">
+                      <Info className="w-5 h-5 mt-0.5 shrink-0" />
+                      <div className="text-[11px] font-bold uppercase tracking-wider leading-relaxed">
+                        <p className="font-black text-xs mb-1">INVENTARIO REAL DE LA SUCURSAL</p>
+                        <p>
+                          Estos son los productos activos y el stock actual registrado en el sistema para <span className="font-black">{sucursal.nombre}</span>.
+                          Si hiciste un envío de stock y no se refleja aquí, revisá el movimiento en la sección <Link to="/dashboard/movimientos" className="underline font-black hover:text-black dark:hover:text-white mx-1 text-neutral-900 dark:text-gray-100">Movimientos</Link>.
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
+                  {shopSubTab === 'entrega' && (
+                    <>
                   {/* Left: Catalog */}
                   <div className="lg:col-span-1">
                     <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-[2.5rem] p-4 md:p-6 shadow-premium border border-neutral-100 dark:border-gray-700 flex flex-col" style={{ height: '60vh', minHeight: '320px' }}>
@@ -739,7 +874,7 @@ const Reporteria = () => {
                               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 md:gap-3 items-start">
                                 {/* Col 1: Stock en comercio */}
                                 <div className="flex flex-col">
-                                  <label className="text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 min-h-[20px] flex items-center">Stock comercio</label>
+                                  <label className="text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 min-h-[20px] flex items-center"><LabelTip label="Stock comercio" tip="Stock actual registrado en la sucursal. Si ya hiciste un envío, debería verse reflejado aquí." /></label>
                                   <div className="h-11 bg-white dark:bg-gray-700 border-2 border-neutral-100 dark:border-gray-600 rounded-xl flex items-center justify-center font-black text-sm text-neutral-500 dark:text-gray-300">
                                     {item.stockAnterior}
                                     <span className="text-[8px] ml-1 text-neutral-300 dark:text-gray-500 font-bold">uds</span>
@@ -753,7 +888,7 @@ const Reporteria = () => {
                                     const excede = item.cantidadDejada > sc;
                                     return (
                                       <>
-                                        <label className={`text-[9px] font-black uppercase tracking-widest mb-1.5 min-h-[20px] flex items-center ${excede ? 'text-amber-500' : 'text-neutral-400'}`}>Central disponible</label>
+                                        <label className={`text-[9px] font-black uppercase tracking-widest mb-1.5 min-h-[20px] flex items-center ${excede ? 'text-amber-500' : 'text-neutral-400'}`}><LabelTip label="Central disponible" tip="Stock disponible en depósito central. Si superás este valor, no hay mercadería suficiente para enviar." /></label>
                                         <div className={`h-11 rounded-xl flex items-center justify-center font-black text-sm border-2 transition-all ${
                                           excede
                                             ? 'bg-amber-50 border-amber-300 text-amber-600'
@@ -774,7 +909,7 @@ const Reporteria = () => {
 
                                 {/* Col 3: A dejar */}
                                 <div className="flex flex-col">
-                                  <label className="text-[9px] font-black uppercase tracking-widest text-brand-cyan mb-1.5 min-h-[20px] flex items-center">A dejar</label>
+                                  <label className="text-[9px] font-black uppercase tracking-widest text-brand-cyan mb-1.5 min-h-[20px] flex items-center"><LabelTip label="A dejar" tip="Cantidad que planificás entregar en esta visita. Inicia en 0 porque el reporte es una planificación, no un envío ya realizado." /></label>
                                   <input
                                     type="number"
                                     min="0"
@@ -794,7 +929,7 @@ const Reporteria = () => {
 
                                 {/* Col 4: Stock nuevo en comercio */}
                                 <div className="flex flex-col">
-                                  <label className="text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 min-h-[20px] flex items-center">Stock nuevo</label>
+                                  <label className="text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 min-h-[20px] flex items-center"><LabelTip label="Stock nuevo" tip="Proyección del stock que tendrá la sucursal si se entrega la cantidad indicada en 'A dejar'." /></label>
                                   <div className={`h-11 rounded-xl flex items-center justify-center font-black text-sm ${
                                     item.cantidadDejada > 0 ? 'bg-neutral-900 dark:bg-gray-900 text-brand-cyan' : 'bg-neutral-50 dark:bg-gray-700 text-neutral-400 dark:text-gray-500 border-2 border-neutral-100 dark:border-gray-600'
                                   }`}>
@@ -841,6 +976,184 @@ const Reporteria = () => {
                       )}
                     </div>
                   </div>
+                    </>
+                  )}
+
+                  {shopSubTab === 'inventario' && (
+                    <div className="lg:col-span-3 space-y-4">
+                      <div className="bg-neutral-900 rounded-2xl px-4 md:px-5 py-3 md:py-3.5 flex flex-wrap items-center justify-between gap-2 md:gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-brand-cyan/20 rounded-lg flex items-center justify-center">
+                            <Store className="text-brand-cyan" size={16} />
+                          </div>
+                          <div>
+                            <p className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest">Inventario actual de</p>
+                            <p className="text-sm font-black text-white uppercase tracking-tight leading-none">{sucursal.nombre}</p>
+                          </div>
+                          <div className="w-2 h-2 bg-brand-cyan rounded-full animate-pulse" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setShowPushPriceShop(!showPushPriceShop)}
+                            className={`h-9 px-4 rounded-xl flex items-center gap-2 transition-all text-[9px] font-black uppercase tracking-widest border-2 ${
+                              showPushPriceShop
+                                ? 'bg-brand-cyan/20 border-brand-cyan text-brand-cyan'
+                                : 'bg-white/5 border-white/10 text-neutral-400 hover:border-white/30'
+                            }`}
+                          >
+                            {showPushPriceShop ? <Eye size={12} /> : <EyeOff size={12} />}
+                            {showPushPriceShop ? 'P. Push: ON' : 'P. Push: OFF'}
+                          </button>
+                          <button
+                            onClick={() => setShowBasePriceShop(!showBasePriceShop)}
+                            className={`h-9 px-4 rounded-xl flex items-center gap-2 transition-all text-[9px] font-black uppercase tracking-widest border-2 ${
+                              showBasePriceShop
+                                ? 'bg-amber-500/20 border-amber-500 text-amber-400'
+                                : 'bg-white/5 border-white/10 text-neutral-400 hover:border-white/30'
+                            }`}
+                          >
+                            {showBasePriceShop ? <Eye size={12} /> : <EyeOff size={12} />}
+                            {showBasePriceShop ? 'P. Base: ON' : 'P. Base: OFF'}
+                          </button>
+                          <button
+                            onClick={handleDownloadStockPDF}
+                            disabled={loadingStockInventory || stockInventory.length === 0}
+                            className="h-9 px-5 rounded-xl flex items-center gap-2 transition-all shadow-md font-black uppercase tracking-widest text-[10px] bg-brand-cyan text-black hover:scale-105 disabled:opacity-60 disabled:hover:scale-100"
+                          >
+                            {loadingStockInventory
+                              ? <><Loader2 size={13} className="animate-spin" /> Cargando...</>
+                              : <><Download size={13} /> Descargar PDF</>
+                            }
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-[2.5rem] p-4 md:p-8 shadow-premium border border-neutral-100 dark:border-gray-700 min-h-[300px] md:min-h-[450px] flex flex-col">
+                        <div className="flex flex-col md:flex-row gap-3 md:items-center justify-between mb-4">
+                          <div>
+                            <h3 className="text-lg font-black text-neutral-900 dark:text-white tracking-tighter uppercase flex items-center gap-2">
+                              <Boxes size={18} className="text-brand-cyan" /> Stock de Sucursal
+                            </h3>
+                            <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5">
+                              Todos los productos activos. Se muestra el stock registrado en el sistema.
+                            </p>
+                          </div>
+                          <div className="relative w-full md:max-w-xs">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={15} />
+                            <input
+                              type="text"
+                              placeholder="Buscar producto..."
+                              value={stockInventorySearch}
+                              onChange={(e) => setStockInventorySearch(e.target.value)}
+                              className="w-full pl-11 pr-4 h-11 bg-neutral-50 dark:bg-gray-700 border-2 border-neutral-100 dark:border-gray-600 rounded-xl focus:border-brand-cyan dark:focus:border-cyan-400 outline-none transition-all font-bold text-xs text-black dark:text-white placeholder:text-neutral-400 dark:placeholder:text-gray-500"
+                            />
+                          </div>
+                        </div>
+
+                        {loadingStockInventory ? (
+                          <div className="flex-1 flex flex-col items-center justify-center py-16">
+                            <Loader2 size={40} className="text-brand-cyan animate-spin mb-4" />
+                            <p className="text-xs font-black text-neutral-400 uppercase tracking-widest">Cargando inventario...</p>
+                          </div>
+                        ) : (
+                          <DataTable
+                            data={stockInventory.filter(item =>
+                              (item.producto?.nombre || '').toLowerCase().includes(stockInventorySearch.toLowerCase()) ||
+                              (item.producto?.marca?.nombre_marca || '').toLowerCase().includes(stockInventorySearch.toLowerCase())
+                            )}
+                            hideSearch={true}
+                            columns={[
+                              {
+                                header: 'Producto',
+                                render: (item) => {
+                                  const prod = item.producto || item;
+                                  return (
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-10 h-10 rounded-lg bg-white dark:bg-gray-700 flex items-center justify-center border border-neutral-100 dark:border-gray-600 overflow-hidden shrink-0">
+                                        {imageMap[prod.id_producto] && imageMap[prod.id_producto].length > 0 ? (
+                                          <img src={imageMap[prod.id_producto][0]} className="w-full h-full object-cover" />
+                                        ) : parseImagenes(prod.imagen_url)[0] ? (
+                                          <img src={parseImagenes(prod.imagen_url)[0]} className="w-full h-full object-cover" />
+                                        ) : <Package className="text-neutral-200 dark:text-gray-500" size={16} />}
+                                      </div>
+                                      <div className="min-w-0">
+                                        <p className="text-[10px] font-black text-neutral-900 dark:text-gray-100 uppercase leading-none truncate max-w-[200px]">{prod.nombre}</p>
+                                        <p className="text-[8px] font-black text-brand-cyan uppercase tracking-widest mt-0.5">{prod.marca?.nombre_marca || 'General'}</p>
+                                      </div>
+                                    </div>
+                                  );
+                                }
+                              },
+                              {
+                                header: 'Stock actual',
+                                render: (item) => {
+                                  const prod = item.producto || item;
+                                  const hasVariants = prod.usa_variantes || item.usa_desglose_variantes || (item.variantes && item.variantes.length > 0);
+                                  const stock = hasVariants
+                                    ? (item.variantes || []).reduce((sum, v) => sum + (v.cantidad_actual || 0), 0)
+                                    : (item.cantidad_actual || 0);
+                                  return (
+                                    <div className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border-2 font-black text-[10px] uppercase tracking-widest ${
+                                      stock > 0
+                                        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400'
+                                        : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400'
+                                    }`}>
+                                      {stock} <span className="text-[8px] opacity-70">uds</span>
+                                    </div>
+                                  );
+                                }
+                              },
+                              ...(showPushPriceShop ? [{
+                                header: 'P. Push',
+                                render: (item) => {
+                                  const prod = item.producto || item;
+                                  return (
+                                    <div className="flex items-center justify-center">
+                                      <div className="px-3 py-1.5 bg-brand-cyan/5 dark:bg-cyan-900/10 border border-brand-cyan/20 rounded-lg">
+                                        <span className="text-brand-cyan dark:text-cyan-400 text-[10px] font-black">
+                                          ${(prod.precio_pushsport || 0).toLocaleString()}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
+                                }
+                              }] : []),
+                              ...(showBasePriceShop ? [{
+                                header: 'P. Base',
+                                render: (item) => {
+                                  const prod = item.producto || item;
+                                  return (
+                                    <div className="flex items-center justify-center">
+                                      <div className="px-3 py-1.5 bg-amber-500/5 dark:bg-amber-900/10 border border-amber-500/20 rounded-lg">
+                                        <span className="text-amber-600 dark:text-amber-400 text-[10px] font-black">
+                                          ${(prod.costo_compra || 0).toLocaleString()}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
+                                }
+                              }] : []),
+                              {
+                                header: 'P. Público',
+                                render: (item) => {
+                                  const prod = item.producto || item;
+                                  return (
+                                    <div className="flex items-center justify-center">
+                                      <div className="px-3 py-1.5 bg-neutral-50 dark:bg-gray-700 border border-neutral-100 dark:border-gray-600 rounded-lg">
+                                        <span className="text-neutral-900 dark:text-gray-100 text-[10px] font-black">
+                                          ${(prod.precio_venta_sugerido || 0).toLocaleString()}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
+                                }
+                              }
+                            ]}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>

@@ -213,6 +213,27 @@ const POS = () => {
     return images.length > 0 ? images[0] : null;
   };
 
+  // Cantidad de un producto simple ya agregada al carrito
+  const getCartQty = (item) => {
+    const cartItem = cart.find(c => c.id === getProductId(item));
+    return cartItem ? cartItem.cantidad : 0;
+  };
+
+  // Stock disponible considerando lo que ya está en el carrito
+  const getAvailableStock = (item) => Math.max(0, getProductStock(item) - getCartQty(item));
+
+  // Cantidad de una variante específica ya agregada al carrito
+  const getCartVarianteQty = (item, idVariante) => {
+    const id = `${item.id_inventario}-${idVariante}`;
+    const cartItem = cart.find(c => c.id === id);
+    return cartItem ? cartItem.cantidad : 0;
+  };
+
+  // Stock disponible de una variante considerando el carrito
+  const getAvailableVarianteStock = (item, idVariante, stockReal) => {
+    return Math.max(0, (stockReal || 0) - getCartVarianteQty(item, idVariante));
+  };
+
   const filteredProducts = useMemo(() => {
     if (!products) return [];
     const term = searchTerm.toLowerCase().trim();
@@ -225,8 +246,8 @@ const POS = () => {
 
   // Manejar clic en producto - muestra variantes si las tiene
   const handleProductClick = (item) => {
-    const stock = getProductStock(item);
-    if (stock <= 0) return;
+    const availableStock = getAvailableStock(item);
+    if (availableStock <= 0) return;
     
     // Si el producto está configurado para usar variantes, SIEMPRE abrir el modal
     if (item.producto?.usa_variantes || item.usa_desglose_variantes || (item.variantes && item.variantes.length > 0)) {
@@ -243,6 +264,11 @@ const POS = () => {
   const addVarianteToCart = (item, variante) => {
     const id = `${item.id_inventario}-${variante.id_variante}`;
     const stockMax = variante.cantidad_actual || 0;
+    const availableStock = getAvailableVarianteStock(item, variante.id_variante, stockMax);
+    if (availableStock <= 0) {
+      toast.error(`No hay más stock disponible para esta variante`);
+      return;
+    }
     const precio = getProductPrecio(item);
     let atributos = variante.variante?.atributos_valores || {};
     if (typeof atributos === 'string') {
@@ -279,7 +305,11 @@ const POS = () => {
   };
 
   const addToCart = (item) => {
-    if (getProductStock(item) <= 0) return;
+    const availableStock = getAvailableStock(item);
+    if (availableStock <= 0) {
+      toast.error(`${getProductNombre(item)} no tiene más stock disponible`);
+      return;
+    }
     const id = getProductId(item);
     const existing = cart.find(c => c.id === id);
     const stockMax = getProductStock(item);
@@ -302,6 +332,7 @@ const POS = () => {
         cantidad: 1
       }]);
     }
+    toast.success(`${getProductNombre(item)} agregado al carrito`);
   };
 
   const removeFromCart = (id) => setCart(cart.filter(item => item.id !== id));
@@ -635,23 +666,30 @@ const POS = () => {
             <AnimatePresence>
             {filteredProducts.map(item => {
               const stock = getProductStock(item);
+              const availableStock = getAvailableStock(item);
+              const cartQty = getCartQty(item);
               const precio = getProductPrecio(item);
               const nombre = getProductNombre(item);
               const img = getProductImg(item);
+              const hasVariantes = item.producto?.usa_variantes || item.usa_desglose_variantes || (item.variantes && item.variantes.length > 0);
+              const isAgotado = stock <= 0;
+              const isDisabled = isAgotado || (!hasVariantes && availableStock <= 0);
               return (
               <motion.div 
                 layout
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                whileHover={stock > 0 ? { scale: 1.01 } : {}}
-                whileTap={stock > 0 ? { scale: 0.98 } : {}}
+                whileHover={!isDisabled ? { scale: 1.01 } : {}}
+                whileTap={!isDisabled ? { scale: 0.98 } : {}}
                 key={getProductId(item)}
-                onClick={() => handleProductClick(item)}
+                onClick={() => !isDisabled && handleProductClick(item)}
                 className={`group p-2 md:p-3 bg-white dark:bg-gray-800 rounded-xl md:rounded-2xl transition-all duration-300 relative cursor-pointer border ${
-                  stock > 0 
-                  ? 'border-neutral-100 dark:border-gray-700 shadow-sm hover:border-brand-cyan/20' 
-                  : 'bg-neutral-50/50 dark:bg-gray-700/50 opacity-40 grayscale border-transparent cursor-not-allowed'
+                  isAgotado
+                  ? 'bg-neutral-50/50 dark:bg-gray-700/50 opacity-40 grayscale border-transparent cursor-not-allowed'
+                  : isDisabled
+                    ? 'border-neutral-100 dark:border-gray-700 shadow-sm opacity-60 cursor-not-allowed'
+                    : 'border-neutral-100 dark:border-gray-700 shadow-sm hover:border-brand-cyan/20'
                 }`}
               >
                 <div className="aspect-square bg-neutral-50 mb-2 md:mb-3 rounded-lg md:rounded-xl overflow-hidden relative border border-neutral-50">
@@ -662,13 +700,17 @@ const POS = () => {
                         <Box size={24} />
                       </div>
                     )}
-                    {stock <= 0 ? (
+                    {isAgotado ? (
                         <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex items-center justify-center">
                             <span className="text-white font-bold text-[6px] uppercase tracking-[0.2em] border border-white/20 px-2 py-1 rounded-full">AGOTADO</span>
                         </div>
-                    ) : (item.producto?.usa_variantes || item.usa_desglose_variantes || (item.variantes && item.variantes.length > 0)) ? (
+                    ) : hasVariantes ? (
                         <div className="absolute top-1 right-1 bg-black/80 backdrop-blur-md text-white text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded shadow-sm border border-white/10 flex items-center gap-1 pointer-events-none">
                             <span>Elegir Variante</span>
+                        </div>
+                    ) : cartQty > 0 ? (
+                        <div className="absolute top-1 right-1 bg-brand-cyan/90 backdrop-blur-md text-black text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded shadow-sm border border-white/10 flex items-center gap-1 pointer-events-none">
+                            <span>En carrito: {cartQty}</span>
                         </div>
                     ) : null}
                 </div>
@@ -676,9 +718,16 @@ const POS = () => {
                 <h3 className="font-bold text-[9px] md:text-xs uppercase tracking-tight mb-0.5 text-neutral-900 dark:text-gray-100 truncate">{nombre}</h3>
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center text-neutral-900 dark:text-gray-100">
                     <span className="font-black text-base md:text-lg tracking-tighter">${precio.toLocaleString()}</span>
-                    <span className={`text-[7px] md:text-[8px] font-black uppercase tracking-widest ${stock < 5 ? 'text-brand-cyan dark:text-cyan-400' : 'text-neutral-400 dark:text-gray-500'}`}>
-                        {stock} DISP.
-                    </span>
+                    <div className="flex flex-col items-end">
+                      <span className={`text-[7px] md:text-[8px] font-black uppercase tracking-widest ${availableStock < 5 && availableStock > 0 ? 'text-brand-cyan dark:text-cyan-400' : 'text-neutral-400 dark:text-gray-500'}`}>
+                        {availableStock} DISP.
+                      </span>
+                      {cartQty > 0 && (
+                        <span className="text-[7px] font-bold text-neutral-400 dark:text-gray-500 line-through">
+                          {stock} real
+                        </span>
+                      )}
+                    </div>
                 </div>
               </motion.div>
               );
@@ -1086,16 +1135,22 @@ const POS = () => {
             {/* Guía de stock para el usuario */}
             {(() => {
               const variantes = selectedProduct.producto?.variantes || selectedProduct.variantes || [];
-              const variantesConStock = variantes.filter(v => {
+              const variantesDisponibles = variantes.filter(v => {
                 const isFromProduct = !v.variante;
-                const varDef = isFromProduct ? v : v.variante;
                 const idVar = isFromProduct ? v.id_variante : v.id_variante;
                 const localStockItem = selectedProduct.variantes?.find(sv => sv.id_variante === idVar);
-                return (localStockItem?.cantidad_actual || 0) > 0;
+                const stockReal = localStockItem?.cantidad_actual || 0;
+                return getAvailableVarianteStock(selectedProduct, idVar, stockReal) > 0;
+              });
+              const variantesSinStock = variantes.filter(v => {
+                const isFromProduct = !v.variante;
+                const idVar = isFromProduct ? v.id_variante : v.id_variante;
+                const localStockItem = selectedProduct.variantes?.find(sv => sv.id_variante === idVar);
+                return (localStockItem?.cantidad_actual || 0) === 0;
               });
 
-              if (variantesConStock.length === 0) {
-                return (
+              if (variantesDisponibles.length === 0) {
+                return variantesSinStock.length === variantes.length ? (
                   <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3 mb-4">
                     <div className="flex items-center gap-2">
                       <AlertCircle size={16} className="text-red-500 dark:text-red-400" />
@@ -1107,14 +1162,26 @@ const POS = () => {
                       Este producto tiene variantes (talla, color, etc.) pero ninguna tiene stock asignado. Flujo para habilitarlo: 1) Panel de administración → Inventario, 2) Buscar el producto, 3) Seleccionar la sucursal, 4) Para cada variante, ingresar la cantidad de stock disponible. Sin stock asignado, el sistema no permite vender.
                     </p>
                   </div>
+                ) : (
+                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-3 mb-4">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle size={16} className="text-amber-500 dark:text-amber-400" />
+                      <p className="text-xs font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wider">
+                        Stock de variantes ya en carrito
+                      </p>
+                    </div>
+                    <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1 leading-relaxed">
+                      Agregaste todas las unidades disponibles de las variantes al carrito. Si necesitás más, primero quitá cantidades del ticket.
+                    </p>
+                  </div>
                 );
-              } else if (variantesConStock.length < variantes.length) {
+              } else if (variantesDisponibles.length < variantes.length) {
                 return (
                   <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-3 mb-4">
                     <div className="flex items-center gap-2">
                       <AlertCircle size={16} className="text-amber-500 dark:text-amber-400" />
                       <p className="text-xs font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wider">
-                        Solo {variantesConStock.length} de {variantes.length} variantes con stock
+                        Solo {variantesDisponibles.length} de {variantes.length} variantes disponibles
                       </p>
                     </div>
                     <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1 leading-relaxed">
@@ -1136,6 +1203,8 @@ const POS = () => {
 
                   const localStockItem = selectedProduct.variantes?.find(sv => sv.id_variante === idVar);
                   const stockVar = localStockItem?.cantidad_actual || 0;
+                  const availableStockVar = getAvailableVarianteStock(selectedProduct, idVar, stockVar);
+                  const cartQtyVar = getCartVarianteQty(selectedProduct, idVar);
 
                   // Intentar parsear atributos si por alguna razón vienen como string
                   let atributos = varDef?.atributos_valores || {};
@@ -1153,10 +1222,10 @@ const POS = () => {
                   return (
                     <button
                       key={idVar}
-                      onClick={() => stockVar > 0 ? addVarianteToCart(selectedProduct, { ...localStockItem, id_variante: idVar, variante: varDef }) : null}
-                      disabled={stockVar <= 0}
+                      onClick={() => availableStockVar > 0 ? addVarianteToCart(selectedProduct, { ...localStockItem, id_variante: idVar, variante: varDef }) : null}
+                      disabled={availableStockVar <= 0}
                       className={`w-full p-3 md:p-4 rounded-xl border transition-all text-left flex items-center justify-between
-                        ${stockVar > 0
+                        ${availableStockVar > 0
                           ? 'bg-neutral-50 dark:bg-gray-700 hover:bg-brand-cyan/10 dark:hover:bg-brand-cyan/20 border-neutral-100 dark:border-gray-600 hover:border-brand-cyan/30'
                           : 'bg-neutral-50/50 dark:bg-gray-800/50 border-transparent opacity-50 cursor-not-allowed grayscale'}`}
                     >
@@ -1169,9 +1238,16 @@ const POS = () => {
                         <p className="font-black text-sm text-neutral-900 dark:text-gray-100">
                           ${getProductPrecio(selectedProduct).toLocaleString()}
                         </p>
-                        <p className={`text-xs font-bold ${stockVar < 5 && stockVar > 0 ? 'text-brand-cyan dark:text-cyan-400' : 'text-neutral-400 dark:text-gray-400'}`}>
-                          {stockVar > 0 ? `${stockVar} DISP.` : 'AGOTADO'}
-                        </p>
+                        <div className="flex flex-col items-end">
+                          <p className={`text-xs font-bold ${availableStockVar < 5 && availableStockVar > 0 ? 'text-brand-cyan dark:text-cyan-400' : 'text-neutral-400 dark:text-gray-400'}`}>
+                            {availableStockVar > 0 ? `${availableStockVar} DISP.` : (stockVar <= 0 ? 'AGOTADO' : 'EN CARRITO')}
+                          </p>
+                          {cartQtyVar > 0 && (
+                            <p className="text-[10px] font-bold text-neutral-400 dark:text-gray-500">
+                              En carrito: {cartQtyVar}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </button>
                   );
