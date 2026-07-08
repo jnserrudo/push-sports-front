@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /#/dashboard
+Disallow: /#/login
+
+Sitemap: https://push-sports-front.onrender.com/sitemap.xml

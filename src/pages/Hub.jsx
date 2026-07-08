@@ -1,10 +1,9 @@
 import React from 'react';
 import { LogIn, Instagram, Facebook, MessageCircle } from 'lucide-react';
 
-// TODO: Completar con las URLs reales de las redes sociales
-const INSTAGRAM_URL = 'https://www.instagram.com/push_sportsalta?igsh=MWhwejA1dmIyZ2YzOQ=='; // TODO: https://instagram.com/pushsport_salta
-const FACEBOOK_URL = ''; // TODO: https://facebook.com/pushsportsalta
-const WHATSAPP_URL = ''; // TODO: https://wa.me/5493871234567
+const INSTAGRAM_URL = 'https://www.instagram.com/push_sportsalta?igsh=MWhwejA1dmIyZ2YzOQ==';
+const FACEBOOK_URL = '';
+const WHATSAPP_URL = 'https://wa.me/5493875792395';
 
 const Hub = () => {
     const links = [
@@ -12,7 +11,7 @@ const Hub = () => {
             icon: LogIn,
             title: 'Acceder al Sistema',
             description: 'Ingresá a la plataforma de gestión',
-            url: 'https://push-sports-front.onrender.com/',
+            url: 'https://push-sports-front.onrender.com/#/login',
             color: 'cyan',
             enabled: true
         },
