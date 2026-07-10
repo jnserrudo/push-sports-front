@@ -12,7 +12,8 @@ import FiltrosVentas from '../../components/ui/FiltrosVentas';
 import FiltrosLiquidaciones from '../../components/ui/FiltrosLiquidaciones';
 
 // --- LIBRERÍAS DE UI Y PDF ---
-import { jsPDF } from 'jspdf';
+import { pdf } from '@react-pdf/renderer';
+import LiquidacionPDF from '../../components/reports/LiquidacionPDF';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Liquidaciones = () => {
@@ -192,158 +193,23 @@ const Liquidaciones = () => {
     };
 
     // --- FUNCIÓN DE EXPORTACIÓN A PDF (COMPROBANTE ENRIQUECIDO) ---
-    const generatePDF = (row) => {
-        const doc = new jsPDF({ format: 'a5' });
-
-        // Diseño estilo Brutalista / Receipt
-        doc.setFillColor(0, 0, 0); // Fondo negro cabecera
-        doc.rect(0, 0, 148, 40, 'F');
-        
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(22);
-        doc.setFont('helvetica', 'bold');
-        doc.text("PUSH SPORTS", 10, 20);
-
-        doc.setTextColor(0, 229, 255); // Brand Cyan
-        doc.setFontSize(10);
-        doc.text("RECIBO OFICIAL DE LIQUIDACIÓN", 10, 30);
-
-        doc.setTextColor(0, 0, 0);
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        
-        doc.text(`ID Transacción: #${String(row.id_liquidacion).split('-')[0].toUpperCase()}`, 10, 50);
-        doc.text(`Fecha Cierre: ${new Date(row.fecha_cierre).toLocaleString()}`, 10, 58);
-        doc.text(`Sede Auditada: ${row.comercio_nombre}`, 10, 66);
-        doc.text(`Ventas Incluidas: ${row.cant_ventas || 0} tickets`, 10, 74);
-
-        doc.setLineWidth(0.5);
-        doc.line(10, 80, 138, 80);
-
-        doc.setFont('helvetica', 'bold');
-        doc.text("RESUMEN DE FONDOS", 10, 90);
-        
-        doc.setFont('helvetica', 'normal');
-        doc.text("Volumen Bruto (Todas las ventas):", 10, 100);
-        doc.text(`$${Math.round(row.total_bruto || 0).toLocaleString()}`, 138, 100, { align: 'right' });
-
-        // Desglose por método de pago si existe en metadata
-        let yPos = 110;
-        if (row.desglose_metodo_pago && Object.keys(row.desglose_metodo_pago).length > 0) {
-            doc.setFontSize(8);
-            doc.setTextColor(100, 100, 100);
-            doc.text("DESGLOSE POR MÉTODO DE PAGO", 10, yPos);
-            yPos += 8;
-            for (const [metodo, total] of Object.entries(row.desglose_metodo_pago)) {
-                doc.text(`${metodo}:`, 10, yPos);
-                doc.text(`$${Math.round(total).toLocaleString()}`, 138, yPos, { align: 'right' });
-                yPos += 8;
-            }
-            doc.setFontSize(10);
-            doc.setTextColor(0, 0, 0);
-            yPos += 2;
+    const generatePDF = async (row) => {
+        try {
+            const blob = await pdf(<LiquidacionPDF row={row} />).toBlob();
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            const idLiq = String(row.id_liquidacion).split('-')[0].toUpperCase();
+            link.download = `Liq_${row.comercio_nombre.replace(/\s+/g, '_')}_${idLiq}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            toast.success("Comprobante PDF generado exitosamente");
+        } catch (error) {
+            console.error("Error generating PDF:", error);
+            toast.error("Error al generar PDF");
         }
-
-        // Detalle de Productos
-        if (row.resumen_productos && row.resumen_productos.length > 0) {
-            doc.setFontSize(8);
-            doc.setTextColor(100, 100, 100);
-            doc.text("DETALLE DE ARTÍCULOS VENDIDOS", 10, yPos);
-            yPos += 8;
-
-            doc.setFontSize(7);
-            doc.setFont('helvetica', 'bold');
-            doc.text("PRODUCTO", 10, yPos);
-            doc.text("CANT", 58, yPos, { align: 'center' });
-            doc.text("P.COBR", 78, yPos, { align: 'right' });
-            doc.text("P.PUSH", 98, yPos, { align: 'right' });
-            doc.text("GANANCIA", 120, yPos, { align: 'right' });
-            doc.text("TOTAL", 138, yPos, { align: 'right' });
-            yPos += 6;
-
-            doc.setFont('helvetica', 'normal');
-            doc.setTextColor(50, 50, 50);
-
-            for (const prod of row.resumen_productos) {
-                // Salto de página si el recibo se hace muy largo
-                if (yPos > 185) {
-                    doc.addPage();
-                    yPos = 20;
-                    
-                    doc.setFillColor(0, 0, 0);
-                    doc.rect(0, 0, 148, 15, 'F');
-                    doc.setTextColor(0, 229, 255);
-                    doc.setFontSize(8);
-                    doc.setFont('helvetica', 'bold');
-                    doc.text("PUSH SPORTS - CONTINUACIÓN RECIBO", 10, 10);
-                    
-                    doc.setTextColor(50, 50, 50);
-                    doc.setFontSize(7);
-                    doc.setFont('helvetica', 'normal');
-                }
-
-                // Truncar nombres muy largos
-                const MAX_LEN = 20;
-                const nombreCorto = prod.nombre.length > MAX_LEN ? prod.nombre.substring(0, MAX_LEN) + '...' : prod.nombre;
-                
-                const precioUnitarioCobrado = (prod.total_bruto || 0) / (prod.cantidad || 1);
-                const precioUnitarioPush = (prod.total_neto || 0) / (prod.cantidad || 1);
-                const ganancia = precioUnitarioCobrado - precioUnitarioPush;
-
-                doc.text(nombreCorto, 10, yPos);
-                doc.text(String(prod.cantidad), 58, yPos, { align: 'center' });
-                doc.text(`$${Math.round(precioUnitarioCobrado).toLocaleString()}`, 78, yPos, { align: 'right' });
-                doc.text(`$${Math.round(precioUnitarioPush).toLocaleString()}`, 98, yPos, { align: 'right' });
-                
-                // Ganancia en verde si existe
-                if (ganancia > 0) {
-                    doc.setTextColor(0, 150, 0);
-                    doc.text(`+$${Math.round(ganancia).toLocaleString()}`, 120, yPos, { align: 'right' });
-                    doc.setTextColor(50, 50, 50);
-                } else {
-                    doc.setTextColor(150, 150, 150);
-                    doc.text('$0', 120, yPos, { align: 'right' });
-                    doc.setTextColor(50, 50, 50);
-                }
-                
-                doc.text(`$${Math.round(prod.total_bruto).toLocaleString()}`, 138, yPos, { align: 'right' });
-                yPos += 5;
-            }
-            yPos += 4;
-        }
-
-        doc.line(10, yPos, 138, yPos);
-        yPos += 10;
-
-        // Validar salto de página antes del final
-        if (yPos > 170) {
-            doc.addPage();
-            yPos = 20;
-        }
-
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.text("NETO LIQUIDADO:", 10, yPos);
-        doc.text(`$${Math.round(row.total_ventas_netas || 0).toLocaleString()}`, 138, yPos, { align: 'right' });
-
-        if (row.diferencia !== 0) {
-            yPos += 10;
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            doc.setTextColor(row.diferencia > 0 ? 0 : 255, row.diferencia > 0 ? 150 : 0, 0);
-            doc.text(row.diferencia > 0 ? "Sobrante de caja:" : "Faltante de caja:", 10, yPos);
-            doc.text(`${row.diferencia > 0 ? '+' : ''}$${Math.round(row.diferencia).toLocaleString()}`, 138, yPos, { align: 'right' });
-            doc.setTextColor(0, 0, 0);
-        }
-
-        doc.setFontSize(8);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(150, 150, 150);
-        doc.text("Este documento es un comprobante oficial generado por el Core.", 74, 190, { align: 'center' });
-        doc.text("Firma Verificada: PUSH SPORT - SISTEMA", 74, 195, { align: 'center' });
-
-        doc.save(`Liq_${row.comercio_nombre.replace(/\s+/g, '_')}_${String(row.id_liquidacion).split('-')[0]}.pdf`);
-        toast.success("Comprobante PDF generado");
     };
 
     const getSaldo = (suc) => Number(suc.saldo_acumulado_mili) || 0;

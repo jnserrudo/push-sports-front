@@ -10,62 +10,66 @@ const GRAY_DARK = '#1F2937';
 const styles = StyleSheet.create({
   page: { paddingTop: 0, paddingHorizontal: 0, paddingBottom: 55, backgroundColor: '#FFFFFF', fontFamily: 'Helvetica' },
 
-  // Cover/Header band
   headerBand: {
-    backgroundColor: BLACK,
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 30,
     paddingVertical: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
   },
-  logoMain: { fontSize: 36, fontFamily: 'Helvetica-Bold', color: '#FFFFFF', letterSpacing: -1, textTransform: 'uppercase', lineHeight: 1 },
-  logoAccent: { color: CYAN },
-  logoSub: { fontSize: 7, color: CYAN, letterSpacing: 3, marginTop: 4, textTransform: 'uppercase' },
+  brandBlock: { flexDirection: 'column' },
+  logoMain: { fontSize: 24, fontFamily: 'Helvetica-Bold', color: BLACK, letterSpacing: -1, textTransform: 'uppercase', lineHeight: 1 },
+  logoSub: { fontSize: 8, color: GRAY_MID, letterSpacing: 1, marginTop: 4, textTransform: 'uppercase' },
+
   headerRight: { alignItems: 'flex-end' },
-  headerLabel: { fontSize: 6, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 2 },
-  headerDate: { fontSize: 14, fontFamily: 'Helvetica-Bold', color: '#FFFFFF' },
-  headerType: { fontSize: 7, color: CYAN, textTransform: 'uppercase', letterSpacing: 2, marginTop: 3 },
+  headerLabel: { fontSize: 7, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 },
+  headerDate: { fontSize: 10, fontFamily: 'Helvetica-Bold', color: BLACK },
+  headerType: { fontSize: 7, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 1, marginTop: 2 },
 
-  // Info strip below header
-  infoStrip: { backgroundColor: CYAN, paddingHorizontal: 30, paddingVertical: 7, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  infoStripText: { fontSize: 7, fontFamily: 'Helvetica-Bold', color: BLACK, textTransform: 'uppercase', letterSpacing: 1 },
-  infoStripSub: { fontSize: 6, color: BLACK, textTransform: 'uppercase', letterSpacing: 1, opacity: 0.6 },
+  infoStrip: { backgroundColor: '#F9FAFB', borderBottomWidth: 1, borderBottomColor: '#E5E7EB', paddingHorizontal: 30, paddingVertical: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  infoStripText: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: GRAY_DARK, textTransform: 'uppercase', letterSpacing: 0.5 },
+  infoStripSub: { fontSize: 7, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 1 },
 
-  // Metric bar
-  metricBar: { flexDirection: 'row', backgroundColor: GRAY_LIGHT, borderBottomWidth: 3, borderBottomColor: BLACK },
-  metricCell: { flex: 1, padding: 14, borderRightWidth: 1, borderRightColor: '#E5E7EB', alignItems: 'center' },
-  metricLabel: { fontSize: 6, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 4 },
+  metricBar: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  metricCell: { flex: 1, padding: 15, borderRightWidth: 1, borderRightColor: '#E5E7EB', alignItems: 'center' },
+  metricLabel: { fontSize: 7, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 },
   metricValue: { fontSize: 20, fontFamily: 'Helvetica-Bold', color: BLACK },
-  metricSub: { fontSize: 6, color: CYAN, textTransform: 'uppercase', letterSpacing: 1, marginTop: 2 },
+  metricSub: { fontSize: 7, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 3 },
 
-  // Table
-  tableContainer: { paddingHorizontal: 30, paddingTop: 10 },
-  tableHeader: { flexDirection: 'row', backgroundColor: BLACK, paddingVertical: 7, paddingHorizontal: 8, marginBottom: 1 },
-  headerText: { fontSize: 7, color: '#FFFFFF', textTransform: 'uppercase', fontFamily: 'Helvetica-Bold', letterSpacing: 1 },
-  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#F3F4F6', paddingVertical: 8, paddingHorizontal: 8, alignItems: 'center', backgroundColor: '#FFFFFF' },
-  tableRowAlt: { backgroundColor: '#F9FAFB' },
+  tableContainer: { paddingHorizontal: 30, paddingTop: 15, paddingBottom: 40 },
+  tableHeader: { flexDirection: 'row', backgroundColor: '#F9FAFB', borderBottomWidth: 1, borderBottomColor: '#E5E7EB', borderTopWidth: 1, borderTopColor: '#E5E7EB', paddingVertical: 8, paddingHorizontal: 8 },
+  headerText: { fontSize: 7, color: GRAY_DARK, textTransform: 'uppercase', fontFamily: 'Helvetica-Bold', letterSpacing: 1 },
+  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#F3F4F6', paddingVertical: 10, paddingHorizontal: 8, alignItems: 'center', backgroundColor: '#FFFFFF' },
+  tableRowAlt: { backgroundColor: '#FFFFFF' },
 
-  // Image
   imagesContainer: { flexDirection: 'column', gap: 8, width: '100%', alignItems: 'center' },
-  imageWrapper: { width: 160, height: 160, borderRadius: 6, overflow: 'hidden', backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E5E7EB' },
+  imageWrapper: { width: 90, height: 90, borderRadius: 6, overflow: 'hidden', backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E5E7EB' },
   productImage: { width: '100%', height: '100%', objectFit: 'contain' },
-  imagePlaceholder: { width: 100, height: 100, borderRadius: 6, backgroundColor: GRAY_LIGHT, justifyContent: 'center', alignItems: 'center' },
-  placeholderLetter: { fontSize: 44, fontFamily: 'Helvetica-Bold', color: '#D1D5DB', textTransform: 'uppercase' },
+  imagePlaceholder: { width: 90, height: 90, borderRadius: 6, backgroundColor: GRAY_LIGHT, justifyContent: 'center', alignItems: 'center' },
+  placeholderLetter: { fontSize: 40, fontFamily: 'Helvetica-Bold', color: '#D1D5DB', textTransform: 'uppercase' },
 
-  // Row text
-  rowMarca: { fontSize: 6, color: CYAN, textTransform: 'uppercase', fontFamily: 'Helvetica-Bold', letterSpacing: 0.8, marginBottom: 3 },
-  rowNombre: { fontSize: 9, fontFamily: 'Helvetica-Bold', color: BLACK, marginBottom: 2 },
-  rowDescription: { fontSize: 6.5, color: GRAY_MID, marginBottom: 4, lineHeight: 1.3 },
-  rowSabor: { fontSize: 6, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 0.5 },
-  pricePush: { fontSize: 9, fontFamily: 'Helvetica-Bold', color: '#005F7A' },
-  pricePublic: { fontSize: 11, fontFamily: 'Helvetica-Bold', color: BLACK },
-  priceLabel: { fontSize: 5.5, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 },
+  rowCodigo: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: BLACK, marginBottom: 2 },
+  accentBar: { width: 3, backgroundColor: '#E5E7EB', borderRadius: 2, marginRight: 8, alignSelf: 'stretch' },
+  rowMarca: { fontSize: 6, color: GRAY_DARK, textTransform: 'uppercase', fontFamily: 'Helvetica-Bold', letterSpacing: 0.8, marginBottom: 3 },
+  rowNombre: { fontSize: 10, fontFamily: 'Helvetica-Bold', color: BLACK, marginBottom: 2 },
+  rowDescription: { fontSize: 7, color: GRAY_MID, marginBottom: 4, lineHeight: 1.3 },
+  rowSabor: { fontSize: 6.5, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 0.5 },
 
-  // Footer
+  priceLabel: { fontSize: 6, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 },
+  pricePush: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: '#005F7A' },
+  pricePublic: { fontSize: 10, fontFamily: 'Helvetica-Bold', color: BLACK },
+
   footer: {
     position: 'absolute',
-    bottom: 18,
+    bottom: 20,
     left: 30,
     right: 30,
     flexDirection: 'row',
@@ -73,14 +77,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
-    paddingTop: 8,
+    paddingTop: 10,
   },
-  footerLeft: { fontSize: 6.5, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 1.5 },
-  footerRight: { fontSize: 6.5, fontFamily: 'Helvetica-Bold', color: GRAY_DARK, textTransform: 'uppercase', letterSpacing: 1 },
-  pageNum: { fontSize: 6, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 1 },
-
-  // Cyan accent bar on left of row
-  accentBar: { width: 3, backgroundColor: CYAN, borderRadius: 2, marginRight: 8, alignSelf: 'stretch' },
+  footerLeft: { fontSize: 7, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 1 },
+  footerRight: { fontSize: 7, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 1 },
+  pageNum: { fontSize: 7, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 1 },
 });
 
 const formatPrice = (price) =>
@@ -93,8 +94,8 @@ const ReportPDF = ({ products, imageMap = {}, currentDate, showPushPrice = true 
     : 0;
   const marcasUnicas = [...new Set(activeProducts.map(p => p.marca?.nombre_marca).filter(Boolean))].length;
 
-  // Column widths
-  const colImg      = { width: showPushPrice ? '34%' : '38%', justifyContent: 'center', alignItems: 'center' };
+  const colCodigo   = { width: '12%', justifyContent: 'center', alignItems: 'center' };
+  const colImg      = { width: showPushPrice ? '22%' : '26%', justifyContent: 'center', alignItems: 'center' };
   const colInfo     = { width: showPushPrice ? '34%' : '42%', paddingRight: 8 };
   const colPush     = showPushPrice ? { width: '16%', alignItems: 'flex-end' } : null;
   const colPublic   = { width: showPushPrice ? '16%' : '20%', alignItems: 'flex-end' };
@@ -103,13 +104,10 @@ const ReportPDF = ({ products, imageMap = {}, currentDate, showPushPrice = true 
     <Document title={`Reporte PushSport — ${currentDate}`}>
       <Page size="A4" style={styles.page}>
 
-        {/* ── Header Band ── */}
         <View style={styles.headerBand}>
-          <View>
-            <Text style={styles.logoMain}>
-              PUSH<Text style={styles.logoAccent}>SPORT</Text>
-            </Text>
-            <Text style={styles.logoSub}>LISTA DE PRECIOS PARA COMERCIOS</Text>
+          <View style={styles.brandBlock}>
+            <Text style={styles.logoMain}>CATÁLOGO</Text>
+            <Text style={styles.logoSub}>LISTA DE PRECIOS GLOBAL</Text>
           </View>
           <View style={styles.headerRight}>
             <Text style={styles.headerLabel}>Fecha de Emisión</Text>
@@ -120,13 +118,11 @@ const ReportPDF = ({ products, imageMap = {}, currentDate, showPushPrice = true 
           </View>
         </View>
 
-        {/* Info strip */}
         <View style={styles.infoStrip}>
           <Text style={styles.infoStripText}>Lista de precios para distribución a comercios</Text>
           <Text style={styles.infoStripSub}>{activeProducts.length} productos · {marcasUnicas} marcas</Text>
         </View>
 
-        {/* ── Metric Bar ── */}
         <View style={styles.metricBar}>
           <View style={styles.metricCell}>
             <Text style={styles.metricLabel}>Productos</Text>
@@ -145,9 +141,9 @@ const ReportPDF = ({ products, imageMap = {}, currentDate, showPushPrice = true 
           </View>
         </View>
 
-        {/* ── Table ── */}
         <View style={styles.tableContainer}>
           <View style={styles.tableHeader}>
+            <View style={colCodigo}><Text style={styles.headerText}>Código</Text></View>
             <View style={colImg}><Text style={styles.headerText}>Producto</Text></View>
             <View style={colInfo}><Text style={styles.headerText}>Descripción</Text></View>
             {showPushPrice && colPush && <View style={colPush}><Text style={styles.headerText}>P. Push</Text></View>}
@@ -163,6 +159,10 @@ const ReportPDF = ({ products, imageMap = {}, currentDate, showPushPrice = true 
               style={[styles.tableRow, idx % 2 !== 0 && styles.tableRowAlt]}
               wrap={false}
             >
+              <View style={colCodigo}>
+                <Text style={styles.rowCodigo}>{prod.codigo_producto?.codigo || '-'}</Text>
+              </View>
+
               <View style={colImg}>
                 {images.length > 0 ? (
                   <View style={styles.imagesContainer}>
@@ -187,7 +187,6 @@ const ReportPDF = ({ products, imageMap = {}, currentDate, showPushPrice = true 
                   {prod.descripcion && (
                     <Text style={styles.rowDescription}>{prod.descripcion}</Text>
                   )}
-                  {/* Mostrar todos los atributos del producto */}
                   {prod.atributos && Object.entries(prod.atributos).map(([key, values]) => {
                     if (!values || values.length === 0) return null;
                     const displayKey = key.toUpperCase();
@@ -220,9 +219,8 @@ const ReportPDF = ({ products, imageMap = {}, currentDate, showPushPrice = true 
           )})}
         </View>
 
-        {/* ── Footer ── */}
         <View style={styles.footer} fixed>
-          <Text style={styles.footerLeft}>PUSH SPORT — Lista de precios para comercios</Text>
+          <Text style={styles.footerLeft}>Catálogo Global · precios para comercios</Text>
           <Text
             style={styles.pageNum}
             render={({ pageNumber, totalPages }) => `Página ${pageNumber} / ${totalPages}`}

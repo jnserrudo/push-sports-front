@@ -144,6 +144,7 @@ const DashboardLayout = () => {
     { label: 'Productos',         icon: Package,         path: '/dashboard/productos',      roles: [1] },
     { label: 'Categorías',        icon: Component,       path: '/dashboard/categorias',     roles: [1] },
     { label: 'Marcas',            icon: Tag,             path: '/dashboard/marcas',         roles: [1] },
+    { label: 'Códigos Prod.',     icon: Tag,             path: '/dashboard/codigos-producto', roles: [1] },
     { label: 'Inventario',        icon: Box,             path: '/dashboard/inventario',     roles: [1, 2, 3] },
     { label: 'Usuarios',          icon: Users,           path: '/dashboard/usuarios',       roles: [1] },
     { label: 'Sucursales',        icon: MapPin,          path: '/dashboard/sucursales',     roles: [1] },

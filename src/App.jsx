@@ -9,6 +9,7 @@ import TiposComercio from './pages/admin/TiposComercio';
 import Productos from './pages/admin/Productos';
 import Categorias from './pages/admin/Categorias';
 import Marcas from './pages/admin/Marcas';
+import CodigosProducto from './pages/admin/CodigosProducto';
 import Usuarios from './pages/admin/Usuarios';
 import Descuentos from './pages/admin/Descuentos';
 import Envios from './pages/admin/Envios';
@@ -81,6 +82,7 @@ const App = () => {
           <Route path="productos" element={<Productos />} />
           <Route path="categorias" element={<Categorias />} />
           <Route path="marcas" element={<Marcas />} />
+          <Route path="codigos-producto" element={<CodigosProducto />} />
           <Route path="usuarios" element={<Usuarios />} />
           <Route path="envios" element={<Envios />} />
           <Route path="movimientos" element={<Movimientos />} />

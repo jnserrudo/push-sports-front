@@ -220,10 +220,12 @@ const Reporteria = () => {
       const reporte = savedData?.data || savedData;
       const numeroReporte = reporte?.numero_reporte || '';
 
+      const sortedSelectedItems = [...selectedItems].sort((a,b) => (a.producto?.codigo_producto?.codigo || '').localeCompare(b.producto?.codigo_producto?.codigo || ''));
+
       const blob = await pdf(
         <ShopReportPDF
           shopName={sucursal.nombre}
-          items={selectedItems}
+          items={sortedSelectedItems}
           imageMap={imageMap}
           currentDate={new Date().toLocaleDateString()}
           showPushPrice={showPushPriceShop}
@@ -267,10 +269,12 @@ const Reporteria = () => {
         };
       });
 
+      const sortedItemsForPdf = itemsForPdf.sort((a,b) => (a.codigo_producto?.codigo || '').localeCompare(b.codigo_producto?.codigo || ''));
+
       const blob = await pdf(
         <ShopStockPDF
           shopName={sucursal.nombre}
-          items={itemsForPdf}
+          items={sortedItemsForPdf}
           imageMap={imageMap}
           currentDate={new Date().toLocaleDateString()}
           showPushPrice={showPushPriceShop}
@@ -394,7 +398,7 @@ const Reporteria = () => {
                   {showPushPriceGlobal ? 'Precio Push: ON' : 'Precio Push: OFF'}
                 </button>
                 <PDFDownloadLink
-                  document={<ReportPDF products={filteredProducts} imageMap={imageMap} currentDate={new Date().toLocaleDateString()} showPushPrice={showPushPriceGlobal} />}
+                  document={<ReportPDF products={[...filteredProducts].sort((a,b) => (a.codigo_producto?.codigo || '').localeCompare(b.codigo_producto?.codigo || ''))} imageMap={imageMap} currentDate={new Date().toLocaleDateString()} showPushPrice={showPushPriceGlobal} />}
                   fileName={`Lista_Precios_${new Date().toLocaleDateString()}.pdf`}
                   className="h-9 px-5 bg-neutral-100 dark:bg-gray-700 text-black dark:text-white rounded-xl flex items-center gap-2 hover:bg-neutral-200 dark:hover:bg-gray-600 transition-all shadow-md text-[10px] font-black uppercase tracking-widest"
                 >

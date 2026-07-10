@@ -35,6 +35,7 @@ import { ExportButton } from '../../components/ui/ExportButton';
 import { useAuthStore } from '../../store/authStore';
 import { productosService } from '../../services/productosService';
 import { variantesService } from '../../services/variantesService';
+import { codigosProductoService } from '../../services/genericServices';
 import VariantesTabSystem from '../../components/variantes/VariantesTabSystem';
 import PremiumSelect from '../../components/ui/PremiumSelect';
 import {
@@ -1132,9 +1133,11 @@ const Productos = () => {
     const [categorias, setCategorias] = useState([]);
     const [marcas, setMarcas] = useState([]);
     const [proveedores, setProveedores] = useState([]);
+    const [codigosProducto, setCodigosProducto] = useState([]);
     const [loadingCategorias, setLoadingCategorias] = useState(false);
     const [loadingMarcas, setLoadingMarcas] = useState(false);
     const [loadingProveedores, setLoadingProveedores] = useState(false);
+    const [loadingCodigos, setLoadingCodigos] = useState(false);
     const [reposicionProducto, setReposicionProducto] = useState(null);
     const [isReposicionModalOpen, setIsReposicionModalOpen] = useState(false);
     const refreshABM = useRef(null);
@@ -1146,18 +1149,22 @@ const Productos = () => {
         setLoadingCategorias(true);
         setLoadingMarcas(true);
         setLoadingProveedores(true);
+        setLoadingCodigos(true);
         Promise.all([
             productosService.getCategorias(),
             productosService.getMarcas(),
             productosService.getProveedores(),
-        ]).then(([cats, mars, provs]) => {
+            codigosProductoService.getAll(),
+        ]).then(([cats, mars, provs, cods]) => {
             setCategorias(cats);
             setMarcas(mars);
             setProveedores(provs);
+            setCodigosProducto(cods);
         }).catch(console.error).finally(() => {
             setLoadingCategorias(false);
             setLoadingMarcas(false);
             setLoadingProveedores(false);
+            setLoadingCodigos(false);
         });
     }, []);
 
@@ -1328,6 +1335,19 @@ const Productos = () => {
                                 onChange={e => setFormData({ ...formData, nombre: e.target.value.toUpperCase() })}
                             />
                         </div>
+                    </div>
+
+                    {/* Código de Producto */}
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">Código de Producto</label>
+                        <PremiumSelect
+                            icon={Hash}
+                            placeholder="SELECCIONAR CÓDIGO..."
+                            isLoading={loadingCodigos}
+                            options={codigosProducto.map(c => ({ value: c.id_codigo, label: `${c.codigo}${c.descripcion ? ' — ' + c.descripcion : ''}` }))}
+                            value={formData.id_codigo_producto || ''}
+                            onChange={val => setFormData({ ...formData, id_codigo_producto: val || null })}
+                        />
                     </div>
 
                     {/* Descripcion */}

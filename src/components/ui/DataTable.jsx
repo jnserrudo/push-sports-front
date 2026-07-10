@@ -318,8 +318,8 @@ const DataTable = ({
             </div>
 
             {/* Table Area */}
-            <div className="rounded border border-neutral-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-sm relative z-10 w-full mb-2 min-h-[180px]">
-                <div className="overflow-x-auto custom-scrollbar rounded">
+            <div className="rounded border border-neutral-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-sm relative z-10 w-full mb-2 overflow-visible">
+                <div className="overflow-x-auto overflow-y-visible custom-scrollbar rounded min-h-[240px]">
                     <table className="w-full text-left border-collapse min-w-full md:min-w-[700px]">
                         <thead>
                             <tr className="bg-neutral-50/50 dark:bg-gray-700/50 text-neutral-500 dark:text-gray-400 border-b border-neutral-200 dark:border-gray-600">

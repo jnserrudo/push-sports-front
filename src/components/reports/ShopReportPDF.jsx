@@ -10,63 +10,58 @@ const GRAY_DARK = '#1F2937';
 const styles = StyleSheet.create({
   page: { paddingTop: 0, paddingHorizontal: 0, paddingBottom: 55, backgroundColor: '#FFFFFF', fontFamily: 'Helvetica' },
 
-  // ── Top band: PUSHSPORT brand + Shop name ──
   headerBand: {
-    backgroundColor: BLACK,
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 30,
-    paddingVertical: 18,
+    paddingVertical: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
   },
   brandBlock: { flexDirection: 'column' },
-  logoMain: { fontSize: 28, fontFamily: 'Helvetica-Bold', color: '#FFFFFF', letterSpacing: -1, textTransform: 'uppercase', lineHeight: 1 },
-  logoAccent: { color: CYAN },
-  logoSub: { fontSize: 6, color: CYAN, letterSpacing: 3, marginTop: 3, textTransform: 'uppercase' },
+  logoMain: { fontSize: 24, fontFamily: 'Helvetica-Bold', color: BLACK, letterSpacing: -1, textTransform: 'uppercase', lineHeight: 1 },
+  logoSub: { fontSize: 8, color: GRAY_MID, letterSpacing: 1, marginTop: 4, textTransform: 'uppercase' },
 
   shopBlock: { alignItems: 'flex-end', flex: 1, paddingLeft: 20 },
-  shopLabel: { fontSize: 6, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 3 },
-  shopName: { fontSize: 18, fontFamily: 'Helvetica-Bold', color: '#FFFFFF', textTransform: 'uppercase', textAlign: 'right' },
-  shopType: { fontSize: 6, color: CYAN, textTransform: 'uppercase', letterSpacing: 2, marginTop: 3 },
+  shopLabel: { fontSize: 7, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 },
+  shopName: { fontSize: 16, fontFamily: 'Helvetica-Bold', color: BLACK, textTransform: 'uppercase', textAlign: 'right' },
+  shopType: { fontSize: 7, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 1, marginTop: 2 },
 
-  // Info strip below header
-  infoStrip: { backgroundColor: CYAN, paddingHorizontal: 30, paddingVertical: 7, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  infoStripText: { fontSize: 7, fontFamily: 'Helvetica-Bold', color: BLACK, textTransform: 'uppercase', letterSpacing: 1 },
+  infoStrip: { backgroundColor: '#F9FAFB', borderBottomWidth: 1, borderBottomColor: '#E5E7EB', paddingHorizontal: 30, paddingVertical: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  infoStripText: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: GRAY_DARK, textTransform: 'uppercase', letterSpacing: 0.5 },
 
-  // ── Metric bar ──
   metricBar: {
     flexDirection: 'row',
-    backgroundColor: GRAY_LIGHT,
-    borderBottomWidth: 3,
-    borderBottomColor: BLACK,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
   },
-  metricCell: { flex: 1, padding: 12, borderRightWidth: 1, borderRightColor: '#E5E7EB', alignItems: 'center' },
-  metricLabel: { fontSize: 6, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 3 },
-  metricValue: { fontSize: 18, fontFamily: 'Helvetica-Bold', color: BLACK },
-  metricSub: { fontSize: 6, color: CYAN, textTransform: 'uppercase', letterSpacing: 1, marginTop: 2 },
+  metricCell: { flex: 1, padding: 15, borderRightWidth: 1, borderRightColor: '#E5E7EB', alignItems: 'center' },
+  metricLabel: { fontSize: 7, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 },
+  metricValue: { fontSize: 20, fontFamily: 'Helvetica-Bold', color: BLACK },
+  metricSub: { fontSize: 7, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 3 },
 
-  // ── Table ──
-  tableContainer: { paddingHorizontal: 30, paddingTop: 10, paddingBottom: 40 },
-  tableHeader: { flexDirection: 'row', backgroundColor: BLACK, paddingVertical: 7, paddingHorizontal: 8, marginBottom: 1 },
-  headerText: { fontSize: 7, color: '#FFFFFF', textTransform: 'uppercase', fontFamily: 'Helvetica-Bold', letterSpacing: 1 },
-  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#F3F4F6', paddingVertical: 8, paddingHorizontal: 8, alignItems: 'center', backgroundColor: '#FFFFFF' },
-  tableRowAlt: { backgroundColor: '#F9FAFB' },
+  tableContainer: { paddingHorizontal: 30, paddingTop: 15, paddingBottom: 40 },
+  tableHeader: { flexDirection: 'row', backgroundColor: '#F9FAFB', borderBottomWidth: 1, borderBottomColor: '#E5E7EB', borderTopWidth: 1, borderTopColor: '#E5E7EB', paddingVertical: 8, paddingHorizontal: 8 },
+  headerText: { fontSize: 7, color: GRAY_DARK, textTransform: 'uppercase', fontFamily: 'Helvetica-Bold', letterSpacing: 1 },
+  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#F3F4F6', paddingVertical: 10, paddingHorizontal: 8, alignItems: 'center', backgroundColor: '#FFFFFF' },
+  tableRowAlt: { backgroundColor: '#FFFFFF' },
 
-  // ── Image ──
   imagesContainer: { flexDirection: 'column', gap: 8, width: '100%', alignItems: 'center' },
-  imageWrapper: { width: 150, height: 150, borderRadius: 6, overflow: 'hidden', backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E5E7EB' },
+  imageWrapper: { width: 90, height: 90, borderRadius: 6, overflow: 'hidden', backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E5E7EB' },
   productImage: { width: '100%', height: '100%', objectFit: 'contain' },
   imagePlaceholder: { width: 90, height: 90, borderRadius: 6, backgroundColor: GRAY_LIGHT, justifyContent: 'center', alignItems: 'center' },
   placeholderLetter: { fontSize: 40, fontFamily: 'Helvetica-Bold', color: '#D1D5DB', textTransform: 'uppercase' },
 
-  // ── Row content ──
-  accentBar: { width: 3, backgroundColor: CYAN, borderRadius: 2, marginRight: 8, alignSelf: 'stretch' },
-  rowMarca: { fontSize: 6, color: CYAN, textTransform: 'uppercase', fontFamily: 'Helvetica-Bold', letterSpacing: 0.8, marginBottom: 3 },
-  rowNombre: { fontSize: 9, fontFamily: 'Helvetica-Bold', color: BLACK, marginBottom: 2 },
-  rowDescription: { fontSize: 6.5, color: GRAY_MID, marginBottom: 4, lineHeight: 1.3 },
-  rowSabor: { fontSize: 6, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 0.5 },
+  rowCodigo: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: BLACK, marginBottom: 2 },
+  accentBar: { width: 3, backgroundColor: '#E5E7EB', borderRadius: 2, marginRight: 8, alignSelf: 'stretch' },
+  rowMarca: { fontSize: 6, color: GRAY_DARK, textTransform: 'uppercase', fontFamily: 'Helvetica-Bold', letterSpacing: 0.8, marginBottom: 3 },
+  rowNombre: { fontSize: 10, fontFamily: 'Helvetica-Bold', color: BLACK, marginBottom: 2 },
+  rowDescription: { fontSize: 7, color: GRAY_MID, marginBottom: 4, lineHeight: 1.3 },
+  rowSabor: { fontSize: 6.5, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 0.5 },
 
-  // ── Stock detail cell ──
   stockCell: { flexDirection: 'column', gap: 2 },
   stockLine: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   stockDot: { width: 4, height: 4, borderRadius: 2 },
@@ -75,16 +70,14 @@ const styles = StyleSheet.create({
   stockTotalLine: { flexDirection: 'row', alignItems: 'center', gap: 3, borderTopWidth: 1, borderTopColor: '#E5E7EB', paddingTop: 2, marginTop: 1 },
   stockTotalVal: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: BLACK },
 
-  // ── Price ──
-  priceLabel: { fontSize: 5.5, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 },
+  priceLabel: { fontSize: 6, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 },
   priceBase: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: '#B45309' },
   pricePush: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: '#005F7A' },
   pricePublic: { fontSize: 10, fontFamily: 'Helvetica-Bold', color: BLACK },
 
-  // ── Footer ──
   footer: {
     position: 'absolute',
-    bottom: 18,
+    bottom: 20,
     left: 30,
     right: 30,
     flexDirection: 'row',
@@ -92,11 +85,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
-    paddingTop: 8,
+    paddingTop: 10,
   },
-  footerLeft: { fontSize: 6.5, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 1.5 },
-  footerCenter: { fontSize: 6.5, fontFamily: 'Helvetica-Bold', color: CYAN, textTransform: 'uppercase', letterSpacing: 1 },
-  footerRight: { fontSize: 6, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 1 },
+  footerLeft: { fontSize: 7, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 1 },
+  footerCenter: { fontSize: 7, fontFamily: 'Helvetica-Bold', color: GRAY_DARK, textTransform: 'uppercase', letterSpacing: 0.5 },
+  footerRight: { fontSize: 7, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 1 },
 });
 
 const formatPrice = (price) =>
@@ -111,7 +104,8 @@ const ShopReportPDF = ({ shopName, items, imageMap = {}, currentDate, showPushPr
   );
 
   const activePriceCols = (showPushPrice ? 1 : 0) + (showBasePrice ? 1 : 0);
-  const colImg      = { width: activePriceCols > 0 ? '28%' : '32%', justifyContent: 'center', alignItems: 'center' };
+  const colCodigo   = { width: '12%', justifyContent: 'center', alignItems: 'center' };
+  const colImg      = { width: activePriceCols > 0 ? '16%' : '20%', justifyContent: 'center', alignItems: 'center' };
   const colInfo     = { width: activePriceCols > 0 ? '24%' : '28%', paddingRight: 6 };
   const colDetalle  = { width: activePriceCols > 0 ? '13%' : '14%', paddingRight: 4 };
   const colBase     = showBasePrice ? { width: '12%', alignItems: 'flex-end' } : null;
@@ -122,13 +116,11 @@ const ShopReportPDF = ({ shopName, items, imageMap = {}, currentDate, showPushPr
     <Document title={`Reporte_${shopName || 'Comercio'}_${currentDate}`}>
       <Page size="A4" style={styles.page}>
 
-        {/* ── Header Band ── */}
+        {/* Top Header */}
         <View style={styles.headerBand}>
           <View style={styles.brandBlock}>
-            <Text style={styles.logoMain}>
-              PUSH<Text style={styles.logoAccent}>SPORT</Text>
-            </Text>
-            <Text style={styles.logoSub}>REPORTE DE VISITA A COMERCIO</Text>
+            <Text style={styles.logoMain}>INFORME</Text>
+            <Text style={styles.logoSub}>LISTA DE PRECIOS</Text>
           </View>
           <View style={styles.shopBlock}>
             <Text style={styles.shopLabel}>Comercio Destino</Text>
@@ -171,6 +163,7 @@ const ShopReportPDF = ({ shopName, items, imageMap = {}, currentDate, showPushPr
         {/* ── Table ── */}
         <View style={styles.tableContainer}>
           <View style={styles.tableHeader}>
+            <View style={colCodigo}><Text style={styles.headerText}>Código</Text></View>
             <View style={colImg}><Text style={styles.headerText}>Producto</Text></View>
             <View style={colInfo}><Text style={styles.headerText}>Descripción</Text></View>
             <View style={colDetalle}><Text style={styles.headerText}>Entrega</Text></View>
@@ -192,6 +185,11 @@ const ShopReportPDF = ({ shopName, items, imageMap = {}, currentDate, showPushPr
                 style={[styles.tableRow, index % 2 !== 0 && styles.tableRowAlt]}
                 wrap={false}
               >
+                {/* Codigo */}
+                <View style={colCodigo}>
+                  <Text style={styles.rowCodigo}>{prod.codigo_producto?.codigo || '-'}</Text>
+                </View>
+
                 {/* Image */}
                 <View style={colImg}>
                   {images.length > 0 ? (
@@ -285,7 +283,7 @@ const ShopReportPDF = ({ shopName, items, imageMap = {}, currentDate, showPushPr
 
         {/* ── Footer ── */}
         <View style={styles.footer} fixed>
-          <Text style={styles.footerLeft}>PUSH SPORT — Reporte de visita a {shopName}</Text>
+          <Text style={styles.footerLeft}>Catálogo de {shopName}</Text>
           <Text style={styles.footerCenter}>{totalProductos} productos · {totalUnidades} uds a entregar</Text>
           <Text
             style={styles.footerRight}

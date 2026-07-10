@@ -39,3 +39,5 @@ export const ofertasService = createApiService('ofertas');
 
 // Re-export sucursales apuntando a comercios
 export const sucursalesGenericService = createApiService('comercios');
+
+export const codigosProductoService = createApiService('codigos-producto');
