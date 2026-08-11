@@ -21,7 +21,8 @@ const GenericABM = ({
     customActions = null,
     headerActions = null, // Custom actions to show in the header
     onDataLoaded = null, // Callback when data is loaded
-    onRefreshReady = null // Callback to provide refresh function to parent
+    onRefreshReady = null, // Callback to provide refresh function to parent
+    deleteCondition = null // (row) => boolean — controla si el botón de eliminar/desactivar se muestra para esa fila
 }) => {
     const [data, setData] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -287,6 +288,7 @@ const GenericABM = ({
                         addLabel={`Agregar ${title}`}
                         onEdit={handleEdit}
                         onDelete={handleDelete}
+                        deleteCondition={deleteCondition}
                         searchPlaceholder={`Buscar en ${title}...`}
                         emptyIcon={Icon}
                         emptyTitle={`Aún no hay ${title}`}
@@ -393,7 +395,7 @@ const GenericABM = ({
                             <div>
                                 <p className="text-[11px] font-black uppercase tracking-widest text-red-700 mb-1">Acción irreversible</p>
                                 <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest leading-relaxed">
-                                    Este registro será desactivado. Podrás reactivarlo editándolo.
+                                    Este registro será desactivado. Podrás reactivarlo desde el menú de acciones.
                                 </p>
                             </div>
                         </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Store, Info, MapPin, Layout, Landmark, X, Navigation } from 'lucide-react';
+import { Store, Info, MapPin, Layout, Landmark, X, Navigation, RefreshCw } from 'lucide-react';
 import { Map, MapMarker, MarkerContent, MapControls, useMap } from '../../components/ui/map';
 import { toast } from '../../store/toastStore';
 import GenericABM from '../../components/ui/GenericABM';
@@ -166,6 +166,30 @@ const Sucursales = () => {
             .finally(() => setLoadingTipos(false));
     }, []);
 
+    const customActions = (row, isInDropdown = false, refresh, onCloseDropdown) => {
+        if (!isInDropdown || row.activo !== false) return null;
+        return (
+            <button
+                type="button"
+                onClick={async (e) => {
+                    e.stopPropagation();
+                    try {
+                        await service.update(row.id_comercio, { activo: true });
+                        toast.success('Sede reactivada correctamente');
+                        if (refresh) refresh();
+                        if (onCloseDropdown) onCloseDropdown();
+                    } catch (error) {
+                        toast.error(error?.response?.data?.error || 'Error al reactivar la sede');
+                    }
+                }}
+                className="w-full flex items-center gap-2.5 px-3 py-3 text-[11px] font-bold uppercase tracking-wide text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-all cursor-pointer pointer-events-auto min-h-[44px]"
+            >
+                <RefreshCw size={16} className="opacity-70" />
+                <span>Reactivar</span>
+            </button>
+        );
+    };
+
     const columns = [
         {
             header: 'Visual',
@@ -246,7 +270,7 @@ const Sucursales = () => {
                         ? 'bg-transparent text-black dark:text-white border-black dark:border-white'
                         : 'bg-neutral-100 dark:bg-gray-800 text-neutral-400 dark:text-neutral-500 border-neutral-200 dark:border-gray-700'
                 }`}>
-                    {row.activo ? 'Operativa' : 'Cesada'}
+                    {row.activo ? 'Operativa' : 'Inactiva'}
                 </div>
             )
         },
@@ -358,6 +382,8 @@ const Sucursales = () => {
             renderForm={renderForm}
             idField="id_comercio"
             modalMaxWidth="max-w-xl md:max-w-4xl"
+            customActions={customActions}
+            deleteCondition={(row) => row.activo !== false}
         />
     );
 };

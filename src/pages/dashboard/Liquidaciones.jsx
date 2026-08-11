@@ -54,6 +54,15 @@ const Liquidaciones = () => {
     const [previewConSeleccion, setPreviewConSeleccion] = useState(null);
     const [isLoadingPreviewSeleccion, setIsLoadingPreviewSeleccion] = useState(false);
 
+    // Modo de vista del PDF: 'interno' (ambos precios) | 'sucursal' (solo PUSH)
+    const [pdfViewMode, setPdfViewMode] = useState(() => {
+        try { return localStorage.getItem('pdfViewMode') || 'interno'; } catch { return 'interno'; }
+    });
+
+    useEffect(() => {
+        try { localStorage.setItem('pdfViewMode', pdfViewMode); } catch { /* ignore */ }
+    }, [pdfViewMode]);
+
     const loadData = async () => {
         setIsLoading(true);
         try {
@@ -195,12 +204,13 @@ const Liquidaciones = () => {
     // --- FUNCIÓN DE EXPORTACIÓN A PDF (COMPROBANTE ENRIQUECIDO) ---
     const generatePDF = async (row) => {
         try {
-            const blob = await pdf(<LiquidacionPDF row={row} />).toBlob();
+            const blob = await pdf(<LiquidacionPDF row={row} viewMode={pdfViewMode} />).toBlob();
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
             const idLiq = String(row.id_liquidacion).split('-')[0].toUpperCase();
-            link.download = `Liq_${row.comercio_nombre.replace(/\s+/g, '_')}_${idLiq}.pdf`;
+            const sufijo = pdfViewMode === 'sucursal' ? '_sucursal' : '';
+            link.download = `Liq_${row.comercio_nombre.replace(/\s+/g, '_')}_${idLiq}${sufijo}.pdf`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -747,6 +757,38 @@ const Liquidaciones = () => {
                         onFiltrosChange={setFiltrosLiquidaciones}
                         onLimpiar={() => setFiltrosLiquidaciones({})}
                     />
+
+                    {/* Selector de modo de vista del PDF */}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 bg-white dark:bg-gray-800 border border-neutral-100 dark:border-gray-700 rounded-xl px-3 py-2">
+                        <div className="flex items-center gap-1.5">
+                            <FileText size={12} className="text-brand-cyan" />
+                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-neutral-500">Modo del Comprobante PDF</span>
+                        </div>
+                        <div className="inline-flex rounded-lg border border-neutral-200 dark:border-gray-700 overflow-hidden ml-auto">
+                            <button
+                                onClick={() => setPdfViewMode('interno')}
+                                className={`px-3 py-1.5 flex flex-col items-start leading-tight transition-colors ${
+                                    pdfViewMode === 'interno'
+                                        ? 'bg-black text-white dark:bg-brand-cyan dark:text-black'
+                                        : 'bg-white text-neutral-500 dark:bg-gray-800 dark:text-gray-400 hover:bg-neutral-50 dark:hover:bg-gray-700'
+                                }`}
+                            >
+                                <span className="text-[9px] font-black uppercase tracking-widest">Vista Interna</span>
+                                <span className="text-[7px] font-medium normal-case tracking-normal opacity-70">(precio público + PUSH — uso interno)</span>
+                            </button>
+                            <button
+                                onClick={() => setPdfViewMode('sucursal')}
+                                className={`px-3 py-1.5 flex flex-col items-start leading-tight transition-colors ${
+                                    pdfViewMode === 'sucursal'
+                                        ? 'bg-black text-white dark:bg-brand-cyan dark:text-black'
+                                        : 'bg-white text-neutral-500 dark:bg-gray-800 dark:text-gray-400 hover:bg-neutral-50 dark:hover:bg-gray-700'
+                                }`}
+                            >
+                                <span className="text-[9px] font-black uppercase tracking-widest">Vista para Sucursal</span>
+                                <span className="text-[7px] font-medium normal-case tracking-normal opacity-70">(solo lo que debe abonar — precio PUSH)</span>
+                            </button>
+                        </div>
+                    </div>
 
                     {isLoading ? (
                         <div className="flex flex-col items-center justify-center py-20 space-y-4">

@@ -135,17 +135,23 @@ const Landing = () => {
     const fetchLocations = async () => {
       try {
         const data = await sucursalesService.getPublic();
-        if (data && data.length > 0) {
-            setLocations(data.map(c => ({
+        // Filtro de seguridad: solo sedes activas (el backend ya filtra, pero reforzamos en el front)
+        const activas = (data || []).filter(c => c.activo !== false);
+        if (activas.length > 0) {
+            setLocations(activas.map(c => ({
+                id: c.id_comercio,
                 nombre: c.nombre,
                 dir: c.direccion || 'Ubicación a confirmar',
-                h: '09:00 - 21:00' // Horario genérico (modelo no tiene campo horario)
+                h: '09:00 - 21:00', // Horario genérico (modelo no tiene campo horario)
+                lat: c.latitud ? parseFloat(c.latitud) : null,
+                lng: c.longitud ? parseFloat(c.longitud) : null,
+                imagen_url: c.imagen_url || null
             })));
         } else {
-            setLocations([{ nombre: 'Plataforma en Mantenimiento', dir: 'No hay sedes activadas temporalmente.', h: '-' }]);
+            setLocations([{ nombre: 'Plataforma en Mantenimiento', dir: 'No hay sedes activadas temporalmente.', h: '-', lat: null, lng: null }]);
         }
       } catch (error) {
-        setLocations([{ nombre: 'Error de Conexión', dir: 'Reconfigure backend.', h: '-' }]);
+        setLocations([{ nombre: 'Error de Conexión', dir: 'Reconfigure backend.', h: '-', lat: null, lng: null }]);
       }
     };
     fetchLocations();
@@ -439,7 +445,7 @@ const Landing = () => {
                     
                     {/* FIX: Sin mix-blend-multiply, el mapa se renderiza limpio */}
                     <div className="w-full h-full">
-                        <StoreMap activeLocation={activeLocation} /> 
+                        <StoreMap locations={locations} activeLocation={activeLocation} />
                     </div>
                 </div>
                 
@@ -455,7 +461,7 @@ const Landing = () => {
           <div className="container mx-auto px-6 max-w-7xl relative z-10">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
                   <div className="space-y-6 md:space-y-8">
-                      <div className="inline-flex items-center gap-2 py-1.5 px-4 border border-white/10 bg-white dark:bg-gray-900/5 rounded-full mb-2">
+                      <div className="inline-flex items-center gap-2 py-1.5 px-4 border border-white/10 bg-white/5 dark:bg-gray-900/5 rounded-full mb-2">
                           <Flash size={16} className="text-brand-cyan" variant="Bold"/>
                           <span className="text-xs font-bold uppercase tracking-widest text-white m-0">Nuestra Filosofía</span>
                       </div>

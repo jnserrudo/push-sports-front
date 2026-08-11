@@ -80,7 +80,7 @@ const RowsPerPageSelect = ({ value, onChange }) => {
    Compact Actions Dropdown
    Replaces separate buttons to save space
    ────────────────────────────────────────────── */
-const RowActions = ({ row, onEdit, onDelete, onView, customActions, refresh, isLastRows }) => {
+const RowActions = ({ row, onEdit, onDelete, onView, customActions, refresh, isLastRows, deleteCondition }) => {
     const [open, setOpen] = useState(false);
     const ref = useRef(null);
     const buttonRef = useRef(null);
@@ -108,7 +108,7 @@ const RowActions = ({ row, onEdit, onDelete, onView, customActions, refresh, isL
                 className={`w-10 h-10 flex items-center justify-center rounded-lg border transition-all cursor-pointer z-20 ${
                     open
                         ? 'border-brand-cyan bg-brand-cyan/5 text-brand-cyan shadow-sm'
-                        : 'border-neutral-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-neutral-500 dark:text-gray-400 hover:border-neutral-400 dark:hover:border-gray-500 hover:text-black dark:hover:text-white'
+                        : 'border-neutral-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-neutral-500 dark:text-gray-400 hover:border-neutral-400 dark:hover:border-gray-400 hover:text-black dark:hover:text-white'
                 }`}
                 title="Acciones"
             >
@@ -117,11 +117,11 @@ const RowActions = ({ row, onEdit, onDelete, onView, customActions, refresh, isL
 
             {open && (
                 <div
-                    className={`absolute right-0 z-[99999] bg-white dark:bg-slate-800 border border-neutral-200 dark:border-slate-700 rounded-xl shadow-2xl overflow-hidden min-w-[160px] pointer-events-auto ${
+                    className={`absolute right-0 z-[999999] min-w-[220px] rounded-xl border-2 bg-white dark:bg-black border-neutral-200 dark:border-gray-600 shadow-[0_8px_30px_rgba(0,0,0,0.35)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.7)] overflow-hidden pointer-events-auto ${
                         isLastRows ? 'bottom-full mb-1' : 'top-full mt-1'
                     }`}
                 >
-                    <div className="p-0 flex flex-col gap-0 text-left pointer-events-auto">
+                    <div className="p-2 flex flex-col gap-1 text-left pointer-events-auto bg-inherit">
                         {onView && (
                             <button
                                 type="button"
@@ -131,13 +131,13 @@ const RowActions = ({ row, onEdit, onDelete, onView, customActions, refresh, isL
                                     onView(row);
                                     setOpen(false);
                                 }}
-                                className="w-full flex items-center gap-2.5 px-3 py-3 text-[10px] font-bold uppercase tracking-widest text-neutral-600 dark:text-gray-100 hover:bg-brand-cyan/10 hover:text-brand-cyan rounded-lg transition-all cursor-pointer pointer-events-auto min-h-[44px]"
+                                className="w-full flex items-center gap-2.5 px-3 py-3 text-xs font-black uppercase tracking-wider text-neutral-800 dark:text-white hover:bg-brand-cyan/10 hover:text-brand-cyan rounded-lg transition-all cursor-pointer pointer-events-auto min-h-[44px]"
                             >
-                                <Eye size={14} className="opacity-70 flex-shrink-0" />
+                                <Eye size={16} className="flex-shrink-0" />
                                 <span>Ver Detalle</span>
                             </button>
                         )}
-                        
+
                         {onEdit && (
                             <button
                                 type="button"
@@ -148,9 +148,9 @@ const RowActions = ({ row, onEdit, onDelete, onView, customActions, refresh, isL
                                     onEdit(row);
                                     setOpen(false);
                                 }}
-                                className="w-full flex items-center gap-2.5 px-3 py-3 text-[10px] font-bold uppercase tracking-widest text-neutral-600 dark:text-gray-100 hover:bg-neutral-100 dark:hover:bg-slate-700 rounded-lg transition-all cursor-pointer pointer-events-auto select-none min-h-[44px]"
+                                className="w-full flex items-center gap-2.5 px-3 py-3 text-xs font-black uppercase tracking-wider text-neutral-800 dark:text-white hover:bg-neutral-100 dark:hover:bg-gray-900 rounded-lg transition-all cursor-pointer pointer-events-auto select-none min-h-[44px]"
                             >
-                                <Pencil size={14} className="opacity-70 flex-shrink-0" />
+                                <Pencil size={16} className="flex-shrink-0" />
                                 <span>Editar</span>
                             </button>
                         )}
@@ -161,7 +161,7 @@ const RowActions = ({ row, onEdit, onDelete, onView, customActions, refresh, isL
                             </div>
                         )}
 
-                        {onDelete && (
+                        {onDelete && (!deleteCondition || deleteCondition(row)) && (
                             <>
                                 <div className="h-px bg-neutral-100 dark:bg-gray-700 my-1" />
                                 <button
@@ -171,9 +171,9 @@ const RowActions = ({ row, onEdit, onDelete, onView, customActions, refresh, isL
                                         onDelete(row);
                                         setOpen(false);
                                     }}
-                                    className="w-full flex items-center gap-2.5 px-2.5 py-2.5 text-[10px] font-bold uppercase tracking-widest text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all cursor-pointer pointer-events-auto min-h-[40px]"
+                                    className="w-full flex items-center gap-2.5 px-3 py-3 text-xs font-black uppercase tracking-wider text-red-600 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all cursor-pointer pointer-events-auto min-h-[44px]"
                                 >
-                                    <Trash2 size={14} className="opacity-70" />
+                                    <Trash2 size={16} />
                                     <span>Dar de Baja</span>
                                 </button>
                             </>
@@ -199,6 +199,7 @@ const DataTable = ({
     emptyTitle = "No hay datos disponibles",
     emptySubtitle = "Todavía no existen registros en esta sección. Puedes comenzar agregando nueva información.",
     customActions,
+    deleteCondition,
     refresh,
     hideSearch = false
 }) => {
@@ -363,10 +364,10 @@ const DataTable = ({
                             ) : (
                                 paginatedData.map((row, rowIdx) => (
                                     <tr key={rowIdx} className={`group hover:bg-neutral-50 dark:hover:bg-gray-700 border-b border-neutral-100 dark:border-gray-700 last:border-0 transition-colors text-[10px] md:text-[11px] text-neutral-700 dark:text-gray-300 ${
-                                        row.activo === false ? 'opacity-50 grayscale' : 'bg-white dark:bg-gray-800'
+                                        row.activo === false ? 'bg-neutral-50/60 dark:bg-gray-800/60' : 'bg-white dark:bg-gray-800'
                                     }`}>
                                         {columns.map((col, colIdx) => (
-                                            <td key={colIdx} className={`px-1.5 py-1 md:px-2 md:py-1 align-middle ${colIdx > 1 ? 'hidden sm:table-cell' : ''} ${colIdx === 0 ? 'text-black font-bold' : ''}`}>
+                                            <td key={colIdx} className={`px-1.5 py-1 md:px-2 md:py-1 align-middle ${colIdx > 1 ? 'hidden sm:table-cell' : ''} ${colIdx === 0 ? 'text-black font-bold' : ''} ${row.activo === false ? 'opacity-60 grayscale' : ''}`}>
                                                 {col.render ? col.render(row) : <span className="text-neutral-600 dark:text-gray-400">{row[col.accessor] ?? '—'}</span>}
                                             </td>
                                         ))}
@@ -380,6 +381,7 @@ const DataTable = ({
                                                     customActions={customActions} 
                                                     refresh={refresh}
                                                     isLastRows={rowIdx >= paginatedData.length - 2 && paginatedData.length > 2}
+                                                    deleteCondition={deleteCondition}
                                                 />
                                             </td>
                                         )}
