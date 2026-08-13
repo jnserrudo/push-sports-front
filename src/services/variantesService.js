@@ -63,6 +63,13 @@ export const variantesService = {
         return response.data;
     },
 
+    // Validar unicidad de código de barras (cruzado contra productos y variantes)
+    validarCodigo: async (codigo, excludeId = null) => {
+        const query = excludeId ? `?exclude_id=${excludeId}` : '';
+        const response = await api.get(`/variantes/validar-codigo/${encodeURIComponent(codigo)}${query}`);
+        return response.data;
+    },
+
     // Obtener stock de una variante en una sucursal
     getStockVariante: async (id_comercio, id_variante) => {
         const response = await api.get(`/inventarios/${id_comercio}/variantes/${id_variante}`);

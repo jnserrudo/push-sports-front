@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Search, Edit2, Trash2, CheckCircle2, AlertCircle, Info, Loader2 } from 'lucide-react';
+import { Search, Edit2, Trash2, CheckCircle2, AlertCircle, Info, Loader2, Barcode } from 'lucide-react';
 import { variantesService } from '../../services/variantesService';
 import { toast } from '../../store/toastStore';
+import Modal from '../ui/Modal';
+import BarcodeScanner from '../ui/BarcodeScanner';
 
 const GestionTab = ({ producto, variantes, onRefresh }) => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -9,6 +11,45 @@ const GestionTab = ({ producto, variantes, onRefresh }) => {
     const [editValues, setEditValues] = useState({});
     const [savingId, setSavingId] = useState(null);
     const [showDeactivateModal, setShowDeactivateModal] = useState(false);
+    const [barcodeVariante, setBarcodeVariante] = useState(null); // variante en edición de código
+    const [savingBarcode, setSavingBarcode] = useState(false);
+
+    const handleOpenBarcodeModal = (variante) => {
+        setBarcodeVariante(variante);
+    };
+
+    const handleCloseBarcodeModal = () => {
+        setBarcodeVariante(null);
+    };
+
+    const handleValidarCodigoVariante = async (codigo) => {
+        if (!codigo) return { disponible: true };
+        try {
+            return await variantesService.validarCodigo(codigo, barcodeVariante?.id_variante);
+        } catch (error) {
+            return { disponible: false, error: 'Error al validar código' };
+        }
+    };
+
+    const handleGuardarCodigoVariante = async (codigo) => {
+        if (!barcodeVariante) return;
+        setSavingBarcode(true);
+        try {
+            const validacion = await handleValidarCodigoVariante(codigo);
+            if (codigo && !validacion.disponible) {
+                toast.error(validacion.error || 'Este código ya está en uso');
+                return;
+            }
+            await variantesService.actualizarVariante(barcodeVariante.id_variante, { codigo_barras: codigo || null });
+            toast.success(codigo ? 'Código de barras asignado exitosamente' : 'Código de barras eliminado');
+            setBarcodeVariante(null);
+            onRefresh();
+        } catch (error) {
+            toast.error(error.response?.data?.error || 'Error al guardar el código de barras');
+        } finally {
+            setSavingBarcode(false);
+        }
+    };
     
     // Filtrar variantes por búsqueda
     const variantesFiltradas = variantes.filter(v => {
@@ -224,6 +265,18 @@ const GestionTab = ({ producto, variantes, onRefresh }) => {
                                                 <div className="flex items-center justify-end gap-1">
                                                     <button
                                                         type="button"
+                                                        onClick={() => handleOpenBarcodeModal(variante)}
+                                                        className={`w-7 h-7 rounded transition-colors flex items-center justify-center ${
+                                                            variante.codigo_barras
+                                                                ? 'bg-brand-cyan/20 text-brand-cyan hover:bg-brand-cyan hover:text-black'
+                                                                : 'bg-neutral-100 dark:bg-slate-700 text-neutral-400 dark:text-gray-500 hover:bg-neutral-200 dark:hover:bg-slate-600'
+                                                        }`}
+                                                        title={variante.codigo_barras ? `Código: ${variante.codigo_barras}` : 'Asignar código de barras'}
+                                                    >
+                                                        <Barcode size={12} />
+                                                    </button>
+                                                    <button
+                                                        type="button"
                                                         onClick={() => handleEdit(variante)}
                                                         className="w-7 h-7 rounded bg-neutral-100 dark:bg-slate-700 text-neutral-600 dark:text-gray-300 hover:bg-brand-cyan hover:text-black transition-colors flex items-center justify-center"
                                                         title="Editar"
@@ -269,6 +322,17 @@ const GestionTab = ({ producto, variantes, onRefresh }) => {
                                         </p>
                                     </div>
                                     <div className="flex gap-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleOpenBarcodeModal(variante)}
+                                            className={`w-8 h-8 rounded transition-colors flex items-center justify-center ${
+                                                variante.codigo_barras
+                                                    ? 'bg-brand-cyan/20 text-brand-cyan hover:bg-brand-cyan hover:text-black'
+                                                    : 'bg-neutral-100 dark:bg-slate-700 text-neutral-400 dark:text-gray-500 hover:bg-neutral-200 dark:hover:bg-slate-600'
+                                            }`}
+                                        >
+                                            <Barcode size={12} />
+                                        </button>
                                         <button
                                             type="button"
                                             onClick={() => handleEdit(variante)}
@@ -458,6 +522,34 @@ const GestionTab = ({ producto, variantes, onRefresh }) => {
                     </div>
                 </div>
             )}
+
+            {/* Modal dedicado: Código de Barras de la Variante */}
+            <Modal
+                isOpen={!!barcodeVariante}
+                onClose={handleCloseBarcodeModal}
+                title={`Código de Barras — ${barcodeVariante?.sku_variante || ''}`}
+                size="medium"
+            >
+                {barcodeVariante && (
+                    <div className="space-y-3">
+                        <p className="text-[9px] font-bold text-neutral-500 dark:text-gray-300 uppercase tracking-wider">
+                            {renderAtributos(barcodeVariante.atributos_valores)}
+                        </p>
+                        <BarcodeScanner
+                            value={barcodeVariante.codigo_barras || ''}
+                            onChange={handleGuardarCodigoVariante}
+                            onValidate={handleValidarCodigoVariante}
+                            placeholder="Escanear o escribir código de esta variante..."
+                            disabled={savingBarcode}
+                        />
+                        {savingBarcode && (
+                            <div className="flex items-center gap-2 text-[9px] font-bold text-neutral-400 dark:text-gray-500 uppercase tracking-wider">
+                                <Loader2 size={12} className="animate-spin" /> Guardando...
+                            </div>
+                        )}
+                    </div>
+                )}
+            </Modal>
         </div>
     );
 };

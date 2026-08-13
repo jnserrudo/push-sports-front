@@ -27,7 +27,8 @@ import {
   MessageSquare,
   X,
   Shield,
-  UserCircle2
+  UserCircle2,
+  Scan
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -141,6 +142,7 @@ const DashboardLayout = () => {
   const menuItems = [
     { label: 'Visión General',    icon: LayoutDashboard, path: '/dashboard',                roles: [1, 2, 3] },
     { label: 'Registrar Ventas',  icon: ShoppingCart,    path: '/dashboard/ventas',            roles: [1, 2, 3] },
+    { label: 'Consulta Barcode',  icon: Scan,            path: '/dashboard/consulta-barcode',  roles: [1, 2, 3] },
     { label: 'Productos',         icon: Package,         path: '/dashboard/productos',      roles: [1] },
     { label: 'Categorías',        icon: Component,       path: '/dashboard/categorias',     roles: [1] },
     { label: 'Marcas',            icon: Tag,             path: '/dashboard/marcas',         roles: [1] },

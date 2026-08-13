@@ -29,7 +29,9 @@ import {
   CreditCard,
   DollarSign,
   Landmark,
-  XCircle
+  XCircle,
+  ScanLine,
+  Camera
 } from 'lucide-react';
 import { pdf } from '@react-pdf/renderer';
 import PosComprobantePDF from '../../components/reports/PosComprobantePDF';
@@ -37,11 +39,13 @@ import { useAuthStore } from '../../store/authStore';
 import { posService } from '../../services/posService';
 import { sucursalesService } from '../../services/sucursalesService';
 import { combosService } from '../../services/combosService';
+import { productosService } from '../../services/productosService';
 import { toast } from '../../store/toastStore';
 
 import { parseImagenes } from '../../lib/supabaseStorage';
 import PremiumSelect from '../../components/ui/PremiumSelect';
 import Modal from '../../components/ui/Modal';
+import BarcodeScanner from '../../components/ui/BarcodeScanner';
 
 const POS = () => {
   const { user, sucursalId } = useAuthStore();
@@ -83,7 +87,13 @@ const POS = () => {
   // Modal informativo de estados de ventas
   const [showSalesInfoModal, setShowSalesInfoModal] = useState(false);
 
+  // Escaneo de código de barras (pistola + cámara)
+  const [scanValue, setScanValue] = useState('');
+  const [showScanCameraModal, setShowScanCameraModal] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+
   const searchInputRef = useRef(null);
+  const scanInputRef = useRef(null);
 
   // Load Drafts from local storage on mount
   useEffect(() => {
@@ -151,6 +161,16 @@ const POS = () => {
   useEffect(() => {
     posService.getOfertasVigentes().then(setOfertasVigentes).catch(() => setOfertasVigentes([]));
   }, []);
+
+  // Mantener el foco en el input de escaneo mientras se está en el catálogo (para la pistola USB)
+  useEffect(() => {
+    if (activeTab === 'catalog' && !showVariantesModal && !showScanCameraModal && !isSuperAdmin_focus()) {
+      scanInputRef.current?.focus();
+    }
+    function isSuperAdmin_focus() {
+      return isSuperAdmin && !selectedSucursalId;
+    }
+  }, [activeTab, showVariantesModal, showScanCameraModal, isSuperAdmin, selectedSucursalId, isLoadingProducts]);
 
   // Load sucursal options for SuperAdmin picker
   useEffect(() => {
@@ -241,7 +261,15 @@ const POS = () => {
     if (!term) return products.slice(0, 80); // Mostrar solo una parte inicial si no hay búsqueda para fluidez
     
     return products
-      .filter(item => getProductNombre(item).toLowerCase().includes(term))
+      .filter(item => {
+        const nombre = getProductNombre(item).toLowerCase();
+        const codigoBarras = item.producto?.codigo_barras || '';
+        const codigoCategoria = item.producto?.codigo_producto?.codigo || '';
+        
+        return nombre.includes(term) || 
+               codigoBarras.includes(term) || 
+               codigoCategoria.includes(term);
+      })
       .slice(0, 100); // Límite de seguridad para el DOM
   }, [products, searchTerm]);
 
@@ -334,6 +362,57 @@ const POS = () => {
       }]);
     }
     toast.success(`${getProductNombre(item)} agregado al carrito`);
+  };
+
+  // Procesa un código escaneado (pistola o cámara) y decide la acción sobre el carrito
+  const handleScanPOS = async (code) => {
+    const cleanCode = (code || '').trim();
+    if (!cleanCode) return;
+
+    setIsScanning(true);
+    try {
+      const data = await productosService.buscarPorCodigo(cleanCode);
+      const { producto, variante_matched: varianteMatched } = data;
+
+      // Buscar el item de inventario correspondiente en esta sucursal
+      const item = products.find(p => p.id_producto === producto.id_producto);
+      if (!item) {
+        toast.error(`"${producto.nombre}" no está disponible en esta sucursal`);
+        return;
+      }
+
+      // Caso 1: el código escaneado corresponde a una variante específica
+      if (varianteMatched) {
+        const localVarianteItem = item.variantes?.find(
+          v => v.variante?.id_variante === varianteMatched.id_variante
+        );
+        if (!localVarianteItem) {
+          toast.error('Esta variante no tiene stock registrado en esta sucursal');
+          return;
+        }
+        addVarianteToCart(item, localVarianteItem);
+        return;
+      }
+
+      // Caso 2: producto con variantes pero código genérico → abrir selector manual
+      const hasVariantes = item.producto?.usa_variantes || item.usa_desglose_variantes || (item.variantes && item.variantes.length > 0);
+      if (hasVariantes) {
+        setSelectedProduct(item);
+        setShowVariantesModal(true);
+        return;
+      }
+
+      // Caso 3: producto simple → agregar directo
+      addToCart(item);
+    } catch (error) {
+      if (error.response?.status === 404) {
+        toast.error(`Código no reconocido: ${cleanCode}`);
+      } else {
+        toast.error('Error al buscar el código escaneado');
+      }
+    } finally {
+      setIsScanning(false);
+    }
   };
 
   const removeFromCart = (id) => setCart(cart.filter(item => item.id !== id));
@@ -506,6 +585,34 @@ const POS = () => {
                     </div>
                 )}
 
+                <div className="relative flex-1 w-full sm:w-44 group min-w-0">
+                    <ScanLine className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors ${isScanning ? 'text-brand-cyan animate-pulse' : 'text-neutral-300 dark:text-gray-500 group-focus-within:text-brand-cyan dark:group-focus-within:text-cyan-400'}`} size={14} />
+                    <input
+                        ref={scanInputRef}
+                        type="text"
+                        placeholder="ESCANEAR (PISTOLA)..."
+                        className="input-premium-v2 pl-9 pr-9 py-2 md:py-2.5 text-[8px] md:text-[9px] tracking-[0.2em] uppercase font-black w-full text-ellipsis"
+                        value={scanValue}
+                        onChange={(e) => setScanValue(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' && scanValue.trim()) {
+                                e.preventDefault();
+                                handleScanPOS(scanValue);
+                                setScanValue('');
+                            }
+                        }}
+                        disabled={isScanning}
+                    />
+                    <button
+                        type="button"
+                        onClick={() => setShowScanCameraModal(true)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-gray-500 hover:text-brand-cyan dark:hover:text-cyan-400 transition-colors"
+                        title="Escanear con la cámara"
+                    >
+                        <Camera size={14} />
+                    </button>
+                </div>
+
                 <div className="relative flex-1 w-full sm:w-56 group min-w-0">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-300 dark:text-gray-500 group-focus-within:text-brand-cyan dark:group-focus-within:text-cyan-400 transition-colors" size={14} />
                     <input 
@@ -515,6 +622,14 @@ const POS = () => {
                         className="input-premium-v2 pl-9 py-2 md:pl-10 md:py-2.5 text-[8px] md:text-[9px] tracking-[0.2em] uppercase font-black w-full text-ellipsis"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' && searchTerm.trim()) {
+                                if (filteredProducts.length === 1) {
+                                    handleProductClick(filteredProducts[0]);
+                                    setSearchTerm('');
+                                }
+                            }
+                        }}
                     />
                 </div>
                 
@@ -1285,6 +1400,29 @@ const POS = () => {
               <strong>Las liquidaciones</strong> son el cierre de caja: agrupan las ventas activas seleccionadas, generan el recibo y reinician el saldo de la sucursal. Antes de liquidar, el sistema te permite elegir cuáles ventas incluir; las que no incluyas quedan activas para rectificar después.
             </p>
           </div>
+        </div>
+      </Modal>
+
+      {/* MODAL: ESCANEAR CON CÁMARA */}
+      <Modal
+        isOpen={showScanCameraModal}
+        onClose={() => setShowScanCameraModal(false)}
+        title="Escanear Producto"
+        size="medium"
+      >
+        <div className="space-y-3">
+          <p className="text-[9px] font-bold text-neutral-400 dark:text-gray-500 uppercase tracking-widest">
+            Apuntá la cámara al código de barras del producto
+          </p>
+          <BarcodeScanner
+            value=""
+            onChange={(code) => {
+              setShowScanCameraModal(false);
+              handleScanPOS(code);
+            }}
+            placeholder="O escribí el código manualmente..."
+            autoFocus
+          />
         </div>
       </Modal>
 

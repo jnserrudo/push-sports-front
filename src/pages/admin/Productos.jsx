@@ -25,9 +25,11 @@ import {
     ShoppingCart,
     ChevronDown,
     ChevronRight,
-    ChevronLeft
+    ChevronLeft,
+    Barcode
 } from 'lucide-react';
 import GenericABM from '../../components/ui/GenericABM';
+import BarcodeScanner from '../../components/ui/BarcodeScanner';
 import Modal from '../../components/ui/Modal';
 import Accordion from '../../components/ui/Accordion';
 import BulkPriceUpdateModal from '../../components/modals/BulkPriceUpdateModal';
@@ -1337,17 +1339,47 @@ const Productos = () => {
                         </div>
                     </div>
 
-                    {/* Código de Producto */}
+                    {/* Código de Barras (escaneable) */}
                     <div className="space-y-2">
-                        <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">Código de Producto</label>
+                        <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">
+                            <Barcode size={12} className="inline mr-1" />
+                            Código de Barras
+                        </label>
+                        <BarcodeScanner
+                            value={formData.codigo_barras || ''}
+                            onChange={(code) => setFormData({ ...formData, codigo_barras: code })}
+                            onValidate={async (code) => {
+                                if (!code) return { disponible: true };
+                                try {
+                                    const res = await fetch(`${import.meta.env.VITE_API_URL}/productos/validar-codigo/${encodeURIComponent(code)}?exclude_id=${formData.id_producto || ''}`, {
+                                        headers: {
+                                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                                        }
+                                    });
+                                    const data = await res.json();
+                                    return data;
+                                } catch (error) {
+                                    return { disponible: false, error: 'Error al validar código' };
+                                }
+                            }}
+                            placeholder="Escanear código de barras..."
+                        />
+                    </div>
+
+                    {/* Código de Categorización (opcional, para reportes) */}
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">Código de Categorización (Opcional)</label>
                         <PremiumSelect
                             icon={Hash}
-                            placeholder="SELECCIONAR CÓDIGO..."
+                            placeholder="PARA REPORTES..."
                             isLoading={loadingCodigos}
                             options={codigosProducto.map(c => ({ value: c.id_codigo, label: `${c.codigo}${c.descripcion ? ' — ' + c.descripcion : ''}` }))}
                             value={formData.id_codigo_producto || ''}
                             onChange={val => setFormData({ ...formData, id_codigo_producto: val || null })}
                         />
+                        <p className="text-[9px] text-neutral-400 dark:text-gray-500">
+                            Usado para agrupar productos en reportes (ej: "SUPL", "IND")
+                        </p>
                     </div>
 
                     {/* Descripcion */}

@@ -26,6 +26,12 @@ export const productosService = {
         return res.data;
     },
 
+    // Busca un producto (o variante) por código de barras escaneado
+    buscarPorCodigo: async (codigo) => {
+        const res = await api.get(`/productos/buscar-codigo/${encodeURIComponent(codigo)}`);
+        return res.data;
+    },
+
     create: async (data) => {
         const res = await api.post('/productos', data);
         return res.data;

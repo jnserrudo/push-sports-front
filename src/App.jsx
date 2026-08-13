@@ -41,6 +41,7 @@ import { CartProvider } from './context/CartContext';
 import Consultas from './pages/admin/Consultas';
 import ConsultaDetalle from './pages/admin/ConsultaDetalle';
 import ConsultaPublica from './pages/public/ConsultaPublica';
+import ConsultaBarcode from './pages/admin/ConsultaBarcode';
 
 const App = () => {
   return (
@@ -103,6 +104,7 @@ const App = () => {
           <Route path="rectificaciones" element={<Rectificaciones />} />
           <Route path="consultas" element={<Consultas />} />
           <Route path="consultas/:id" element={<ConsultaDetalle />} />
+          <Route path="consulta-barcode" element={<ConsultaBarcode />} />
           <Route path="perfil" element={<Perfil />} />
           {/* Registrar Ventas accessible under /dashboard for Vendedores */}
           <Route path="ventas" element={<POS />} />
