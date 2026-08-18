@@ -3,7 +3,7 @@ import axios from 'axios';
 // Instancia de Axios sin interceptores de autenticación.
 // Esta capa se usa exclusivamente para endpoints que no requieren login (B2C).
 const publicApi = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://push-sports-back.onrender.com/api',
+  baseURL: import.meta.env.VITE_API_URL || 'https://pushsport.com.ar/api',
 });
 
 const publicService = {

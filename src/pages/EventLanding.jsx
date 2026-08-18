@@ -121,7 +121,7 @@ const TicketStep = ({ nombre, eventoNombre, recompensaTexto }) => (
         </div>
 
         <a 
-            href="https://push-sports-front.onrender.com/" 
+            href="https://pushsport.com.ar/" 
             target="_blank" 
             rel="noopener noreferrer"
             className="mt-6 w-full py-4 bg-brand-cyan text-black font-sport text-base uppercase tracking-widest rounded-2xl flex items-center justify-center gap-3 hover:bg-white transition-all shadow-[0_0_30px_rgba(0,229,255,0.3)] hover:-translate-y-0.5"

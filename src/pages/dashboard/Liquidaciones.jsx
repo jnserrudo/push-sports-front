@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, CheckCircle2, Send, ShieldCheck, FileText, Settings2, AlertCircle, RotateCcw, CalendarDays, DollarSign, Wallet, History, Eye, Search } from 'lucide-react';
+import { CreditCard, CheckCircle2, Send, ShieldCheck, FileText, Settings2, AlertCircle, RotateCcw, CalendarDays, DollarSign, Wallet, History, Eye, Search, FileSpreadsheet } from 'lucide-react';
 import { toast } from '../../store/toastStore';
 import { useAuthStore } from '../../store/authStore';
 import { sucursalesService } from '../../services/sucursalesService';
@@ -14,6 +14,7 @@ import FiltrosLiquidaciones from '../../components/ui/FiltrosLiquidaciones';
 // --- LIBRERÍAS DE UI Y PDF ---
 import { pdf } from '@react-pdf/renderer';
 import LiquidacionPDF from '../../components/reports/LiquidacionPDF';
+import { exportToExcel } from '../../utils/exportExcel';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Liquidaciones = () => {
@@ -222,6 +223,28 @@ const Liquidaciones = () => {
         }
     };
 
+    const generateExcel = (row) => {
+        const productos = row.resumen_productos || [];
+        const rows = productos.length > 0
+            ? productos.map(prod => ({
+                Sucursal: row.comercio_nombre,
+                Fecha: new Date(row.fecha_cierre).toLocaleDateString('es-AR'),
+                Producto: prod.nombre || prod.producto || '',
+                Cantidad: prod.cantidad || prod.unidades || 0,
+                Bruto: Number(prod.total_bruto || 0),
+                Neto: Number(prod.total_neto || 0),
+            }))
+            : [{
+                Sucursal: row.comercio_nombre,
+                Fecha: new Date(row.fecha_cierre).toLocaleDateString('es-AR'),
+                Tickets: row.cant_ventas,
+                'Total cobrado': Number(row.total_bruto || 0),
+                'Total a liquidar': Number(row.total_ventas_netas || 0),
+            }];
+        const idLiq = String(row.id_liquidacion).split('-')[0].toUpperCase();
+        exportToExcel(rows, `Liq_${String(row.comercio_nombre).replace(/\s+/g, '_')}_${idLiq}`);
+    };
+
     const getSaldo = (suc) => Number(suc.saldo_acumulado_mili) || 0;
     const getId = (suc) => suc.id_comercio ?? suc.id;
 
@@ -316,13 +339,22 @@ const Liquidaciones = () => {
         {
             header: 'Comprobante',
             render: (row) => (
-                <button
-                    onClick={() => generatePDF(row)}
-                    className="p-2 text-neutral-400 hover:text-black dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-md transition-colors"
-                    title="Exportar Recibo PDF"
-                >
-                    <FileText size={16} strokeWidth={2.5} />
-                </button>
+                <div className="flex items-center gap-1">
+                    <button
+                        onClick={() => generatePDF(row)}
+                        className="p-2 text-neutral-400 hover:text-black dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                        title="Exportar Recibo PDF"
+                    >
+                        <FileText size={16} strokeWidth={2.5} />
+                    </button>
+                    <button
+                        onClick={() => generateExcel(row)}
+                        className="p-2 text-neutral-400 hover:text-emerald-600 hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                        title="Exportar Excel"
+                    >
+                        <FileSpreadsheet size={16} strokeWidth={2.5} />
+                    </button>
+                </div>
             )
         }
     ];
@@ -1092,6 +1124,12 @@ const Liquidaciones = () => {
                                 className="flex-1 bg-black dark:bg-gray-700 text-white py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-brand-cyan hover:text-black transition-colors flex items-center justify-center gap-2"
                             >
                                 <FileText size={14} /> Descargar PDF
+                            </button>
+                            <button
+                                onClick={() => generateExcel(selectedLiquidacion)}
+                                className="flex-1 bg-emerald-600 text-white py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+                            >
+                                <FileSpreadsheet size={14} /> Excel
                             </button>
                             <button
                                 onClick={() => setIsDetallesModalOpen(false)}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { LogIn, Instagram, Facebook, MessageCircle } from 'lucide-react';
+import { SITE_ORIGIN } from '../utils/siteUrl';
 
 const INSTAGRAM_URL = 'https://www.instagram.com/push_sportsalta?igsh=MWhwejA1dmIyZ2YzOQ==';
 const FACEBOOK_URL = '';
@@ -11,7 +12,7 @@ const Hub = () => {
             icon: LogIn,
             title: 'Acceder al Sistema',
             description: 'Ingresá a la plataforma de gestión',
-            url: 'https://push-sports-front.onrender.com/#/login',
+            url: `${SITE_ORIGIN}/#/login`,
             color: 'cyan',
             enabled: true
         },

@@ -22,7 +22,7 @@ import { toast } from '../../store/toastStore';
 // --- QR Modal ---
 const QRModal = ({ evento, onClose }) => {
     const canvasRef = useRef(null);
-    const BASE_URL = 'https://push-sports-front.onrender.com/#/e/';
+    const BASE_URL = 'https://pushsport.com.ar/#/e/';
     const url = `${BASE_URL}${evento.id_evento}`;
 
     const handleDownload = () => {
@@ -213,7 +213,7 @@ const FormModal = ({ evento, onClose, onSave }) => {
 
 // --- Hub QR Modal ---
 const HubQRModal = ({ onClose }) => {
-    const BASE_URL = 'https://push-sports-front.onrender.com/#/hub';
+    const BASE_URL = 'https://pushsport.com.ar/#/hub';
     const url = BASE_URL;
 
     const handleDownload = () => {

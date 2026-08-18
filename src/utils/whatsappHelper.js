@@ -55,11 +55,11 @@ export const generateWhatsAppMessage = (orderData) => {
   // URL de seguimiento si existe token
   if (tokenSeguimiento) {
     message += `\n🔗 *Seguí tu pedido aquí:*\n`;
-    message += `https://push-sports-front.onrender.com/#/consulta/${tokenSeguimiento}\n`;
+    message += `https://pushsport.com.ar/#/consulta/${tokenSeguimiento}\n`;
     message += '\n';
   }
   
-  message += 'Pedido generado desde https://push-sports-front.onrender.com';
+  message += 'Pedido generado desde https://pushsport.com.ar';
   
   return encodeURIComponent(message);
 };

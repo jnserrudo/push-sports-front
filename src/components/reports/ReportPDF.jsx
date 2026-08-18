@@ -33,16 +33,17 @@ const styles = StyleSheet.create({
   infoStripText: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: GRAY_DARK, textTransform: 'uppercase', letterSpacing: 0.5 },
   infoStripSub: { fontSize: 7, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 1 },
 
-  metricBar: {
-    flexDirection: 'row',
+  brandBanner: {
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
+    paddingVertical: 18,
+    paddingHorizontal: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  metricCell: { flex: 1, padding: 15, borderRightWidth: 1, borderRightColor: '#E5E7EB', alignItems: 'center' },
-  metricLabel: { fontSize: 7, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 },
-  metricValue: { fontSize: 20, fontFamily: 'Helvetica-Bold', color: BLACK },
-  metricSub: { fontSize: 7, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 3 },
+  brandLogo: { width: 52, height: 52, borderRadius: 26, objectFit: 'cover', marginBottom: 8 },
+  brandPhrase: { fontSize: 11, fontFamily: 'Helvetica-Bold', color: BLACK, letterSpacing: 2, textTransform: 'uppercase' },
 
   tableContainer: { paddingHorizontal: 30, paddingTop: 15, paddingBottom: 40 },
   tableHeader: { flexDirection: 'row', backgroundColor: '#F9FAFB', borderBottomWidth: 1, borderBottomColor: '#E5E7EB', borderTopWidth: 1, borderTopColor: '#E5E7EB', paddingVertical: 8, paddingHorizontal: 8 },
@@ -87,12 +88,10 @@ const styles = StyleSheet.create({
 const formatPrice = (price) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(price || 0);
 
+const logoSrc = typeof window !== 'undefined' ? `${window.location.origin}/icono_new.jpeg` : '/icono_new.jpeg';
+
 const ReportPDF = ({ products, imageMap = {}, currentDate, showPushPrice = true }) => {
   const activeProducts = products.filter(p => p.activo !== false);
-  const avgPrice = activeProducts.length > 0
-    ? activeProducts.reduce((a, p) => a + Number(p.precio_venta_sugerido || 0), 0) / activeProducts.length
-    : 0;
-  const marcasUnicas = [...new Set(activeProducts.map(p => p.marca?.nombre_marca).filter(Boolean))].length;
 
   const colCodigo   = { width: '12%', justifyContent: 'center', alignItems: 'center' };
   const colImg      = { width: showPushPrice ? '22%' : '26%', justifyContent: 'center', alignItems: 'center' };
@@ -120,25 +119,11 @@ const ReportPDF = ({ products, imageMap = {}, currentDate, showPushPrice = true 
 
         <View style={styles.infoStrip}>
           <Text style={styles.infoStripText}>Lista de precios para distribución a comercios</Text>
-          <Text style={styles.infoStripSub}>{activeProducts.length} productos · {marcasUnicas} marcas</Text>
         </View>
 
-        <View style={styles.metricBar}>
-          <View style={styles.metricCell}>
-            <Text style={styles.metricLabel}>Productos</Text>
-            <Text style={styles.metricValue}>{activeProducts.length}</Text>
-            <Text style={styles.metricSub}>en esta lista</Text>
-          </View>
-          <View style={styles.metricCell}>
-            <Text style={styles.metricLabel}>Marcas</Text>
-            <Text style={styles.metricValue}>{marcasUnicas}</Text>
-            <Text style={styles.metricSub}>incluidas</Text>
-          </View>
-          <View style={[styles.metricCell, { borderRightWidth: 0 }]}>
-            <Text style={styles.metricLabel}>Precio Público Prom.</Text>
-            <Text style={styles.metricValue}>{formatPrice(avgPrice)}</Text>
-            <Text style={styles.metricSub}>precio al público</Text>
-          </View>
+        <View style={styles.brandBanner}>
+          <Image src={logoSrc} style={styles.brandLogo} />
+          <Text style={styles.brandPhrase}>PUSHSPORT CENTRALIZADOS</Text>
         </View>
 
         <View style={styles.tableContainer}>

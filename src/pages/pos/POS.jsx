@@ -20,6 +20,7 @@ import {
   AlertCircle,
   Zap,
   Printer,
+  FileSpreadsheet,
   Package,
   ShoppingBag,
   Info,
@@ -41,6 +42,7 @@ import { sucursalesService } from '../../services/sucursalesService';
 import { combosService } from '../../services/combosService';
 import { productosService } from '../../services/productosService';
 import { toast } from '../../store/toastStore';
+import { exportToExcel } from '../../utils/exportExcel';
 
 import { parseImagenes } from '../../lib/supabaseStorage';
 import PremiumSelect from '../../components/ui/PremiumSelect';
@@ -512,6 +514,27 @@ const POS = () => {
       console.error('Error al generar el comprobante PDF:', error);
       toast.error('Error al generar PDF');
     }
+  };
+
+  const generateComprobanteExcel = (ventaData) => {
+    const refId = ventaData?.ventaCabecera?.id_venta
+      || ventaData?.id_venta
+      || lastSale?.ventaCabecera?.id_venta
+      || Date.now();
+    const detalles = ventaData?.detalles?.length
+      ? ventaData.detalles.map(d => ({
+          Codigo: d.producto?.codigo_producto?.codigo || d.codigo || '',
+          Producto: d.producto?.nombre || d.nombre || '',
+          Cantidad: Number(d.cantidad || 1),
+          Precio: Number(d.precio_unitario || d.precio_venta || 0),
+        }))
+      : cart.map(item => ({
+          Codigo: item.codigo_producto?.codigo || item.codigo || '',
+          Producto: item.nombre,
+          Cantidad: item.cantidad,
+          Precio: item.precio,
+        }));
+    exportToExcel(detalles, `comprobante_${refId}`);
   };
 
   const handleConfirmSale = async () => {
@@ -1132,6 +1155,7 @@ const POS = () => {
                     </button>
                 )}
                 {lastSale && cart.length === 0 && (
+                    <>
                     <button
                         onClick={() => generateComprobante(lastSale)}
                         className="flex-shrink-0 bg-neutral-100 dark:bg-gray-700 text-neutral-500 dark:text-gray-400 font-black text-[8px] uppercase tracking-widest px-1.5 py-1.5 rounded-xl hover:bg-neutral-200 dark:hover:bg-gray-600 hover:text-black dark:hover:text-white transition-colors flex items-center gap-0.5"
@@ -1139,6 +1163,14 @@ const POS = () => {
                     >
                         <Printer size={10} />
                     </button>
+                    <button
+                        onClick={() => generateComprobanteExcel(lastSale)}
+                        className="flex-shrink-0 bg-emerald-600 text-white font-black text-[8px] uppercase tracking-widest px-1.5 py-1.5 rounded-xl hover:bg-emerald-700 transition-colors flex items-center gap-0.5"
+                        title="Exportar último comprobante a Excel"
+                    >
+                        <FileSpreadsheet size={10} />
+                    </button>
+                    </>
                 )}
                 <button
                     onClick={handleConfirmSale}

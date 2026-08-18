@@ -3,4 +3,4 @@ Allow: /
 Disallow: /#/dashboard
 Disallow: /#/login
 
-Sitemap: https://push-sports-front.onrender.com/sitemap.xml
+Sitemap: https://pushsport.com.ar/sitemap.xml

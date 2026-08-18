@@ -17,7 +17,8 @@ import {
   Mail,
   DollarSign,
   Info,
-  Boxes
+  Boxes,
+  FileSpreadsheet
 } from 'lucide-react';
 import api from '../../api/api';
 import { Link } from 'react-router-dom';
@@ -37,6 +38,7 @@ import {
 import Toaster from '../../components/ui/Toaster';
 import DataTable from '../../components/ui/DataTable';
 import BulkPriceUpdateModal from '../../components/modals/BulkPriceUpdateModal';
+import { exportToExcel } from '../../utils/exportExcel';
 
 const Reporteria = () => {
   const [activeTab, setActiveTab] = useState('global');
@@ -198,6 +200,56 @@ const Reporteria = () => {
 
   const removeItemFromReport = (index) => {
     setSelectedItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const dateStamp = () => new Date().toLocaleDateString('es-AR').replace(/\//g, '-');
+
+  const handleExportGlobalExcel = () => {
+    const rows = [...filteredProducts]
+      .filter(p => p.activo !== false)
+      .sort((a, b) => (a.codigo_producto?.codigo || '').localeCompare(b.codigo_producto?.codigo || ''))
+      .map(p => ({
+        Codigo: p.codigo_producto?.codigo || '',
+        Producto: p.nombre || '',
+        Marca: p.marca?.nombre_marca || '',
+        'Precio Push': Number(p.precio_pushsport || 0),
+        'Precio Publico': Number(p.precio_venta_sugerido || 0),
+      }));
+    exportToExcel(rows, `Lista_Precios_${dateStamp()}`);
+  };
+
+  const handleExportEntregaExcel = () => {
+    if (!sucursal || selectedItems.length === 0) return;
+    const rows = [...selectedItems]
+      .sort((a, b) => (a.producto?.codigo_producto?.codigo || '').localeCompare(b.producto?.codigo_producto?.codigo || ''))
+      .map(item => ({
+        Sucursal: sucursal.nombre,
+        Codigo: item.producto?.codigo_producto?.codigo || '',
+        Producto: item.producto?.nombre || '',
+        Cantidad: Number(item.cantidadDejada) || 0,
+        'Precio Publico': Number(item.precio_venta_sugerido) || 0,
+        'Precio Push': Number(item.precio_pushsport) || 0,
+      }));
+    exportToExcel(rows, `Reporte_Entrega_${sucursal.nombre}_${dateStamp()}`);
+  };
+
+  const handleExportStockExcel = () => {
+    if (!sucursal || stockInventory.length === 0) return;
+    const rows = stockInventory.map(item => {
+      const prod = item.producto || item;
+      const cantidad = item.producto?.usa_desglose_variantes || item.usa_desglose_variantes
+        ? (item.variantes || []).reduce((sum, v) => sum + (v.cantidad_actual || 0), 0)
+        : (item.cantidad_actual || 0);
+      return {
+        Sucursal: sucursal.nombre,
+        Codigo: prod.codigo_producto?.codigo || '',
+        Producto: prod.nombre || '',
+        Stock: cantidad,
+        'Precio Publico': Number(prod.precio_venta_sugerido || 0),
+        'Precio Push': Number(prod.precio_pushsport || 0),
+      };
+    });
+    exportToExcel(rows, `Inventario_${sucursal.nombre}_${dateStamp()}`);
   };
 
   const handleDownloadReport = async () => {
@@ -408,6 +460,14 @@ const Reporteria = () => {
                       : <><Download size={13} /> PDF Lista Precios</>
                   )}
                 </PDFDownloadLink>
+                <button
+                  type="button"
+                  onClick={handleExportGlobalExcel}
+                  disabled={filteredProducts.length === 0}
+                  className="h-9 px-5 bg-emerald-600 text-white rounded-xl flex items-center gap-2 hover:bg-emerald-700 transition-all shadow-md text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
+                >
+                  <FileSpreadsheet size={13} /> Excel Lista Precios
+                </button>
 
                 <button
                   onClick={async () => {
@@ -807,6 +867,7 @@ const Reporteria = () => {
                                   <Download size={13} /> Descargar Reporte
                                 </button>
                               ) : (
+                                <>
                                 <button
                                   onClick={handleDownloadReport}
                                   disabled={savingReport}
@@ -821,6 +882,14 @@ const Reporteria = () => {
                                     : <><Download size={13} />{hayExceso ? ' Reporte PDF (con adv.)' : ` Descargar Reporte PDF (${selectedItems.length})`}</>
                                   }
                                 </button>
+                                <button
+                                  type="button"
+                                  onClick={handleExportEntregaExcel}
+                                  className="h-9 px-5 rounded-xl flex items-center gap-2 transition-all shadow-md font-black uppercase tracking-widest text-[10px] bg-emerald-600 text-white hover:bg-emerald-700"
+                                >
+                                  <FileSpreadsheet size={13} /> Excel
+                                </button>
+                                </>
                               )}
                             </>
                           );
@@ -1028,6 +1097,14 @@ const Reporteria = () => {
                               ? <><Loader2 size={13} className="animate-spin" /> Cargando...</>
                               : <><Download size={13} /> Descargar PDF</>
                             }
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleExportStockExcel}
+                            disabled={loadingStockInventory || stockInventory.length === 0}
+                            className="h-9 px-5 rounded-xl flex items-center gap-2 transition-all shadow-md font-black uppercase tracking-widest text-[10px] bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60"
+                          >
+                            <FileSpreadsheet size={13} /> Excel
                           </button>
                         </div>
                       </div>

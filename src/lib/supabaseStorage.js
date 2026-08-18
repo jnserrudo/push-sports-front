@@ -1,59 +1,24 @@
-// Supabase Storage — direct REST API (no SDK required)
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const BUCKET = import.meta.env.VITE_SUPABASE_BUCKET;
+import api from '../api/api';
 
 /**
- * Uploads a File object to Supabase Storage and returns its public URL.
- * The bucket "productos" must be public in the Supabase dashboard.
+ * Uploads a product/branch image through the backend (disk on the VPS).
  */
 export const uploadProductImage = async (file) => {
     if (!file) throw new Error('No file provided');
-
-    // Generate a unique path: products/timestamp-random.ext
-    const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
-    const uniqueName = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}.${ext}`;
-    const path = `productos/${uniqueName}`;
-
-    const res = await fetch(
-        `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`,
-        {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                'Content-Type': file.type || 'image/jpeg',
-            },
-            body: file,
-        }
-    );
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || `Upload failed: ${res.status}`);
-    }
-
-    // Return the public URL
-    return `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${path}`;
+    const form = new FormData();
+    form.append('file', file);
+    const { data } = await api.post('/uploads', form);
+    if (!data?.url) throw new Error('Upload failed');
+    return data.url;
 };
 
 /**
- * Deletes an image from Supabase Storage given its full public URL.
+ * Deletes a locally hosted image. Remote/legacy URLs are ignored.
  */
 export const deleteProductImage = async (url) => {
+    if (!url) return;
     try {
-        // Extract the path from the URL
-        const marker = `/object/public/${BUCKET}/`;
-        const idx = url.indexOf(marker);
-        if (idx === -1) return;
-        const path = url.slice(idx + marker.length);
-
-        await fetch(
-            `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`,
-            {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-            }
-        );
+        await api.delete('/uploads', { data: { url } });
     } catch {
         // Silent fail — main concern is saving the new URL, not cleaning up orphans
     }

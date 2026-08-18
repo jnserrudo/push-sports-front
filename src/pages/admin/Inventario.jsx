@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Search, Package, AlertTriangle, MapPin, Box, Trash2, Plus, Loader2 } from 'lucide-react';
 import { inventarioService } from '../../services/inventarioService';
 import { productosService } from '../../services/productosService';
@@ -10,6 +10,7 @@ import DataTable from '../../components/ui/DataTable';
 import Modal from '../../components/ui/Modal';
 import { motion } from 'framer-motion';
 import { parseImagenes } from '../../lib/supabaseStorage';
+import { CASA_CENTRAL_ID } from '../../utils/siteUrl';
 
 const Inventario = () => {
     const { user, sucursalId } = useAuthStore();
@@ -32,6 +33,7 @@ const Inventario = () => {
         cantidad_actual: '',
         stock_minimo_alerta: '',
     });
+    const [sedeFilter, setSedeFilter] = useState(isSuperAdmin ? CASA_CENTRAL_ID : sucursalId || 'ALL');
 
     // ─── Load data ──────────────────────────────────────────────────────────
     const loadAll = useCallback(async () => {
@@ -65,7 +67,9 @@ const Inventario = () => {
         setEditingItem(null);
         setFormData({
             id_producto: productos[0]?.id_producto || '',
-            id_comercio: isSuperAdmin ? (sucursales[0]?.id_comercio || '') : sucursalId,
+            id_comercio: isSuperAdmin
+                ? (sucursales.some(s => s.id_comercio === CASA_CENTRAL_ID) ? CASA_CENTRAL_ID : (sucursales[0]?.id_comercio || ''))
+                : sucursalId,
             cantidad_actual: '',
             stock_minimo_alerta: '5',
         });
@@ -165,12 +169,18 @@ const Inventario = () => {
             header: 'Sede',
             render: (row) => {
                 const nombre = row.sucursal_nombre || row.comercio?.nombre || sucursales.find(s => s.id_comercio === row.id_comercio)?.nombre || 'N/A';
+                const esCasaCentral = row.id_comercio === CASA_CENTRAL_ID;
                 return (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                         <MapPin size={12} className="text-neutral-400" />
                         <span className="text-xs font-bold text-neutral-600 uppercase tracking-widest">
                             {nombre}
                         </span>
+                        {esCasaCentral && (
+                            <span className="text-[8px] font-black uppercase tracking-widest text-brand-cyan bg-brand-cyan/10 px-1.5 py-0.5 rounded">
+                                Casa central
+                            </span>
+                        )}
                     </div>
                 );
             }
@@ -208,6 +218,19 @@ const Inventario = () => {
     const productNombre = (id) => productos.find(p => p.id_producto === id)?.nombre || '';
     const comercioNombre = (id) => sucursales.find(s => s.id_comercio === id)?.nombre || '';
 
+    const filteredData = useMemo(() => {
+        if (!isSuperAdmin || sedeFilter === 'ALL') return data;
+        return data.filter(row => row.id_comercio === sedeFilter);
+    }, [data, isSuperAdmin, sedeFilter]);
+
+    const sedeOptions = useMemo(() => ([
+        { value: 'ALL', label: 'Todas las sedes' },
+        ...sucursales.map(s => ({
+            value: s.id_comercio,
+            label: s.id_comercio === CASA_CENTRAL_ID ? `${s.nombre} (Casa central)` : s.nombre,
+        })),
+    ]), [sucursales]);
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 15 }}
@@ -227,6 +250,9 @@ const Inventario = () => {
                     </h2>
                     <p className="text-neutral-500 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed max-w-xl mt-2 whitespace-normal">
                         Asigná y modificá el stock real en cada sucursal. Los cambios hechos acá impactan directamente en el sistema y habilitan las ventas.
+                    </p>
+                    <p className="text-neutral-400 text-[10px] md:text-[11px] font-medium tracking-wide leading-relaxed max-w-2xl mt-2">
+                        Esta tabla muestra vínculos reales. Stock 0 = no hay unidades en esa sede; no significa que el producto no esté asignado.
                     </p>
                     <div className="flex items-center gap-2 mt-2">
                         <span className="text-[10px] font-black uppercase text-brand-cyan bg-brand-cyan/10 px-2 py-0.5 rounded">
@@ -257,9 +283,29 @@ const Inventario = () => {
                         animate={{ opacity: 1, y: 0 }} 
                         transition={{ duration: 0.5 }}
                     >
+                        {isSuperAdmin && (
+                            <div className="mb-3 flex flex-col sm:flex-row sm:items-end gap-3">
+                                <div className="w-full sm:max-w-xs space-y-1.5">
+                                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 block">
+                                        Sede
+                                    </label>
+                                    <PremiumSelect
+                                        icon={MapPin}
+                                        placeholder="Filtrar por sede"
+                                        isLoading={loadingSucursales}
+                                        options={sedeOptions}
+                                        value={sedeFilter}
+                                        onChange={setSedeFilter}
+                                    />
+                                </div>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500 pb-2">
+                                    {filteredData.length} producto{filteredData.length === 1 ? '' : 's'} en esta sede
+                                </span>
+                            </div>
+                        )}
                         <DataTable
                             columns={columns}
-                            data={data}
+                            data={filteredData}
                             onAdd={isSuperAdmin ? handleAdd : null}
                             onEdit={handleEdit}
                             onDelete={isSuperAdmin ? handleDelete : null}
