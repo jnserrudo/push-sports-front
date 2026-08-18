@@ -15,6 +15,7 @@ import FiltrosLiquidaciones from '../../components/ui/FiltrosLiquidaciones';
 import { pdf } from '@react-pdf/renderer';
 import LiquidacionPDF from '../../components/reports/LiquidacionPDF';
 import { exportToExcel } from '../../utils/exportExcel';
+import { parseImagenes } from '../../lib/supabaseStorage';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Liquidaciones = () => {
@@ -227,6 +228,7 @@ const Liquidaciones = () => {
         const productos = row.resumen_productos || [];
         const rows = productos.length > 0
             ? productos.map(prod => ({
+                _imageUrl: parseImagenes(prod.imagen_url || prod.imagen)[0] || '',
                 Sucursal: row.comercio_nombre,
                 Fecha: new Date(row.fecha_cierre).toLocaleDateString('es-AR'),
                 Producto: prod.nombre || prod.producto || '',

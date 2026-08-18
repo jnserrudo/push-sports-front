@@ -209,6 +209,7 @@ const Reporteria = () => {
       .filter(p => p.activo !== false)
       .sort((a, b) => (a.codigo_producto?.codigo || '').localeCompare(b.codigo_producto?.codigo || ''))
       .map(p => ({
+        _imageUrl: parseImagenes(p.imagen_url)[0] || '',
         Codigo: p.codigo_producto?.codigo || '',
         Producto: p.nombre || '',
         Marca: p.marca?.nombre_marca || '',
@@ -223,6 +224,7 @@ const Reporteria = () => {
     const rows = [...selectedItems]
       .sort((a, b) => (a.producto?.codigo_producto?.codigo || '').localeCompare(b.producto?.codigo_producto?.codigo || ''))
       .map(item => ({
+        _imageUrl: parseImagenes(item.producto?.imagen_url)[0] || '',
         Sucursal: sucursal.nombre,
         Codigo: item.producto?.codigo_producto?.codigo || '',
         Producto: item.producto?.nombre || '',
@@ -241,6 +243,7 @@ const Reporteria = () => {
         ? (item.variantes || []).reduce((sum, v) => sum + (v.cantidad_actual || 0), 0)
         : (item.cantidad_actual || 0);
       return {
+        _imageUrl: parseImagenes(prod.imagen_url)[0] || '',
         Sucursal: sucursal.nombre,
         Codigo: prod.codigo_producto?.codigo || '',
         Producto: prod.nombre || '',

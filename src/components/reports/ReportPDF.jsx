@@ -42,7 +42,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  brandLogo: { width: 52, height: 52, borderRadius: 26, objectFit: 'cover', marginBottom: 8 },
+  brandLogoClip: { width: 52, height: 52, borderRadius: 26, overflow: 'hidden', marginBottom: 8 },
+  brandLogoImg: { width: 64, height: 64, objectFit: 'cover', marginTop: -10, marginLeft: 4 },
   brandPhrase: { fontSize: 11, fontFamily: 'Helvetica-Bold', color: BLACK, letterSpacing: 2, textTransform: 'uppercase' },
 
   tableContainer: { paddingHorizontal: 30, paddingTop: 15, paddingBottom: 40 },
@@ -122,8 +123,10 @@ const ReportPDF = ({ products, imageMap = {}, currentDate, showPushPrice = true 
         </View>
 
         <View style={styles.brandBanner}>
-          <Image src={logoSrc} style={styles.brandLogo} />
-          <Text style={styles.brandPhrase}>PUSHSPORT CENTRALIZADOS</Text>
+          <View style={styles.brandLogoClip}>
+            <Image src={logoSrc} style={styles.brandLogoImg} />
+          </View>
+          <Text style={styles.brandPhrase}>PUSHSPORT</Text>
         </View>
 
         <View style={styles.tableContainer}>

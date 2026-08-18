@@ -523,12 +523,14 @@ const POS = () => {
       || Date.now();
     const detalles = ventaData?.detalles?.length
       ? ventaData.detalles.map(d => ({
+          _imageUrl: parseImagenes(d.producto?.imagen_url)[0] || '',
           Codigo: d.producto?.codigo_producto?.codigo || d.codigo || '',
           Producto: d.producto?.nombre || d.nombre || '',
           Cantidad: Number(d.cantidad || 1),
           Precio: Number(d.precio_unitario || d.precio_venta || 0),
         }))
       : cart.map(item => ({
+          _imageUrl: item.img || parseImagenes(item.imagen_url || item.producto?.imagen_url)[0] || '',
           Codigo: item.codigo_producto?.codigo || item.codigo || '',
           Producto: item.nombre,
           Cantidad: item.cantidad,

@@ -14,7 +14,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 3000,
   },
   optimizeDeps: {
-    include: ['xlsx', 'base64-js'],
+    include: ['xlsx', 'base64-js', 'exceljs'],
     exclude: [],
   },
 })
