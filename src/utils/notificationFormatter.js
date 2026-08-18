@@ -7,7 +7,8 @@
  * Mapeo de tipos de notificación a texto legible
  */
 const NOTIFICATION_TYPE_LABELS = {
-  CONSULTA_WEB: 'Consulta Web Recibida',
+    VENCIMIENTO: 'Producto por vencer',
+    CONSULTA_WEB: 'Consulta Web Recibida',
   STOCK_BAJO: 'Stock Bajo',
   VENTA_NUEVA: 'Venta Nueva',
   VENTA_CANCELADA: 'Venta Cancelada',
@@ -52,6 +53,7 @@ export const formatearTipoNotificacion = (tipo) => {
  */
 export const getColorTipoNotificacion = (tipo) => {
   const colorMap = {
+    VENCIMIENTO: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
     CONSULTA_WEB: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
     STOCK_BAJO: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
     VENTA_NUEVA: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
@@ -75,6 +77,7 @@ export const getColorTipoNotificacion = (tipo) => {
  */
 export const getIconoTipoNotificacion = (tipo) => {
   const iconMap = {
+    VENCIMIENTO: 'AlertTriangle',
     CONSULTA_WEB: 'MessageSquare',
     STOCK_BAJO: 'AlertTriangle',
     VENTA_NUEVA: 'ShoppingCart',

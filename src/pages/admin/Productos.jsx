@@ -26,7 +26,8 @@ import {
     ChevronDown,
     ChevronRight,
     ChevronLeft,
-    Barcode
+    Barcode,
+    CalendarDays
 } from 'lucide-react';
 import GenericABM from '../../components/ui/GenericABM';
 import BarcodeScanner from '../../components/ui/BarcodeScanner';
@@ -1127,6 +1128,119 @@ const ModalReposicion = ({ isOpen, onClose, producto: initialProducto, onSave })
         </Modal>
     );
 };
+
+const daysUntilYmd = (ymd) => {
+    if (!ymd) return null;
+    const now = new Date();
+    const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    const [y, m, d] = String(ymd).slice(0, 10).split('-').map(Number);
+    if (!y || !m || !d) return null;
+    const target = Date.UTC(y, m - 1, d);
+    return Math.round((target - today) / 86400000);
+};
+
+const expiryStatusOf = (vencimientos) => {
+    const dates = Array.isArray(vencimientos) ? vencimientos : [];
+    if (!dates.length) return null;
+    if (dates.some((d) => daysUntilYmd(d) < 0)) return 'vencido';
+    if (dates.some((d) => daysUntilYmd(d) <= 7)) return 'pronto';
+    return null;
+};
+
+const formatYmdEs = (ymd) => {
+    const [y, m, d] = String(ymd).slice(0, 10).split('-');
+    return `${d}/${m}/${y}`;
+};
+
+const VencimientosManager = ({ formData, setFormData }) => {
+    const [draft, setDraft] = useState('');
+    const dates = Array.isArray(formData.vencimientos) ? formData.vencimientos : [];
+
+    const addDate = () => {
+        const ymd = (draft || '').trim().slice(0, 10);
+        if (!ymd) return;
+        if (dates.includes(ymd)) {
+            toast.error('Esa fecha ya está cargada');
+            return;
+        }
+        setFormData({ ...formData, vencimientos: [...dates, ymd].sort() });
+        setDraft('');
+    };
+
+    const removeDate = (ymd) => {
+        setFormData({ ...formData, vencimientos: dates.filter((d) => d !== ymd) });
+    };
+
+    return (
+        <div className="space-y-2">
+            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">
+                <CalendarDays size={12} className="inline mr-1" />
+                Fechas de vencimiento
+            </label>
+            <p className="text-[9px] text-neutral-400 dark:text-gray-500 font-medium leading-relaxed">
+                Opcional. No mueve el stock: agregá una fecha cuando llega una tanda y sacala cuando ya no quede de esa.
+            </p>
+            {dates.length > 0 && (
+                <div className="flex flex-col gap-1.5">
+                    {dates.map((ymd) => {
+                        const days = daysUntilYmd(ymd);
+                        const tone = days < 0 ? 'vencido' : days <= 7 ? 'pronto' : 'ok';
+                        return (
+                            <div
+                                key={ymd}
+                                className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg border ${
+                                    tone === 'vencido'
+                                        ? 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20'
+                                        : tone === 'pronto'
+                                            ? 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20'
+                                            : 'border-neutral-200 bg-neutral-50 dark:border-gray-600 dark:bg-gray-700'
+                                }`}
+                            >
+                                <div className="flex items-center gap-2 min-w-0">
+                                    <span className="text-xs font-black text-black dark:text-white tracking-wide">
+                                        {formatYmdEs(ymd)}
+                                    </span>
+                                    {tone === 'vencido' && (
+                                        <span className="text-[8px] font-black uppercase tracking-widest text-red-600">Vencido</span>
+                                    )}
+                                    {tone === 'pronto' && (
+                                        <span className="text-[8px] font-black uppercase tracking-widest text-amber-600">Por vencer</span>
+                                    )}
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => removeDate(ymd)}
+                                    className="p-1 text-neutral-400 hover:text-red-500 transition-colors"
+                                    title="Quitar fecha"
+                                >
+                                    <X size={14} />
+                                </button>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+            <div className="flex items-center gap-2">
+                <input
+                    type="date"
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    className="flex-1 px-3 py-2.5 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-xs font-bold text-black dark:text-white focus:outline-none focus:border-brand-cyan"
+                />
+                <button
+                    type="button"
+                    onClick={addDate}
+                    disabled={!draft}
+                    className="px-3 py-2.5 bg-black text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-brand-cyan hover:text-black transition-colors disabled:opacity-40"
+                >
+                    <Plus size={12} className="inline mr-1" />
+                    Agregar
+                </button>
+            </div>
+        </div>
+    );
+};
+
 const Productos = () => {
     const { user } = useAuthStore();
     const isPrivileged = user?.id_rol === 1 || user?.id_rol === 2; // Admin or Supervisor
@@ -1198,6 +1312,12 @@ const Productos = () => {
                         <div className="flex flex-col min-w-0">
                             <div className="flex items-center gap-1.5 flex-wrap">
                                 <span className="font-black text-[10px] text-black dark:text-white uppercase tracking-wider truncate">{row.nombre}</span>
+                                {expiryStatusOf(row.vencimientos) === 'vencido' && (
+                                    <span className="text-[7px] font-black uppercase tracking-widest text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded">Vencido</span>
+                                )}
+                                {expiryStatusOf(row.vencimientos) === 'pronto' && (
+                                    <span className="text-[7px] font-black uppercase tracking-widest text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">Por vencer</span>
+                                )}
                                 <span className="text-[7px] font-bold text-neutral-400 dark:text-gray-300 uppercase tracking-widest border-l border-neutral-200 dark:border-gray-600 pl-1.5">
                                     {row.marca?.nombre_marca || 'GEN'} · {row.categoria?.nombre || 'S/C'}
                                 </span>
@@ -1307,6 +1427,9 @@ const Productos = () => {
             const existing = parseImagenes(formData.imagen_url);
             const padded = [...existing, '', '', ''].slice(0, 3);
             setFormData(prev => ({ ...prev, _imagenesTemp: padded, _uploading: [false, false, false] }));
+        }
+        if (formData.vencimientos === undefined) {
+            setFormData(prev => ({ ...prev, vencimientos: [] }));
         }
 
         // Estados para acordeones
@@ -1442,6 +1565,8 @@ const Productos = () => {
                             onChange={val => setFormData({ ...formData, id_proveedor: val || null })}
                         />
                     </div>
+
+                    <VencimientosManager formData={formData} setFormData={setFormData} />
 
                     {/* ═══════════════════════════════════════════════════════════
                         ACORDEÓN: FICHA TÉCNICA
