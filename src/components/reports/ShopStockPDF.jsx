@@ -93,13 +93,13 @@ const styles = StyleSheet.create({
 const formatPrice = (price) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(price || 0);
 
-const ShopStockPDF = ({ shopName, items, imageMap = {}, currentDate, showPushPrice = false, showBasePrice = false }) => {
+const ShopStockPDF = ({ shopName, items, imageMap = {}, currentDate, showPushPrice = true, showBasePrice = false }) => {
   const itemsWithStock = items.filter(i => (Number(i.cantidad_actual) || 0) > 0);
   const totalUnidades = items.reduce((acc, curr) => acc + (Number(curr.cantidad_actual) || 0), 0);
   const totalProductos = items.length;
   const productosConStock = itemsWithStock.length;
   const valorizacionTotal = items.reduce(
-    (acc, curr) => acc + (Number(curr.cantidad_actual) || 0) * (Number(curr.precio_venta_sugerido) || 0),
+    (acc, curr) => acc + (Number(curr.cantidad_actual) || 0) * (Number(curr.precio_pushsport) || 0),
     0
   );
 
@@ -218,6 +218,9 @@ const ShopStockPDF = ({ shopName, items, imageMap = {}, currentDate, showPushPri
                 <View style={{ ...colStock, ...styles.stockCell }}>
                   <Text style={hasStock ? styles.stockValue : styles.stockZero}>{stock}</Text>
                   <Text style={styles.stockLabel}>{hasStock ? 'uds' : 'SIN STOCK'}</Text>
+                  {(item.variantes || []).filter((v) => Number(v.cantidad) > 0).map((v) => (
+                    <Text key={v.nombre} style={styles.rowSabor}>{v.nombre}: {v.cantidad}</Text>
+                  ))}
                 </View>
 
                 {showBasePrice && colBase && (
@@ -251,7 +254,7 @@ const ShopStockPDF = ({ shopName, items, imageMap = {}, currentDate, showPushPri
 
         <View style={styles.footer} fixed>
           <Text style={styles.footerLeft}>Inventario de {shopName}</Text>
-          <Text style={styles.footerCenter}>{productosConStock} con stock · {totalUnidades} uds · {formatPrice(valorizacionTotal)}</Text>
+          <Text style={styles.footerCenter}>{productosConStock} con stock · {totalUnidades} uds · Push {formatPrice(valorizacionTotal)}</Text>
           <Text
             style={styles.footerRight}
             render={({ pageNumber, totalPages }) => `Pág ${pageNumber}/${totalPages}`}

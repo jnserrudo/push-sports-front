@@ -1,4 +1,15 @@
 import api from '../api/api';
+import { SITE_ORIGIN } from '../utils/siteUrl';
+
+export const toAbsoluteImageUrl = (url) => {
+    if (!url || typeof url !== 'string') return null;
+    const trimmed = url.trim();
+    if (!trimmed) return null;
+    if (trimmed.startsWith('data:') || trimmed.startsWith('blob:') || /^https?:\/\//i.test(trimmed)) return trimmed;
+    if (trimmed.startsWith('//')) return `https:${trimmed}`;
+    if (trimmed.startsWith('/')) return `${SITE_ORIGIN}${trimmed}`;
+    return trimmed;
+};
 
 /**
  * Uploads a product/branch image through the backend (disk on the VPS).
@@ -29,13 +40,17 @@ export const deleteProductImage = async (url) => {
  */
 export const parseImagenes = (imagen_url) => {
     if (!imagen_url) return [];
+    let list = [];
     try {
-        if (Array.isArray(imagen_url)) return imagen_url;
-        const parsed = JSON.parse(imagen_url);
-        return Array.isArray(parsed) ? parsed : [parsed];
+        if (Array.isArray(imagen_url)) list = imagen_url;
+        else {
+            const parsed = JSON.parse(imagen_url);
+            list = Array.isArray(parsed) ? parsed : [parsed];
+        }
     } catch {
-        return imagen_url ? [imagen_url] : [];
+        list = imagen_url ? [imagen_url] : [];
     }
+    return list.map(toAbsoluteImageUrl).filter(Boolean);
 };
 
 /**
@@ -53,9 +68,10 @@ export const serializeImagenes = (urls) => {
  * Returns null if the fetch fails.
  */
 export const fetchImageAsBase64 = async (url) => {
-    if (!url) return null;
+    const absolute = toAbsoluteImageUrl(url);
+    if (!absolute) return null;
     try {
-        const res = await fetch(url);
+        const res = await fetch(absolute);
         if (!res.ok) return null;
         const blob = await res.blob();
         
@@ -89,16 +105,19 @@ export const fetchImageAsBase64 = async (url) => {
 };
 
 /**
- * Pre-fetch all product images as base64, returning a map of { id_producto: base64string | null }
- * Call this once before rendering PDFs.
+ * Pre-fetch product images as base64 for react-pdf.
+ * Returns { map, failedCount, expectedCount }. Wait for this to finish before generating a PDF.
  */
 export const prefetchProductImages = async (products) => {
     const entries = await Promise.all(
-        products.map(async (p) => {
+        (products || []).map(async (p) => {
             const urls = parseImagenes(p.imagen_url).slice(0, 3);
-            const base64Array = await Promise.all(urls.map(url => fetchImageAsBase64(url)));
-            return [p.id_producto, base64Array.filter(Boolean)];
+            const base64Array = (await Promise.all(urls.map((url) => fetchImageAsBase64(url)))).filter(Boolean);
+            return [p.id_producto, base64Array, urls.length];
         })
     );
-    return Object.fromEntries(entries);
+    const map = Object.fromEntries(entries.map(([id, arr]) => [id, arr]));
+    const expectedCount = entries.reduce((sum, [, , expected]) => sum + expected, 0);
+    const failedCount = entries.reduce((sum, [, arr, expected]) => sum + (expected - arr.length), 0);
+    return { map, failedCount, expectedCount };
 };

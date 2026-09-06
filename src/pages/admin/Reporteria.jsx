@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import api from '../../api/api';
 import { Link } from 'react-router-dom';
-import { PDFDownloadLink, pdf } from '@react-pdf/renderer';
+import { pdf } from '@react-pdf/renderer';
 import { motion, AnimatePresence } from 'framer-motion';
 import { productosService } from '../../services/productosService';
 import { sucursalesService } from '../../services/sucursalesService';
@@ -39,6 +39,24 @@ import Toaster from '../../components/ui/Toaster';
 import DataTable from '../../components/ui/DataTable';
 import BulkPriceUpdateModal from '../../components/modals/BulkPriceUpdateModal';
 import { exportToExcel } from '../../utils/exportExcel';
+import QueQueresHacer from '../../components/ui/QueQueresHacer';
+
+const variantLabel = (v) => {
+  const raw = v?.variante || v || {};
+  let attrs = raw.atributos_valores || v?.atributos_valores || {};
+  if (typeof attrs === 'string') {
+    try { attrs = JSON.parse(attrs); } catch { attrs = {}; }
+  }
+  const fromAttrs = Object.values(attrs || {}).filter(Boolean).join(' / ');
+  return fromAttrs || raw.sku_variante || v?.sku_variante || 'Variante';
+};
+
+const itemCantidadDejada = (item) => {
+  if (item?.variantesDejada?.length) {
+    return item.variantesDejada.reduce((sum, v) => sum + (Number(v.cantidad) || 0), 0);
+  }
+  return Number(item?.cantidadDejada) || 0;
+};
 
 const Reporteria = () => {
   const [activeTab, setActiveTab] = useState('global');
@@ -68,8 +86,8 @@ const Reporteria = () => {
   const [stockInventorySearch, setStockInventorySearch] = useState('');
 
   // Toggles
-  const [showPushPriceGlobal, setShowPushPriceGlobal] = useState(false);
-  const [showPushPriceShop, setShowPushPriceShop] = useState(false);
+  const [showPushPriceGlobal, setShowPushPriceGlobal] = useState(true);
+  const [showPushPriceShop, setShowPushPriceShop] = useState(true);
   const [showBasePriceShop, setShowBasePriceShop] = useState(false);
   const [savingReport, setSavingReport] = useState(false);
 
@@ -98,11 +116,7 @@ const Reporteria = () => {
       const prods = prodData || [];
       setProducts(prods);
       setSucursales(sucData || []);
-      // Pre-fetch all images as base64 so PDFs can embed them
-      setPrefetchingImages(true);
-      const map = await prefetchProductImages(prods);
-      setImageMap(map);
-      setPrefetchingImages(false);
+      await refreshImages(prods, false);
     } catch (error) {
       console.error('Error fetching data:', error);
       if (error.response?.status === 403 || error.response?.status === 401) {
@@ -112,6 +126,23 @@ const Reporteria = () => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const refreshImages = async (prods, warnOnFail = true) => {
+    setPrefetchingImages(true);
+    try {
+      const { map, failedCount } = await prefetchProductImages(prods);
+      setImageMap(map);
+      if (warnOnFail && failedCount > 0) {
+        setToaster({
+          type: 'error',
+          message: `${failedCount} foto${failedCount === 1 ? '' : 's'} no se pudieron cargar. Esos productos salen con inicial en el PDF.`
+        });
+      }
+      return map;
+    } finally {
+      setPrefetchingImages(false);
     }
   };
 
@@ -178,6 +209,16 @@ const Reporteria = () => {
       const stockItem = inv.find(i => i.id_producto === p.id_producto);
       const stockComercio = stockItem ? stockItem.cantidad_actual : 0;
       const stockCentral = p.stock_central ?? 0;
+      const variantesRaw = (stockItem?.variantes?.length ? stockItem.variantes : (p.variantes || []));
+      const usaVariantes = p.usa_desglose_variantes || p.usa_variantes || variantesRaw.length > 0;
+      const variantesDejada = usaVariantes
+        ? variantesRaw.map((v) => ({
+            id_variante: v.variante?.id_variante || v.id_variante,
+            nombre: variantLabel(v),
+            stock: v.cantidad_actual ?? v.stock_central ?? 0,
+            cantidad: 0
+          }))
+        : [];
       setSelectedItems(prev => [
         ...prev,
         {
@@ -185,6 +226,7 @@ const Reporteria = () => {
           stockAnterior: stockComercio,
           stockCentral,
           cantidadDejada: 0,
+          variantesDejada,
           precio_venta_sugerido: p.precio_venta_sugerido,
           precio_pushsport: p.precio_pushsport,
           precio_base: p.costo_compra
@@ -204,6 +246,34 @@ const Reporteria = () => {
 
   const dateStamp = () => new Date().toLocaleDateString('es-AR').replace(/\//g, '-');
 
+  const handleDownloadGlobalPDF = async () => {
+    const sorted = [...filteredProducts].sort((a, b) => (a.codigo_producto?.codigo || '').localeCompare(b.codigo_producto?.codigo || ''));
+    if (sorted.length === 0) return;
+    setPrefetchingImages(true);
+    try {
+      const freshMap = await refreshImages(sorted, true);
+      const blob = await pdf(
+        <ReportPDF
+          products={sorted}
+          imageMap={freshMap}
+          currentDate={new Date().toLocaleDateString()}
+          showPushPrice={showPushPriceGlobal}
+        />
+      ).toBlob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Lista_Precios_${new Date().toLocaleDateString()}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error generando lista de precios:', error);
+      setToaster({ type: 'error', message: 'Error al generar el PDF de lista de precios' });
+    }
+  };
+
   const handleExportGlobalExcel = () => {
     const rows = [...filteredProducts]
       .filter(p => p.activo !== false)
@@ -221,17 +291,29 @@ const Reporteria = () => {
 
   const handleExportEntregaExcel = () => {
     if (!sucursal || selectedItems.length === 0) return;
+    const totalUnidades = selectedItems.reduce((sum, item) => sum + itemCantidadDejada(item), 0);
+    if (totalUnidades === 0) {
+      setToaster({ type: 'error', message: 'Ingresá cuántas unidades vas a dejar (A dejar). Si el producto tiene variantes, cargá Chocolate / Vainilla por separado.' });
+      return;
+    }
     const rows = [...selectedItems]
       .sort((a, b) => (a.producto?.codigo_producto?.codigo || '').localeCompare(b.producto?.codigo_producto?.codigo || ''))
-      .map(item => ({
-        _imageUrl: parseImagenes(item.producto?.imagen_url)[0] || '',
-        Sucursal: sucursal.nombre,
-        Codigo: item.producto?.codigo_producto?.codigo || '',
-        Producto: item.producto?.nombre || '',
-        Cantidad: Number(item.cantidadDejada) || 0,
-        'Precio Publico': Number(item.precio_venta_sugerido) || 0,
-        'Precio Push': Number(item.precio_pushsport) || 0,
-      }));
+      .flatMap(item => {
+        const base = {
+          _imageUrl: parseImagenes(item.producto?.imagen_url)[0] || '',
+          Sucursal: sucursal.nombre,
+          Codigo: item.producto?.codigo_producto?.codigo || '',
+          Producto: item.producto?.nombre || '',
+          'Precio Publico': Number(item.precio_venta_sugerido) || 0,
+          'Precio Push': Number(item.precio_pushsport) || 0,
+        };
+        if (item.variantesDejada?.length) {
+          return item.variantesDejada
+            .filter(v => Number(v.cantidad) > 0)
+            .map(v => ({ ...base, Variante: v.nombre, Cantidad: Number(v.cantidad) || 0 }));
+        }
+        return [{ ...base, Variante: '', Cantidad: Number(item.cantidadDejada) || 0 }];
+      });
     exportToExcel(rows, `Reporte_Entrega_${sucursal.nombre}_${dateStamp()}`);
   };
 
@@ -248,6 +330,7 @@ const Reporteria = () => {
         Codigo: prod.codigo_producto?.codigo || '',
         Producto: prod.nombre || '',
         Stock: cantidad,
+        'Valorizado Push': cantidad * Number(prod.precio_pushsport || 0),
         'Precio Publico': Number(prod.precio_venta_sugerido || 0),
         'Precio Push': Number(prod.precio_pushsport || 0),
       };
@@ -257,9 +340,18 @@ const Reporteria = () => {
 
   const handleDownloadReport = async () => {
     if (!sucursal || selectedItems.length === 0) return;
+    const itemsWithQty = selectedItems.map(item => ({
+      ...item,
+      cantidadDejada: itemCantidadDejada(item)
+    }));
+    const totalUnidades = itemsWithQty.reduce((sum, item) => sum + item.cantidadDejada, 0);
+    if (totalUnidades === 0) {
+      setToaster({ type: 'error', message: 'Ingresá cuántas unidades vas a dejar (A dejar). Si el producto tiene variantes, cargá cada sabor / talle por separado.' });
+      return;
+    }
     setSavingReport(true);
     try {
-      const detalles = selectedItems.map(item => ({
+      const detalles = itemsWithQty.map(item => ({
         id_producto: item.producto.id_producto,
         cantidad: Number(item.cantidadDejada) || 0,
         precio_venta: Number(item.precio_venta_sugerido) || 0,
@@ -275,13 +367,14 @@ const Reporteria = () => {
       const reporte = savedData?.data || savedData;
       const numeroReporte = reporte?.numero_reporte || '';
 
-      const sortedSelectedItems = [...selectedItems].sort((a,b) => (a.producto?.codigo_producto?.codigo || '').localeCompare(b.producto?.codigo_producto?.codigo || ''));
+      const sortedSelectedItems = [...itemsWithQty].sort((a,b) => (a.producto?.codigo_producto?.codigo || '').localeCompare(b.producto?.codigo_producto?.codigo || ''));
+      const freshMap = await refreshImages(sortedSelectedItems.map(i => i.producto), true);
 
       const blob = await pdf(
         <ShopReportPDF
           shopName={sucursal.nombre}
           items={sortedSelectedItems}
-          imageMap={imageMap}
+          imageMap={freshMap}
           currentDate={new Date().toLocaleDateString()}
           showPushPrice={showPushPriceShop}
           showBasePrice={showBasePriceShop}
@@ -320,17 +413,22 @@ const Reporteria = () => {
           cantidad_actual: cantidad,
           precio_venta_sugerido: prod.precio_venta_sugerido,
           precio_pushsport: prod.precio_pushsport,
-          costo_compra: prod.costo_compra
+          costo_compra: prod.costo_compra,
+          variantes: (item.variantes || []).map((v) => ({
+            nombre: variantLabel(v),
+            cantidad: v.cantidad_actual || 0
+          }))
         };
       });
 
       const sortedItemsForPdf = itemsForPdf.sort((a,b) => (a.codigo_producto?.codigo || '').localeCompare(b.codigo_producto?.codigo || ''));
+      const freshMap = await refreshImages(sortedItemsForPdf, true);
 
       const blob = await pdf(
         <ShopStockPDF
           shopName={sucursal.nombre}
           items={sortedItemsForPdf}
-          imageMap={imageMap}
+          imageMap={freshMap}
           currentDate={new Date().toLocaleDateString()}
           showPushPrice={showPushPriceShop}
           showBasePrice={showBasePriceShop}
@@ -395,7 +493,7 @@ const Reporteria = () => {
                 <span className="text-brand-cyan">Reportería</span>
             </h1>
             <p className="text-neutral-500 dark:text-gray-400 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed max-w-xl mt-2 whitespace-normal">
-                Generá listas de precios, planificá entregas a sucursales o descargá el stock actual de una sucursal en PDF. La generación de PDFs es informativa y no modifica la base de datos.
+                El PDF/Excel es para firmar. No mueve stock. Para dejarle mercadería a una sucursal usá Envíos → Cargar Mercadería.
             </p>
         </div>
 
@@ -418,6 +516,8 @@ const Reporteria = () => {
         </div>
       </div>
 
+      <QueQueresHacer />
+
       <AnimatePresence mode="wait">
         {activeTab === 'global' ? (
           <motion.div
@@ -432,7 +532,7 @@ const Reporteria = () => {
               <div>
                 <p className="text-white dark:text-gray-100 font-black text-xs uppercase tracking-tight">Lista de Precios para Comercios</p>
                 <p className="text-neutral-400 dark:text-gray-400 text-[9px] font-bold uppercase tracking-wider mt-0.5">
-                  El <span className="text-white">precio público</span> siempre se incluye en el PDF. Podés activar el precio Push si querés enviarlo también.
+                  <span className="text-white">Público</span> = lo que cobra la sucursal al cliente. <span className="text-brand-cyan">Push</span> = lo que te paga la sucursal. Por defecto ambos van en el PDF.
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -452,17 +552,17 @@ const Reporteria = () => {
                   {showPushPriceGlobal ? <Eye size={13} /> : <EyeOff size={13} />}
                   {showPushPriceGlobal ? 'Precio Push: ON' : 'Precio Push: OFF'}
                 </button>
-                <PDFDownloadLink
-                  document={<ReportPDF products={[...filteredProducts].sort((a,b) => (a.codigo_producto?.codigo || '').localeCompare(b.codigo_producto?.codigo || ''))} imageMap={imageMap} currentDate={new Date().toLocaleDateString()} showPushPrice={showPushPriceGlobal} />}
-                  fileName={`Lista_Precios_${new Date().toLocaleDateString()}.pdf`}
-                  className="h-9 px-5 bg-neutral-100 dark:bg-gray-700 text-black dark:text-white rounded-xl flex items-center gap-2 hover:bg-neutral-200 dark:hover:bg-gray-600 transition-all shadow-md text-[10px] font-black uppercase tracking-widest"
+                <button
+                  type="button"
+                  onClick={handleDownloadGlobalPDF}
+                  disabled={filteredProducts.length === 0 || prefetchingImages}
+                  className="h-9 px-5 bg-neutral-100 dark:bg-gray-700 text-black dark:text-white rounded-xl flex items-center gap-2 hover:bg-neutral-200 dark:hover:bg-gray-600 transition-all shadow-md text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
                 >
-                  {({ loading: pdfLoading }) => (
-                    pdfLoading
-                      ? <><Loader2 size={13} className="animate-spin" /> Generando...</>
-                      : <><Download size={13} /> PDF Lista Precios</>
-                  )}
-                </PDFDownloadLink>
+                  {prefetchingImages
+                    ? <><Loader2 size={13} className="animate-spin" /> Preparando fotos...</>
+                    : <><Download size={13} /> PDF Lista Precios</>
+                  }
+                </button>
                 <button
                   type="button"
                   onClick={handleExportGlobalExcel}
@@ -732,8 +832,8 @@ const Reporteria = () => {
                       <div className="text-[11px] font-bold uppercase tracking-wider leading-relaxed">
                         <p className="font-black text-xs mb-1">ATENCIÓN: ESTE REPORTE NO CAMBIA EL STOCK EN EL SISTEMA</p>
                         <p>
-                          Esta pantalla sirve para planificar la mercadería que vas a entregar físicamente. El PDF se imprime para firmar, pero el stock real de la sucursal no cambia.
-                          Para que el comercio pueda vender este stock, registrá el ingreso desde la sección <Link to="/dashboard/inventario" className="underline font-black hover:text-black dark:hover:text-white mx-1 text-neutral-900 dark:text-gray-100">STOCK</Link>.
+                          Esta pantalla sirve para planificar e imprimir. El PDF se firma, pero el stock de la sucursal no cambia.
+                          Para que el comercio pueda vender, registrá el ingreso en <Link to="/dashboard/envios" className="underline font-black hover:text-black dark:hover:text-white mx-1 text-neutral-900 dark:text-gray-100">Envíos → Cargar Mercadería</Link>.
                         </p>
                       </div>
                     </div>
@@ -852,8 +952,9 @@ const Reporteria = () => {
                           {showBasePriceShop ? 'P. Base: ON' : 'P. Base: OFF'}
                         </button>
                         {(() => {
-                          const hayExceso = selectedItems.some(i => i.cantidadDejada > (i.stockCentral ?? 0));
+                          const hayExceso = selectedItems.some(i => itemCantidadDejada(i) > (i.stockCentral ?? 0));
                           const nada = selectedItems.length === 0;
+                          const sinCantidades = !nada && selectedItems.every(i => itemCantidadDejada(i) === 0);
                           return (
                             <>
                               {hayExceso && (
@@ -873,7 +974,7 @@ const Reporteria = () => {
                                 <>
                                 <button
                                   onClick={handleDownloadReport}
-                                  disabled={savingReport}
+                                  disabled={savingReport || prefetchingImages || sinCantidades}
                                   className={`h-9 px-5 rounded-xl flex items-center gap-2 transition-all shadow-md font-black uppercase tracking-widest text-[10px] ${
                                     hayExceso
                                       ? 'bg-amber-500/80 text-black hover:scale-105'
@@ -905,7 +1006,7 @@ const Reporteria = () => {
                       <div className="flex items-center justify-between mb-6">
                         <div>
                           <h3 className="text-lg font-black text-neutral-900 dark:text-white tracking-tighter uppercase">Productos a entregar</h3>
-                          <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5">Ingresá cuántas unidades vas a dejar en el comercio</p>
+                          <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5">Ingresá cuántas unidades vas a dejar. Si hay variantes (Chocolate / Vainilla), cargá cada una.</p>
                         </div>
                         {selectedItems.length > 0 && (
                           <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest bg-neutral-50 border border-neutral-200 px-3 py-1 rounded-lg">
@@ -961,7 +1062,7 @@ const Reporteria = () => {
                                 <div className="flex flex-col">
                                   {(() => {
                                     const sc = item.stockCentral ?? 0;
-                                    const excede = item.cantidadDejada > sc;
+                                    const excede = itemCantidadDejada(item) > sc;
                                     return (
                                       <>
                                         <label className={`text-[9px] font-black uppercase tracking-widest mb-1.5 min-h-[20px] flex items-center ${excede ? 'text-amber-500' : 'text-neutral-400'}`}><LabelTip label="Central disponible" tip="Stock disponible en depósito central. Si superás este valor, no hay mercadería suficiente para enviar." /></label>
@@ -985,7 +1086,32 @@ const Reporteria = () => {
 
                                 {/* Col 3: A dejar */}
                                 <div className="flex flex-col">
-                                  <label className="text-[9px] font-black uppercase tracking-widest text-brand-cyan mb-1.5 min-h-[20px] flex items-center"><LabelTip label="A dejar" tip="Cantidad que planificás entregar en esta visita. Inicia en 0 porque el reporte es una planificación, no un envío ya realizado." /></label>
+                                  <label className="text-[9px] font-black uppercase tracking-widest text-brand-cyan mb-1.5 min-h-[20px] flex items-center"><LabelTip label="A dejar" tip="Cantidad que planificás entregar. Si hay variantes, cargá cada sabor o talle. El PDF no mueve stock." /></label>
+                                  {item.variantesDejada?.length ? (
+                                    <div className="space-y-1.5">
+                                      {item.variantesDejada.map((variante, vIdx) => (
+                                        <div key={variante.id_variante || vIdx} className="flex items-center gap-1.5">
+                                          <span className="text-[8px] font-black uppercase tracking-tight text-neutral-500 w-20 truncate" title={variante.nombre}>{variante.nombre}</span>
+                                          <input
+                                            type="number"
+                                            min="0"
+                                            placeholder="0"
+                                            value={variante.cantidad || ''}
+                                            onChange={(e) => {
+                                              const v = Math.max(0, Number(e.target.value));
+                                              setSelectedItems(prev => prev.map((it, i) => {
+                                                if (i !== idx) return it;
+                                                const variantesDejada = it.variantesDejada.map((vr, j) => j === vIdx ? { ...vr, cantidad: v } : vr);
+                                                return { ...it, variantesDejada, cantidadDejada: variantesDejada.reduce((s, vr) => s + (Number(vr.cantidad) || 0), 0) };
+                                              }));
+                                            }}
+                                            className="flex-1 h-9 rounded-lg px-2 text-center font-black text-xs outline-none border-2 bg-white dark:bg-gray-700 border-brand-cyan/50 dark:border-brand-cyan/30 text-neutral-900 dark:text-white focus:border-brand-cyan"
+                                          />
+                                        </div>
+                                      ))}
+                                      <p className="text-[8px] font-black text-brand-cyan uppercase tracking-widest">Total {itemCantidadDejada(item)} uds</p>
+                                    </div>
+                                  ) : (
                                   <input
                                     type="number"
                                     min="0"
@@ -996,20 +1122,21 @@ const Reporteria = () => {
                                       setSelectedItems(prev => prev.map((it, i) => i === idx ? { ...it, cantidadDejada: v } : it));
                                     }}
                                     className={`w-full h-11 rounded-xl px-3 text-center font-black text-sm outline-none transition-all placeholder:text-neutral-200 dark:placeholder:text-gray-600 border-2 ${
-                                      item.cantidadDejada > (item.stockCentral ?? 0)
+                                      itemCantidadDejada(item) > (item.stockCentral ?? 0)
                                         ? 'bg-red-50 dark:bg-red-900/20 border-red-400 dark:border-red-600 text-red-600 dark:text-red-400 focus:border-red-500 dark:focus:border-red-400'
                                         : 'bg-white dark:bg-gray-700 border-brand-cyan/50 dark:border-brand-cyan/30 text-neutral-900 dark:text-white focus:border-brand-cyan dark:focus:border-cyan-400'
                                     }`}
                                   />
+                                  )}
                                 </div>
 
                                 {/* Col 4: Stock nuevo en comercio */}
                                 <div className="flex flex-col">
                                   <label className="text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 min-h-[20px] flex items-center"><LabelTip label="Stock nuevo" tip="Proyección del stock que tendrá la sucursal si se entrega la cantidad indicada en 'A dejar'." /></label>
                                   <div className={`h-11 rounded-xl flex items-center justify-center font-black text-sm ${
-                                    item.cantidadDejada > 0 ? 'bg-neutral-900 dark:bg-gray-900 text-brand-cyan' : 'bg-neutral-50 dark:bg-gray-700 text-neutral-400 dark:text-gray-500 border-2 border-neutral-100 dark:border-gray-600'
+                                    itemCantidadDejada(item) > 0 ? 'bg-neutral-900 dark:bg-gray-900 text-brand-cyan' : 'bg-neutral-50 dark:bg-gray-700 text-neutral-400 dark:text-gray-500 border-2 border-neutral-100 dark:border-gray-600'
                                   }`}>
-                                    {item.stockAnterior + item.cantidadDejada}
+                                    {item.stockAnterior + itemCantidadDejada(item)}
                                     <span className="text-[8px] ml-1 opacity-60 font-bold">uds</span>
                                   </div>
                                 </div>
@@ -1035,7 +1162,7 @@ const Reporteria = () => {
                           <div className="mt-6 pt-5 border-t border-neutral-100 dark:border-gray-700 flex flex-wrap justify-between items-center gap-4">
                             <div className="text-xs font-black uppercase tracking-widest">
                               <p className="text-neutral-400 dark:text-gray-400">Total unidades a entregar</p>
-                              <p className="text-3xl text-neutral-900 dark:text-white tracking-tighter mt-1">{selectedItems.reduce((a, c) => a + c.cantidadDejada, 0)}</p>
+                              <p className="text-3xl text-neutral-900 dark:text-white tracking-tighter mt-1">{selectedItems.reduce((a, c) => a + itemCantidadDejada(c), 0)}</p>
                             </div>
                             <div className="text-right text-xs font-black uppercase tracking-widest">
                               <p className="text-neutral-400 dark:text-gray-400">Productos en entrega</p>
@@ -1044,9 +1171,9 @@ const Reporteria = () => {
                           </div>
                           
                           <div className="mt-4 p-3.5 bg-neutral-50 dark:bg-gray-700/30 rounded-2xl border border-neutral-200 dark:border-gray-600 text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-gray-400 leading-normal">
-                            RECUERDA: Tras realizar la entrega física de la mercadería y firmar este reporte, debés ir a 
-                            <Link to="/dashboard/inventario" className="text-brand-cyan dark:text-cyan-400 underline font-black mx-1 hover:text-black dark:hover:text-white">STOCK</Link> 
-                            y actualizar el "Stock Actual" de cada producto al valor indicado arriba en "Stock nuevo".
+                            RECUERDA: este PDF no mueve stock. Después de entregar, andá a
+                            <Link to="/dashboard/envios" className="text-brand-cyan dark:text-cyan-400 underline font-black mx-1 hover:text-black dark:hover:text-white">Envíos → Cargar Mercadería</Link>
+                            y registrá las mismas cantidades (por variante si corresponde).
                           </div>
                         </>
                       )}
@@ -1093,7 +1220,7 @@ const Reporteria = () => {
                           </button>
                           <button
                             onClick={handleDownloadStockPDF}
-                            disabled={loadingStockInventory || stockInventory.length === 0}
+                            disabled={loadingStockInventory || stockInventory.length === 0 || prefetchingImages}
                             className="h-9 px-5 rounded-xl flex items-center gap-2 transition-all shadow-md font-black uppercase tracking-widest text-[10px] bg-brand-cyan text-black hover:scale-105 disabled:opacity-60 disabled:hover:scale-100"
                           >
                             {loadingStockInventory
@@ -1104,7 +1231,7 @@ const Reporteria = () => {
                           <button
                             type="button"
                             onClick={handleExportStockExcel}
-                            disabled={loadingStockInventory || stockInventory.length === 0}
+                            disabled={loadingStockInventory || stockInventory.length === 0 || prefetchingImages}
                             className="h-9 px-5 rounded-xl flex items-center gap-2 transition-all shadow-md font-black uppercase tracking-widest text-[10px] bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60"
                           >
                             <FileSpreadsheet size={13} /> Excel

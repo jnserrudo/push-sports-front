@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { pdf } from '@react-pdf/renderer';
 import PosComprobantePDF from '../../components/reports/PosComprobantePDF';
+import { Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { posService } from '../../services/posService';
 import { sucursalesService } from '../../services/sucursalesService';
@@ -48,6 +49,7 @@ import { parseImagenes } from '../../lib/supabaseStorage';
 import PremiumSelect from '../../components/ui/PremiumSelect';
 import Modal from '../../components/ui/Modal';
 import BarcodeScanner from '../../components/ui/BarcodeScanner';
+import QueQueresHacer from '../../components/ui/QueQueresHacer';
 
 const POS = () => {
   const { user, sucursalId } = useAuthStore();
@@ -88,6 +90,7 @@ const POS = () => {
 
   // Modal informativo de estados de ventas
   const [showSalesInfoModal, setShowSalesInfoModal] = useState(false);
+  const [showConfirmSale, setShowConfirmSale] = useState(false);
 
   // Escaneo de código de barras (pistola + cámara)
   const [scanValue, setScanValue] = useState('');
@@ -149,7 +152,7 @@ const POS = () => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         if (cart.length > 0 && !isProcessing && activeTab === 'cart' || cart.length > 0 && !isProcessing && window.innerWidth >= 1280) { // Only if cart is visible or desktop
           e.preventDefault();
-          handleConfirmSale();
+          setShowConfirmSale(true);
         }
       }
     };
@@ -278,7 +281,10 @@ const POS = () => {
   // Manejar clic en producto - muestra variantes si las tiene
   const handleProductClick = (item) => {
     const availableStock = getAvailableStock(item);
-    if (availableStock <= 0) return;
+    if (availableStock <= 0) {
+      toast.error(`${getProductNombre(item)} no tiene stock acá. Para cargarle mercadería usá Envíos → Cargar Mercadería.`);
+      return;
+    }
     
     // Si el producto está configurado para usar variantes, SIEMPRE abrir el modal
     if (item.producto?.usa_variantes || item.usa_desglose_variantes || (item.variantes && item.variantes.length > 0)) {
@@ -297,7 +303,7 @@ const POS = () => {
     const stockMax = variante.cantidad_actual || 0;
     const availableStock = getAvailableVarianteStock(item, variante.id_variante, stockMax);
     if (availableStock <= 0) {
-      toast.error(`No hay más stock disponible para esta variante`);
+      toast.error(`Esa variante no tiene más stock. El total del producto no se puede vender mezclado: cada sabor/talle tiene su propio tope (${stockMax} uds).`);
       return;
     }
     const precio = getProductPrecio(item);
@@ -312,7 +318,7 @@ const POS = () => {
     const existing = cart.find(c => c.id === id);
     if (existing) {
       if (existing.cantidad >= stockMax) {
-        toast.error(`Máximo de stock disponible: ${stockMax} unidades`);
+        toast.error(`Solo hay ${stockMax} uds de ${nombreVariante}. No se puede vender más de esa variante.`);
         return;
       }
       setCart(cart.map(c => c.id === id ? { ...c, cantidad: c.cantidad + 1 } : c));
@@ -422,6 +428,10 @@ const POS = () => {
   const updateQuantity = (id, delta) => {
     setCart(cart.map(item => {
       if (item.id === id) {
+        if (delta > 0 && item.cantidad >= item.stock) {
+          toast.error(`Solo hay ${item.stock} uds de ${item.nombre}. Cada variante tiene su propio tope.`);
+          return item;
+        }
         const newQty = Math.min(item.stock, Math.max(1, item.cantidad + delta));
         return { ...item, cantidad: newQty };
       }
@@ -430,6 +440,7 @@ const POS = () => {
   };
 
   const subtotal = cart.reduce((acc, item) => acc + (item.precio * item.cantidad), 0);
+  const totalPush = cart.reduce((acc, item) => acc + ((Number(item.precio_push) || 0) * item.cantidad), 0);
   const montoDescuento = descuentoAplicado?.monto_descuento || 0;
   const total = Math.max(0, subtotal - montoDescuento);
   const cartItemsCount = cart.reduce((acc, item) => acc + item.cantidad, 0);
@@ -541,6 +552,7 @@ const POS = () => {
 
   const handleConfirmSale = async () => {
     if (!cart.length) return;
+    setShowConfirmSale(false);
     setIsProcessing(true);
     try {
       const comercioId = selectedSucursalId || sucursalId || user?.id_comercio_asignado;
@@ -584,6 +596,9 @@ const POS = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h2 className="text-base md:text-lg font-black tracking-tighter m-0 uppercase leading-none text-neutral-950">Registrar Ventas - {currentSucursal?.nombre || 'Seleccioná sede'}</h2>
+                  <p className="text-[8px] font-bold uppercase tracking-widest text-neutral-400 mt-1 m-0">
+                    Venta al cliente · cobrás <span className="text-black dark:text-white">Público</span>
+                  </p>
                 </div>
                 <button
                     onClick={() => setShowSalesInfoModal(true)}
@@ -713,11 +728,17 @@ const POS = () => {
 
             {/* System impact warning card */}
             {(!isSuperAdmin || selectedSucursalId) && (
-              <div className="mx-3 md:mx-4 mb-2 flex items-start gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg">
-                <AlertCircle size={12} className="text-blue-500 dark:text-blue-400 shrink-0 mt-0.5" />
-                <p className="text-[8px] md:text-[9px] text-blue-700 dark:text-blue-300 font-bold leading-relaxed m-0">
-                  La venta resta stock de esta sede y suma el monto a liquidaciones. Si una variante figura como AGOTADO, es porque no tiene stock en esta sucursal. Para agregar stock, usa la seccion Envíos a Sucursales.
-                </p>
+              <div className="mx-3 md:mx-4 mb-2 space-y-2">
+                <div className="flex items-start gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg">
+                  <AlertCircle size={12} className="text-blue-500 dark:text-blue-400 shrink-0 mt-0.5" />
+                  <p className="text-[8px] md:text-[9px] text-blue-700 dark:text-blue-300 font-bold leading-relaxed m-0">
+                    Acá vendés al cliente final y cobrás <span className="font-black">Público</span>. Resta stock de esta sede.
+                    ¿Querés dejarle mercadería a una sucursal? No uses esta pantalla: andá a{' '}
+                    <Link to="/dashboard/envios" className="underline font-black">Envíos → Cargar Mercadería</Link>.
+                    Lo que te paga la sucursal es <span className="font-black">Push</span> (Liquidaciones).
+                  </p>
+                </div>
+                <QueQueresHacer compact />
               </div>
             )}
         </div>
@@ -920,9 +941,9 @@ const POS = () => {
                     )}
                 </div>
                     <div>
-                        <h2 className="text-lg md:text-xl font-black tracking-tighter m-0 uppercase leading-none text-neutral-900 dark:text-gray-100">Ticket</h2>
+                        <h2 className="text-lg md:text-xl font-black tracking-tighter m-0 uppercase leading-none text-neutral-900 dark:text-gray-100">Ticket / venta rápida</h2>
                         <span className="text-[10px] md:text-[11px] font-bold text-neutral-400 dark:text-gray-500 uppercase tracking-widest mt-0.5 block">
-                            Terminal de venta rápida. Agregá productos y finalizá cobros en segundos.
+                            Cliente final · cobrás Público. Push es lo que te liquida la sucursal.
                         </span>
                     </div>
             </div>
@@ -1028,7 +1049,9 @@ const POS = () => {
                          </div>
                          <div className="flex flex-col min-w-0 max-w-[140px] md:max-w-none">
                             <h4 className="font-bold uppercase text-[9px] md:text-[10px] tracking-tight text-neutral-900 dark:text-gray-100 mb-0.5 md:mb-1 truncate">{item.nombre}</h4>
-                            <span className="text-[8px] font-bold text-neutral-400 dark:text-gray-500 uppercase tracking-widest">${item.precio.toLocaleString()} c/u</span>
+                            <span className="text-[8px] font-bold text-neutral-400 dark:text-gray-500 uppercase tracking-widest">
+                              Público ${item.precio.toLocaleString()} · Push ${(item.precio_push || 0).toLocaleString()}
+                            </span>
                          </div>
                     </div>
                     <button onClick={() => removeFromCart(item.id)} className="p-2 text-neutral-300 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 active:scale-125 transition-all">
@@ -1132,16 +1155,19 @@ const POS = () => {
                     </div>
                 </div>
                 <div className="pt-1.5 border-t border-neutral-200 flex justify-between items-end">
-                    <span className="text-[7px] font-black text-neutral-400 dark:text-gray-500 uppercase tracking-[0.15em]">Total</span>
+                    <span className="text-[7px] font-black text-neutral-400 dark:text-gray-500 uppercase tracking-[0.15em]">Total Público</span>
+                    <div className="text-right">
                     <motion.span
                         key={total}
                         initial={{ scale: 1.05, color: '#00d2ff' }}
                         animate={{ scale: 1, color: '#171717' }}
                         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                        className="text-base md:text-lg font-black tracking-tighter leading-none"
+                        className="text-base md:text-lg font-black tracking-tighter leading-none block"
                     >
                         ${total.toLocaleString()}
                     </motion.span>
+                    <span className="text-[8px] font-bold text-neutral-400 uppercase tracking-widest">Push ${totalPush.toLocaleString()}</span>
+                    </div>
                 </div>
             </div>
 
@@ -1175,7 +1201,7 @@ const POS = () => {
                     </>
                 )}
                 <button
-                    onClick={handleConfirmSale}
+                    onClick={() => setShowConfirmSale(true)}
                     disabled={cart.length === 0 || isProcessing || showDrafts}
                     className="flex-1 btn-cyan h-9 text-[9px] flex items-center justify-center gap-1 disabled:opacity-20 transition-all active:scale-95"
                 >
@@ -1188,6 +1214,61 @@ const POS = () => {
       </>
       )}
       </AnimatePresence>
+
+      <Modal
+        isOpen={showConfirmSale}
+        onClose={() => !isProcessing && setShowConfirmSale(false)}
+        title="Confirmar venta al cliente"
+      >
+        <div className="space-y-4">
+          <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-amber-800 dark:text-amber-300 leading-relaxed m-0">
+              Esto cobra precio Público al cliente final y resta el stock de esta sede. No es un envío a sucursal.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-xl border border-neutral-200 dark:border-gray-700 p-3">
+              <p className="text-[8px] font-black uppercase tracking-widest text-neutral-400 m-0">Cobra al cliente</p>
+              <p className="text-xl font-black text-neutral-900 dark:text-white m-0">${total.toLocaleString()}</p>
+              <p className="text-[8px] font-bold uppercase text-neutral-400 m-0">Público</p>
+            </div>
+            <div className="rounded-xl border border-brand-cyan/30 bg-brand-cyan/5 p-3">
+              <p className="text-[8px] font-black uppercase tracking-widest text-neutral-400 m-0">Te liquida la sucursal</p>
+              <p className="text-xl font-black text-brand-cyan m-0">${totalPush.toLocaleString()}</p>
+              <p className="text-[8px] font-bold uppercase text-neutral-400 m-0">Push</p>
+            </div>
+          </div>
+          <div className="space-y-1.5 max-h-40 overflow-y-auto">
+            {cart.map((item) => (
+              <div key={item.id} className="flex justify-between gap-2 text-[10px] font-bold uppercase tracking-tight text-neutral-600 dark:text-gray-300">
+                <span className="truncate">{item.cantidad} × {item.nombre}</span>
+                <span className="shrink-0">-{item.cantidad} stock</span>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-col gap-2 pt-1">
+            <button
+              type="button"
+              onClick={handleConfirmSale}
+              disabled={isProcessing}
+              className="w-full btn-cyan h-11 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
+            >
+              {isProcessing ? <Loader2 size={14} className="animate-spin" /> : 'Confirmar y cobrar Público'}
+            </button>
+            <button
+              type="button"
+              disabled={isProcessing}
+              onClick={() => setShowConfirmSale(false)}
+              className="w-full text-[10px] font-black uppercase tracking-widest text-neutral-400 hover:text-black py-2"
+            >
+              Cancelar
+            </button>
+            <Link to="/dashboard/envios" className="text-center text-[9px] font-black uppercase tracking-widest text-brand-cyan">
+              Si querías cargar mercadería, andá a Envíos
+            </Link>
+          </div>
+        </div>
+      </Modal>
 
       {/* MODAL DE SELECCIÓN DE VARIANTES */}
       {showVariantesModal && selectedProduct && (
@@ -1249,7 +1330,7 @@ const POS = () => {
                       </p>
                     </div>
                     <p className="text-[10px] text-red-600 dark:text-red-400 mt-1 leading-relaxed">
-                      Este producto tiene variantes (talla, color, etc.) pero ninguna tiene stock asignado. Flujo para habilitarlo: 1) Panel de administración → Inventario, 2) Buscar el producto, 3) Seleccionar la sucursal, 4) Para cada variante, ingresar la cantidad de stock disponible. Sin stock asignado, el sistema no permite vender.
+                      Este producto tiene variantes (Chocolate / Vainilla, talle, etc.) pero ninguna tiene stock en esta sucursal. Para cargarlo: menú Envíos → Cargar Mercadería y poné la cantidad de cada variante. Si el producto no aparece en la sucursal, primero Vincular Producto en Inventario (queda en 0 hasta el envío).
                     </p>
                   </div>
                 ) : (

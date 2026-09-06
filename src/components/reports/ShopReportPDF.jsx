@@ -95,11 +95,18 @@ const styles = StyleSheet.create({
 const formatPrice = (price) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(price || 0);
 
-const ShopReportPDF = ({ shopName, items, imageMap = {}, currentDate, showPushPrice = false, showBasePrice = false, reportNumber = '' }) => {
-  const totalUnidades = items.reduce((acc, curr) => acc + (Number(curr.cantidadDejada) || 0), 0);
+const qtyDejada = (item) => {
+  if (item?.variantesDejada?.length) {
+    return item.variantesDejada.reduce((sum, v) => sum + (Number(v.cantidad) || 0), 0);
+  }
+  return Number(item?.cantidadDejada) || 0;
+};
+
+const ShopReportPDF = ({ shopName, items, imageMap = {}, currentDate, showPushPrice = true, showBasePrice = false, reportNumber = '' }) => {
+  const totalUnidades = items.reduce((acc, curr) => acc + qtyDejada(curr), 0);
   const totalProductos = items.length;
   const stockTotalActual = items.reduce(
-    (acc, curr) => acc + (Number(curr.stockAnterior) || 0) + (Number(curr.cantidadDejada) || 0),
+    (acc, curr) => acc + (Number(curr.stockAnterior) || 0) + qtyDejada(curr),
     0
   );
 
@@ -176,8 +183,9 @@ const ShopReportPDF = ({ shopName, items, imageMap = {}, currentDate, showPushPr
             const prod = item.producto;
             const images = Array.isArray(imageMap[prod.id_producto]) ? imageMap[prod.id_producto] : (imageMap[prod.id_producto] ? [imageMap[prod.id_producto]] : []);
             const stockAnterior = Number(item.stockAnterior) || 0;
-            const cantidadDejada = Number(item.cantidadDejada) || 0;
+            const cantidadDejada = qtyDejada(item);
             const totalStock = stockAnterior + cantidadDejada;
+            const variantesConCantidad = (item.variantesDejada || []).filter((v) => Number(v.cantidad) > 0);
 
             return (
               <View
@@ -242,6 +250,11 @@ const ShopReportPDF = ({ shopName, items, imageMap = {}, currentDate, showPushPr
                     <Text style={styles.stockLabel}>A dejar </Text>
                     <Text style={[styles.stockVal, { color: CYAN }]}>{cantidadDejada}</Text>
                   </View>
+                  {variantesConCantidad.map((v) => (
+                    <Text key={v.id_variante || v.nombre} style={styles.rowSabor}>
+                      {v.nombre}: {v.cantidad}
+                    </Text>
+                  ))}
                   <View style={styles.stockTotalLine}>
                     <View style={[styles.stockDot, { backgroundColor: BLACK }]} />
                     <Text style={styles.stockLabel}>Nuevo </Text>

@@ -70,7 +70,7 @@ const Inventario = () => {
             id_comercio: isSuperAdmin
                 ? (sucursales.some(s => s.id_comercio === CASA_CENTRAL_ID) ? CASA_CENTRAL_ID : (sucursales[0]?.id_comercio || ''))
                 : sucursalId,
-            cantidad_actual: '',
+            cantidad_actual: '0',
             stock_minimo_alerta: '5',
         });
         setIsModalOpen(true);
@@ -118,7 +118,7 @@ const Inventario = () => {
                 toast.success('Registro actualizado correctamente');
             } else {
                 await inventarioService.create(payload);
-                toast.success('Stock registrado correctamente');
+                toast.success('Producto vinculado. Si quedó en 0, cargá unidades desde Envíos → Cargar Mercadería.');
             }
             setIsModalOpen(false);
             await loadAll();
@@ -249,10 +249,10 @@ const Inventario = () => {
                         <span className="text-brand-cyan">Stock</span>
                     </h2>
                     <p className="text-neutral-500 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed max-w-xl mt-2 whitespace-normal">
-                        Asigná y modificá el stock real en cada sucursal. Los cambios hechos acá impactan directamente en el sistema y habilitan las ventas.
+                        Vincular Producto deja el ítem en la sucursal con stock 0. Para que pueda vender, cargá unidades en Envíos → Cargar Mercadería.
                     </p>
                     <p className="text-neutral-400 text-[10px] md:text-[11px] font-medium tracking-wide leading-relaxed max-w-2xl mt-2">
-                        Esta tabla muestra vínculos reales. Stock 0 = no hay unidades en esa sede; no significa que el producto no esté asignado.
+                        Stock 0 no es un error: el producto está asignado, pero todavía no le enviaste mercadería.
                     </p>
                     <div className="flex items-center gap-2 mt-2">
                         <span className="text-[10px] font-black uppercase text-brand-cyan bg-brand-cyan/10 px-2 py-0.5 rounded">
@@ -312,7 +312,7 @@ const Inventario = () => {
                             searchPlaceholder="BUSCAR POR PRODUCTO O SEDE..."
                             addLabel="VINCULAR PRODUCTO"
                             emptyTitle="Catálogo sin distribución"
-                            emptySubtitle={isSuperAdmin ? "No hay productos vinculados a ninguna sede todavía. Utiliza el botón 'Vincular Producto' sobre la tabla para comenzar." : "Tu sede no tiene productos asignados. Contacta al administrador central."}
+                            emptySubtitle={isSuperAdmin ? "No hay productos vinculados. Usá Vincular Producto (queda en 0) y después Envíos → Cargar Mercadería para darle stock." : "Tu sede no tiene productos asignados. Contactá al administrador central."}
                             emptyIcon={Package}
                         />
                     </motion.div>
@@ -323,7 +323,7 @@ const Inventario = () => {
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => !isSubmitting && setIsModalOpen(false)}
-                title={editingItem ? 'Editar Registro de Stock' : 'Nuevo Registro de Stock'}
+                title={editingItem ? 'Editar Registro de Stock' : 'Vincular Producto a una sede'}
             >
                 <form onSubmit={handleSubmit} className="space-y-6 py-2">
 
@@ -374,11 +374,17 @@ const Inventario = () => {
                         </div>
                     )}
 
+                    {!editingItem && (
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-3 leading-relaxed">
+                            Vincular no es un envío. Dejá stock inicial en 0 y después usá Envíos → Cargar Mercadería para mover unidades (también por variante).
+                        </p>
+                    )}
+
                     {/* Stock */}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 block">
-                                {editingItem ? 'Stock Actual' : 'Stock Inicial'}
+                                {editingItem ? 'Stock Actual' : 'Stock inicial (suele ser 0)'}
                             </label>
                             <input
                                 type="number"

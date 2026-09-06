@@ -17,6 +17,7 @@ import LiquidacionPDF from '../../components/reports/LiquidacionPDF';
 import { exportToExcel } from '../../utils/exportExcel';
 import { parseImagenes } from '../../lib/supabaseStorage';
 import { motion, AnimatePresence } from 'framer-motion';
+import QueQueresHacer from '../../components/ui/QueQueresHacer';
 
 const Liquidaciones = () => {
     const { sucursalId, user } = useAuthStore();
@@ -58,7 +59,7 @@ const Liquidaciones = () => {
 
     // Modo de vista del PDF: 'interno' (ambos precios) | 'sucursal' (solo PUSH)
     const [pdfViewMode, setPdfViewMode] = useState(() => {
-        try { return localStorage.getItem('pdfViewMode') || 'interno'; } catch { return 'interno'; }
+        try { return localStorage.getItem('pdfViewMode') || 'sucursal'; } catch { return 'sucursal'; }
     });
 
     useEffect(() => {
@@ -383,7 +384,7 @@ const Liquidaciones = () => {
                         <span className="text-brand-cyan">Liquidaciones</span>
                     </h2>
                     <p className="text-neutral-500 text-[9px] md:text-[10px] font-bold uppercase tracking-widest leading-relaxed max-w-xl mt-1.5 whitespace-normal">
-                        Módulo de liquidación y cierre. Conciliá el dinero cobrado por las sucursales en sus ventas para registrar el cierre de caja.
+                        Acá cobrás a la sucursal. El monto a rendir es precio Push, no el Público que ella le cobró al cliente.
                     </p>
                  </div>
                  
@@ -395,6 +396,8 @@ const Liquidaciones = () => {
                     </div>
                  </div>
             </div>
+
+            <QueQueresHacer />
 
             {/* Tabs Navigation */}
             <Tabs
@@ -425,11 +428,11 @@ const Liquidaciones = () => {
                                 ¿Cómo funciona el flujo de Liquidaciones y Caja?
                             </h4>
                             <p className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium leading-relaxed">
-                                1. <strong>Ventas:</strong> Cada venta realizada en la sección <strong>Ventas</strong> descuenta stock del local automáticamente y suma dinero al saldo acumulado de la sucursal.
+                                1. <strong>Ventas:</strong> En Registrar Ventas la sucursal cobra <strong>Público</strong> al cliente y se descuenta stock.
                                 <br />
-                                2. <strong>Control:</strong> En esta sección, auditás esas ventas y contás el dinero físico real entregado por el encargado.
+                                2. <strong>Lo que te pagan:</strong> acá liquidás el <strong>precio Push</strong> (no el Público).
                                 <br />
-                                3. <strong>Cierre:</strong> Al liquidar una sucursal, confirmás el monto físico recibido, emitís el recibo PDF y <strong>el saldo a rendir de la sucursal se reinicia a cero ($0)</strong> para comenzar un nuevo ciclo.
+                                3. <strong>Cierre:</strong> confirmás el monto recibido, emitís el PDF y el saldo a rendir vuelve a $0.
                             </p>
                         </div>
                     </div>
@@ -808,7 +811,7 @@ const Liquidaciones = () => {
                                 }`}
                             >
                                 <span className="text-[9px] font-black uppercase tracking-widest">Vista Interna</span>
-                                <span className="text-[7px] font-medium normal-case tracking-normal opacity-70">(precio público + PUSH — uso interno)</span>
+                                <span className="text-[7px] font-medium normal-case tracking-normal opacity-70">(Público + Push — uso interno)</span>
                             </button>
                             <button
                                 onClick={() => setPdfViewMode('sucursal')}
@@ -819,7 +822,7 @@ const Liquidaciones = () => {
                                 }`}
                             >
                                 <span className="text-[9px] font-black uppercase tracking-widest">Vista para Sucursal</span>
-                                <span className="text-[7px] font-medium normal-case tracking-normal opacity-70">(solo lo que debe abonar — precio PUSH)</span>
+                                <span className="text-[7px] font-medium normal-case tracking-normal opacity-70">(lo que te debe abonar — solo Push)</span>
                             </button>
                         </div>
                     </div>

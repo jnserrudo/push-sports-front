@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { Truck, Box, Home, PlusCircle, Info, Check, RefreshCw, AlertCircle, CheckCircle2, Package, Clock } from 'lucide-react';
 import DataTable from '../../components/ui/DataTable';
 import Modal from '../../components/ui/Modal';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { enviosService } from '../../services/enviosService';
 import { sucursalesService } from '../../services/sucursalesService';
 import { productosService } from '../../services/productosService';
+import { inventarioService } from '../../services/inventarioService';
 import { useAuthStore } from '../../store/authStore';
 import PremiumSelect from '../../components/ui/PremiumSelect';
+import QueQueresHacer from '../../components/ui/QueQueresHacer';
 
 const Envios = () => {
     const { user } = useAuthStore();
@@ -22,6 +25,7 @@ const Envios = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isModalOpen, setIsModalOpen]   = useState(false);
     const [feedback, setFeedback] = useState(null); // { type: 'ok'|'error', msg: string }
+    const [confirmEnvio, setConfirmEnvio] = useState(null);
 
     const [formData, setFormData] = useState({
         sucursal_id: '',
@@ -110,38 +114,88 @@ const Envios = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setFeedback(null);
+
+        let itemsVariantes = [];
+        let qtyLabel = '';
+        if (hasVariants) {
+            itemsVariantes = Object.entries(variantQuantities)
+                .filter(([, cantidad]) => Number(cantidad) > 0)
+                .map(([id_variante, cantidad]) => ({ id_variante, cantidad: Number(cantidad) }));
+            if (itemsVariantes.length === 0) {
+                setFeedback({ type: 'error', msg: 'Debes ingresar cantidad para al menos una variante.' });
+                return;
+            }
+            qtyLabel = itemsVariantes.map((item) => {
+                const variante = productVariants.find(v => v.id_variante === item.id_variante);
+                const attrs = variante?.atributos_valores || {};
+                const nombre = variante?.sku_variante || Object.values(attrs).join(' / ') || 'Variante';
+                return `${item.cantidad} ${nombre}`;
+            }).join(', ');
+        } else {
+            const qty = Number(formData.cantidad) || 0;
+            if (qty <= 0) {
+                setFeedback({ type: 'error', msg: 'Ingresá una cantidad mayor a 0.' });
+                return;
+            }
+            qtyLabel = `${qty} unidades`;
+        }
+
+        const sucursalNombre = sucursales.find(s => s.id_comercio === formData.sucursal_id)?.nombre || 'la sucursal';
+        const productoNombre = selectedProduct?.nombre || 'el producto';
+        let needsLink = false;
+        try {
+            const inv = await inventarioService.getBySucursal(formData.sucursal_id);
+            needsLink = !(inv || []).some(i => i.id_producto === formData.producto_id);
+        } catch {
+            needsLink = false;
+        }
+
+        setConfirmEnvio({
+            needsLink,
+            sucursalNombre,
+            productoNombre,
+            qtyLabel,
+            itemsVariantes,
+        });
+    };
+
+    const executeEnvio = async () => {
+        const pending = confirmEnvio;
+        setConfirmEnvio(null);
         setIsSubmitting(true);
         setFeedback(null);
         try {
-            if (hasVariants) {
-                // Verificar que hay al menos una variante con cantidad
-                const itemsVariantes = Object.entries(variantQuantities)
-                    .filter(([, cantidad]) => Number(cantidad) > 0)
-                    .map(([id_variante, cantidad]) => ({ id_variante, cantidad: Number(cantidad) }));
-                
-                if (itemsVariantes.length === 0) {
-                    setFeedback({ type: 'error', msg: 'Debes ingresar cantidad para al menos una variante.' });
-                    setIsSubmitting(false);
-                    return;
+            if (pending?.needsLink) {
+                try {
+                    await inventarioService.create({
+                        id_producto: formData.producto_id,
+                        id_comercio: formData.sucursal_id,
+                        cantidad_actual: 0,
+                        stock_minimo_alerta: 5,
+                    });
+                } catch {
+                    // Ya existe o el envío lo crea solo
                 }
+            }
 
+            if (hasVariants) {
                 await enviosService.crearEnvioConVariantes(
                     formData.sucursal_id,
                     formData.producto_id,
-                    itemsVariantes
+                    pending.itemsVariantes
                 );
-                
-                const totalUnidades = itemsVariantes.reduce((sum, item) => sum + item.cantidad, 0);
-                setFeedback({ type: 'ok', msg: `Orden procesada: ${totalUnidades} unidades de ${itemsVariantes.length} variantes.` });
+                const totalUnidades = pending.itemsVariantes.reduce((sum, item) => sum + item.cantidad, 0);
+                setFeedback({ type: 'ok', msg: `Stock cargado: ${totalUnidades} unidades de ${pending.itemsVariantes.length} variantes.` });
             } else {
                 await enviosService.crearEnvio(
                     formData.sucursal_id,
                     formData.producto_id,
                     Number(formData.cantidad) || 0
                 );
-                setFeedback({ type: 'ok', msg: 'Orden procesada correctamente.' });
+                setFeedback({ type: 'ok', msg: 'Stock cargado en la sucursal. Ya puede venderlo.' });
             }
-            
+
             setTimeout(() => {
                 setIsModalOpen(false);
                 setFeedback(null);
@@ -221,10 +275,10 @@ const Envios = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-black dark:border-gray-600 pb-3 gap-3">
                 <div>
                     <h2 className="text-xl md:text-2xl uppercase leading-none m-0 font-sport text-black dark:text-white">
-                        Gestión de <span className="text-brand-cyan">Ingresos</span>
+                        Envíos a <span className="text-brand-cyan">Sucursales</span>
                     </h2>
                     <p className="text-neutral-500 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed max-w-xl mt-2 whitespace-normal line-clamp-3 md:line-clamp-none">
-                        Módulo de logística para la carga de mercadería nueva. Los registros aquí realizados incrementan el stock disponible en las sedes.
+                        Acá le dejás stock a una sucursal. El botón Cargar Mercadería sí mueve el inventario. Reportería solo imprime; Registrar Ventas cobra al cliente.
                     </p>
                 </div>
 
@@ -247,10 +301,12 @@ const Envios = () => {
                 </div>
             </div>
 
+            <QueQueresHacer />
+
             <div className="bg-brand-cyan/5 border border-brand-cyan/20 p-4 rounded-xl flex items-start gap-4 mb-2">
                 <Info size={18} className="text-brand-cyan shrink-0 mt-0.5" />
                 <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 dark:text-cyan-200 leading-relaxed m-0">
-                    <span className="text-black dark:text-white font-black">Historial de Registros:</span> Debajo puedes auditar los ingresos de stock recientes. Para ver el stock acumulado total por producto, dirígete a <span className="text-brand-cyan">"Stock por Sede"</span>.
+                    <span className="text-black dark:text-white font-black">Cargar Mercadería:</span> suma stock en la sede destino (por variante si corresponde). Si el producto no está vinculado, al confirmar se vincula en 0 y después entra el envío. El historial de abajo son esos ingresos. Stock actual: <Link to="/dashboard/inventario" className="text-brand-cyan underline">Inventario</Link>.
                 </p>
             </div>
 
@@ -303,7 +359,7 @@ const Envios = () => {
                     <div className="p-5 bg-neutral-50 border border-neutral-200 rounded-xl flex items-start gap-4">
                         <Info size={18} className="text-brand-cyan shrink-0 mt-0.5" />
                         <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 leading-relaxed m-0">
-                            Al confirmar, el stock se incrementará en la <span className="text-black font-black">Sede Destino</span>. Operación irreversible.
+                            Al confirmar, el stock se incrementa en la <span className="text-black font-black">Sede Destino</span> y la sucursal ya puede venderlo. No uses Registrar Ventas para esto.
                         </p>
                     </div>
 
@@ -451,6 +507,19 @@ const Envios = () => {
                     </div>
                 </form>
             </Modal>
+
+            <ConfirmDialog
+                isOpen={!!confirmEnvio}
+                onClose={() => setConfirmEnvio(null)}
+                onConfirm={executeEnvio}
+                variant={confirmEnvio?.needsLink ? 'warning' : 'info'}
+                title="¿Cargar mercadería ahora?"
+                confirmText="Sí, mover stock"
+                cancelText="Volver"
+                message={confirmEnvio
+                    ? `Vas a dejar ${confirmEnvio.qtyLabel} de ${confirmEnvio.productoNombre} en ${confirmEnvio.sucursalNombre}. Esto suma stock real. ${confirmEnvio.needsLink ? 'El producto no está vinculado a esa sucursal: se vincula en 0 y después entra el envío.' : ''}`
+                    : ''}
+            />
         </div>
     );
 };

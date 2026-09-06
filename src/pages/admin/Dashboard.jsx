@@ -20,6 +20,7 @@ import {
   AreaChart, Area
 } from 'recharts';
 import { motion } from 'framer-motion';
+import QueQueresHacer from '../../components/ui/QueQueresHacer';
 
 // ─── Metric Card ──────────────────────────────────────────────────────────────
 const MetricCard = ({ title, value, icon: Icon, trend, sub, link, loading, description }) => {
@@ -242,6 +243,8 @@ const Dashboard = () => {
           </div>
         </div>
       </header>
+
+      <QueQueresHacer />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-3">
         {/* Gráfico Principal */}
