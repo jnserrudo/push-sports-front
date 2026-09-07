@@ -7,7 +7,7 @@ const TiposComercio = () => {
     const columns = [
         { header: 'ID', accessor: 'id_tipo_comercio', className: 'w-16 hidden md:table-cell' },
         { 
-            header: 'Tipo de Negocio', 
+            header: 'Tipo de sede', 
             accessor: 'nombre',
             render: (row) => (
                 <div className="flex items-center gap-3 py-1">
@@ -44,7 +44,7 @@ const TiposComercio = () => {
     return (
         <GenericABM
             title="Tipos de Sedes"
-            description="Clasificación operativa de los puntos de venta (Ej: Franquicia, Local Propio, Mayorista). Define las reglas de negocio base de cada sucursal."
+            description="Clasificación del local (Tienda, Farmacia, Outlet). No confundir con Categorías Master, que son para productos (suplementos, indumentaria)."
             icon={Tag}
             service={service}
             columns={columns}

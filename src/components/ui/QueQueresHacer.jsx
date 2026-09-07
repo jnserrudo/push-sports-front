@@ -19,11 +19,11 @@ const ACTIONS = [
     to: '/dashboard/liquidaciones',
     icon: CreditCard,
     title: 'Cobrarle a la sucursal',
-    desc: 'Liquidaciones: lo que te pagan es el precio Push, no el Público.',
+    desc: 'Liquidaciones cobra el Push de TODAS las ventas sin cerrar, no solo la última. Descuento a sucursal: ahí, no en Ventas.',
   },
 ];
 
-const QueQueresHacer = ({ compact = false }) => (
+const QueQueresHacer = ({ compact = false, extra = null }) => (
   <div
     className={`rounded-xl border border-brand-cyan/30 bg-brand-cyan/5 ${
       compact ? 'p-2.5' : 'p-3 md:p-4'
@@ -54,6 +54,11 @@ const QueQueresHacer = ({ compact = false }) => (
         </Link>
       ))}
     </div>
+    {extra && (
+      <p className="text-[9px] font-bold text-neutral-600 dark:text-gray-400 leading-snug m-0 mt-2">
+        {extra}
+      </p>
+    )}
   </div>
 );
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, CheckCircle2, Send, ShieldCheck, FileText, Settings2, AlertCircle, RotateCcw, CalendarDays, DollarSign, Wallet, History, Eye, Search, FileSpreadsheet } from 'lucide-react';
+import { CreditCard, CheckCircle2, Send, ShieldCheck, FileText, Settings2, AlertCircle, RotateCcw, CalendarDays, DollarSign, Wallet, History, Eye, Search, FileSpreadsheet, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from '../../store/toastStore';
 import { useAuthStore } from '../../store/authStore';
 import { sucursalesService } from '../../services/sucursalesService';
@@ -56,6 +56,9 @@ const Liquidaciones = () => {
     const [ventasSeleccionadas, setVentasSeleccionadas] = useState(new Set());
     const [previewConSeleccion, setPreviewConSeleccion] = useState(null);
     const [isLoadingPreviewSeleccion, setIsLoadingPreviewSeleccion] = useState(false);
+    const [descuentoTipo, setDescuentoTipo] = useState('monto');
+    const [descuentoValor, setDescuentoValor] = useState('');
+    const [ajustandoSaldo, setAjustandoSaldo] = useState(false);
 
     // Modo de vista del PDF: 'interno' (ambos precios) | 'sucursal' (solo PUSH)
     const [pdfViewMode, setPdfViewMode] = useState(() => {
@@ -123,6 +126,8 @@ const Liquidaciones = () => {
         setRowsPerModalPage(5);
         setVentasSeleccionadas(new Set());
         setPreviewConSeleccion(null);
+        setDescuentoTipo('monto');
+        setDescuentoValor('');
 
         try {
             const data = await liquidacionesService.getPreview(sucursal.id_comercio || sucursal.id);
@@ -191,7 +196,13 @@ const Liquidaciones = () => {
                 : null;
             const idsVentas = ventasSeleccionadas.size > 0 ? Array.from(ventasSeleccionadas) : null;
 
-            await liquidacionesService.liquidarSucursal(sucId, monto, idsVentas);
+            const netoBase = Number(previewConSeleccion?.netoFinal ?? previewData?.netoFinal ?? 0);
+            const descRaw = parseFloat(descuentoValor) || 0;
+            const descuento = descuentoTipo === 'porcentaje'
+                ? Math.round(netoBase * (Math.min(100, Math.max(0, descRaw)) / 100) * 100) / 100
+                : Math.min(Math.max(0, descRaw), netoBase);
+
+            await liquidacionesService.liquidarSucursal(sucId, monto, idsVentas, descuento);
 
             toast.success("Liquidación procesada correctamente");
             setIsPreviewOpen(false);
@@ -250,6 +261,33 @@ const Liquidaciones = () => {
 
     const getSaldo = (suc) => Number(suc.saldo_acumulado_mili) || 0;
     const getId = (suc) => suc.id_comercio ?? suc.id;
+    const getTicketsPendientes = (suc) => suc._count?.ventas_registradas || 0;
+
+    const netoSeleccionado = Number(previewConSeleccion?.netoFinal ?? previewData?.netoFinal ?? 0);
+    const descuentoCalculado = (() => {
+        const raw = parseFloat(descuentoValor) || 0;
+        if (descuentoTipo === 'porcentaje') {
+            return Math.round(netoSeleccionado * (Math.min(100, Math.max(0, raw)) / 100) * 100) / 100;
+        }
+        return Math.min(Math.max(0, raw), netoSeleccionado);
+    })();
+    const aCobrar = Math.max(0, Math.round((netoSeleccionado - descuentoCalculado) * 100) / 100);
+
+    const handleAjustarSaldoHuerfano = async () => {
+        const sucId = selectedSucursal?.id_comercio || selectedSucursal?.id;
+        if (!sucId) return;
+        setAjustandoSaldo(true);
+        try {
+            await liquidacionesService.ajustarSaldoHuerfano(sucId);
+            toast.success('Saldo ajustado a $0. Ya no figura como pendiente.');
+            setIsPreviewOpen(false);
+            loadData();
+        } catch (error) {
+            toast.error(error?.response?.data?.error || 'No se pudo ajustar el saldo');
+        } finally {
+            setAjustandoSaldo(false);
+        }
+    };
 
     const handleVerDetallesLiquidacion = (liquidacion) => {
         setSelectedLiquidacion(liquidacion);
@@ -384,7 +422,7 @@ const Liquidaciones = () => {
                         <span className="text-brand-cyan">Liquidaciones</span>
                     </h2>
                     <p className="text-neutral-500 text-[9px] md:text-[10px] font-bold uppercase tracking-widest leading-relaxed max-w-xl mt-1.5 whitespace-normal">
-                        Acá cobrás a la sucursal. El monto a rendir es precio Push, no el Público que ella le cobró al cliente.
+                        Cobrá el Push de todas las ventas sin cerrar. El número de la tarjeta no es solo la última venta. Inactiva con saldo: todavía se cobra.
                     </p>
                  </div>
                  
@@ -397,7 +435,7 @@ const Liquidaciones = () => {
                  </div>
             </div>
 
-            <QueQueresHacer />
+            <QueQueresHacer extra="El precio viejo se cobra viejo. Si le querés hacer un descuento a la sucursal, ponelo al liquidar, no en la venta al cliente." />
 
             {/* Tabs Navigation */}
             <Tabs
@@ -428,36 +466,33 @@ const Liquidaciones = () => {
                                 ¿Cómo funciona el flujo de Liquidaciones y Caja?
                             </h4>
                             <p className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium leading-relaxed">
-                                1. <strong>Ventas:</strong> En Registrar Ventas la sucursal cobra <strong>Público</strong> al cliente y se descuenta stock.
+                                1. El número de la tarjeta es <strong>todo lo que esa sucursal todavía no te pagó</strong> (todas las ventas sin cerrar), no solo la última.
                                 <br />
-                                2. <strong>Lo que te pagan:</strong> acá liquidás el <strong>precio Push</strong> (no el Público).
+                                2. Lo que te pagan es <strong>Push del día de cada venta</strong>. Si el producto subió de precio, esa venta vieja se cobra al precio viejo.
                                 <br />
-                                3. <strong>Cierre:</strong> confirmás el monto recibido, emitís el PDF y el saldo a rendir vuelve a $0.
+                                3. Un descuento a la sucursal se pone <strong>acá, al liquidar</strong> — no en Registrar Ventas.
+                                <br />
+                                4. Sucursal inactiva con saldo: todavía te debe. Liquidala y después desaparece.
                             </p>
                         </div>
                     </div>
 
                     {/* Tarjetas de Sucursales */}
-                    <div className="space-y-3">
-                        <div className="flex items-center gap-1.5 mb-1.5">
-                            <Send size={14} className="text-black dark:text-white" />
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-black dark:text-white m-0">Estado de Sucursales</h3>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                            {sucursales.map((suc, i) => {
-                                const saldo = getSaldo(suc);
-                                const hasDebt = saldo > 0;
-
-                                return (
-                                <motion.div 
+                    {(() => {
+                        const activas = sucursales.filter(s => s.activo !== false);
+                        const inactivasConSaldo = sucursales.filter(s => s.activo === false && getSaldo(s) > 0);
+                        const renderCard = (suc, i, inactiva = false) => {
+                            const saldo = getSaldo(suc);
+                            const hasDebt = saldo > 0;
+                            const tickets = getTicketsPendientes(suc);
+                            return (
+                                <motion.div
                                     key={getId(suc)}
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: i * 0.1 }}
-                                    className={`bg-white dark:bg-gray-800 border p-3 md:p-4 rounded-xl flex flex-col justify-between transition-all duration-300 shadow-sm relative overflow-hidden group hover:-translate-y-1 hover:shadow-premium ${hasDebt ? 'border-neutral-200 dark:border-gray-600 hover:border-brand-cyan' : 'border-neutral-100 dark:border-gray-700'}`}
+                                    transition={{ delay: i * 0.05 }}
+                                    className={`bg-white dark:bg-gray-800 border p-3 md:p-4 rounded-xl flex flex-col justify-between transition-all duration-300 shadow-sm relative overflow-hidden group hover:-translate-y-1 hover:shadow-premium ${hasDebt ? 'border-neutral-200 dark:border-gray-600 hover:border-brand-cyan' : 'border-neutral-100 dark:border-gray-700'} ${inactiva ? 'ring-1 ring-amber-300' : ''}`}
                                 >
-                                    {/* Marcador de deuda */}
                                     {hasDebt && (
                                         <div className="absolute top-0 right-0 w-16 h-16 overflow-hidden pointer-events-none">
                                             <div className="absolute top-0 right-0 bg-brand-cyan text-black text-[6px] font-black uppercase tracking-[0.2em] py-0.5 px-8 rotate-45 translate-x-[28px] translate-y-[10px] shadow-sm">
@@ -465,15 +500,16 @@ const Liquidaciones = () => {
                                             </div>
                                         </div>
                                     )}
-
                                     <div className="space-y-1.5 relative z-10">
                                         <div className="flex items-center gap-1.5">
                                             <div className="w-5 h-5 rounded bg-neutral-100 dark:bg-gray-700 flex items-center justify-center">
                                                 <Wallet size={10} className={hasDebt ? 'text-brand-cyan' : 'text-neutral-400'} />
                                             </div>
                                             <span className="text-[9px] font-black uppercase tracking-[0.15em] text-black dark:text-white block">{suc.nombre}</span>
+                                            {inactiva && (
+                                                <span className="text-[7px] font-black uppercase tracking-widest text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">Inactiva</span>
+                                            )}
                                         </div>
-                                        
                                         <div className="pt-1">
                                             <span className="text-[7px] font-bold text-neutral-400 uppercase tracking-widest block mb-0.5">Saldo a cobrar (Neto PUSH)</span>
                                             <div className="flex items-baseline gap-1">
@@ -482,11 +518,15 @@ const Liquidaciones = () => {
                                                     {saldo.toLocaleString()}
                                                 </p>
                                             </div>
+                                            {hasDebt && (
+                                                <p className="text-[8px] font-bold text-neutral-500 uppercase tracking-widest mt-1.5 m-0 leading-relaxed">
+                                                    {tickets} ticket{tickets === 1 ? '' : 's'} sin liquidar. Este total incluye ventas anteriores, no es solo la última.
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
-                                    
                                     {isSuperAdmin && hasDebt ? (
-                                        <motion.button 
+                                        <motion.button
                                             whileTap={{ scale: 0.95 }}
                                             onClick={() => handleOpenPreview(suc)}
                                             className="w-full mt-4 bg-black dark:bg-gray-700 text-white py-2 rounded-lg text-[8px] font-black uppercase tracking-[0.15em] hover:bg-brand-cyan hover:text-black transition-colors flex items-center justify-center gap-2 shadow-sm"
@@ -502,9 +542,35 @@ const Liquidaciones = () => {
                                         </div>
                                     )}
                                 </motion.div>
-                            )})}
-                        </div>
-                    </div>
+                            );
+                        };
+                        return (
+                            <div className="space-y-6">
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-1.5 mb-1.5">
+                                        <Send size={14} className="text-black dark:text-white" />
+                                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-black dark:text-white m-0">Sucursales activas</h3>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                                        {activas.map((suc, i) => renderCard(suc, i, false))}
+                                    </div>
+                                </div>
+                                {inactivasConSaldo.length > 0 && (
+                                    <div className="space-y-3">
+                                        <div>
+                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-800 dark:text-amber-300 m-0">Ya no opera, pero todavía te debe</h3>
+                                            <p className="text-[9px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest mt-1 m-0">
+                                                Liquidá el saldo. Cuando quede en $0, deja de aparecer.
+                                            </p>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                                            {inactivasConSaldo.map((suc, i) => renderCard(suc, i, true))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })()}
                 </>
             )}
 
@@ -524,16 +590,46 @@ const Liquidaciones = () => {
                                 <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Analizando registros...</p>
                             </div>
                         ) : !previewData?.hayDatos ? (
-                            <div className="py-12 text-center space-y-3 bg-neutral-50 dark:bg-gray-800 rounded-xl border border-neutral-200 dark:border-gray-700">
-                                <CheckCircle2 size={32} className="mx-auto text-green-500" />
-                                <h3 className="text-sm font-bold text-black dark:text-white uppercase tracking-widest">Todo al día</h3>
-                                <p className="text-xs text-neutral-500 dark:text-gray-400">No hay ventas pendientes para liquidar en esta sede.</p>
-                                <button 
-                                    onClick={() => setIsPreviewOpen(false)}
-                                    className="mt-4 px-6 py-2 bg-black text-white rounded-lg text-[10px] font-black uppercase tracking-widest"
-                                >
-                                    VOLVER
-                                </button>
+                            <div className="py-8 text-center space-y-3 bg-neutral-50 dark:bg-gray-800 rounded-xl border border-neutral-200 dark:border-gray-700 px-4">
+                                {previewData?.saldoHuerfano ? (
+                                    <>
+                                        <AlertCircle size={32} className="mx-auto text-amber-500" />
+                                        <h3 className="text-sm font-bold text-black dark:text-white uppercase tracking-widest">Hay un saldo, pero no hay tickets</h3>
+                                        <p className="text-xs text-neutral-600 dark:text-gray-400 leading-relaxed max-w-md mx-auto">
+                                            {selectedSucursal?.nombre} figura debiendo ${Math.round(previewData.saldoAcumulado || 0).toLocaleString()} Push, pero no hay ventas activas para liquidar. Suele pasar si se liquidó a medias o quedó un resto viejo.
+                                        </p>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700">
+                                            Si no hay nada real para cobrar, ajustá el saldo a $0 para que deje de aparecer pendiente.
+                                        </p>
+                                        <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2">
+                                            <button
+                                                onClick={() => setIsPreviewOpen(false)}
+                                                className="px-6 py-2 border border-neutral-200 text-neutral-600 rounded-lg text-[10px] font-black uppercase tracking-widest"
+                                            >
+                                                VOLVER
+                                            </button>
+                                            <button
+                                                onClick={handleAjustarSaldoHuerfano}
+                                                disabled={ajustandoSaldo}
+                                                className="px-6 py-2 bg-amber-500 text-black rounded-lg text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
+                                            >
+                                                {ajustandoSaldo ? 'AJUSTANDO...' : 'AJUSTAR SALDO A $0'}
+                                            </button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <CheckCircle2 size={32} className="mx-auto text-green-500" />
+                                        <h3 className="text-sm font-bold text-black dark:text-white uppercase tracking-widest">Todo al día</h3>
+                                        <p className="text-xs text-neutral-500 dark:text-gray-400">No hay ventas pendientes para liquidar en esta sede.</p>
+                                        <button
+                                            onClick={() => setIsPreviewOpen(false)}
+                                            className="mt-4 px-6 py-2 bg-black text-white rounded-lg text-[10px] font-black uppercase tracking-widest"
+                                        >
+                                            VOLVER
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         ) : (
                             <div className="space-y-1.5">
@@ -575,7 +671,7 @@ const Liquidaciones = () => {
                                                 Seleccionar todas las ventas
                                             </label>
                                         </div>
-                                        <span className="text-[8px] font-bold text-neutral-500 uppercase">Ticket · Vendedor · Método · Total</span>
+                                        <span className="text-[8px] font-bold text-neutral-500 uppercase">Ticket · Público · Push</span>
                                     </div>
                                     <div className="max-h-[200px] overflow-y-auto">
                                         {previewData.ventas?.map(v => (
@@ -597,9 +693,10 @@ const Liquidaciones = () => {
                                                         {new Date(v.fecha).toLocaleString()} · {v.metodo_pago}
                                                     </p>
                                                 </div>
-                                                <span className="text-[10px] font-sport text-black dark:text-white">
-                                                    ${Math.round(v.total).toLocaleString()}
-                                                </span>
+                                                <div className="text-right shrink-0">
+                                                    <p className="text-[9px] font-bold text-neutral-400 m-0">Público ${Math.round(v.total).toLocaleString()}</p>
+                                                    <p className="text-[10px] font-sport text-brand-cyan m-0">Push ${Math.round(v.neto || 0).toLocaleString()}</p>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
@@ -614,10 +711,11 @@ const Liquidaciones = () => {
                                 </div>
 
                                 {/* Detalle de Artículos Vendidos — pagina después de 5 */}
-                                {previewData.resumenProductos && previewData.resumenProductos.length > 0 && (() => {
+                                {(previewConSeleccion?.resumenProductos || previewData.resumenProductos)?.length > 0 && (() => {
+                                     const productosLista = previewConSeleccion?.resumenProductos || previewData.resumenProductos;
                                      const itemsPerPage = rowsPerModalPage;
-                                     const totalModalPages = Math.ceil(previewData.resumenProductos.length / itemsPerPage);
-                                     const paginatedItemsModal = previewData.resumenProductos.slice(
+                                     const totalModalPages = Math.ceil(productosLista.length / itemsPerPage);
+                                     const paginatedItemsModal = productosLista.slice(
                                          (currentModalPage - 1) * itemsPerPage,
                                          currentModalPage * itemsPerPage
                                      );
@@ -648,8 +746,8 @@ const Liquidaciones = () => {
                                                     <tr>
                                                         <th className="px-2 py-1.5 text-[9px] font-black uppercase tracking-widest text-neutral-500 border-b border-neutral-200 dark:border-gray-600">Prod / Var</th>
                                                         <th className="px-1 py-1.5 text-[9px] font-black uppercase tracking-widest text-neutral-500 border-b border-neutral-200 dark:border-gray-600 text-center">Cant</th>
-                                                        <th className="px-1 py-1.5 text-[9px] font-black uppercase tracking-widest text-neutral-500 border-b border-neutral-200 dark:border-gray-600 text-right">Bruto</th>
-                                                        <th className="px-2 py-1.5 text-[9px] font-black uppercase tracking-widest text-brand-cyan border-b border-neutral-200 dark:border-gray-600 text-right">Neto</th>
+                                                        <th className="px-1 py-1.5 text-[9px] font-black uppercase tracking-widest text-neutral-500 border-b border-neutral-200 dark:border-gray-600 text-right">Público</th>
+                                                        <th className="px-2 py-1.5 text-[9px] font-black uppercase tracking-widest text-brand-cyan border-b border-neutral-200 dark:border-gray-600 text-right">Push al vender</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -666,6 +764,11 @@ const Liquidaciones = () => {
                                                             </td>
                                                             <td className="px-2 py-1.5 text-right">
                                                                 <span className="text-[11px] font-sport text-black dark:text-white">${Math.round(prod.total_neto).toLocaleString()}</span>
+                                                                {prod.precio_unitario_push_actual > 0 && Math.round(prod.precio_unitario_push_actual) !== Math.round(prod.precio_unitario_push) && (
+                                                                    <p className="text-[8px] font-bold text-amber-600 uppercase tracking-tight m-0 mt-0.5">
+                                                                        Hoy vale ${Math.round(prod.precio_unitario_push_actual).toLocaleString()} · se cobra el de esa venta
+                                                                    </p>
+                                                                )}
                                                             </td>
                                                         </tr>
                                                     ))}
@@ -717,33 +820,63 @@ const Liquidaciones = () => {
                                         )}
 
                                         <div className="flex justify-between items-end pt-0.5">
-                                            <span className="text-[8px] font-black text-brand-cyan uppercase tracking-[0.1em]">NETO:</span>
+                                            <span className="text-[8px] font-black text-neutral-400 uppercase tracking-[0.1em]">Push de estos tickets:</span>
                                             <div className="flex items-baseline gap-0.5 text-white">
                                                 <span className="text-[10px] font-bold">$</span>
-                                                <span className="text-xl font-sport leading-none">
-                                                    {isLoadingPreviewSeleccion ? '...' : Math.round(previewConSeleccion?.netoFinal ?? previewData.netoFinal).toLocaleString()}
+                                                <span className="text-lg font-sport leading-none">
+                                                    {isLoadingPreviewSeleccion ? '...' : Math.round(netoSeleccionado).toLocaleString()}
                                                 </span>
                                             </div>
                                         </div>
 
-                                        {/* Input monto recibido inline */}
+                                        <div className="bg-neutral-900 border border-neutral-700 rounded p-1.5 mt-1 space-y-1">
+                                            <div className="flex items-center justify-between gap-1">
+                                                <label className="text-[6px] font-bold text-neutral-500 uppercase tracking-widest">Descuento a la sucursal (Push)</label>
+                                                <div className="flex rounded overflow-hidden border border-neutral-700">
+                                                    <button type="button" onClick={() => setDescuentoTipo('monto')} className={`px-1.5 py-0.5 text-[7px] font-black uppercase ${descuentoTipo === 'monto' ? 'bg-brand-cyan text-black' : 'text-neutral-500'}`}>$</button>
+                                                    <button type="button" onClick={() => setDescuentoTipo('porcentaje')} className={`px-1.5 py-0.5 text-[7px] font-black uppercase ${descuentoTipo === 'porcentaje' ? 'bg-brand-cyan text-black' : 'text-neutral-500'}`}>%</button>
+                                                </div>
+                                            </div>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                value={descuentoValor}
+                                                onChange={(e) => setDescuentoValor(e.target.value)}
+                                                placeholder={descuentoTipo === 'porcentaje' ? '0' : '0'}
+                                                className="bg-transparent border-none outline-none text-white font-sport text-[10px] w-full placeholder-neutral-700 h-5"
+                                            />
+                                            {descuentoCalculado > 0 && (
+                                                <p className="text-[7px] font-bold text-brand-cyan uppercase m-0">
+                                                    Te debía ${Math.round(netoSeleccionado).toLocaleString()}. Descuento ${Math.round(descuentoCalculado).toLocaleString()}. A cobrar ${Math.round(aCobrar).toLocaleString()}.
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        <div className="flex justify-between items-end pt-1">
+                                            <span className="text-[8px] font-black text-brand-cyan uppercase tracking-[0.1em]">A COBRAR:</span>
+                                            <div className="flex items-baseline gap-0.5 text-white">
+                                                <span className="text-[10px] font-bold">$</span>
+                                                <span className="text-xl font-sport leading-none">{Math.round(aCobrar).toLocaleString()}</span>
+                                            </div>
+                                        </div>
+
                                         <div className="bg-neutral-900 border border-neutral-700 rounded p-1 mt-1">
                                             <div className="flex items-center gap-1">
-                                                <label className="text-[6px] font-bold text-neutral-500 uppercase tracking-widest whitespace-nowrap">Recibido:</label>
+                                                <label className="text-[6px] font-bold text-neutral-500 uppercase tracking-widest whitespace-nowrap">Recibido (plata física):</label>
                                                 <div className="flex items-center gap-1 flex-1">
                                                     <DollarSign size={8} className="text-neutral-600" />
                                                     <input 
                                                         type="number"
                                                         value={montoRecibidoManual}
                                                         onChange={(e) => setMontoRecibidoManual(e.target.value)}
-                                                        placeholder={Math.round(previewData.netoFinal).toString()}
+                                                        placeholder={Math.round(aCobrar).toString()}
                                                         className="bg-transparent border-none outline-none text-white font-sport text-[10px] w-full placeholder-neutral-700 h-4"
                                                     />
                                                 </div>
-                                                {montoRecibidoManual && !isNaN(montoRecibidoManual) && parseFloat(montoRecibidoManual) !== previewData.netoFinal && (
-                                                    <span className={`text-[7px] font-black uppercase whitespace-nowrap ${parseFloat(montoRecibidoManual) > previewData.netoFinal ? 'text-green-400' : 'text-red-400'}`}>
-                                                        {parseFloat(montoRecibidoManual) > previewData.netoFinal ? '+' : ''}
-                                                        ${Math.round(parseFloat(montoRecibidoManual) - previewData.netoFinal).toLocaleString()}
+                                                {montoRecibidoManual && !isNaN(montoRecibidoManual) && parseFloat(montoRecibidoManual) !== aCobrar && (
+                                                    <span className={`text-[7px] font-black uppercase whitespace-nowrap ${parseFloat(montoRecibidoManual) > aCobrar ? 'text-green-400' : 'text-red-400'}`}>
+                                                        {parseFloat(montoRecibidoManual) > aCobrar ? '+' : ''}
+                                                        ${Math.round(parseFloat(montoRecibidoManual) - aCobrar).toLocaleString()}
                                                     </span>
                                                 )}
                                             </div>
@@ -755,7 +888,7 @@ const Liquidaciones = () => {
                                 <div className="p-2 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/50 rounded flex items-start gap-1.5">
                                     <AlertCircle size={12} className="text-emerald-600 shrink-0 mt-0.5" />
                                     <p className="text-[8px] font-bold uppercase tracking-widest text-emerald-800 dark:text-emerald-300 m-0 leading-normal">
-                                        IMPORTANTE: Al confirmar, se archivarán {ventasSeleccionadas.size} de {previewData.cantVentas} ventas seleccionadas, se registrará el dinero en el historial consolidado, se generará el recibo PDF y el saldo a cobrar de la sede volverá a $0. Las no seleccionadas quedan activas para rectificar.
+                                        Se archivan {ventasSeleccionadas.size} de {previewData.cantVentas} tickets. El saldo baja solo lo de esas ventas. Si dejás tickets sin marcar, la sucursal sigue debiendo ese resto. El descuento baja lo oficial a cobrar; Recibido es la plata que te dieron.
                                     </p>
                                 </div>
 
@@ -1040,6 +1173,12 @@ const Liquidaciones = () => {
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center pt-2 border-t border-neutral-200 dark:border-gray-700">
+                                    {Number(selectedLiquidacion.descuento_comercial) > 0 && (
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-xs text-neutral-600 dark:text-gray-400">Descuento comercial:</span>
+                                            <span className="text-sm font-bold text-brand-cyan">-${Math.round(selectedLiquidacion.descuento_comercial).toLocaleString()}</span>
+                                        </div>
+                                    )}
                                     <span className="text-sm font-bold text-black dark:text-white">Total a Liquidar:</span>
                                     <span className="text-xl font-sport text-black dark:text-white">${Math.round(selectedLiquidacion.total_ventas_netas || 0).toLocaleString()}</span>
                                 </div>

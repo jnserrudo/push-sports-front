@@ -41,8 +41,7 @@ export const liquidacionesService = {
         return response.data || [];
     },
 
-    // Generar una liquidación para un comercio
-    liquidarSucursal: async (sucursalId, montoRecibido = null, idVentas = null) => {
+    liquidarSucursal: async (sucursalId, montoRecibido = null, idVentas = null, descuentoComercial = 0) => {
         const body = { id_comercio: sucursalId };
         if (montoRecibido !== null && montoRecibido !== undefined) {
             body.monto_recibido = parseFloat(montoRecibido);
@@ -50,7 +49,15 @@ export const liquidacionesService = {
         if (idVentas && Array.isArray(idVentas) && idVentas.length > 0) {
             body.id_ventas = idVentas;
         }
+        if (descuentoComercial) {
+            body.descuento_comercial = parseFloat(descuentoComercial) || 0;
+        }
         const response = await api.post('/liquidaciones', body);
+        return response.data;
+    },
+
+    ajustarSaldoHuerfano: async (sucursalId) => {
+        const response = await api.post(`/liquidaciones/${sucursalId}/ajustar-saldo`);
         return response.data;
     }
 };

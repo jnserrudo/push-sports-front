@@ -4,6 +4,7 @@ import { Map, MapMarker, MarkerContent, MapControls, useMap } from '../../compon
 import { toast } from '../../store/toastStore';
 import GenericABM from '../../components/ui/GenericABM';
 import { sucursalesService as service } from '../../services/sucursalesService';
+import { tipoComercioService } from '../../services/tipoComercioService';
 import { uploadProductImage, deleteProductImage } from '../../lib/supabaseStorage';
 import PremiumSelect from '../../components/ui/PremiumSelect';
 
@@ -157,6 +158,7 @@ const ImagePicker = ({ value, onChange, label = "Imagen de la Sede" }) => {
 const Sucursales = () => {
     const [tiposComercio, setTiposComercio] = useState([]);
     const [loadingTipos, setLoadingTipos] = useState(false);
+    const [creandoFarmacia, setCreandoFarmacia] = useState(false);
 
     useEffect(() => {
         setLoadingTipos(true);
@@ -218,7 +220,7 @@ const Sucursales = () => {
             )
         },
         {
-            header: 'Categorización',
+            header: 'Tipo de sede',
             accessor: 'id_tipo_comercio',
             render: (row) => (
                 <div className="flex flex-col">
@@ -300,10 +302,13 @@ const Sucursales = () => {
                 </div>
 
                 <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-black dark:text-white">Tipo de Negocio *</label>
+                    <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-black dark:text-white">Tipo de sede *</label>
+                    <p className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest m-0">
+                        Farmacia, tienda, outlet. No es la categoría de un producto.
+                    </p>
                     <PremiumSelect
                         icon={Layout}
-                        placeholder="SELECCIONAR TIPO..."
+                        placeholder="SELECCIONAR TIPO DE SEDE..."
                         isLoading={loadingTipos}
                         options={(Array.isArray(tiposComercio) ? tiposComercio : []).map(t => ({
                             value: t.id_tipo_comercio,
@@ -313,6 +318,31 @@ const Sucursales = () => {
                         value={formData.id_tipo_comercio || ''}
                         onChange={val => setFormData({ ...formData, id_tipo_comercio: parseInt(val) })}
                     />
+                    {!(Array.isArray(tiposComercio) ? tiposComercio : []).some(t => /farmacia/i.test(t.nombre || '')) && (
+                        <button
+                            type="button"
+                            disabled={creandoFarmacia}
+                            onClick={async () => {
+                                setCreandoFarmacia(true);
+                                try {
+                                    const created = await tipoComercioService.create({
+                                        nombre: 'Farmacia',
+                                        descripcion: 'Farmacia / droguería'
+                                    });
+                                    setTiposComercio(prev => [...(Array.isArray(prev) ? prev : []), created]);
+                                    setFormData(prev => ({ ...prev, id_tipo_comercio: created.id_tipo_comercio }));
+                                    toast.success('Tipo Farmacia creado. Ya quedó seleccionado.');
+                                } catch (err) {
+                                    toast.error(err?.response?.data?.error || 'No se pudo crear el tipo Farmacia');
+                                } finally {
+                                    setCreandoFarmacia(false);
+                                }
+                            }}
+                            className="text-[9px] font-black uppercase tracking-widest text-brand-cyan hover:underline disabled:opacity-50"
+                        >
+                            {creandoFarmacia ? 'Creando...' : 'Crear tipo Farmacia'}
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -374,7 +404,7 @@ const Sucursales = () => {
     return (
         <GenericABM
             title="Sedes y Sucursales"
-            description="Registro y mapeo de los puntos de venta. Controla la ubicación física, el estado operativo y las categorizaciones de cada sucursal de la red Push Sport."
+            description="Registro de puntos de venta. El tipo de sede (Farmacia, Tienda, Outlet) no es una categoría de producto: las categorías de producto se cargan en Productos."
             icon={Store}
             service={service}
             columns={columns}

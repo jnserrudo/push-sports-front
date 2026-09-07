@@ -28,7 +28,7 @@ const Categorias = () => {
     return (
         <GenericABM
             title="Categorías Master"
-            description="Clasificación general de productos (Ej: Indumentaria, Calzado, Suplementos). Ayuda a organizar el catálogo y facilitar las búsquedas."
+            description="Clasificación de PRODUCTOS (suplementos, indumentaria). Para farmacias u otro rubro de local usá Tipos de Sedes, no esta pantalla."
             icon={Layout}
             service={service}
             columns={columns}

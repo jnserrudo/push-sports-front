@@ -91,6 +91,7 @@ const POS = () => {
   // Modal informativo de estados de ventas
   const [showSalesInfoModal, setShowSalesInfoModal] = useState(false);
   const [showConfirmSale, setShowConfirmSale] = useState(false);
+  const [saleImpact, setSaleImpact] = useState(null);
 
   // Escaneo de código de barras (pistola + cámara)
   const [scanValue, setScanValue] = useState('');
@@ -564,6 +565,9 @@ const POS = () => {
         precio_push: item.precio_push || 0,
         precio_base: item.precio_base || 0
       }));
+      const thisPush = totalPush;
+      const thisPublico = total;
+      const sedeNombre = currentSucursal?.nombre || 'la sucursal';
       const ventaResult = await posService.registrarVenta(comercioId, user?.id_usuario, itemsPayload, total, metodoPago);
       setLastSale(ventaResult);
       generateComprobante(ventaResult);
@@ -572,7 +576,19 @@ const POS = () => {
       setCodigoPromo('');
       setActiveTab('catalog');
       toast.success("Venta procesada exitosamente");
-      // Recargar inventario tras la venta para reflejar stock actualizado
+      try {
+        const comercio = await sucursalesService.getById(comercioId);
+        const saldoTotal = Number(comercio?.saldo_acumulado_mili || 0);
+        setSaleImpact({
+          nombre: sedeNombre,
+          thisPush,
+          thisPublico,
+          saldoTotal,
+          anteriores: Math.max(0, Math.round((saldoTotal - thisPush) * 100) / 100)
+        });
+      } catch {
+        setSaleImpact({ nombre: sedeNombre, thisPush, thisPublico, saldoTotal: thisPush, anteriores: 0 });
+      }
       const inventario = await posService.getInventarioSucursal(comercioId);
       setProducts(inventario || []);
     } catch (error) {
@@ -738,7 +754,7 @@ const POS = () => {
                     Lo que te paga la sucursal es <span className="font-black">Push</span> (Liquidaciones).
                   </p>
                 </div>
-                <QueQueresHacer compact />
+                <QueQueresHacer compact extra="Después de confirmar, el carrito se vacía porque la venta ya está. El total de Liquidaciones suma esta venta más las anteriores sin cobrar." />
               </div>
             )}
         </div>
@@ -1214,6 +1230,47 @@ const POS = () => {
       </>
       )}
       </AnimatePresence>
+
+      <Modal
+        isOpen={!!saleImpact}
+        onClose={() => setSaleImpact(null)}
+        title="Venta guardada"
+      >
+        {saleImpact && (
+          <div className="space-y-3">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 dark:text-gray-300 leading-relaxed m-0">
+              El carrito se vació porque la venta ya está guardada. El cobro a la sucursal no es esta pantalla: es Liquidaciones.
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-xl border border-neutral-200 dark:border-gray-700 p-3">
+                <p className="text-[8px] font-black uppercase tracking-widest text-neutral-400 m-0">Esta venta (Push)</p>
+                <p className="text-xl font-black text-neutral-900 dark:text-white m-0">${Math.round(saleImpact.thisPush).toLocaleString()}</p>
+              </div>
+              <div className="rounded-xl border border-brand-cyan/30 bg-brand-cyan/5 p-3">
+                <p className="text-[8px] font-black uppercase tracking-widest text-neutral-400 m-0">{saleImpact.nombre} te debe ahora</p>
+                <p className="text-xl font-black text-brand-cyan m-0">${Math.round(saleImpact.saldoTotal).toLocaleString()}</p>
+              </div>
+            </div>
+            {saleImpact.anteriores > 0 && (
+              <p className="text-[10px] font-bold text-amber-700 dark:text-amber-300 uppercase tracking-widest leading-relaxed m-0">
+                Incluye ${Math.round(saleImpact.anteriores).toLocaleString()} de ventas anteriores que todavía no liquidaste. Por eso el total no es solo esta venta.
+              </p>
+            )}
+            <div className="flex flex-col gap-2">
+              <Link
+                to="/dashboard/liquidaciones"
+                className="w-full btn-cyan h-11 text-[10px] font-black uppercase tracking-widest flex items-center justify-center"
+                onClick={() => setSaleImpact(null)}
+              >
+                Ir a Liquidaciones
+              </Link>
+              <button type="button" onClick={() => setSaleImpact(null)} className="w-full text-[10px] font-black uppercase tracking-widest text-neutral-400 py-2">
+                Seguir vendiendo
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       <Modal
         isOpen={showConfirmSale}

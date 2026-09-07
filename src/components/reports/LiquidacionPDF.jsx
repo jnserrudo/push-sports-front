@@ -164,6 +164,11 @@ const LiquidacionPDF = ({ row, viewMode = 'interno' }) => {
                 </View>
                 <View style={colInfo}>
                   <Text style={styles.rowNombre}>{prod.nombre}</Text>
+                  {!esSucursal && prod.precio_unitario_push_actual > 0 && Math.round(prod.precio_unitario_push_actual) !== Math.round(prod.precio_unitario_push) && (
+                    <Text style={styles.priceLabel}>
+                      Push al vender {formatPrice(prod.precio_unitario_push)} · hoy {formatPrice(prod.precio_unitario_push_actual)}
+                    </Text>
+                  )}
                 </View>
                 <View style={colCant}>
                   <Text style={styles.rowNombre}>{prod.cantidad}</Text>
@@ -200,6 +205,18 @@ const LiquidacionPDF = ({ row, viewMode = 'interno' }) => {
               <Text style={styles.totalLabel}>Volumen Bruto (Todas las ventas)</Text>
               <Text style={styles.totalValue}>{formatPrice(row.total_bruto)}</Text>
             </View>
+          )}
+          {Number(row.descuento_comercial) > 0 && (
+            <>
+              <View style={styles.totalRow}>
+                <Text style={styles.totalLabel}>Push de los tickets</Text>
+                <Text style={styles.totalValue}>{formatPrice(row.neto_ventas || (Number(row.total_ventas_netas) + Number(row.descuento_comercial)))}</Text>
+              </View>
+              <View style={styles.totalRow}>
+                <Text style={styles.totalLabel}>Descuento comercial</Text>
+                <Text style={styles.totalValue}>- {formatPrice(row.descuento_comercial)}</Text>
+              </View>
+            </>
           )}
           <View style={styles.grandTotalRow}>
             <Text style={styles.grandTotalLabel}>{esSucursal ? 'Total a Abonar' : 'Neto Liquidado'}</Text>
