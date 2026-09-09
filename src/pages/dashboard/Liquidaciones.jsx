@@ -59,6 +59,7 @@ const Liquidaciones = () => {
     const [descuentoTipo, setDescuentoTipo] = useState('monto');
     const [descuentoValor, setDescuentoValor] = useState('');
     const [ajustandoSaldo, setAjustandoSaldo] = useState(false);
+    const [mostrarInactivas, setMostrarInactivas] = useState(false);
 
     // Modo de vista del PDF: 'interno' (ambos precios) | 'sucursal' (solo PUSH)
     const [pdfViewMode, setPdfViewMode] = useState(() => {
@@ -139,7 +140,7 @@ const Liquidaciones = () => {
             }
         } catch (error) {
             console.error('Error al obtener preview:', error);
-            toast.error("Error al calcular la liquidación");
+            toast.error(error?.response?.data?.error || "Error al calcular la liquidación");
             setIsPreviewOpen(false);
         } finally {
             setIsLoadingPreview(false);
@@ -421,8 +422,8 @@ const Liquidaciones = () => {
                      <h2 className="text-lg md:text-xl uppercase leading-none m-0 font-sport text-black dark:text-white">
                         <span className="text-brand-cyan">Liquidaciones</span>
                     </h2>
-                    <p className="text-neutral-500 text-[9px] md:text-[10px] font-bold uppercase tracking-widest leading-relaxed max-w-xl mt-1.5 whitespace-normal">
-                        Cobrá el Push de todas las ventas sin cerrar. El número de la tarjeta no es solo la última venta. Inactiva con saldo: todavía se cobra.
+                    <p className="text-neutral-500 text-[10px] font-medium leading-relaxed max-w-xl mt-1.5 m-0">
+                        Acá cobrás el Push. El número grande es todo lo impago de esa sucursal, no la última venta.
                     </p>
                  </div>
                  
@@ -435,7 +436,7 @@ const Liquidaciones = () => {
                  </div>
             </div>
 
-            <QueQueresHacer extra="El precio viejo se cobra viejo. Si le querés hacer un descuento a la sucursal, ponelo al liquidar, no en la venta al cliente." />
+            <QueQueresHacer extra="Si le hacés un precio especial a la sucursal, el descuento va al liquidar. El de Registrar Ventas es solo para el cliente de la farmacia." />
 
             {/* Tabs Navigation */}
             <Tabs
@@ -462,17 +463,11 @@ const Liquidaciones = () => {
                     <div className="flex items-start gap-3 p-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/50 rounded-2xl mb-2">
                         <ShieldCheck className="text-emerald-500 shrink-0 mt-0.5" size={18} />
                         <div className="space-y-1">
-                            <h4 className="text-[10px] font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-widest">
-                                ¿Cómo funciona el flujo de Liquidaciones y Caja?
+                            <h4 className="text-[11px] font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-widest">
+                                Cómo leer cada tarjeta
                             </h4>
-                            <p className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium leading-relaxed">
-                                1. El número de la tarjeta es <strong>todo lo que esa sucursal todavía no te pagó</strong> (todas las ventas sin cerrar), no solo la última.
-                                <br />
-                                2. Lo que te pagan es <strong>Push del día de cada venta</strong>. Si el producto subió de precio, esa venta vieja se cobra al precio viejo.
-                                <br />
-                                3. Un descuento a la sucursal se pone <strong>acá, al liquidar</strong> — no en Registrar Ventas.
-                                <br />
-                                4. Sucursal inactiva con saldo: todavía te debe. Liquidala y después desaparece.
+                            <p className="text-[12px] text-emerald-800 dark:text-emerald-300 font-medium leading-relaxed m-0">
+                                Si el total es más alto que la última venta, no es un error: hay ventas viejas sin cobrar. El resumen las lista una por una. Un precio especial a la sucursal se pone ahí, en Descuento — no en Registrar Ventas.
                             </p>
                         </div>
                     </div>
@@ -484,7 +479,12 @@ const Liquidaciones = () => {
                         const renderCard = (suc, i, inactiva = false) => {
                             const saldo = getSaldo(suc);
                             const hasDebt = saldo > 0;
-                            const tickets = getTicketsPendientes(suc);
+                            const tickets = suc.resumen_pendiente?.tickets ?? getTicketsPendientes(suc);
+                            const ultimaPush = Number(suc.resumen_pendiente?.ultima_push || 0);
+                            const anterioresPush = Number(suc.resumen_pendiente?.anteriores_push || 0);
+                            const ultimaFecha = suc.resumen_pendiente?.ultima_fecha
+                                ? new Date(suc.resumen_pendiente.ultima_fecha).toLocaleDateString('es-AR')
+                                : null;
                             return (
                                 <motion.div
                                     key={getId(suc)}
@@ -511,16 +511,36 @@ const Liquidaciones = () => {
                                             )}
                                         </div>
                                         <div className="pt-1">
-                                            <span className="text-[7px] font-bold text-neutral-400 uppercase tracking-widest block mb-0.5">Saldo a cobrar (Neto PUSH)</span>
+                                            <span className="text-[10px] font-semibold text-neutral-500 block mb-0.5">
+                                                Te debe (Push de todas las ventas sin cobrar)
+                                            </span>
                                             <div className="flex items-baseline gap-1">
                                                 <span className={`text-xs font-bold ${hasDebt ? 'text-black dark:text-white' : 'text-neutral-500 dark:text-gray-500'}`}>$</span>
                                                 <p className={`text-3xl font-sport m-0 leading-none ${hasDebt ? 'text-black dark:text-white' : 'text-neutral-800 dark:text-gray-400'}`}>
                                                     {saldo.toLocaleString()}
                                                 </p>
                                             </div>
-                                            {hasDebt && (
-                                                <p className="text-[8px] font-bold text-neutral-500 uppercase tracking-widest mt-1.5 m-0 leading-relaxed">
-                                                    {tickets} ticket{tickets === 1 ? '' : 's'} sin liquidar. Este total incluye ventas anteriores, no es solo la última.
+                                            {hasDebt && tickets > 1 && (
+                                                <div className="mt-2 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/60 px-2 py-1.5 space-y-0.5">
+                                                    <p className="text-[11px] font-semibold text-amber-900 dark:text-amber-200 m-0 leading-snug">
+                                                        No es solo la última venta. Son {tickets} juntas:
+                                                    </p>
+                                                    <p className="text-[11px] text-amber-900 dark:text-amber-200 m-0">
+                                                        Última{ultimaFecha ? ` (${ultimaFecha})` : ''}: ${Math.round(ultimaPush).toLocaleString()} Push
+                                                    </p>
+                                                    <p className="text-[11px] text-amber-900 dark:text-amber-200 m-0">
+                                                        Anteriores sin cobrar: ${Math.round(anterioresPush).toLocaleString()} Push
+                                                    </p>
+                                                </div>
+                                            )}
+                                            {hasDebt && tickets === 1 && (
+                                                <p className="text-[11px] text-neutral-600 dark:text-gray-400 mt-1.5 m-0">
+                                                    1 venta sin cobrar{ultimaFecha ? ` · ${ultimaFecha}` : ''}.
+                                                </p>
+                                            )}
+                                            {hasDebt && tickets === 0 && (
+                                                <p className="text-[11px] text-neutral-500 mt-1.5 m-0">
+                                                    Hay saldo, pero no hay tickets. Abrí el resumen para ajustarlo.
                                                 </p>
                                             )}
                                         </div>
@@ -555,13 +575,31 @@ const Liquidaciones = () => {
                                         {activas.map((suc, i) => renderCard(suc, i, false))}
                                     </div>
                                 </div>
-                                {inactivasConSaldo.length > 0 && (
+                                {inactivasConSaldo.length > 0 && !mostrarInactivas && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setMostrarInactivas(true)}
+                                        className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest hover:text-neutral-600"
+                                    >
+                                        Hay {inactivasConSaldo.length} sucursal{inactivasConSaldo.length === 1 ? '' : 'es'} que ya no opera{inactivasConSaldo.length === 1 ? '' : 'n'} (no se muestran). Ver.
+                                    </button>
+                                )}
+                                {inactivasConSaldo.length > 0 && mostrarInactivas && (
                                     <div className="space-y-3">
-                                        <div>
-                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-800 dark:text-amber-300 m-0">Ya no opera, pero todavía te debe</h3>
-                                            <p className="text-[9px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest mt-1 m-0">
-                                                Liquidá el saldo. Cuando quede en $0, deja de aparecer.
-                                            </p>
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div>
+                                                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-800 dark:text-amber-300 m-0">Inactivas con saldo</h3>
+                                                <p className="text-[9px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest mt-1 m-0">
+                                                    No operan. Si no las vas a cobrar, no hace falta entrar. Podés ocultarlas de nuevo.
+                                                </p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setMostrarInactivas(false)}
+                                                className="text-[9px] font-black uppercase tracking-widest text-neutral-500 shrink-0"
+                                            >
+                                                Ocultar
+                                            </button>
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                                             {inactivasConSaldo.map((suc, i) => renderCard(suc, i, true))}
@@ -656,6 +694,15 @@ const Liquidaciones = () => {
                                     </div>
                                 </div>
 
+                                {previewData.cantVentas > 1 && (
+                                    <div className="rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/50 px-3 py-2">
+                                        <p className="text-[12px] font-semibold text-amber-900 dark:text-amber-200 m-0 leading-snug">
+                                            Este total es la suma de {previewData.cantVentas} ventas, no de la última sola.
+                                            Podés destildar las viejas si ahora solo querés cobrar una.
+                                        </p>
+                                    </div>
+                                )}
+
                                 {/* Selección de ventas */}
                                 <div className="bg-white dark:bg-gray-800 rounded border border-neutral-200 dark:border-gray-700 overflow-hidden">
                                     <div className="p-2 border-b border-neutral-100 dark:border-gray-700 bg-neutral-50 dark:bg-gray-700/50 flex items-center justify-between gap-2">
@@ -671,10 +718,12 @@ const Liquidaciones = () => {
                                                 Seleccionar todas las ventas
                                             </label>
                                         </div>
-                                        <span className="text-[8px] font-bold text-neutral-500 uppercase">Ticket · Público · Push</span>
+                                        <span className="text-[10px] font-medium text-neutral-500">Cliente pagó · te deben Push</span>
                                     </div>
                                     <div className="max-h-[200px] overflow-y-auto">
-                                        {previewData.ventas?.map(v => (
+                                        {[...(previewData.ventas || [])]
+                                            .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
+                                            .map((v, idx) => (
                                             <div
                                                 key={v.id_venta}
                                                 className={`p-2 flex items-center gap-2 border-b border-neutral-100 dark:border-gray-700 last:border-0 ${ventasSeleccionadas.has(v.id_venta) ? 'bg-cyan-50/50 dark:bg-cyan-900/10' : 'opacity-70'}`}
@@ -686,16 +735,17 @@ const Liquidaciones = () => {
                                                     className="w-4 h-4 accent-black shrink-0"
                                                 />
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-[10px] font-bold text-black dark:text-white truncate">
-                                                        #{v.id_venta?.split('-')[0]} · {v.vendedor}
+                                                    <p className="text-[11px] font-bold text-black dark:text-white truncate m-0">
+                                                        {idx === 0 ? 'Última venta' : `Venta anterior`}
+                                                        {v.vendedor ? ` · ${v.vendedor}` : ''}
                                                     </p>
-                                                    <p className="text-[9px] text-neutral-500 truncate">
-                                                        {new Date(v.fecha).toLocaleString()} · {v.metodo_pago}
+                                                    <p className="text-[10px] text-neutral-500 truncate m-0">
+                                                        {new Date(v.fecha).toLocaleString('es-AR')} · {v.metodo_pago}
                                                     </p>
                                                 </div>
                                                 <div className="text-right shrink-0">
-                                                    <p className="text-[9px] font-bold text-neutral-400 m-0">Público ${Math.round(v.total).toLocaleString()}</p>
-                                                    <p className="text-[10px] font-sport text-brand-cyan m-0">Push ${Math.round(v.neto || 0).toLocaleString()}</p>
+                                                    <p className="text-[10px] text-neutral-500 m-0">Cliente ${Math.round(v.total).toLocaleString()}</p>
+                                                    <p className="text-[12px] font-sport text-brand-cyan m-0">Push ${Math.round(v.neto || 0).toLocaleString()}</p>
                                                 </div>
                                             </div>
                                         ))}
@@ -831,7 +881,7 @@ const Liquidaciones = () => {
 
                                         <div className="bg-neutral-900 border border-neutral-700 rounded p-1.5 mt-1 space-y-1">
                                             <div className="flex items-center justify-between gap-1">
-                                                <label className="text-[6px] font-bold text-neutral-500 uppercase tracking-widest">Descuento a la sucursal (Push)</label>
+                                                <label className="text-[10px] font-medium text-neutral-400">¿Le cobrás menos a esta sucursal?</label>
                                                 <div className="flex rounded overflow-hidden border border-neutral-700">
                                                     <button type="button" onClick={() => setDescuentoTipo('monto')} className={`px-1.5 py-0.5 text-[7px] font-black uppercase ${descuentoTipo === 'monto' ? 'bg-brand-cyan text-black' : 'text-neutral-500'}`}>$</button>
                                                     <button type="button" onClick={() => setDescuentoTipo('porcentaje')} className={`px-1.5 py-0.5 text-[7px] font-black uppercase ${descuentoTipo === 'porcentaje' ? 'bg-brand-cyan text-black' : 'text-neutral-500'}`}>%</button>
@@ -842,7 +892,7 @@ const Liquidaciones = () => {
                                                 min="0"
                                                 value={descuentoValor}
                                                 onChange={(e) => setDescuentoValor(e.target.value)}
-                                                placeholder={descuentoTipo === 'porcentaje' ? '0' : '0'}
+                                                placeholder={descuentoTipo === 'porcentaje' ? 'Ej. 10' : 'Monto de descuento'}
                                                 className="bg-transparent border-none outline-none text-white font-sport text-[10px] w-full placeholder-neutral-700 h-5"
                                             />
                                             {descuentoCalculado > 0 && (
@@ -887,8 +937,8 @@ const Liquidaciones = () => {
                                 {/* Alerta + Botones compactos */}
                                 <div className="p-2 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/50 rounded flex items-start gap-1.5">
                                     <AlertCircle size={12} className="text-emerald-600 shrink-0 mt-0.5" />
-                                    <p className="text-[8px] font-bold uppercase tracking-widest text-emerald-800 dark:text-emerald-300 m-0 leading-normal">
-                                        Se archivan {ventasSeleccionadas.size} de {previewData.cantVentas} tickets. El saldo baja solo lo de esas ventas. Si dejás tickets sin marcar, la sucursal sigue debiendo ese resto. El descuento baja lo oficial a cobrar; Recibido es la plata que te dieron.
+                                    <p className="text-[11px] font-medium text-emerald-800 dark:text-emerald-300 m-0 leading-normal">
+                                        Se cierran {ventasSeleccionadas.size} de {previewData.cantVentas} ventas. El saldo baja solo esas. Las que no marques siguen debiendo. El descuento baja lo que te tiene que pagar; Recibido es el efectivo que te dieron.
                                     </p>
                                 </div>
 

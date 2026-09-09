@@ -19,7 +19,7 @@ const ACTIONS = [
     to: '/dashboard/liquidaciones',
     icon: CreditCard,
     title: 'Cobrarle a la sucursal',
-    desc: 'Liquidaciones cobra el Push de TODAS las ventas sin cerrar, no solo la última. Descuento a sucursal: ahí, no en Ventas.',
+    desc: 'Acá cobrás el Push de todo lo impago. Si el número es más alto que la última venta, hay ventas viejas. Descuento a sucursal: acá.',
   },
 ];
 

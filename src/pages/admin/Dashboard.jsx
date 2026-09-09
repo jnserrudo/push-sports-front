@@ -353,9 +353,9 @@ const Dashboard = () => {
           <div className="flex-1">
             <h4 className="text-xs font-black text-blue-800 dark:text-blue-300 uppercase tracking-wider mb-1">¿Cómo interpretar estas métricas?</h4>
             <p className="text-[11px] md:text-xs text-blue-700 dark:text-blue-300 leading-relaxed m-0">
-              <strong>Total Ventas:</strong> todo lo vendido en los últimos 30 días.{' '}
-              <strong>Ingresos:</strong> dinero ya cobrado por liquidaciones.{' '}
-              <strong>Caja Fuerte:</strong> saldo pendiente de liquidar. Si Caja Fuerte es $0 significa que ya cobraste todo.
+              <strong>Ventas al público:</strong> lo que las sucursales cobraron al cliente en 30 días (precio Público). No es lo que te deben.{' '}
+              <strong>Ingresos:</strong> Push que ya te pagaron.{' '}
+              <strong>Caja Fuerte:</strong> Push que todavía no te pagaron (todas las ventas sin cerrar, no solo las de 30 días).
             </p>
           </div>
         </div>
@@ -364,14 +364,14 @@ const Dashboard = () => {
       {/* ── MÉTRICAS ── */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
         <MetricCard 
-          title="Total Ventas" 
+          title="Ventas al público" 
           value={`$${Number(stats.totalVentas || 0).toLocaleString('es-AR')}`} 
           icon={ShoppingCart} 
           trend={!loading && stats.crecimientoVentas > 0 ? stats.crecimientoVentas : null}
-          sub={`${stats.cantidadVentas || 0} ventas (30 días)`} 
+          sub={`${stats.cantidadVentas || 0} ventas · 30 días · no es Push`} 
           link="/dashboard/liquidaciones" 
           loading={loading} 
-          description="Suma de todas las ventas realizadas en los últimos 30 días, incluyendo ventas activas y ya liquidadas."
+          description="Precio Público de los últimos 30 días. No compares este número con Liquidaciones: allá se cobra Push de todas las ventas sin cerrar, aunque sean más viejas."
         />
         <MetricCard 
           title="Ingresos" 
@@ -380,16 +380,16 @@ const Dashboard = () => {
           sub={`${stats.cantidadLiquidaciones || 0} liquidaciones (30 días)`} 
           link="/dashboard/liquidaciones" 
           loading={loading} 
-          description="Dinero efectivamente cobrado a través de liquidaciones de sucursales en los últimos 30 días."
+          description="Push que ya te pagaron las sucursales en los últimos 30 días."
         />
         <MetricCard 
           title="Caja Fuerte" 
           value={`$${Number(stats.ventas || 0).toLocaleString('es-AR')}`} 
           icon={CircleDollarSign} 
-          sub="Saldo pendiente" 
+          sub="Push pendiente · todas las sucursales" 
           link="/dashboard/liquidaciones" 
           loading={loading} 
-          description="Saldo acumulado que aún no ha sido liquidado por las sucursales. Si es $0, todo el dinero ya fue cobrado."
+          description="Lo que las sucursales todavía te deben de Push. Incluye ventas de hace más de 30 días si no se liquidaron."
         />
         {isSuperAdmin && (
             <MetricCard 

@@ -1102,12 +1102,13 @@ const POS = () => {
 
             {/* Campo código promo */}
             {!descuentoAplicado ? (
-                <div className="flex gap-1">
+                <div className="space-y-0.5">
+                    <div className="flex gap-1">
                     <div className="relative flex-1">
                         <Tag size={7} className="absolute left-1.5 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-gray-500" />
                         <input
                             type="text"
-                            placeholder="CÓDIGO PROMO..."
+                            placeholder="PROMO AL CLIENTE..."
                             value={codigoPromo}
                             onChange={e => { setCodigoPromo(e.target.value.toUpperCase()); setPromoError(''); }}
                             onKeyDown={e => e.key === 'Enter' && handleValidarCodigo()}
@@ -1121,6 +1122,8 @@ const POS = () => {
                     >
                         {isValidatingCodigo ? <Loader2 size={7} className="animate-spin" /> : 'OK'}
                     </button>
+                    </div>
+                    <p className="text-[9px] text-neutral-500 m-0 leading-snug">Baja lo que paga el cliente. No baja el Push que te debe la sucursal. Eso se descuenta en Liquidaciones.</p>
                 </div>
             ) : (
                 <div className="flex items-center justify-between px-1.5 py-0.5 bg-green-50 border border-green-200 rounded-lg">
@@ -1149,10 +1152,13 @@ const POS = () => {
                     <span>${subtotal.toLocaleString()}</span>
                 </div>
                 {descuentoAplicado && (
+                    <>
                     <div className="flex justify-between font-bold text-[7px] tracking-[0.08em] text-green-600">
-                        <span>Descuento ({descuentoAplicado.codigo})</span>
+                        <span>Descuento cliente ({descuentoAplicado.codigo})</span>
                         <span>-${montoDescuento.toLocaleString()}</span>
                     </div>
+                    <p className="text-[9px] text-green-700 m-0 leading-snug">El Push de la sucursal sigue en ${totalPush.toLocaleString()}.</p>
+                    </>
                 )}
                 <div className="flex justify-between items-center font-bold text-[8px] tracking-[0.12em] text-neutral-500 dark:text-gray-400">
                     <span>Método de pago</span>
@@ -1279,8 +1285,9 @@ const POS = () => {
       >
         <div className="space-y-4">
           <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-amber-800 dark:text-amber-300 leading-relaxed m-0">
-              Esto cobra precio Público al cliente final y resta el stock de esta sede. No es un envío a sucursal.
+            <p className="text-[12px] font-medium text-amber-900 dark:text-amber-200 leading-relaxed m-0">
+              El cliente paga Público. Lo que te debe la sucursal es Push. No es un envío de mercadería.
+              {descuentoAplicado ? ' El descuento de esta pantalla es para el cliente: el Push no baja.' : ''}
             </p>
           </div>
           <div className="grid grid-cols-2 gap-2">

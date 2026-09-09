@@ -381,7 +381,7 @@ const Sucursales = () => {
                 <label className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-neutral-100 dark:border-gray-700 rounded-xl cursor-pointer group hover:border-brand-cyan transition-all">
                     <div className="flex flex-col">
                         <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-black dark:text-white">Estado Operativo</span>
-                        <span className="text-[9px] text-neutral-400 dark:text-gray-500 font-bold tracking-wider mt-0.5">Visible y recibe operaciones</span>
+                        <span className="text-[9px] text-neutral-400 dark:text-gray-500 font-medium tracking-normal mt-0.5">Si la desactivás, deja de aparecer en Liquidaciones. No borra el historial.</span>
                     </div>
                     <div
                         onClick={(e) => {
