@@ -19,7 +19,7 @@ const ACTIONS = [
     to: '/dashboard/liquidaciones',
     icon: CreditCard,
     title: 'Cobrarle a la sucursal',
-    desc: 'Acá cobrás el Push de todo lo impago. Si el número es más alto que la última venta, hay ventas viejas. Descuento a sucursal: acá.',
+    desc: 'Acá cobrás el Push. Para vender un producto más barato, el descuento es en Registrar Ventas, en el ítem.',
   },
 ];
 

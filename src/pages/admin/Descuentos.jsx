@@ -73,7 +73,7 @@ const Descuentos = () => {
     const renderForm = (formData, setFormData) => (
         <div className="space-y-6">
             <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">Código Promocional</label>
+                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">Código (el que se escribe en la venta)</label>
                 <div className="relative group">
                     <Hash size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-brand-cyan transition-colors pointer-events-none" />
                     <input
@@ -88,7 +88,7 @@ const Descuentos = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">Mecánica</label>
+                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">Tipo</label>
                     <PremiumSelect
                         placeholder="SELECCIONAR..."
                         searchable={false}
@@ -133,8 +133,8 @@ const Descuentos = () => {
 
     return (
         <GenericABM
-            title="Gestión de Descuentos"
-            description="Creación de cupones y códigos promocionales (monto fijo o porcentaje) con capacidad de establecer límites de uso."
+            title="Códigos de descuento"
+            description="Creá un código (ej. VERANO26). En Registrar Ventas, abajo del carrito, lo escribís y se aplica a toda la venta. Si querés descontar un producto suelto, no hace falta código: en el carrito tocá Descuento."
             icon={Ticket}
             service={descuentosService}
             columns={columns}

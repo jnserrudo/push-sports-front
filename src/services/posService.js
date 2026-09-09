@@ -8,19 +8,23 @@ export const posService = {
     },
 
     // Registra la venta (Cabecera y Detalle normalizado para la API)
-    registrarVenta: async (sucursalId, vendedorId, items, montoTotal, metodoPago = 'Efectivo') => {
+    registrarVenta: async (sucursalId, vendedorId, items, montoTotal, metodoPago = 'Efectivo', codigoDescuento = null) => {
         const payload = {
             id_comercio: sucursalId,
             id_usuario: vendedorId,
             metodo_pago: metodoPago,
-            total_venta: montoTotal, // Aclaro monto total por si acaso el backend lo requiere
+            total_venta: montoTotal,
+            codigo_descuento: codigoDescuento || undefined,
             detalles: items.map(item => ({
                 id_producto: item.id_producto,
-                id_variante: item.id_variante, // Soportar variantes
+                id_variante: item.id_variante,
                 cantidad: item.cantidadAComprar,
                 precio_unitario: item.precio_venta,
-                precio_push: item.precio_push || 0,   // Precio PUSH del momento de la venta
-                precio_base: item.precio_base || 0    // Precio público base sin oferta
+                precio_push: item.precio_push || 0,
+                precio_base: item.precio_base || 0,
+                precio_lista: item.precio_lista || item.precio_base || item.precio_venta,
+                descuento_tipo: item.descuento_tipo || null,
+                descuento_valor: item.descuento_valor ?? null
             }))
         };
 

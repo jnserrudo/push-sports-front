@@ -89,7 +89,10 @@ const PosComprobantePDF = ({
   metodoPagoDoc, 
   detalles, 
   descuentoMonto, 
-  totalVenta 
+  totalVenta,
+  codigoDescuento,
+  comercioNombre,
+  refId
 }) => {
   const sortedDetalles = [...detalles].sort((a,b) => (a.codigo || '').localeCompare(b.codigo || ''));
 
@@ -99,7 +102,7 @@ const PosComprobantePDF = ({
   const colPrecio = { width: '15%', alignItems: 'flex-end' };
   const colTotal = { width: '20%', alignItems: 'flex-end' };
 
-  const idText = venta.id_venta ? String(venta.id_venta).toUpperCase() : 'N/A';
+  const idText = (refId || venta?.id_venta) ? String(refId || venta.id_venta).toUpperCase() : 'N/A';
 
   return (
     <Document title={`Comprobante_Venta_${idText}`}>
@@ -112,8 +115,8 @@ const PosComprobantePDF = ({
           </View>
           <View style={styles.shopBlock}>
             <Text style={styles.shopLabel}>Sede de Venta</Text>
-            <Text style={styles.shopName}>{venta.comercio?.nombre_comercio || 'Tienda Principal'}</Text>
-            <Text style={styles.shopType}>ID: #{venta.id_venta}</Text>
+            <Text style={styles.shopName}>{comercioNombre || venta?.comercio?.nombre || venta?.comercio?.nombre_comercio || 'Tienda Principal'}</Text>
+            <Text style={styles.shopType}>ID: #{refId || venta?.id_venta || 'N/A'}</Text>
           </View>
         </View>
 
@@ -140,6 +143,9 @@ const PosComprobantePDF = ({
                 </View>
                 <View style={colInfo}>
                   <Text style={styles.rowNombre}>{prod.nombre}</Text>
+                  {prod.descuento ? (
+                    <Text style={styles.priceLabel}>Dto producto {prod.descuento}</Text>
+                  ) : null}
                 </View>
                 <View style={colCant}>
                   <Text style={styles.rowNombre}>{prod.cantidad}</Text>
@@ -160,7 +166,7 @@ const PosComprobantePDF = ({
         <View style={styles.totalContainer}>
           {descuentoMonto > 0 && (
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Descuento Aplicado</Text>
+              <Text style={styles.totalLabel}>Código {codigoDescuento || 'promo'}</Text>
               <Text style={styles.totalValue}>-{formatPrice(descuentoMonto)}</Text>
             </View>
           )}

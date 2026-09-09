@@ -436,7 +436,7 @@ const Liquidaciones = () => {
                  </div>
             </div>
 
-            <QueQueresHacer extra="Si le hacés un precio especial a la sucursal, el descuento va al liquidar. El de Registrar Ventas es solo para el cliente de la farmacia." />
+            <QueQueresHacer extra="Para vender más barato: en Registrar Ventas, tocá Descuento en el producto." />
 
             {/* Tabs Navigation */}
             <Tabs
@@ -459,17 +459,11 @@ const Liquidaciones = () => {
                 </div>
             ) : (
                 <>
-                    {/* Explanation Banner for Liquidaciones */}
                     <div className="flex items-start gap-3 p-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/50 rounded-2xl mb-2">
                         <ShieldCheck className="text-emerald-500 shrink-0 mt-0.5" size={18} />
-                        <div className="space-y-1">
-                            <h4 className="text-[11px] font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-widest">
-                                Cómo leer cada tarjeta
-                            </h4>
-                            <p className="text-[12px] text-emerald-800 dark:text-emerald-300 font-medium leading-relaxed m-0">
-                                Si el total es más alto que la última venta, no es un error: hay ventas viejas sin cobrar. El resumen las lista una por una. Un precio especial a la sucursal se pone ahí, en Descuento — no en Registrar Ventas.
-                            </p>
-                        </div>
+                        <p className="text-[13px] text-emerald-800 dark:text-emerald-300 font-medium leading-relaxed m-0">
+                            Si el total es más alto que la última venta, hay ventas viejas sin cobrar. Para vender un producto más barato: Registrar Ventas → Descuento en ese producto.
+                        </p>
                     </div>
 
                     {/* Tarjetas de Sucursales */}
@@ -850,95 +844,100 @@ const Liquidaciones = () => {
                                  )})}
 
 
-                                {/* Resumen Financiero Compacto */}
-                                <div className="bg-black p-2 rounded border border-neutral-800 overflow-hidden relative">
-                                    <div className="absolute -right-4 -top-4 w-16 h-16 bg-brand-cyan/20 blur-2xl rounded-full pointer-events-none" />
-
-                                    <div className="relative z-10 space-y-1">
+                                {/* Totales + descuento a la sucursal */}
+                                <div className="space-y-2">
+                                    <div className="bg-black p-3 rounded-xl space-y-2">
                                         <div className="flex justify-between items-center text-neutral-300">
-                                            <span className="text-[7px] font-bold uppercase tracking-widest">Bruto Total Seleccionado:</span>
-                                            <span className="font-sport text-[9px]">${Math.round(previewConSeleccion?.totalVentasBruto ?? previewData.totalVentasBruto).toLocaleString()}</span>
+                                            <span className="text-[12px]">Lo que pagaron los clientes (Público)</span>
+                                            <span className="font-sport text-sm">${Math.round(previewConSeleccion?.totalVentasBruto ?? previewData.totalVentasBruto).toLocaleString()}</span>
                                         </div>
-
                                         {(previewConSeleccion?.totalDevoluciones ?? previewData.totalDevoluciones) > 0 && (
-                                            <div className="flex justify-between items-center text-amber-400 border-b border-neutral-800 pb-0.5">
-                                                <span className="text-[7px] font-bold uppercase tracking-widest flex items-center gap-1">
-                                                    <RotateCcw size={7} /> Devol. ({previewConSeleccion?.cantDevoluciones ?? previewData.cantDevoluciones}):
+                                            <div className="flex justify-between items-center text-amber-400">
+                                                <span className="text-[12px] flex items-center gap-1">
+                                                    <RotateCcw size={12} /> Devoluciones
                                                 </span>
-                                                <span className="font-sport text-[9px]">-${Math.round(previewConSeleccion?.totalDevoluciones ?? previewData.totalDevoluciones).toLocaleString()}</span>
+                                                <span className="font-sport text-sm">-${Math.round(previewConSeleccion?.totalDevoluciones ?? previewData.totalDevoluciones).toLocaleString()}</span>
                                             </div>
                                         )}
-
-                                        <div className="flex justify-between items-end pt-0.5">
-                                            <span className="text-[8px] font-black text-neutral-400 uppercase tracking-[0.1em]">Push de estos tickets:</span>
+                                        <div className="flex justify-between items-end pt-1 border-t border-neutral-800">
+                                            <span className="text-[13px] font-semibold text-white">Te debe de Push</span>
                                             <div className="flex items-baseline gap-0.5 text-white">
-                                                <span className="text-[10px] font-bold">$</span>
-                                                <span className="text-lg font-sport leading-none">
+                                                <span className="text-sm font-bold">$</span>
+                                                <span className="text-2xl font-sport leading-none">
                                                     {isLoadingPreviewSeleccion ? '...' : Math.round(netoSeleccionado).toLocaleString()}
                                                 </span>
                                             </div>
                                         </div>
+                                    </div>
 
-                                        <div className="bg-neutral-900 border border-neutral-700 rounded p-1.5 mt-1 space-y-1">
-                                            <div className="flex items-center justify-between gap-1">
-                                                <label className="text-[10px] font-medium text-neutral-400">¿Le cobrás menos a esta sucursal?</label>
-                                                <div className="flex rounded overflow-hidden border border-neutral-700">
-                                                    <button type="button" onClick={() => setDescuentoTipo('monto')} className={`px-1.5 py-0.5 text-[7px] font-black uppercase ${descuentoTipo === 'monto' ? 'bg-brand-cyan text-black' : 'text-neutral-500'}`}>$</button>
-                                                    <button type="button" onClick={() => setDescuentoTipo('porcentaje')} className={`px-1.5 py-0.5 text-[7px] font-black uppercase ${descuentoTipo === 'porcentaje' ? 'bg-brand-cyan text-black' : 'text-neutral-500'}`}>%</button>
-                                                </div>
+                                    <div className="rounded-xl border-2 border-brand-cyan bg-white dark:bg-gray-800 p-3 space-y-2">
+                                        <p className="text-[15px] font-bold text-neutral-900 dark:text-white m-0 leading-snug">
+                                            Descuento extra a esta liquidación
+                                        </p>
+                                        <p className="text-[13px] text-neutral-600 dark:text-gray-300 m-0 leading-snug">
+                                            Opcional. Si ya descontaste el producto en la venta, no hace falta. Esto baja el total de Push de esta cobranza.
+                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex rounded-lg overflow-hidden border border-neutral-300 dark:border-gray-600">
+                                                <button type="button" onClick={() => setDescuentoTipo('monto')} className={`px-3 py-1.5 text-[12px] font-bold ${descuentoTipo === 'monto' ? 'bg-brand-cyan text-black' : 'text-neutral-500 bg-neutral-50 dark:bg-gray-700'}`}>
+                                                    En pesos
+                                                </button>
+                                                <button type="button" onClick={() => setDescuentoTipo('porcentaje')} className={`px-3 py-1.5 text-[12px] font-bold ${descuentoTipo === 'porcentaje' ? 'bg-brand-cyan text-black' : 'text-neutral-500 bg-neutral-50 dark:bg-gray-700'}`}>
+                                                    En %
+                                                </button>
                                             </div>
                                             <input
                                                 type="number"
                                                 min="0"
                                                 value={descuentoValor}
                                                 onChange={(e) => setDescuentoValor(e.target.value)}
-                                                placeholder={descuentoTipo === 'porcentaje' ? 'Ej. 10' : 'Monto de descuento'}
-                                                className="bg-transparent border-none outline-none text-white font-sport text-[10px] w-full placeholder-neutral-700 h-5"
+                                                placeholder={descuentoTipo === 'porcentaje' ? 'Ej: 10' : 'Ej: 20000'}
+                                                className="flex-1 min-w-0 border border-neutral-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-lg font-sport text-neutral-900 dark:text-white bg-white dark:bg-gray-900 outline-none focus:border-brand-cyan"
                                             />
-                                            {descuentoCalculado > 0 && (
-                                                <p className="text-[7px] font-bold text-brand-cyan uppercase m-0">
-                                                    Te debía ${Math.round(netoSeleccionado).toLocaleString()}. Descuento ${Math.round(descuentoCalculado).toLocaleString()}. A cobrar ${Math.round(aCobrar).toLocaleString()}.
-                                                </p>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-2 text-center">
+                                            <div className="rounded-lg bg-neutral-50 dark:bg-gray-900 py-2 px-1">
+                                                <p className="text-[10px] text-neutral-500 m-0">Te debe</p>
+                                                <p className="text-[13px] font-bold text-neutral-900 dark:text-white m-0">${Math.round(netoSeleccionado).toLocaleString()}</p>
+                                            </div>
+                                            <div className="rounded-lg bg-neutral-50 dark:bg-gray-900 py-2 px-1">
+                                                <p className="text-[10px] text-neutral-500 m-0">Le descontás</p>
+                                                <p className="text-[13px] font-bold text-amber-700 m-0">${Math.round(descuentoCalculado).toLocaleString()}</p>
+                                            </div>
+                                            <div className="rounded-lg bg-brand-cyan/15 py-2 px-1">
+                                                <p className="text-[10px] text-neutral-600 m-0">Te tiene que pagar</p>
+                                                <p className="text-[13px] font-bold text-neutral-900 dark:text-white m-0">${Math.round(aCobrar).toLocaleString()}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="rounded-xl border border-neutral-200 dark:border-gray-700 bg-neutral-50 dark:bg-gray-800 p-3 space-y-1">
+                                        <p className="text-[13px] font-bold text-neutral-900 dark:text-white m-0">¿Cuánta plata te dieron hoy?</p>
+                                        <p className="text-[12px] text-neutral-500 m-0 leading-snug">
+                                            Si te pagaron exactamente ${Math.round(aCobrar).toLocaleString()}, dejalo vacío. Esto no es el descuento: es para anotar si te dieron de más o de menos.
+                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            <DollarSign size={16} className="text-neutral-400" />
+                                            <input
+                                                type="number"
+                                                value={montoRecibidoManual}
+                                                onChange={(e) => setMontoRecibidoManual(e.target.value)}
+                                                placeholder={Math.round(aCobrar).toString()}
+                                                className="flex-1 bg-white dark:bg-gray-900 border border-neutral-200 dark:border-gray-600 rounded-lg px-3 py-1.5 font-sport text-lg text-neutral-900 dark:text-white outline-none"
+                                            />
+                                            {montoRecibidoManual && !isNaN(montoRecibidoManual) && parseFloat(montoRecibidoManual) !== aCobrar && (
+                                                <span className={`text-[12px] font-bold whitespace-nowrap ${parseFloat(montoRecibidoManual) > aCobrar ? 'text-green-600' : 'text-red-500'}`}>
+                                                    {parseFloat(montoRecibidoManual) > aCobrar ? 'De más ' : 'De menos '}
+                                                    ${Math.round(Math.abs(parseFloat(montoRecibidoManual) - aCobrar)).toLocaleString()}
+                                                </span>
                                             )}
-                                        </div>
-
-                                        <div className="flex justify-between items-end pt-1">
-                                            <span className="text-[8px] font-black text-brand-cyan uppercase tracking-[0.1em]">A COBRAR:</span>
-                                            <div className="flex items-baseline gap-0.5 text-white">
-                                                <span className="text-[10px] font-bold">$</span>
-                                                <span className="text-xl font-sport leading-none">{Math.round(aCobrar).toLocaleString()}</span>
-                                            </div>
-                                        </div>
-
-                                        <div className="bg-neutral-900 border border-neutral-700 rounded p-1 mt-1">
-                                            <div className="flex items-center gap-1">
-                                                <label className="text-[6px] font-bold text-neutral-500 uppercase tracking-widest whitespace-nowrap">Recibido (plata física):</label>
-                                                <div className="flex items-center gap-1 flex-1">
-                                                    <DollarSign size={8} className="text-neutral-600" />
-                                                    <input 
-                                                        type="number"
-                                                        value={montoRecibidoManual}
-                                                        onChange={(e) => setMontoRecibidoManual(e.target.value)}
-                                                        placeholder={Math.round(aCobrar).toString()}
-                                                        className="bg-transparent border-none outline-none text-white font-sport text-[10px] w-full placeholder-neutral-700 h-4"
-                                                    />
-                                                </div>
-                                                {montoRecibidoManual && !isNaN(montoRecibidoManual) && parseFloat(montoRecibidoManual) !== aCobrar && (
-                                                    <span className={`text-[7px] font-black uppercase whitespace-nowrap ${parseFloat(montoRecibidoManual) > aCobrar ? 'text-green-400' : 'text-red-400'}`}>
-                                                        {parseFloat(montoRecibidoManual) > aCobrar ? '+' : ''}
-                                                        ${Math.round(parseFloat(montoRecibidoManual) - aCobrar).toLocaleString()}
-                                                    </span>
-                                                )}
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Alerta + Botones compactos */}
-                                <div className="p-2 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/50 rounded flex items-start gap-1.5">
-                                    <AlertCircle size={12} className="text-emerald-600 shrink-0 mt-0.5" />
-                                    <p className="text-[11px] font-medium text-emerald-800 dark:text-emerald-300 m-0 leading-normal">
-                                        Se cierran {ventasSeleccionadas.size} de {previewData.cantVentas} ventas. El saldo baja solo esas. Las que no marques siguen debiendo. El descuento baja lo que te tiene que pagar; Recibido es el efectivo que te dieron.
+                                <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/50 rounded-xl">
+                                    <p className="text-[13px] font-medium text-emerald-900 dark:text-emerald-200 m-0 leading-snug">
+                                        Se cierran {ventasSeleccionadas.size} de {previewData.cantVentas} ventas. El saldo baja solo esas. Las que no marques siguen debiendo.
                                     </p>
                                 </div>
 
@@ -955,7 +954,7 @@ const Liquidaciones = () => {
                                         disabled={isProcessing || ventasSeleccionadas.size === 0}
                                         className="flex-1 bg-brand-cyan text-black py-1.5 rounded text-[9px] font-black uppercase tracking-[0.1em] flex items-center justify-center gap-1.5 hover:bg-black hover:text-white transition-all border-2 border-transparent hover:border-brand-cyan disabled:opacity-40 disabled:cursor-not-allowed"
                                     >
-                                        {isProcessing ? 'PROCESANDO...' : <><CheckCircle2 size={12} /> LIQUIDAR {ventasSeleccionadas.size} VENTAS</>}
+                                        {isProcessing ? 'PROCESANDO...' : <><CheckCircle2 size={12} /> COBRAR ${Math.round(aCobrar).toLocaleString()}</>}
                                     </motion.button>
                                 </div>
                             </div>
@@ -1371,6 +1370,12 @@ const Liquidaciones = () => {
                                     <span className="text-[8px] font-bold text-neutral-400 uppercase block">Total</span>
                                     <span className="text-lg font-sport text-black dark:text-white">${Math.round(selectedVenta.total_venta || 0).toLocaleString()}</span>
                                 </div>
+                                {Number(selectedVenta.monto_descuento) > 0 && (
+                                    <div>
+                                        <span className="text-[8px] font-bold text-neutral-400 uppercase block">Código {selectedVenta.codigo_descuento || ''}</span>
+                                        <span className="text-sm font-bold text-green-700">-${Math.round(selectedVenta.monto_descuento).toLocaleString()}</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -1383,7 +1388,15 @@ const Liquidaciones = () => {
                                         <div key={idx} className="flex justify-between items-center text-xs bg-white dark:bg-gray-700 p-2 rounded border border-neutral-200 dark:border-gray-600">
                                             <div className="flex-1">
                                                 <span className="font-bold text-black dark:text-white block">{detalle.producto?.nombre || 'Producto'}</span>
-                                                <span className="text-[10px] text-neutral-500">Cant: {detalle.cantidad}</span>
+                                                <span className="text-[10px] text-neutral-500">
+                                                    Cant: {detalle.cantidad}
+                                                    {detalle.descuento_tipo
+                                                        ? ` · Dto ${detalle.descuento_tipo === 'porcentaje' ? `${detalle.descuento_valor}%` : `$${Number(detalle.descuento_valor).toLocaleString()}`}`
+                                                        : ''}
+                                                    {detalle.precio_lista && Number(detalle.precio_lista) > Number(detalle.precio_unitario_cobrado)
+                                                        ? ` · lista $${Math.round(detalle.precio_lista).toLocaleString()}`
+                                                        : ''}
+                                                </span>
                                             </div>
                                             <div className="text-right">
                                                 <span className="text-sm font-sport text-black dark:text-white block">${Math.round((detalle.precio_unitario_cobrado || 0) * detalle.cantidad).toLocaleString()}</span>

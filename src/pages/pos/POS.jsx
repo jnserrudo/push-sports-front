@@ -74,6 +74,9 @@ const POS = () => {
   const [descuentoAplicado, setDescuentoAplicado] = useState(null); // { codigo, monto_descuento, tipo_descuento, valor_descuento }
   const [isValidatingCodigo, setIsValidatingCodigo] = useState(false);
   const [promoError, setPromoError] = useState('');
+  const [descuentoLineaId, setDescuentoLineaId] = useState(null);
+  const [descuentoLineaTipo, setDescuentoLineaTipo] = useState('porcentaje');
+  const [descuentoLineaValor, setDescuentoLineaValor] = useState('');
 
   // Ofertas vigentes
   const [ofertasVigentes, setOfertasVigentes] = useState([]);
@@ -331,7 +334,9 @@ const POS = () => {
         nombre: `${getProductNombre(item)} - ${nombreVariante}`,
         precio,
         precio_base: getProductPrecioBase(item),
+        precio_lista: precio,
         precio_push: Number(item.producto?.precio_pushsport || 0),
+        precio_push_lista: Number(item.producto?.precio_pushsport || 0),
         stock: stockMax,
         img: getProductImg(item),
         cantidad: 1
@@ -364,7 +369,9 @@ const POS = () => {
         nombre: getProductNombre(item),
         precio: getProductPrecio(item),
         precio_base: getProductPrecioBase(item),
+        precio_lista: getProductPrecio(item),
         precio_push: Number(item.producto?.precio_pushsport || 0),
+        precio_push_lista: Number(item.producto?.precio_pushsport || 0),
         stock: stockMax,
         img: getProductImg(item),
         cantidad: 1
@@ -440,10 +447,52 @@ const POS = () => {
     }));
   };
 
+  const applyDescuentoLinea = (id) => {
+    const raw = parseFloat(descuentoLineaValor);
+    if (!Number.isFinite(raw) || raw < 0) {
+      toast.error('Ingresá un descuento');
+      return;
+    }
+    setCart(cart.map(item => {
+      if (item.id !== id) return item;
+      const lista = Number(item.precio_lista ?? item.precio_base ?? item.precio) || 0;
+      const pushLista = Number(item.precio_push_lista ?? item.precio_push) || 0;
+      let nuevoPrecio = lista;
+      if (descuentoLineaTipo === 'porcentaje') {
+        nuevoPrecio = Math.round(lista * (1 - Math.min(100, raw) / 100) * 100) / 100;
+      } else {
+        nuevoPrecio = Math.max(0, Math.round((lista - raw) * 100) / 100);
+      }
+      const ratio = lista > 0 ? nuevoPrecio / lista : 1;
+      return {
+        ...item,
+        precio: nuevoPrecio,
+        precio_push: Math.round(pushLista * ratio * 100) / 100,
+        descuento_linea: { tipo: descuentoLineaTipo, valor: raw }
+      };
+    }));
+    setDescuentoLineaId(null);
+    setDescuentoLineaValor('');
+  };
+
+  const quitarDescuentoLinea = (id) => {
+    setCart(cart.map(item => {
+      if (item.id !== id) return item;
+      return {
+        ...item,
+        precio: Number(item.precio_lista ?? item.precio_base ?? item.precio),
+        precio_push: Number(item.precio_push_lista ?? item.precio_push),
+        descuento_linea: null
+      };
+    }));
+  };
+
   const subtotal = cart.reduce((acc, item) => acc + (item.precio * item.cantidad), 0);
-  const totalPush = cart.reduce((acc, item) => acc + ((Number(item.precio_push) || 0) * item.cantidad), 0);
+  const totalPushLista = cart.reduce((acc, item) => acc + ((Number(item.precio_push) || 0) * item.cantidad), 0);
   const montoDescuento = descuentoAplicado?.monto_descuento || 0;
   const total = Math.max(0, subtotal - montoDescuento);
+  const ratioCupon = subtotal > 0 ? total / subtotal : 1;
+  const totalPush = Math.round(totalPushLista * ratioCupon * 100) / 100;
   const cartItemsCount = cart.reduce((acc, item) => acc + item.cantidad, 0);
 
   const handleValidarCodigo = async () => {
@@ -470,35 +519,41 @@ const POS = () => {
   };
 
   const generateComprobante = async (ventaData) => {
-    const comercioNombre = currentSucursal?.nombre || ventaData?.ventaCabecera?.comercio?.nombre || 'Sede';
-    const fecha = ventaData?.ventaCabecera?.fecha_venta
-      ? new Date(ventaData.ventaCabecera.fecha_venta).toLocaleString()
+    const cab = ventaData?.data?.ventaCabecera || ventaData?.ventaCabecera || {};
+    const comercioNombre = currentSucursal?.nombre || cab.comercio?.nombre || 'Sede';
+    const fecha = cab.fecha_hora || cab.fecha_venta
+      ? new Date(cab.fecha_hora || cab.fecha_venta).toLocaleString()
       : new Date().toLocaleString();
-    const metodoPagoDoc = ventaData?.ventaCabecera?.metodo_pago || metodoPago;
-    const refId = ventaData?.ventaCabecera?.id_venta || ventaData?.id_venta || '';
-    const totalVenta = Number(ventaData?.ventaCabecera?.total_venta ?? total ?? 0);
+    const metodoPagoDoc = cab.metodo_pago || metodoPago;
+    const refId = cab.id_venta || ventaData?.id_venta || '';
+    const totalVenta = Number(cab.total_venta ?? total ?? 0);
 
     const detalles = ventaData?.detalles?.length
       ? ventaData.detalles.map(d => ({
           nombre: d.producto?.nombre || d.nombre || 'Producto',
           cantidad: Number(d.cantidad || 1),
-          precio: Number(d.precio_unitario || d.precio_venta || 0),
-          precioPublico: Number(d.producto?.precio_venta_sugerido || 0),
-          precioPush: Number(d.producto?.precio_pushsport || 0),
-          codigo: d.producto?.codigo_producto?.codigo || d.codigo || ''
+          precio: Number(d.precio_unitario_cobrado || d.precio_unitario || d.precio_venta || 0),
+          precioPublico: Number(d.precio_lista || d.producto?.precio_venta_sugerido || 0),
+          precioPush: Number(d.precio_pushsport_historico || d.producto?.precio_pushsport || 0),
+          codigo: d.producto?.codigo_producto?.codigo || d.codigo || '',
+          descuento: d.descuento_tipo
+            ? (d.descuento_tipo === 'porcentaje' ? `${d.descuento_valor}%` : `$${Number(d.descuento_valor).toLocaleString()}`)
+            : ''
         }))
       : cart.map(item => ({
           nombre: item.nombre,
           cantidad: item.cantidad,
           precio: item.precio,
-          precioPublico: item.precio_base || 0,
+          precioPublico: item.precio_lista || item.precio_base || 0,
           precioPush: item.precio_push || 0,
-          codigo: item.codigo_producto?.codigo || item.codigo || ''
+          codigo: item.codigo_producto?.codigo || item.codigo || '',
+          descuento: item.descuento_linea
+            ? (item.descuento_linea.tipo === 'porcentaje' ? `${item.descuento_linea.valor}%` : `$${Number(item.descuento_linea.valor).toLocaleString()}`)
+            : ''
         }));
 
-    const descuentoMonto = ventaData?.ventaCabecera?.descuento_aplicado
-      ? Number(ventaData.ventaCabecera.descuento_aplicado)
-      : montoDescuento;
+    const descuentoMonto = Number(cab.monto_descuento ?? montoDescuento ?? 0);
+    const codigoDescuento = cab.codigo_descuento || descuentoAplicado?.codigo || '';
 
     try {
       const blob = await pdf(
@@ -509,6 +564,7 @@ const POS = () => {
           refId={refId}
           detalles={detalles}
           descuentoMonto={descuentoMonto}
+          codigoDescuento={codigoDescuento}
           totalVenta={totalVenta}
         />
       ).toBlob();
@@ -559,16 +615,26 @@ const POS = () => {
       const comercioId = selectedSucursalId || sucursalId || user?.id_comercio_asignado;
       const itemsPayload = cart.map(item => ({
         id_producto: item.id_producto,
-        id_variante: item.id_variante, // Soportar variantes
+        id_variante: item.id_variante,
         cantidadAComprar: item.cantidad,
         precio_venta: item.precio,
         precio_push: item.precio_push || 0,
-        precio_base: item.precio_base || 0
+        precio_base: item.precio_base || 0,
+        precio_lista: item.precio_lista || item.precio_base || item.precio,
+        descuento_tipo: item.descuento_linea?.tipo || null,
+        descuento_valor: item.descuento_linea?.valor ?? null
       }));
       const thisPush = totalPush;
       const thisPublico = total;
       const sedeNombre = currentSucursal?.nombre || 'la sucursal';
-      const ventaResult = await posService.registrarVenta(comercioId, user?.id_usuario, itemsPayload, total, metodoPago);
+      const ventaResult = await posService.registrarVenta(
+        comercioId,
+        user?.id_usuario,
+        itemsPayload,
+        total,
+        metodoPago,
+        descuentoAplicado?.codigo || null
+      );
       setLastSale(ventaResult);
       generateComprobante(ventaResult);
       setCart([]);
@@ -979,7 +1045,8 @@ const POS = () => {
             <div className="mx-4 md:mx-5 mt-4 flex items-center gap-2.5 px-3.5 py-2.5 bg-neutral-50 dark:bg-gray-700/40 border border-neutral-200/70 dark:border-gray-600 rounded-xl shadow-sm">
                 <Receipt size={13} className="text-brand-cyan shrink-0" />
                 <p className="text-[9px] md:text-[10px] font-bold text-neutral-500 dark:text-gray-300 leading-relaxed m-0">
-                    <span className="font-black text-black dark:text-white mr-1">Paso 4:</span>Revisá los ítems, aplicá un código promo si tenés, elegí el método de pago y presioná "Finalizar Venta".
+                    <span className="font-black text-black dark:text-white mr-1">Paso 4:</span>
+                    Dos formas de descontar: en el producto (botón Descuento) o con un código que hayas creado en Descuentos. Queda registrado en la venta.
                 </p>
             </div>
         )}
@@ -1065,16 +1132,22 @@ const POS = () => {
                          </div>
                          <div className="flex flex-col min-w-0 max-w-[140px] md:max-w-none">
                             <h4 className="font-bold uppercase text-[9px] md:text-[10px] tracking-tight text-neutral-900 dark:text-gray-100 mb-0.5 md:mb-1 truncate">{item.nombre}</h4>
-                            <span className="text-[8px] font-bold text-neutral-400 dark:text-gray-500 uppercase tracking-widest">
-                              Público ${item.precio.toLocaleString()} · Push ${(item.precio_push || 0).toLocaleString()}
-                            </span>
+                            {item.descuento_linea ? (
+                              <span className="text-[10px] font-semibold text-green-700">
+                                Lista ${Number(item.precio_lista || item.precio).toLocaleString()} → ${item.precio.toLocaleString()}
+                              </span>
+                            ) : (
+                              <span className="text-[8px] font-bold text-neutral-400 dark:text-gray-500 uppercase tracking-widest">
+                                ${item.precio.toLocaleString()} · Push ${(item.precio_push || 0).toLocaleString()}
+                              </span>
+                            )}
                          </div>
                     </div>
                     <button onClick={() => removeFromCart(item.id)} className="p-2 text-neutral-300 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 active:scale-125 transition-all">
                         <Trash2 size={16} />
                     </button>
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center gap-2">
                     <div className="flex items-center gap-1 bg-white dark:bg-gray-700 border border-neutral-100 dark:border-gray-600 rounded-lg p-0.5 shadow-sm">
                         <button onClick={() => updateQuantity(item.id, -1)} className="w-6 h-6 md:w-7 md:h-7 flex items-center justify-center text-neutral-400 dark:text-gray-500 active:text-brand-cyan dark:active:text-cyan-400"><Minus size={12} /></button>
                         <span className="w-5 md:w-7 text-center font-bold text-xs md:text-sm tabular-nums text-neutral-900 dark:text-white">{item.cantidad}</span>
@@ -1082,6 +1155,42 @@ const POS = () => {
                     </div>
                     <span className="font-black text-neutral-900 dark:text-gray-100 text-sm md:text-base tracking-tighter">${(item.precio * item.cantidad).toLocaleString()}</span>
                 </div>
+                {descuentoLineaId === item.id ? (
+                  <div className="flex flex-wrap items-center gap-1 pt-1">
+                    <div className="flex rounded overflow-hidden border border-neutral-200">
+                      <button type="button" onClick={() => setDescuentoLineaTipo('porcentaje')} className={`px-2 py-1 text-[11px] font-bold ${descuentoLineaTipo === 'porcentaje' ? 'bg-brand-cyan text-black' : 'text-neutral-500'}`}>%</button>
+                      <button type="button" onClick={() => setDescuentoLineaTipo('monto')} className={`px-2 py-1 text-[11px] font-bold ${descuentoLineaTipo === 'monto' ? 'bg-brand-cyan text-black' : 'text-neutral-500'}`}>$</button>
+                    </div>
+                    <input
+                      type="number"
+                      min="0"
+                      autoFocus
+                      value={descuentoLineaValor}
+                      onChange={(e) => setDescuentoLineaValor(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && applyDescuentoLinea(item.id)}
+                      placeholder={descuentoLineaTipo === 'porcentaje' ? '10' : '2000'}
+                      className="w-20 border border-neutral-200 rounded-lg px-2 py-1 text-sm"
+                    />
+                    <button type="button" onClick={() => applyDescuentoLinea(item.id)} className="px-2 py-1 bg-black text-white text-[11px] font-bold rounded-lg">Listo</button>
+                    <button type="button" onClick={() => { setDescuentoLineaId(null); setDescuentoLineaValor(''); }} className="text-[11px] text-neutral-400">Cancelar</button>
+                  </div>
+                ) : item.descuento_linea ? (
+                  <button
+                    type="button"
+                    onClick={() => quitarDescuentoLinea(item.id)}
+                    className="self-start text-[11px] font-semibold text-green-700"
+                  >
+                    {item.descuento_linea.tipo === 'porcentaje' ? `-${item.descuento_linea.valor}%` : `-$${Number(item.descuento_linea.valor).toLocaleString()}`} · quitar
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => { setDescuentoLineaId(item.id); setDescuentoLineaValor(''); setDescuentoLineaTipo('porcentaje'); }}
+                    className="self-start text-[12px] font-bold text-brand-cyan"
+                  >
+                    Descuento
+                  </button>
+                )}
               </motion.div>
             ))}
             </AnimatePresence>
@@ -1100,65 +1209,52 @@ const POS = () => {
                 </div>
             )}
 
-            {/* Campo código promo */}
             {!descuentoAplicado ? (
-                <div className="space-y-0.5">
+                <div className="space-y-1">
+                    <p className="text-[11px] font-bold text-neutral-600 m-0">Código de descuento</p>
                     <div className="flex gap-1">
-                    <div className="relative flex-1">
-                        <Tag size={7} className="absolute left-1.5 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-gray-500" />
-                        <input
-                            type="text"
-                            placeholder="PROMO AL CLIENTE..."
-                            value={codigoPromo}
-                            onChange={e => { setCodigoPromo(e.target.value.toUpperCase()); setPromoError(''); }}
-                            onKeyDown={e => e.key === 'Enter' && handleValidarCodigo()}
-                            className="w-full pl-5 pr-1 py-0.5 bg-white dark:bg-gray-600 border border-neutral-200 dark:border-gray-500 rounded-lg text-[7px] font-black uppercase tracking-widest text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-cyan-400 transition-colors"
-                        />
-                    </div>
+                    <input
+                        type="text"
+                        placeholder="Ej: VERANO26"
+                        value={codigoPromo}
+                        onChange={e => { setCodigoPromo(e.target.value.toUpperCase()); setPromoError(''); }}
+                        onKeyDown={e => e.key === 'Enter' && handleValidarCodigo()}
+                        className="flex-1 px-2 py-1 bg-white dark:bg-gray-600 border border-neutral-200 dark:border-gray-500 rounded-lg text-[11px] text-black dark:text-white"
+                    />
                     <button
                         onClick={handleValidarCodigo}
                         disabled={!codigoPromo.trim() || isValidatingCodigo || cart.length === 0}
-                        className="px-1 py-0.5 bg-black text-white text-[7px] font-black uppercase rounded-lg hover:bg-brand-cyan hover:text-black transition-colors disabled:opacity-30 flex items-center gap-0.5"
+                        className="px-2 py-1 bg-black text-white text-[11px] font-bold rounded-lg disabled:opacity-30"
                     >
-                        {isValidatingCodigo ? <Loader2 size={7} className="animate-spin" /> : 'OK'}
+                        {isValidatingCodigo ? <Loader2 size={12} className="animate-spin" /> : 'Aplicar'}
                     </button>
                     </div>
-                    <p className="text-[9px] text-neutral-500 m-0 leading-snug">Baja lo que paga el cliente. No baja el Push que te debe la sucursal. Eso se descuenta en Liquidaciones.</p>
                 </div>
             ) : (
-                <div className="flex items-center justify-between px-1.5 py-0.5 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="flex items-center gap-1">
-                        <CheckCircle2 size={8} className="text-green-600" />
-                        <span className="text-[7px] font-black uppercase tracking-widest text-green-700">
-                            {descuentoAplicado.codigo} &mdash; -{descuentoAplicado.tipo_descuento === 'porcentaje' ? `${descuentoAplicado.valor_descuento}%` : `$${descuentoAplicado.valor_descuento.toLocaleString()}`}
-                        </span>
-                    </div>
-                    <button onClick={handleRemoveCodigo} className="text-neutral-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors">
-                        <X size={8} />
+                <div className="flex items-center justify-between px-2 py-1 bg-green-50 border border-green-200 rounded-lg">
+                    <span className="text-[11px] font-bold text-green-800">
+                        Promo {descuentoAplicado.codigo}: -${Number(descuentoAplicado.monto_descuento || montoDescuento).toLocaleString()} · queda en la venta
+                    </span>
+                    <button onClick={handleRemoveCodigo} className="text-neutral-400 hover:text-red-500">
+                        <X size={12} />
                     </button>
                 </div>
             )}
             {promoError && (
-                <div className="flex items-center gap-1.5 px-2 py-1">
-                    <AlertCircle size={10} className="text-red-500" />
-                    <span className="text-[8px] font-bold text-red-500">{promoError}</span>
-                </div>
+                <p className="text-[11px] text-red-500 m-0">{promoError}</p>
             )}
 
             {/* Desglose de totales */}
             <div className="space-y-0.5 pt-0">
-                <div className="flex justify-between text-neutral-400 dark:text-gray-500 font-extrabold uppercase text-[7px] tracking-[0.12em]">
-                    <span>Subtotal</span>
+                <div className="flex justify-between text-neutral-500 font-semibold text-[11px]">
+                    <span>Subtotal cliente</span>
                     <span>${subtotal.toLocaleString()}</span>
                 </div>
                 {descuentoAplicado && (
-                    <>
-                    <div className="flex justify-between font-bold text-[7px] tracking-[0.08em] text-green-600">
-                        <span>Descuento cliente ({descuentoAplicado.codigo})</span>
+                    <div className="flex justify-between text-[11px] font-semibold text-green-700">
+                        <span>Ahorro del cliente</span>
                         <span>-${montoDescuento.toLocaleString()}</span>
                     </div>
-                    <p className="text-[9px] text-green-700 m-0 leading-snug">El Push de la sucursal sigue en ${totalPush.toLocaleString()}.</p>
-                    </>
                 )}
                 <div className="flex justify-between items-center font-bold text-[8px] tracking-[0.12em] text-neutral-500 dark:text-gray-400">
                     <span>Método de pago</span>
@@ -1177,7 +1273,10 @@ const POS = () => {
                     </div>
                 </div>
                 <div className="pt-1.5 border-t border-neutral-200 flex justify-between items-end">
-                    <span className="text-[7px] font-black text-neutral-400 dark:text-gray-500 uppercase tracking-[0.15em]">Total Público</span>
+                    <div>
+                        <p className="text-[11px] font-bold text-neutral-500 m-0">Paga el cliente</p>
+                        <p className="text-[10px] text-neutral-400 m-0">Público</p>
+                    </div>
                     <div className="text-right">
                     <motion.span
                         key={total}
@@ -1188,7 +1287,7 @@ const POS = () => {
                     >
                         ${total.toLocaleString()}
                     </motion.span>
-                    <span className="text-[8px] font-bold text-neutral-400 uppercase tracking-widest">Push ${totalPush.toLocaleString()}</span>
+                    <span className="text-[11px] font-semibold text-neutral-500">Sucursal te debe ${totalPush.toLocaleString()} Push</span>
                     </div>
                 </div>
             </div>
@@ -1285,21 +1384,18 @@ const POS = () => {
       >
         <div className="space-y-4">
           <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
-            <p className="text-[12px] font-medium text-amber-900 dark:text-amber-200 leading-relaxed m-0">
-              El cliente paga Público. Lo que te debe la sucursal es Push. No es un envío de mercadería.
-              {descuentoAplicado ? ' El descuento de esta pantalla es para el cliente: el Push no baja.' : ''}
+            <p className="text-[13px] font-medium text-amber-900 dark:text-amber-200 leading-relaxed m-0">
+              Se cobra al cliente y se suma lo de Push a Liquidaciones.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="rounded-xl border border-neutral-200 dark:border-gray-700 p-3">
-              <p className="text-[8px] font-black uppercase tracking-widest text-neutral-400 m-0">Cobra al cliente</p>
+              <p className="text-[12px] font-semibold text-neutral-500 m-0">Paga el cliente</p>
               <p className="text-xl font-black text-neutral-900 dark:text-white m-0">${total.toLocaleString()}</p>
-              <p className="text-[8px] font-bold uppercase text-neutral-400 m-0">Público</p>
             </div>
             <div className="rounded-xl border border-brand-cyan/30 bg-brand-cyan/5 p-3">
-              <p className="text-[8px] font-black uppercase tracking-widest text-neutral-400 m-0">Te liquida la sucursal</p>
+              <p className="text-[12px] font-semibold text-neutral-500 m-0">Push a liquidar</p>
               <p className="text-xl font-black text-brand-cyan m-0">${totalPush.toLocaleString()}</p>
-              <p className="text-[8px] font-bold uppercase text-neutral-400 m-0">Push</p>
             </div>
           </div>
           <div className="space-y-1.5 max-h-40 overflow-y-auto">

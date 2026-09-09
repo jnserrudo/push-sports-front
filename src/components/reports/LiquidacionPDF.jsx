@@ -213,7 +213,7 @@ const LiquidacionPDF = ({ row, viewMode = 'interno' }) => {
                 <Text style={styles.totalValue}>{formatPrice(row.neto_ventas || (Number(row.total_ventas_netas) + Number(row.descuento_comercial)))}</Text>
               </View>
               <View style={styles.totalRow}>
-                <Text style={styles.totalLabel}>Descuento comercial</Text>
+                <Text style={styles.totalLabel}>Descuento a la sucursal (le cobraste menos Push)</Text>
                 <Text style={styles.totalValue}>- {formatPrice(row.descuento_comercial)}</Text>
               </View>
             </>
