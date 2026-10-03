@@ -153,7 +153,7 @@ const DashboardLayout = () => {
     { label: 'Tipos de Sede',     icon: Wallet,          path: '/dashboard/tipos-comercio', roles: [1] },
     { label: 'Envíos a Sucursales',icon: Truck,          path: '/dashboard/envios',         roles: [1] },
     { label: 'Movimientos de Stock',icon: Activity,     path: '/dashboard/movimientos',    roles: [1, 2] },
-    { label: 'Reportería',        icon: ClipboardList,   path: '/dashboard/reporteria',     roles: [1] },
+    { label: 'Reportería (descargas)', icon: ClipboardList, path: '/dashboard/reporteria',  roles: [1] },
     { label: 'Devoluciones',      icon: RotateCcw,       path: '/dashboard/devoluciones',   roles: [1, 2, 3] },
     { label: 'Consultas Web',    icon: MessageSquare,    path: '/dashboard/consultas',      roles: [1, 2, 3] },
     { label: 'Rectificaciones',   icon: AlertTriangle,   path: '/dashboard/rectificaciones',roles: [1, 2, 3] },

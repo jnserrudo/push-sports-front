@@ -21,7 +21,7 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import api from '../../api/api';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { pdf } from '@react-pdf/renderer';
 import { motion, AnimatePresence } from 'framer-motion';
 import { productosService } from '../../services/productosService';
@@ -59,7 +59,9 @@ const itemCantidadDejada = (item) => {
 };
 
 const Reporteria = () => {
-  const [activeTab, setActiveTab] = useState('global');
+  const [searchParams] = useSearchParams();
+  const abrirInventario = searchParams.get('ver') === 'inventario';
+  const [activeTab, setActiveTab] = useState(abrirInventario ? 'shop' : 'global');
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -80,7 +82,7 @@ const Reporteria = () => {
   const [addingProduct, setAddingProduct] = useState(null); // id_producto being loaded
 
   // Shop sub-tab: 'entrega' | 'inventario'
-  const [shopSubTab, setShopSubTab] = useState('entrega');
+  const [shopSubTab, setShopSubTab] = useState(abrirInventario ? 'inventario' : 'entrega');
   const [stockInventory, setStockInventory] = useState([]);
   const [loadingStockInventory, setLoadingStockInventory] = useState(false);
   const [stockInventorySearch, setStockInventorySearch] = useState('');
@@ -319,21 +321,27 @@ const Reporteria = () => {
 
   const handleExportStockExcel = () => {
     if (!sucursal || stockInventory.length === 0) return;
-    const rows = stockInventory.map(item => {
+    const rows = stockInventory.flatMap(item => {
       const prod = item.producto || item;
-      const cantidad = item.producto?.usa_desglose_variantes || item.usa_desglose_variantes
-        ? (item.variantes || []).reduce((sum, v) => sum + (v.cantidad_actual || 0), 0)
-        : (item.cantidad_actual || 0);
-      return {
+      const publico = Number(prod.precio_venta_sugerido || 0);
+      const push = Number(prod.precio_pushsport || 0);
+      const fila = (variante, cantidad) => ({
         _imageUrl: parseImagenes(prod.imagen_url)[0] || '',
         Sucursal: sucursal.nombre,
         Codigo: prod.codigo_producto?.codigo || '',
         Producto: prod.nombre || '',
+        Variante: variante,
         Stock: cantidad,
-        'Valorizado Push': cantidad * Number(prod.precio_pushsport || 0),
-        'Precio Publico': Number(prod.precio_venta_sugerido || 0),
-        'Precio Push': Number(prod.precio_pushsport || 0),
-      };
+        'Precio Publico': publico,
+        'Precio Push': push,
+        'Total Publico': cantidad * publico,
+        'Total Push': cantidad * push,
+      });
+      const usaVariantes = item.producto?.usa_desglose_variantes || item.usa_desglose_variantes;
+      if (usaVariantes && item.variantes?.length) {
+        return item.variantes.map(v => fila(variantLabel(v), v.cantidad_actual || 0));
+      }
+      return [fila('', item.cantidad_actual || 0)];
     });
     exportToExcel(rows, `Inventario_${sucursal.nombre}_${dateStamp()}`);
   };
@@ -516,6 +524,38 @@ const Reporteria = () => {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab('shop');
+            setShopSubTab('inventario');
+            if (sucursal && shopStep === 2) loadStockInventory(sucursal.id_comercio);
+          }}
+          className={`flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all ${
+            activeTab === 'shop' && shopSubTab === 'inventario'
+              ? 'border-brand-cyan bg-brand-cyan/10'
+              : 'border-neutral-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-brand-cyan'
+          }`}
+        >
+          <Boxes size={20} className="text-brand-cyan shrink-0" />
+          <span>
+            <span className="block text-[11px] font-black uppercase tracking-tight text-black dark:text-white">Descargar stock y precios de una sucursal</span>
+            <span className="block text-[10px] font-bold text-neutral-500 dark:text-gray-400">Lo que tiene hoy: cantidad + Público + Push (PDF o Excel)</span>
+          </span>
+        </button>
+        <Link
+          to="/dashboard/envios"
+          className="flex items-center gap-3 p-3 rounded-xl border-2 border-neutral-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-emerald-500 text-left transition-all"
+        >
+          <FileSpreadsheet size={20} className="text-emerald-600 shrink-0" />
+          <span>
+            <span className="block text-[11px] font-black uppercase tracking-tight text-black dark:text-white">Descargar mercadería ingresada</span>
+            <span className="block text-[10px] font-bold text-neutral-500 dark:text-gray-400">Lo que le cargaste a cada sucursal (Envíos → Descargar Excel)</span>
+          </span>
+        </Link>
+      </div>
+
       <QueQueresHacer />
 
       <AnimatePresence mode="wait">
@@ -695,7 +735,7 @@ const Reporteria = () => {
                         : 'text-neutral-400 dark:text-gray-400 hover:text-white'
                     }`}
                   >
-                    <ListPlus size={12} className="inline mr-1.5" /> Entrega
+                    <ListPlus size={12} className="inline mr-1.5" /> Armar entrega
                   </button>
                   <button
                     onClick={() => {
@@ -708,7 +748,7 @@ const Reporteria = () => {
                         : 'text-neutral-400 dark:text-gray-400 hover:text-white'
                     }`}
                   >
-                    <Boxes size={12} className="inline mr-1.5" /> Inventario
+                    <Boxes size={12} className="inline mr-1.5" /> Stock y precios
                   </button>
                 </div>
               </div>
@@ -769,9 +809,13 @@ const Reporteria = () => {
                       <div className="w-12 h-12 bg-brand-cyan/10 rounded-xl flex items-center justify-center mx-auto mb-3">
                         <Store className="text-brand-cyan w-6 h-6" />
                       </div>
-                      <h3 className="text-lg font-black text-neutral-900 dark:text-white uppercase tracking-tight mb-1">¿A qué comercio vas a ir?</h3>
+                      <h3 className="text-lg font-black text-neutral-900 dark:text-white uppercase tracking-tight mb-1">
+                        {shopSubTab === 'inventario' ? '¿De qué sucursal querés el stock?' : '¿A qué comercio vas a ir?'}
+                      </h3>
                       <p className="text-xs font-bold text-neutral-400 dark:text-gray-500 uppercase tracking-widest max-w-sm mx-auto">
-                        Seleccioná el comercio destino. El sistema va a consultar el stock actual de cada producto para ese local.
+                        {shopSubTab === 'inventario'
+                          ? 'Tocá la sucursal. Vas a ver cada producto con su cantidad y precios, y arriba los botones Descargar PDF y Excel.'
+                          : 'Seleccioná el comercio destino. El sistema va a consultar el stock actual de cada producto para ese local.'}
                       </p>
                     </div>
 
@@ -800,7 +844,12 @@ const Reporteria = () => {
                             <Store className="text-neutral-400 group-hover:text-brand-cyan transition-colors" size={24} />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="font-black text-neutral-900 dark:text-white uppercase tracking-tight text-sm">{s.nombre}</p>
+                            <p className="font-black text-neutral-900 dark:text-white uppercase tracking-tight text-sm">
+                              {s.nombre}
+                              {s.activo === false && (
+                                <span className="ml-2 align-middle text-[9px] font-black px-2 py-0.5 rounded-full bg-neutral-200 dark:bg-gray-600 text-neutral-500 dark:text-gray-300">INACTIVA</span>
+                              )}
+                            </p>
                             {s.direccion && <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest truncate mt-0.5">{s.direccion}</p>}
                           </div>
                           <ChevronRight className="text-neutral-300 group-hover:text-brand-cyan transition-colors shrink-0" size={20} />

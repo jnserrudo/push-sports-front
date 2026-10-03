@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { Truck, Box, Home, PlusCircle, Info, Check, RefreshCw, AlertCircle, CheckCircle2, Package, Clock } from 'lucide-react';
+import { Truck, Box, Home, PlusCircle, Info, Check, RefreshCw, AlertCircle, CheckCircle2, Package, Clock, FileSpreadsheet, Boxes, Download } from 'lucide-react';
 import DataTable from '../../components/ui/DataTable';
 import Modal from '../../components/ui/Modal';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
@@ -11,6 +11,17 @@ import { inventarioService } from '../../services/inventarioService';
 import { useAuthStore } from '../../store/authStore';
 import PremiumSelect from '../../components/ui/PremiumSelect';
 import QueQueresHacer from '../../components/ui/QueQueresHacer';
+import { exportToExcel } from '../../utils/exportExcel';
+
+const TIPO_INGRESO = 1;
+
+const varianteNombre = (mv) => {
+    const v = mv?.variante || {};
+    const attrs = v.atributos_valores && typeof v.atributos_valores === 'object'
+        ? Object.values(v.atributos_valores).join(' / ')
+        : '';
+    return attrs || v.sku_variante || 'Variante';
+};
 
 const Envios = () => {
     const { user } = useAuthStore();
@@ -18,6 +29,10 @@ const Envios = () => {
 
     const [envios, setEnvios]         = useState([]);
     const [sucursales, setSucursales] = useState([]);
+    const [todasSucursales, setTodasSucursales] = useState([]);
+    const [filtro, setFiltro] = useState({ sucursalId: '', desde: '', hasta: '' });
+    const [loadingEnvios, setLoadingEnvios] = useState(false);
+    const [exporting, setExporting] = useState(false);
     const [productos, setProductos]   = useState([]);
     const [loadingSucursales, setLoadingSucursales] = useState(false);
     const [loadingProductos, setLoadingProductos] = useState(false);
@@ -37,21 +52,38 @@ const Envios = () => {
     const [variantQuantities, setVariantQuantities] = useState({});
     const [hasVariants, setHasVariants] = useState(false);
 
+    const fetchIngresos = useCallback(async (f) => {
+        const res = await enviosService.getAll({
+            id_tipo_movimiento: TIPO_INGRESO,
+            sucursalId: f.sucursalId || undefined,
+            desde: f.desde || undefined,
+            hasta: f.hasta || undefined,
+            limit: 5000,
+        });
+        return (res.data || []).filter(item => item && (item.id_movimiento || item.fecha_hora || item.producto?.nombre));
+    }, []);
+
+    const loadEnvios = useCallback(async (f) => {
+        setLoadingEnvios(true);
+        try {
+            setEnvios(await fetchIngresos(f));
+        } catch (err) {
+            console.error('Error cargando envíos:', err);
+        } finally {
+            setLoadingEnvios(false);
+        }
+    }, [fetchIngresos]);
+
     const loadData = useCallback(async () => {
         setIsLoading(true);
         setLoadingSucursales(true);
         setLoadingProductos(true);
         try {
-            const [envData, sucData, prodData] = await Promise.all([
-                enviosService.getAll().then(res => {
-                    const data = res.data || [];
-                    // Sanitización mejorada para MovimientoStock (usa id_movimiento y fecha_hora)
-                    return data.filter(item => item && (item.id_movimiento || item.fecha_hora || item.producto?.nombre));
-                }),
+            const [sucData, prodData] = await Promise.all([
                 sucursalesService.getAll(),
                 productosService.getAll(),
             ]);
-            setEnvios(envData);
+            setTodasSucursales(sucData);
             setSucursales(sucData.filter(s => s.activo));
             setProductos(prodData.filter(p => p.activo));
         } catch (err) {
@@ -64,6 +96,47 @@ const Envios = () => {
     }, []);
 
     useEffect(() => { loadData(); }, [loadData]);
+    useEffect(() => { loadEnvios(filtro); }, [filtro, loadEnvios]);
+
+    const sucursalNombreById = (id) => todasSucursales.find(s => s.id_comercio === id)?.nombre || '';
+
+    const handleExportIngresos = async () => {
+        setExporting(true);
+        try {
+            const rows = [...envios]
+                .sort((a, b) => new Date(a.fecha_hora) - new Date(b.fecha_hora))
+                .flatMap(mov => {
+                    const prod = mov.producto || {};
+                    const publico = Number(prod.precio_venta_sugerido || 0);
+                    const push = Number(prod.precio_pushsport || 0);
+                    const base = {
+                        Fecha: mov.fecha_hora ? new Date(mov.fecha_hora).toLocaleDateString('es-AR') : '',
+                        Sucursal: mov.comercio?.nombre || sucursalNombreById(mov.id_comercio),
+                        Producto: prod.nombre || '',
+                    };
+                    const fila = (variante, cantidad) => ({
+                        ...base,
+                        Variante: variante,
+                        Cantidad: cantidad,
+                        'Precio Publico (hoy)': publico,
+                        'Precio Push (hoy)': push,
+                        'Total Publico': cantidad * publico,
+                        'Total Push': cantidad * push,
+                    });
+                    if (mov.variantes?.length) {
+                        return mov.variantes.map(mv => fila(varianteNombre(mv), Number(mv.cantidad_cambio) || 0));
+                    }
+                    return [fila('', Number(mov.cantidad_cambio) || 0)];
+                });
+            const suc = filtro.sucursalId ? sucursalNombreById(filtro.sucursalId) : 'Todas';
+            const stamp = new Date().toLocaleDateString('es-AR').replace(/\//g, '-');
+            await exportToExcel(rows, `Mercaderia_Ingresada_${suc}_${stamp}`);
+        } finally {
+            setExporting(false);
+        }
+    };
+
+    const totalUnidadesFiltradas = envios.reduce((sum, m) => sum + (Number(m.cantidad_cambio) || 0), 0);
 
     const handleAdd = () => {
         setFormData({
@@ -200,6 +273,7 @@ const Envios = () => {
                 setIsModalOpen(false);
                 setFeedback(null);
                 loadData();
+                loadEnvios(filtro);
             }, 1200);
         } catch (err) {
             const backendError = err.response?.data?.error || err.message || 'Error al procesar la orden.';
@@ -237,7 +311,7 @@ const Envios = () => {
             render: (row) => (
                 <div className="flex items-center gap-1.5">
                     <Home size={10} className="text-brand-cyan" />
-                    <span className="font-bold text-[10px] text-black uppercase tracking-tight">{row.comercio?.nombre || '—'}</span>
+                    <span className="font-bold text-[10px] text-black dark:text-white uppercase tracking-tight">{row.comercio?.nombre || sucursalNombreById(row.id_comercio) || '—'}</span>
                 </div>
             )
         },
@@ -284,7 +358,7 @@ const Envios = () => {
 
                 <div className="flex gap-3 w-full md:w-auto">
                     <button
-                        onClick={loadData}
+                        onClick={() => { loadData(); loadEnvios(filtro); }}
                         disabled={isLoading}
                         className="flex items-center gap-2 bg-neutral-100 dark:bg-gray-700 text-black dark:text-white hover:bg-neutral-200 dark:hover:bg-gray-600 transition-colors px-4 py-3.5 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] disabled:opacity-50"
                     >
@@ -306,11 +380,113 @@ const Envios = () => {
             <div className="bg-brand-cyan/5 border border-brand-cyan/20 p-4 rounded-xl flex items-start gap-4 mb-2">
                 <Info size={18} className="text-brand-cyan shrink-0 mt-0.5" />
                 <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 dark:text-cyan-200 leading-relaxed m-0">
-                    <span className="text-black dark:text-white font-black">Cargar Mercadería:</span> suma stock en la sede destino (por variante si corresponde). Si el producto no está vinculado, al confirmar se vincula en 0 y después entra el envío. El historial de abajo son esos ingresos. Stock actual: <Link to="/dashboard/inventario" className="text-brand-cyan underline">Inventario</Link>.
+                    <span className="text-black dark:text-white font-black">Cargar Mercadería:</span> suma stock en la sede destino (por variante si corresponde). Si el producto no está vinculado, al confirmar se vincula en 0 y después entra el envío. El historial de abajo son esos ingresos.
                 </p>
             </div>
 
-            {isLoading ? (
+            <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500 dark:text-gray-400 mb-2">¿Qué querés descargar?</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <Link
+                        to="/dashboard/reporteria?ver=inventario"
+                        className="group flex items-start gap-4 p-4 rounded-xl border-2 border-neutral-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-brand-cyan transition-all"
+                    >
+                        <div className="w-10 h-10 rounded-lg bg-brand-cyan/10 flex items-center justify-center shrink-0">
+                            <Boxes size={20} className="text-brand-cyan" />
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-xs font-black uppercase tracking-tight text-black dark:text-white">Lo que tiene HOY una sucursal</p>
+                            <p className="text-[10px] font-bold text-neutral-500 dark:text-gray-400 mt-1 leading-relaxed">
+                                Stock actual de cada producto + precio Público y Push. Elegís la sucursal y bajás PDF o Excel.
+                            </p>
+                            <span className="inline-flex items-center gap-1 mt-2 text-[10px] font-black uppercase tracking-widest text-brand-cyan group-hover:underline">
+                                <Download size={12} /> Ir a descargar stock
+                            </span>
+                        </div>
+                    </Link>
+                    <a
+                        href="#mercaderia-ingresada"
+                        className="group flex items-start gap-4 p-4 rounded-xl border-2 border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-900/10 hover:border-emerald-500 transition-all"
+                    >
+                        <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                            <Truck size={20} className="text-emerald-600" />
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-xs font-black uppercase tracking-tight text-black dark:text-white">Mercadería ingresada (lo que le cargaste)</p>
+                            <p className="text-[10px] font-bold text-neutral-500 dark:text-gray-400 mt-1 leading-relaxed">
+                                Todo lo que entró a una sucursal con Cargar Mercadería: fecha, producto, cantidad y precios. Está acá abajo.
+                            </p>
+                            <span className="inline-flex items-center gap-1 mt-2 text-[10px] font-black uppercase tracking-widest text-emerald-600 group-hover:underline">
+                                <FileSpreadsheet size={12} /> Descargar Excel abajo
+                            </span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <div id="mercaderia-ingresada" className="bg-white dark:bg-gray-800 border-2 border-emerald-500/30 rounded-xl p-4 space-y-3 scroll-mt-4">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                    <div>
+                        <p className="text-sm font-black uppercase tracking-tight text-black dark:text-white flex items-center gap-2">
+                            <FileSpreadsheet size={16} className="text-emerald-600" /> Descargar mercadería ingresada
+                        </p>
+                        <p className="text-[10px] font-bold text-neutral-500 dark:text-gray-400 mt-0.5">
+                            1) Elegí la sucursal (o dejá Todas). 2) Si querés, poné fechas. 3) Tocá Descargar Excel. La tabla de abajo muestra lo mismo que se descarga.
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={handleExportIngresos}
+                        disabled={exporting || loadingEnvios || envios.length === 0}
+                        className="h-11 px-5 rounded-xl flex items-center justify-center gap-2 font-black uppercase tracking-widest text-[11px] bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 shrink-0"
+                    >
+                        <FileSpreadsheet size={15} /> {exporting ? 'Generando...' : 'Descargar Excel'}
+                    </button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-neutral-500">Sucursal</label>
+                        <select
+                            value={filtro.sucursalId}
+                            onChange={e => setFiltro(f => ({ ...f, sucursalId: e.target.value }))}
+                            className="w-full h-10 px-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-xs font-bold text-black dark:text-white"
+                        >
+                            <option value="">Todas las sucursales</option>
+                            {todasSucursales.map(s => (
+                                <option key={s.id_comercio} value={s.id_comercio}>
+                                    {s.nombre}{s.activo ? '' : ' (inactiva)'}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="space-y-1">
+                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-neutral-500">Desde (opcional)</label>
+                        <input
+                            type="date"
+                            value={filtro.desde}
+                            onChange={e => setFiltro(f => ({ ...f, desde: e.target.value }))}
+                            className="w-full h-10 px-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-xs font-bold text-black dark:text-white"
+                        />
+                    </div>
+                    <div className="space-y-1">
+                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-neutral-500">Hasta (opcional)</label>
+                        <input
+                            type="date"
+                            value={filtro.hasta}
+                            onChange={e => setFiltro(f => ({ ...f, hasta: e.target.value }))}
+                            className="w-full h-10 px-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200 dark:border-gray-600 rounded-lg text-xs font-bold text-black dark:text-white"
+                        />
+                    </div>
+                </div>
+                <p className="text-[10px] font-bold text-neutral-500 dark:text-gray-400">
+                    {loadingEnvios
+                        ? 'Buscando...'
+                        : `${envios.length} ingreso${envios.length !== 1 ? 's' : ''} · ${totalUnidadesFiltradas} unidades`}
+                    {' · '}Los precios del Excel son los de hoy.
+                </p>
+            </div>
+
+            {isLoading || loadingEnvios ? (
                 <div className="flex flex-col items-center justify-center py-16 space-y-3">
                     <div className="w-8 h-8 border-3 border-neutral-200 border-t-brand-cyan rounded-full animate-spin" />
                     <p className="text-[9px] font-black uppercase tracking-[0.2em] text-neutral-400 animate-pulse">Recopilando historial de ingresos...</p>
