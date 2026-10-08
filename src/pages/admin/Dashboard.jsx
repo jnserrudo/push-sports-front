@@ -21,6 +21,7 @@ import {
 } from 'recharts';
 import { motion } from 'framer-motion';
 import QueQueresHacer from '../../components/ui/QueQueresHacer';
+import PanelSucursal from './PanelSucursal';
 
 // ─── Metric Card ──────────────────────────────────────────────────────────────
 const MetricCard = ({ title, value, icon: Icon, trend, sub, link, loading, description }) => {
@@ -120,6 +121,12 @@ const QuickCard = ({ icon: Icon, title, desc, link, accent = false }) => (
 
 // ─── Dashboard Principal ───────────────────────────────────────────────────────
 const Dashboard = () => {
+  const { user } = useAuthStore();
+  const esDeSucursal = user?.id_rol !== 1 && Boolean(user?.id_comercio_asignado);
+  return esDeSucursal ? <PanelSucursal /> : <DashboardAdmin />;
+};
+
+const DashboardAdmin = () => {
   const navigate = useNavigate();
   const { user, sucursalId } = useAuthStore();
   const isSuperAdmin = user?.id_rol === 1;

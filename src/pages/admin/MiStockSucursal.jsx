@@ -1,23 +1,14 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Package, Box, Info, FileSpreadsheet, Loader2, PackageCheck, PackageX, Search } from 'lucide-react';
-import { inventarioService } from '../../services/inventarioService';
 import { useAuthStore } from '../../store/authStore';
 import { toast } from '../../store/toastStore';
 import DataTable from '../../components/ui/DataTable';
 import QueQueresHacer from '../../components/ui/QueQueresHacer';
-import { parseImagenes } from '../../lib/supabaseStorage';
 import { exportToExcel } from '../../utils/exportExcel';
+import { cargarMisProductos } from '../../utils/misProductos';
 
 const money = (n) => `$${Number(n || 0).toLocaleString('es-AR')}`;
-
-const varianteNombre = (v) => {
-    const raw = v?.variante || {};
-    const attrs = raw.atributos_valores && typeof raw.atributos_valores === 'object'
-        ? Object.values(raw.atributos_valores).join(' / ')
-        : '';
-    return attrs || raw.sku_variante || 'Variante';
-};
 
 const MiStockSucursal = () => {
     const { user, sucursalId } = useAuthStore();
@@ -31,32 +22,7 @@ const MiStockSucursal = () => {
         if (!sucursalId) return;
         setIsLoading(true);
         try {
-            const inv = await inventarioService.getBySucursal(sucursalId);
-            const rows = (inv || [])
-                .filter(item => item.id_inventario)
-                .map(item => {
-                    const prod = item.producto || {};
-                    const variantes = (item.variantes || []).map(v => ({
-                        nombre: varianteNombre(v),
-                        cantidad: v.cantidad_actual || 0,
-                    }));
-                    const usaVariantes = item.usa_desglose_variantes && variantes.length > 0;
-                    const stock = usaVariantes
-                        ? variantes.reduce((sum, v) => sum + v.cantidad, 0)
-                        : (item.cantidad_actual || 0);
-                    return {
-                        id: item.id_inventario,
-                        nombre: prod.nombre || '',
-                        marca: prod.marca?.nombre_marca || '',
-                        imagen: parseImagenes(prod.imagen_url)[0] || '',
-                        variantes: usaVariantes ? variantes : [],
-                        stock,
-                        publico: Number(prod.precio_venta_sugerido || 0),
-                        push: Number(prod.precio_pushsport || 0),
-                    };
-                })
-                .sort((a, b) => a.nombre.localeCompare(b.nombre));
-            setItems(rows);
+            setItems(await cargarMisProductos(sucursalId));
         } catch (e) {
             console.error(e);
             toast.error('No se pudo cargar tu stock');
