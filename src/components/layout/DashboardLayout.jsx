@@ -147,7 +147,8 @@ const DashboardLayout = () => {
     { label: 'Categorías',        icon: Component,       path: '/dashboard/categorias',     roles: [1] },
     { label: 'Marcas',            icon: Tag,             path: '/dashboard/marcas',         roles: [1] },
     { label: 'Códigos Prod.',     icon: Tag,             path: '/dashboard/codigos-producto', roles: [1] },
-    { label: 'Inventario',        icon: Box,             path: '/dashboard/inventario',     roles: [1, 2, 3] },
+    { label: 'Inventario',        icon: Box,             path: '/dashboard/inventario',     roles: [1] },
+    { label: 'Mis productos',     icon: Box,             path: '/dashboard/inventario',     roles: [2, 3] },
     { label: 'Usuarios',          icon: Users,           path: '/dashboard/usuarios',       roles: [1] },
     { label: 'Sucursales',        icon: MapPin,          path: '/dashboard/sucursales',     roles: [1] },
     { label: 'Tipos de Sede',     icon: Wallet,          path: '/dashboard/tipos-comercio', roles: [1] },
@@ -181,9 +182,9 @@ const DashboardLayout = () => {
 
   // Autorización estricta por ruta temporal
   const currentPath = location.pathname;
-  const currentMenuItem = menuItems.find(item => 
-    item.path === '/dashboard' ? currentPath === '/dashboard' : currentPath.startsWith(item.path)
-  );
+  const matchesPath = (item) =>
+    item.path === '/dashboard' ? currentPath === '/dashboard' : currentPath.startsWith(item.path);
+  const currentMenuItem = filteredMenu.find(matchesPath) || menuItems.find(matchesPath);
   
   // Si la ruta está en el menú y el usuario no tiene rol, se bloquea.
   const isAuthorized = currentMenuItem ? currentMenuItem.roles.includes(user?.id_rol) : true;

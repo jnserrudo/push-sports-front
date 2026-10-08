@@ -11,8 +11,14 @@ import Modal from '../../components/ui/Modal';
 import { motion } from 'framer-motion';
 import { parseImagenes } from '../../lib/supabaseStorage';
 import { CASA_CENTRAL_ID } from '../../utils/siteUrl';
+import MiStockSucursal from './MiStockSucursal';
 
 const Inventario = () => {
+    const { user } = useAuthStore();
+    return user?.id_rol === 1 ? <InventarioAdmin /> : <MiStockSucursal />;
+};
+
+const InventarioAdmin = () => {
     const { user, sucursalId } = useAuthStore();
     const isSuperAdmin = user?.id_rol === 1;
 
