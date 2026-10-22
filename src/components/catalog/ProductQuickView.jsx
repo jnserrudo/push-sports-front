@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ShoppingCart, Share2, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ShoppingCart, Share2, MapPin, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { formatPrice, hasDiscount, getFinalPrice, calculateDiscountPercentage } from '../../utils/priceFormatter';
 import { useProducts } from '../../hooks/useProducts';
@@ -21,7 +21,14 @@ const ProductQuickView = ({ producto, isOpen, onClose, onQuickView }) => {
   const discount = hasDiscount(producto);
   const discountPercentage = discount ? calculateDiscountPercentage(producto.precio_base, producto.precio_promocion) : 0;
   const hasStock = producto.disponibilidad && producto.disponibilidad.length > 0;
+  const needsConsult = producto.consultar_precio || !finalPrice || Number(finalPrice) <= 0;
   const relatedProducts = getRelatedProducts(producto.id, 4);
+
+  const handleConsultar = () => {
+    const num = (import.meta.env.VITE_WHATSAPP_NUMBER || '+5493872602424').replace(/\D/g, '');
+    const msg = encodeURIComponent(`Hola! Quiero consultar el precio de: ${producto.nombre}`);
+    window.open(`https://wa.me/${num}?text=${msg}`, '_blank');
+  };
 
   // Simular galería de imágenes (en producción vendrían del backend)
   const images = parseImagenes(producto.imagen_url || producto.imagen);
@@ -213,16 +220,23 @@ const ProductQuickView = ({ producto, isOpen, onClose, onQuickView }) => {
             </h1>
 
             {/* Precios */}
-            <div className="flex items-center gap-3">
-              <span className="text-4xl font-sport text-brand-cyan">
-                {formatPrice(finalPrice)}
-              </span>
-              {discount && (
-                <span className="text-xl text-neutral-400 line-through">
-                  {formatPrice(producto.precio_base)}
+            {needsConsult ? (
+              <div className="flex items-center gap-2 text-green-600">
+                <MessageCircle size={22} />
+                <span className="text-lg font-bold uppercase tracking-wider">Consultar precio</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <span className="text-4xl font-sport text-brand-cyan">
+                  {formatPrice(finalPrice)}
                 </span>
-              )}
-            </div>
+                {discount && (
+                  <span className="text-xl text-neutral-400 line-through">
+                    {formatPrice(producto.precio_base)}
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* Descripción */}
             {producto.descripcion && (
@@ -253,7 +267,7 @@ const ProductQuickView = ({ producto, isOpen, onClose, onQuickView }) => {
             </div>
 
             {/* Selector de cantidad */}
-            {hasStock && (
+            {hasStock && !needsConsult && (
               <div className="border-t border-neutral-200 dark:border-gray-700 pt-4">
                 <h3 className="text-xs font-bold uppercase tracking-widest text-neutral-500 dark:text-gray-400 mb-3">
                   Cantidad
@@ -278,14 +292,20 @@ const ProductQuickView = ({ producto, isOpen, onClose, onQuickView }) => {
               </div>
             )}
 
-            {/* Botón agregar al carrito */}
+            {/* Botón agregar al carrito / consultar precio */}
             <button
-              onClick={handleAddToCart}
+              onClick={needsConsult ? handleConsultar : handleAddToCart}
               disabled={isAdding}
-              className={`w-full py-4 rounded-xl font-bold text-sm uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-3 bg-brand-cyan text-white hover:bg-black hover:shadow-lg hover:-translate-y-0.5 ${isAdding ? 'scale-95' : ''}`}
+              className={`w-full py-4 rounded-xl font-bold text-sm uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-3 ${needsConsult ? 'bg-green-500 hover:bg-green-600' : 'bg-brand-cyan hover:bg-black'} text-white hover:shadow-lg hover:-translate-y-0.5 ${isAdding ? 'scale-95' : ''}`}
             >
-              <ShoppingCart size={20} className={isAdding ? 'animate-bounce' : ''} />
-              {isAdding ? 'Agregando...' : `Agregar al Carrito - ${formatPrice(finalPrice * cantidad)}`}
+              {needsConsult
+                ? <MessageCircle size={20} />
+                : <ShoppingCart size={20} className={isAdding ? 'animate-bounce' : ''} />
+              }
+              {needsConsult
+                ? 'Consultar precio por WhatsApp'
+                : (isAdding ? 'Agregando...' : `Agregar al Carrito - ${formatPrice(finalPrice * cantidad)}`)
+              }
             </button>
           </div>
         </div>

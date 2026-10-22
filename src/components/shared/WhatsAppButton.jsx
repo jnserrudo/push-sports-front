@@ -2,7 +2,7 @@ import React from 'react';
 import { MessageCircle } from 'lucide-react';
 
 const WhatsAppButton = () => {
-  const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || '+5493875792395';
+  const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || '+5493872602424';
   const message = encodeURIComponent('Hola! Me gustaría obtener más información sobre sus productos.');
 
   const handleClick = () => {

@@ -4,7 +4,7 @@ import { SITE_ORIGIN } from '../utils/siteUrl';
 
 const INSTAGRAM_URL = 'https://www.instagram.com/push_sportsalta?igsh=MWhwejA1dmIyZ2YzOQ==';
 const FACEBOOK_URL = '';
-const WHATSAPP_URL = 'https://wa.me/5493875792395';
+const WHATSAPP_URL = 'https://wa.me/5493872602424';
 
 const Hub = () => {
     const links = [

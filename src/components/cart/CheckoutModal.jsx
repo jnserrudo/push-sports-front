@@ -234,7 +234,7 @@ const CheckoutModal = ({ isOpen, onClose }) => {
       });
 
       // Número de WhatsApp del negocio (configurar en .env)
-      const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || '+5493875792395';
+      const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || '+5493872602424';
 
       // Abrir WhatsApp
       console.log('📱 Abriendo WhatsApp...');

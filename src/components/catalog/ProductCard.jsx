@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingCart, Eye, MapPin } from 'lucide-react';
+import { ShoppingCart, Eye, MapPin, MessageCircle } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { formatPrice, hasDiscount, getFinalPrice, calculateDiscountPercentage } from '../../utils/priceFormatter';
 import { parseImagenes } from '../../lib/supabaseStorage';
@@ -17,6 +17,14 @@ const ProductCard = ({ producto, onQuickView, onCompareToggle, isComparing = fal
   const hasStock = producto.disponibilidad && producto.disponibilidad.length > 0;
   const parsedImages = parseImagenes(producto.imagen_url || producto.imagen);
   const mainImage = parsedImages.length > 0 ? parsedImages[0] : '/placeholder-product.jpg';
+  const needsConsult = producto.consultar_precio || !finalPrice || Number(finalPrice) <= 0;
+
+  const handleConsultar = (e) => {
+    e.stopPropagation();
+    const num = (import.meta.env.VITE_WHATSAPP_NUMBER || '+5493872602424').replace(/\D/g, '');
+    const msg = encodeURIComponent(`Hola! Quiero consultar el precio de: ${producto.nombre}`);
+    window.open(`https://wa.me/${num}?text=${msg}`, '_blank');
+  };
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
@@ -123,16 +131,27 @@ const ProductCard = ({ producto, onQuickView, onCompareToggle, isComparing = fal
         )}
 
         {/* Precios */}
-        <div className="flex items-center gap-2 mb-3 mt-auto">
-          <span className="text-2xl font-sport text-brand-cyan">
-            {formatPrice(finalPrice)}
-          </span>
-          {discount && (
-            <span className="text-sm text-neutral-400 line-through">
-              {formatPrice(producto.precio_base)}
+        {needsConsult ? (
+          <button
+            onClick={handleConsultar}
+            className="flex items-center gap-2 mb-3 mt-auto text-green-600 hover:text-green-500 font-bold text-sm uppercase tracking-wider transition-colors"
+            title="Consultar precio por WhatsApp"
+          >
+            <MessageCircle size={18} />
+            Consultar precio
+          </button>
+        ) : (
+          <div className="flex items-center gap-2 mb-3 mt-auto">
+            <span className="text-2xl font-sport text-brand-cyan">
+              {formatPrice(finalPrice)}
             </span>
-          )}
-        </div>
+            {discount && (
+              <span className="text-sm text-neutral-400 line-through">
+                {formatPrice(producto.precio_base)}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Disponibilidad */}
         <div className="mb-4">
@@ -161,16 +180,21 @@ const ProductCard = ({ producto, onQuickView, onCompareToggle, isComparing = fal
         {/* Botones */}
         <div className="flex gap-1.5 md:gap-2">
           <button
-            onClick={handleAddToCart}
+            onClick={needsConsult ? handleConsultar : handleAddToCart}
             disabled={isAdding}
             className={`flex-1 py-2 md:py-3 px-1 md:px-3 rounded-xl font-bold text-[9px] md:text-sm uppercase tracking-wider md:tracking-widest transition-all duration-300 flex items-center justify-center gap-1.5 md:gap-2 ${
-                inCart
+                needsConsult
+                ? 'bg-green-500 text-white hover:bg-green-600 hover:shadow-lg hover:-translate-y-0.5'
+                : inCart
                 ? 'bg-green-500 text-white'
                 : 'bg-brand-cyan text-white hover:bg-black hover:shadow-lg hover:-translate-y-0.5'
             } ${isAdding ? 'scale-95' : ''}`}
           >
-            <ShoppingCart size={16} className={`md:w-[18px] md:h-[18px] flex-shrink-0 ${isAdding ? 'animate-bounce' : ''}`} />
-            <span className="truncate">{inCart ? 'En Carrito' : 'Agregar'}</span>
+            {needsConsult
+              ? <MessageCircle size={16} className="md:w-[18px] md:h-[18px] flex-shrink-0" />
+              : <ShoppingCart size={16} className={`md:w-[18px] md:h-[18px] flex-shrink-0 ${isAdding ? 'animate-bounce' : ''}`} />
+            }
+            <span className="truncate">{needsConsult ? 'Consultar' : (inCart ? 'En Carrito' : 'Agregar')}</span>
           </button>
 
           <button
