@@ -83,7 +83,7 @@ export const useProducts = () => {
         filtered.sort((a, b) => b.nombre.localeCompare(a.nombre));
         break;
       default:
-        // Relevancia (orden original del backend)
+        // Más vendidos (orden por defecto del backend: vendidos desc, nombre asc)
         break;
     }
 

@@ -84,7 +84,7 @@ const ProductFilters = ({
               onChange={handleSortChange}
               className="px-4 py-3 bg-neutral-50 dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-xl text-sm font-medium focus:outline-none focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/20 transition-all cursor-pointer"
             >
-              <option value="relevancia">Relevancia</option>
+              <option value="relevancia">Más vendidos</option>
               <option value="precio_asc">Precio: Menor a Mayor</option>
               <option value="precio_desc">Precio: Mayor a Menor</option>
               <option value="nombre_asc">Nombre: A-Z</option>
@@ -137,7 +137,7 @@ const ProductFilters = ({
                 onChange={handleSortChange}
                 className="px-4 py-3 bg-neutral-50 dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-xl text-sm font-medium focus:outline-none focus:border-brand-cyan transition-all cursor-pointer"
               >
-                <option value="relevancia">Relevancia</option>
+                <option value="relevancia">Más vendidos</option>
                 <option value="precio_asc">$ Menor</option>
                 <option value="precio_desc">$ Mayor</option>
                 <option value="nombre_asc">A-Z</option>
