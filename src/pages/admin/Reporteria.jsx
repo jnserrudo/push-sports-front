@@ -38,6 +38,7 @@ import {
 import Toaster from '../../components/ui/Toaster';
 import DataTable from '../../components/ui/DataTable';
 import BulkPriceUpdateModal from '../../components/modals/BulkPriceUpdateModal';
+import ReportConfigModal from '../../components/modals/ReportConfigModal';
 import { exportToExcel } from '../../utils/exportExcel';
 import QueQueresHacer from '../../components/ui/QueQueresHacer';
 
@@ -67,6 +68,7 @@ const Reporteria = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [shopSearchTerm, setShopSearchTerm] = useState('');
   const [isBulkPriceModalOpen, setIsBulkPriceModalOpen] = useState(false);
+  const [isReportConfigOpen, setIsReportConfigOpen] = useState(false);
 
   // Image prefetch map: { id_producto: base64string | null }
   const [imageMap, setImageMap] = useState({});
@@ -88,7 +90,6 @@ const Reporteria = () => {
   const [stockInventorySearch, setStockInventorySearch] = useState('');
 
   // Toggles
-  const [showPushPriceGlobal, setShowPushPriceGlobal] = useState(true);
   const [showPushPriceShop, setShowPushPriceShop] = useState(true);
   const [showBasePriceShop, setShowBasePriceShop] = useState(false);
   const [savingReport, setSavingReport] = useState(false);
@@ -248,24 +249,41 @@ const Reporteria = () => {
 
   const dateStamp = () => new Date().toLocaleDateString('es-AR').replace(/\//g, '-');
 
-  const handleDownloadGlobalPDF = async () => {
-    const sorted = [...filteredProducts].sort((a, b) => (a.codigo_producto?.codigo || '').localeCompare(b.codigo_producto?.codigo || ''));
-    if (sorted.length === 0) return;
+  const handleGenerateReport = async ({ products: configuredProducts, groupByCategory, showPushPrice, sucursalNombre }, formato) => {
+    if (!configuredProducts.length) return;
+    if (formato === 'excel') {
+      const rows = configuredProducts.map(p => ({
+        _imageUrl: parseImagenes(p.imagen_url)[0] || '',
+        Codigo: p.codigo_producto?.codigo || '',
+        Categoria: p.categoria?.nombre || '',
+        Producto: p.nombre || '',
+        Marca: p.marca?.nombre_marca || '',
+        ...(showPushPrice ? { 'Precio Push': Number(p.precio_pushsport || 0) } : {}),
+        'Precio Publico': Number(p.precio_venta_sugerido || 0),
+      }));
+      const suffix = sucursalNombre ? `_${sucursalNombre}` : '';
+      exportToExcel(rows, `Lista_Precios${suffix}_${dateStamp()}`);
+      return;
+    }
+
     setPrefetchingImages(true);
     try {
-      const freshMap = await refreshImages(sorted, true);
+      const freshMap = await refreshImages(configuredProducts, true);
       const blob = await pdf(
         <ReportPDF
-          products={sorted}
+          products={configuredProducts}
           imageMap={freshMap}
           currentDate={new Date().toLocaleDateString()}
-          showPushPrice={showPushPriceGlobal}
+          showPushPrice={showPushPrice}
+          groupByCategory={groupByCategory}
+          sucursalNombre={sucursalNombre}
         />
       ).toBlob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `Lista_Precios_${new Date().toLocaleDateString()}.pdf`;
+      const suffix = sucursalNombre ? `_${sucursalNombre}` : '';
+      link.download = `Lista_Precios${suffix}_${new Date().toLocaleDateString()}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -273,22 +291,9 @@ const Reporteria = () => {
     } catch (error) {
       console.error('Error generando lista de precios:', error);
       setToaster({ type: 'error', message: 'Error al generar el PDF de lista de precios' });
+    } finally {
+      setPrefetchingImages(false);
     }
-  };
-
-  const handleExportGlobalExcel = () => {
-    const rows = [...filteredProducts]
-      .filter(p => p.activo !== false)
-      .sort((a, b) => (a.codigo_producto?.codigo || '').localeCompare(b.codigo_producto?.codigo || ''))
-      .map(p => ({
-        _imageUrl: parseImagenes(p.imagen_url)[0] || '',
-        Codigo: p.codigo_producto?.codigo || '',
-        Producto: p.nombre || '',
-        Marca: p.marca?.nombre_marca || '',
-        'Precio Push': Number(p.precio_pushsport || 0),
-        'Precio Publico': Number(p.precio_venta_sugerido || 0),
-      }));
-    exportToExcel(rows, `Lista_Precios_${dateStamp()}`);
   };
 
   const handleExportEntregaExcel = () => {
@@ -572,7 +577,7 @@ const Reporteria = () => {
               <div>
                 <p className="text-white dark:text-gray-100 font-black text-xs uppercase tracking-tight">Lista de Precios para Comercios</p>
                 <p className="text-neutral-400 dark:text-gray-400 text-[9px] font-bold uppercase tracking-wider mt-0.5">
-                  <span className="text-white">Público</span> = lo que cobra la sucursal al cliente. <span className="text-brand-cyan">Push</span> = lo que te paga la sucursal. Por defecto ambos van en el PDF.
+                  <span className="text-white">Público</span> = lo que cobra la sucursal al cliente. <span className="text-brand-cyan">Push</span> = lo que te paga la sucursal. Elegí categoría, marca, sucursal y agrupamiento antes de generar.
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -582,34 +587,15 @@ const Reporteria = () => {
                   </span>
                 )}
                 <button
-                  onClick={() => setShowPushPriceGlobal(!showPushPriceGlobal)}
-                  className={`h-9 px-4 rounded-xl flex items-center gap-2 transition-all text-[10px] font-black uppercase tracking-widest border-2 ${
-                    showPushPriceGlobal
-                      ? 'bg-brand-cyan/20 border-brand-cyan text-brand-cyan'
-                      : 'bg-white/5 border-white/10 text-neutral-400 dark:text-gray-500 hover:border-white/30'
-                  }`}
-                >
-                  {showPushPriceGlobal ? <Eye size={13} /> : <EyeOff size={13} />}
-                  {showPushPriceGlobal ? 'Precio Push: ON' : 'Precio Push: OFF'}
-                </button>
-                <button
                   type="button"
-                  onClick={handleDownloadGlobalPDF}
-                  disabled={filteredProducts.length === 0 || prefetchingImages}
-                  className="h-9 px-5 bg-neutral-100 dark:bg-gray-700 text-black dark:text-white rounded-xl flex items-center gap-2 hover:bg-neutral-200 dark:hover:bg-gray-600 transition-all shadow-md text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
+                  onClick={() => setIsReportConfigOpen(true)}
+                  disabled={products.length === 0 || prefetchingImages}
+                  className="h-9 px-5 bg-brand-cyan text-black rounded-xl flex items-center gap-2 hover:bg-cyan-400 transition-all shadow-md text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
                 >
                   {prefetchingImages
                     ? <><Loader2 size={13} className="animate-spin" /> Preparando fotos...</>
-                    : <><Download size={13} /> PDF Lista Precios</>
+                    : <><Download size={13} /> Generar Lista de Precios</>
                   }
-                </button>
-                <button
-                  type="button"
-                  onClick={handleExportGlobalExcel}
-                  disabled={filteredProducts.length === 0}
-                  className="h-9 px-5 bg-emerald-600 text-white rounded-xl flex items-center gap-2 hover:bg-emerald-700 transition-all shadow-md text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
-                >
-                  <FileSpreadsheet size={13} /> Excel Lista Precios
                 </button>
 
                 <button
@@ -681,7 +667,7 @@ const Reporteria = () => {
                       </div>
                     )
                   },
-                  ...(showPushPriceGlobal ? [{
+                  {
                     header: 'P. Push',
                     render: (p) => (
                       <div className="flex items-center justify-center">
@@ -692,7 +678,7 @@ const Reporteria = () => {
                         </div>
                       </div>
                     )
-                  }] : []),
+                  },
                   {
                     header: 'P. Público',
                     render: (p) => (
@@ -1427,6 +1413,15 @@ const Reporteria = () => {
         onClose={() => setIsBulkPriceModalOpen(false)}
         products={products}
         onSubmit={handleBulkPriceUpdate}
+      />
+
+      {/* Paso extra: filtros y agrupamiento antes de generar la Lista de Precios */}
+      <ReportConfigModal
+        isOpen={isReportConfigOpen}
+        onClose={() => setIsReportConfigOpen(false)}
+        products={products}
+        sucursales={sucursales}
+        onGenerate={handleGenerateReport}
       />
     </div>
   );

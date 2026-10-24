@@ -84,6 +84,11 @@ const styles = StyleSheet.create({
   footerLeft: { fontSize: 7, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 1 },
   footerRight: { fontSize: 7, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 1 },
   pageNum: { fontSize: 7, color: GRAY_MID, textTransform: 'uppercase', letterSpacing: 1 },
+
+  categoryHeader: { backgroundColor: BLACK, paddingVertical: 6, paddingHorizontal: 10, marginTop: 10 },
+  categoryHeaderText: { fontSize: 10, fontFamily: 'Helvetica-Bold', color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: 1 },
+  brandSubHeader: { backgroundColor: GRAY_LIGHT, paddingVertical: 4, paddingHorizontal: 10, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
+  brandSubHeaderText: { fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: GRAY_DARK, textTransform: 'uppercase', letterSpacing: 1 },
 });
 
 const formatPrice = (price) =>
@@ -91,7 +96,7 @@ const formatPrice = (price) =>
 
 const logoSrc = typeof window !== 'undefined' ? `${window.location.origin}/icono_new.jpeg` : '/icono_new.jpeg';
 
-const ReportPDF = ({ products, imageMap = {}, currentDate, showPushPrice = true }) => {
+const ReportPDF = ({ products, imageMap = {}, currentDate, showPushPrice = true, groupByCategory = false, sucursalNombre = '' }) => {
   const activeProducts = products.filter(p => p.activo !== false);
 
   const colCodigo   = { width: '12%', justifyContent: 'center', alignItems: 'center' };
@@ -119,7 +124,10 @@ const ReportPDF = ({ products, imageMap = {}, currentDate, showPushPrice = true 
         </View>
 
         <View style={styles.infoStrip}>
-          <Text style={styles.infoStripText}>Lista de precios para distribución a comercios</Text>
+          <Text style={styles.infoStripText}>
+            {sucursalNombre ? `Lista de precios · Sucursal ${sucursalNombre}` : 'Lista de precios para distribución a comercios'}
+          </Text>
+          <Text style={styles.infoStripSub}>{activeProducts.length} producto{activeProducts.length !== 1 ? 's' : ''}</Text>
         </View>
 
         <View style={styles.brandBanner}>
@@ -140,13 +148,28 @@ const ReportPDF = ({ products, imageMap = {}, currentDate, showPushPrice = true 
 
           {activeProducts.map((prod, idx) => {
             const images = Array.isArray(imageMap[prod.id_producto]) ? imageMap[prod.id_producto] : (imageMap[prod.id_producto] ? [imageMap[prod.id_producto]] : []);
-            
+            const prev = activeProducts[idx - 1];
+            const categoriaNombre = prod.categoria?.nombre || 'Sin categoría';
+            const marcaNombre = prod.marca?.nombre_marca || 'GENERAL';
+            const isNewCategory = groupByCategory && (!prev || (prev.categoria?.nombre || 'Sin categoría') !== categoriaNombre);
+            const isNewBrand = groupByCategory && (isNewCategory || (prev.marca?.nombre_marca || 'GENERAL') !== marcaNombre);
+
             return (
-            <View
-              key={prod.id_producto}
-              style={[styles.tableRow, idx % 2 !== 0 && styles.tableRowAlt]}
-              wrap={false}
-            >
+            <React.Fragment key={prod.id_producto}>
+              {isNewCategory && (
+                <View style={styles.categoryHeader} wrap={false}>
+                  <Text style={styles.categoryHeaderText}>{categoriaNombre}</Text>
+                </View>
+              )}
+              {isNewBrand && (
+                <View style={styles.brandSubHeader} wrap={false}>
+                  <Text style={styles.brandSubHeaderText}>{marcaNombre}</Text>
+                </View>
+              )}
+              <View
+                style={[styles.tableRow, idx % 2 !== 0 && styles.tableRowAlt]}
+                wrap={false}
+              >
               <View style={colCodigo}>
                 <Text style={styles.rowCodigo}>{prod.codigo_producto?.codigo || '-'}</Text>
               </View>
@@ -203,7 +226,8 @@ const ReportPDF = ({ products, imageMap = {}, currentDate, showPushPrice = true 
                   {prod.precio_venta_sugerido > 0 ? formatPrice(prod.precio_venta_sugerido) : '—'}
                 </Text>
               </View>
-            </View>
+              </View>
+            </React.Fragment>
           )})}
         </View>
 
